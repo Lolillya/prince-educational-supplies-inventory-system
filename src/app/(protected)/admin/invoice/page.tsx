@@ -1,7 +1,64 @@
+import { Poppins } from "next/font/google";
+import { Input } from "~/components/ui/input";
+import { RxMagnifyingGlass } from "react-icons/rx";
+
+import Image from "next/image";
+import Filter_Icon from "public/icons/filter-icon2.svg";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Label } from "~/components/ui/label";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import { Separator } from "~/components/ui/separator";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 const InvoicePage = () => {
   return (
-    <section>
-      <h1>Invoice Page</h1>
+    <section
+      className={`h-auto w-screen p-5 ${poppins.className} m-10 flex flex-col gap-3`}
+    >
+      <div className="relative flex items-center justify-between">
+        <div className="flex h-auto w-full max-w-md gap-3">
+          <RxMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500" />
+          <Input placeholder="Search" className="bg-gray-100 pl-10" />
+
+          <div className="rounded-md bg-gray-100 p-3 hover:cursor-pointer hover:bg-gray-300">
+            <Image src={Filter_Icon} alt="filter icon" />
+          </div>
+        </div>
+
+        <Button className="h-14 bg-[#FF7B7B] font-bold">+ New Invoice</Button>
+      </div>
+
+      <Card className="p-3">
+        <div className="flex items-center justify-between">
+          <div className="flex flex-col gap-3">
+            <Label>#12345678 - September 29, 2024</Label>
+            <div className="flex items-center gap-3">
+              <Avatar>
+                <AvatarImage
+                  src="https://github.com/shadcn.png"
+                  alt="profile avatar"
+                />
+                <AvatarFallback>CN</AvatarFallback>
+              </Avatar>
+              <Label className="font-bold">John Doe</Label>
+            </div>
+          </div>
+
+          <div>
+            <Separator orientation="vertical" className="my-4" />
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <Label>Total</Label>
+            <Label>₱ 0000.00</Label>
+          </div>
+        </div>
+      </Card>
     </section>
   );
 };

@@ -9,6 +9,7 @@ import { Card } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Separator } from "~/components/ui/separator";
+import { FaEllipsisH } from "react-icons/fa";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -33,9 +34,9 @@ const InvoicePage = () => {
         <Button className="h-14 bg-[#FF7B7B] font-bold">+ New Invoice</Button>
       </div>
 
-      <Card className="p-3">
+      <Card className="flex flex-col gap-3 p-5">
         <div className="flex items-center justify-between">
-          <div className="flex flex-col gap-3">
+          <div className="flex w-full flex-col gap-3 p-3">
             <Label>#12345678 - September 29, 2024</Label>
             <div className="flex items-center gap-3">
               <Avatar>
@@ -49,15 +50,70 @@ const InvoicePage = () => {
             </div>
           </div>
 
-          <div>
-            <Separator orientation="vertical" className="my-4" />
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="my-4 h-16 w-[2px]" />
           </div>
 
-          <div className="flex flex-col gap-3">
-            <Label>Total</Label>
-            <Label>₱ 0000.00</Label>
+          <div className="flex w-full items-center justify-between gap-3 p-3">
+            <div className="flex flex-col gap-3">
+              <Label>Total</Label>
+              <Label>₱ 0000.00</Label>
+            </div>
+
+            <div className="rounded-md border-2 border-[#D3D6DF] p-3">
+              <FaEllipsisH color="gray" />
+            </div>
           </div>
         </div>
+
+        <div className="flex items-center justify-between gap-5 rounded-md bg-[#F0F1F4] p-5">
+          <div className="flex items-center gap-5">
+            <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+            <div className="flex flex-col gap-5">
+              <div className="flex">
+                <Label>Brand</Label>
+                <Label> - </Label>
+                <Label>Item</Label>
+              </div>
+
+              <div className="flex">
+                <Label>Variant 1</Label>
+                <Label>3 Boxex</Label>
+                <Label>0% discount</Label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Label>P 0000.00</Label>
+          </div>
+        </div>
+
+        <div className="flex items-center justify-between gap-5 rounded-md bg-[#F0F1F4] p-5">
+          <div className="flex items-center gap-5">
+            <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+            <div className="flex flex-col gap-5">
+              <div className="flex">
+                <Label>Brand</Label>
+                <Label> - </Label>
+                <Label>Item</Label>
+              </div>
+
+              <div className="flex">
+                <Label>Variant 1</Label>
+                <Label>3 Boxex</Label>
+                <Label>0% discount</Label>
+              </div>
+            </div>
+          </div>
+
+          <div>
+            <Label>P 0000.00</Label>
+          </div>
+        </div>
+
+        <Button>View All</Button>
       </Card>
     </section>
   );

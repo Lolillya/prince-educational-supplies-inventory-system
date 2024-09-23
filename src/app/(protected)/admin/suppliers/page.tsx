@@ -2,13 +2,14 @@ import { Poppins } from "next/font/google";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { RxMagnifyingGlass } from "react-icons/rx";
+import { AiFillMail, AiFillPhone } from "react-icons/ai";
 import { Input } from "~/components/ui/input";
 
 import Filter_Icon from "public/icons/filter-icon2.svg";
 import Image from "next/image";
 import { Card } from "~/components/ui/card";
 import { Badge } from "~/components/ui/badge";
-import { FaEllipsisH } from "react-icons/fa";
+import { FaAngleDown, FaAngleUp, FaEllipsisH, FaPen } from "react-icons/fa";
 import { Separator } from "~/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 
@@ -39,27 +40,298 @@ const SuppliersPage = () => {
       </div>
 
       <Card className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-5 rounded-md p-5">
-          <div className="flex items-center gap-5">
-            <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
-            <div className="flex flex-col gap-5">
-              <div className="flex items-center gap-3">
-                <Label>Brand</Label>
-                <Label> - </Label>
-                <Label>Item</Label>
-                <Badge className="bg-blue-400 font-light">Category</Badge>
-              </div>
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
+                </div>
 
-              <div className="flex">
-                <Label>Variant 1</Label>
-                <Label>3 Boxex</Label>
-                <Label>0% discount</Label>
+                <div className="flex">
+                  <Label>The Huang Company</Label>
+                </div>
               </div>
             </div>
           </div>
 
-          <div>
-            <Label>P 0000.00</Label>
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaPen color="gray" />
+            </div>
+
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaAngleDown color="gray" />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
+                </div>
+
+                <div className="flex">
+                  <Label>The Huang Company</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaPen color="gray" />
+            </div>
+
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaAngleUp color="gray" />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex p-3">
+          <div className="flex w-full flex-col gap-5">
+            <Label>Location</Label>
+            <Label>Leon Garcia, Barpa, Brgy. Agdao, Davao City</Label>
+          </div>
+
+          <div className="flex w-full flex-col gap-5">
+            <Label>Notes</Label>
+            <Label>
+              Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit Amet Lorem Ipsum
+              Dolor Sit Amet
+            </Label>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
+                </div>
+
+                <div className="flex">
+                  <Label>The Huang Company</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaPen color="gray" />
+            </div>
+
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaAngleDown color="gray" />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
+                </div>
+
+                <div className="flex">
+                  <Label>The Huang Company</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaPen color="gray" />
+            </div>
+
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaAngleDown color="gray" />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
+                </div>
+
+                <div className="flex">
+                  <Label>The Huang Company</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaPen color="gray" />
+            </div>
+
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaAngleDown color="gray" />
+            </div>
+          </div>
+        </div>
+      </Card>
+
+      <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
+                </div>
+
+                <div className="flex">
+                  <Label>The Huang Company</Label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative flex items-center">
+            {/* Set explicit height for the Separator */}
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
+            </div>
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaPen color="gray" />
+            </div>
+
+            <div className="flex items-center justify-center rounded-md border-2 p-3">
+              <FaAngleDown color="gray" />
+            </div>
           </div>
         </div>
       </Card>

@@ -12,6 +12,15 @@ import { Badge } from "~/components/ui/badge";
 import { FaAngleDown, FaAngleUp, FaEllipsisH, FaPen } from "react-icons/fa";
 import { Separator } from "~/components/ui/separator";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import { Textarea } from "~/components/ui/textarea";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,7 +44,69 @@ const SuppliersPage = () => {
             </div>
           </div>
 
-          <Button className="bg-[#FF7B7B] p-5 font-bold">+ New Invoice</Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-[#FF7B7B] p-5 font-bold">
+                + New Invoice
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-full max-w-5xl gap-5 p-10">
+              <DialogHeader>
+                <DialogTitle className="p-3 text-2xl font-bold">
+                  NEW SUPPLIER
+                </DialogTitle>
+              </DialogHeader>
+              <div className="flex flex-col gap-1">
+                <Label>
+                  Customer <span className="text-red-600">*</span>
+                </Label>
+                <Input placeholder="Customer Name" className="p-5" required />
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label>
+                  Business <span className="text-red-600">*</span>
+                </Label>
+                <Input placeholder="Business Name" className="p-5" required />
+              </div>
+
+              <div className="flex gap-3">
+                <div className="flex w-full flex-col gap-1">
+                  <Label>
+                    Business <span className="text-red-600">*</span>
+                  </Label>
+                  <Input placeholder="Business Name" className="p-5" required />
+                </div>
+
+                <div className="flex w-full flex-col gap-1">
+                  <Label>
+                    Email <span className="text-red-600">*</span>
+                  </Label>
+                  <Input placeholder="Email" className="p-5" required />
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-1">
+                <Label>
+                  Address <span className="text-red-600">*</span>
+                </Label>
+                <Input placeholder="Address" className="p-5" required />
+              </div>
+
+              <div>
+                <Textarea
+                  placeholder="About this supplier..."
+                  rows={4}
+                  className="resize-none"
+                />
+              </div>
+
+              <div className="flex justify-end gap-3">
+                <Button>Clear</Button>
+                <Button>Save</Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 
@@ -75,9 +146,73 @@ const SuppliersPage = () => {
           </div>
 
           <div className="flex gap-3">
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaPen color="gray" />
-            </div>
+            <Dialog>
+              <DialogTrigger asChild>
+                <div className="flex items-center justify-center rounded-md border-2 p-3 hover:cursor-pointer">
+                  <FaPen color="gray" />
+                </div>
+              </DialogTrigger>
+              <DialogContent className="w-full max-w-5xl gap-5 p-10">
+                <DialogHeader>
+                  <DialogTitle className="p-3 text-2xl font-bold">
+                    EDIT SUPPLIER
+                  </DialogTitle>
+                </DialogHeader>
+                <div className="flex flex-col gap-1">
+                  <Label>
+                    Customer <span className="text-red-600">*</span>
+                  </Label>
+                  <Input placeholder="Customer Name" className="p-5" required />
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label>
+                    Business <span className="text-red-600">*</span>
+                  </Label>
+                  <Input placeholder="Business Name" className="p-5" required />
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex w-full flex-col gap-1">
+                    <Label>
+                      Business <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      placeholder="Business Name"
+                      className="p-5"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex w-full flex-col gap-1">
+                    <Label>
+                      Email <span className="text-red-600">*</span>
+                    </Label>
+                    <Input placeholder="Email" className="p-5" required />
+                  </div>
+                </div>
+
+                <div className="flex flex-col gap-1">
+                  <Label>
+                    Address <span className="text-red-600">*</span>
+                  </Label>
+                  <Input placeholder="Address" className="p-5" required />
+                </div>
+
+                <div>
+                  <Textarea
+                    placeholder="About this supplier..."
+                    rows={4}
+                    className="resize-none"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-3">
+                  <Button>Clear</Button>
+                  <Button>Save</Button>
+                </div>
+              </DialogContent>
+            </Dialog>
 
             <div className="flex items-center justify-center rounded-md border-2 p-3">
               <FaAngleDown color="gray" />
@@ -144,194 +279,6 @@ const SuppliersPage = () => {
               Lorem Ipsum Dolor Sit Amet Lorem Ipsum Dolor Sit Amet Lorem Ipsum
               Dolor Sit Amet
             </Label>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-5 rounded-md">
-          <div className="w-full">
-            <div className="flex items-center gap-5">
-              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
-              <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-3">
-                  <Label>Rich Adrian Huang</Label>
-                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
-                </div>
-
-                <div className="flex">
-                  <Label>The Huang Company</Label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative flex items-center">
-            {/* Set explicit height for the Separator */}
-            <Separator orientation="vertical" className="h-16 w-[2px]" />
-          </div>
-
-          <div className="flex w-full flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <AiFillPhone />
-              <Label>09xxxxxxxxxx</Label>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <AiFillMail />
-              <Label>email@gmail.com</Label>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaPen color="gray" />
-            </div>
-
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaAngleDown color="gray" />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-5 rounded-md">
-          <div className="w-full">
-            <div className="flex items-center gap-5">
-              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
-              <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-3">
-                  <Label>Rich Adrian Huang</Label>
-                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
-                </div>
-
-                <div className="flex">
-                  <Label>The Huang Company</Label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative flex items-center">
-            {/* Set explicit height for the Separator */}
-            <Separator orientation="vertical" className="h-16 w-[2px]" />
-          </div>
-
-          <div className="flex w-full flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <AiFillPhone />
-              <Label>09xxxxxxxxxx</Label>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <AiFillMail />
-              <Label>email@gmail.com</Label>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaPen color="gray" />
-            </div>
-
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaAngleDown color="gray" />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-5 rounded-md">
-          <div className="w-full">
-            <div className="flex items-center gap-5">
-              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
-              <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-3">
-                  <Label>Rich Adrian Huang</Label>
-                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
-                </div>
-
-                <div className="flex">
-                  <Label>The Huang Company</Label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative flex items-center">
-            {/* Set explicit height for the Separator */}
-            <Separator orientation="vertical" className="h-16 w-[2px]" />
-          </div>
-
-          <div className="flex w-full flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <AiFillPhone />
-              <Label>09xxxxxxxxxx</Label>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <AiFillMail />
-              <Label>email@gmail.com</Label>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaPen color="gray" />
-            </div>
-
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaAngleDown color="gray" />
-            </div>
-          </div>
-        </div>
-      </Card>
-
-      <Card className="flex flex-col gap-3 p-5">
-        <div className="flex items-center justify-between gap-5 rounded-md">
-          <div className="w-full">
-            <div className="flex items-center gap-5">
-              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
-              <div className="flex flex-col gap-5">
-                <div className="flex items-center gap-3">
-                  <Label>Rich Adrian Huang</Label>
-                  {/* <Badge className="bg-blue-400 font-light">Category</Badge> */}
-                </div>
-
-                <div className="flex">
-                  <Label>The Huang Company</Label>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="relative flex items-center">
-            {/* Set explicit height for the Separator */}
-            <Separator orientation="vertical" className="h-16 w-[2px]" />
-          </div>
-
-          <div className="flex w-full flex-col gap-3">
-            <div className="flex items-center gap-3">
-              <AiFillPhone />
-              <Label>09xxxxxxxxxx</Label>
-            </div>
-
-            <div className="flex items-center gap-3">
-              <AiFillMail />
-              <Label>email@gmail.com</Label>
-            </div>
-          </div>
-
-          <div className="flex gap-3">
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaPen color="gray" />
-            </div>
-
-            <div className="flex items-center justify-center rounded-md border-2 p-3">
-              <FaAngleDown color="gray" />
-            </div>
           </div>
         </div>
       </Card>

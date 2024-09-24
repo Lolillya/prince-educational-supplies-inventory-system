@@ -14,7 +14,10 @@ const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
-
+// TODO
+// ADD TO STOCK
+// EDIT ITEM
+// NEW ITEM
 const InventoryPage = () => {
   return (
     <section

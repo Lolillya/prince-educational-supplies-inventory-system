@@ -17,6 +17,11 @@ const poppins = Poppins({
   weight: ["400", "700"],
 });
 
+// TODO
+// NEW INVVOICE WINDOW
+// NEW INVOICE REPACKAGE WINDOW
+// INVOICE DETAILS
+
 const InvoicePage = () => {
   return (
     <section

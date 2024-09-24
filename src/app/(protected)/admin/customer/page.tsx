@@ -51,7 +51,7 @@ const CustomerPage = () => {
           <Dialog>
             <DialogTrigger asChild>
               <Button className="bg-[#FF7B7B] p-5 font-bold">
-                + New Invoice
+                + New Supplier
               </Button>
             </DialogTrigger>
             <DialogContent className="w-full max-w-5xl gap-5 p-10">

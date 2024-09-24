@@ -36,6 +36,10 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+const thisisafucntion = () => {
+  return;
+};
+
 export function DashboardChart() {
   return (
     <Card className="h-full max-h-[570px] w-full">

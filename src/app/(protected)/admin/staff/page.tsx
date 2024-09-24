@@ -23,7 +23,10 @@ import {
 import { Textarea } from "~/components/ui/textarea";
 
 import { useState } from "react";
-import { customers } from "~/server/db/customersData";
+import { customers } from "~/server/db/customersData";import SwitchComponent  from "~/app/_components/switch"
+import {Badge} from "~/components/ui/badge";
+
+
 
 const poppins = Poppins({
     subsets: ["latin"],
@@ -69,29 +72,38 @@ const StaffPage = () => {
                                 <Label>
                                     Customer <span className="text-red-600">*</span>
                                 </Label>
-                                <Input placeholder="Customer Name" className="p-5" required />
-                            </div>
-
-                            <div className="flex flex-col gap-1">
-                                <Label>
-                                    Business <span className="text-red-600">*</span>
-                                </Label>
-                                <Input placeholder="Business Name" className="p-5" required />
+                                <Input placeholder="Customer Name" className="p-5" required/>
                             </div>
 
                             <div className="flex gap-3">
                                 <div className="flex w-full flex-col gap-1">
                                     <Label>
-                                        Business <span className="text-red-600">*</span>
+                                        Position <span className="text-red-600">*</span>
                                     </Label>
-                                    <Input placeholder="Business Name" className="p-5" required />
+                                    <Input placeholder="Position" className="p-5" required/>
+                                </div>
+
+                                <div className="flex w-full flex-col gap-2">
+                                    <Label>
+                                        Administrator Privileges <span className="text-red-600">*</span>
+                                    </Label>
+                                    <SwitchComponent/>
+                                </div>
+                            </div>
+
+                            <div className="flex gap-3">
+                                <div className="flex w-full flex-col gap-1">
+                                    <Label>
+                                        Contact Number <span className="text-red-600">*</span>
+                                    </Label>
+                                    <Input placeholder="Contact Number" className="p-5" required/>
                                 </div>
 
                                 <div className="flex w-full flex-col gap-1">
                                     <Label>
                                         Email <span className="text-red-600">*</span>
                                     </Label>
-                                    <Input placeholder="Email" className="p-5" required />
+                                    <Input placeholder="Email" className="p-5" required/>
                                 </div>
                             </div>
 
@@ -99,12 +111,12 @@ const StaffPage = () => {
                                 <Label>
                                     Address <span className="text-red-600">*</span>
                                 </Label>
-                                <Input placeholder="Address" className="p-5" required />
+                                <Input placeholder="Address" className="p-5" required/>
                             </div>
 
                             <div>
                                 <Textarea
-                                    placeholder="About this staff..."
+                                    placeholder="About this Employee..."
                                     rows={4}
                                     className="resize-none"
                                 />
@@ -165,6 +177,7 @@ const StaffPage = () => {
                                 <div className="flex flex-col gap-5">
                                     <div className="flex items-center gap-3">
                                         <Label>{customer.name}</Label>
+                                        <Badge className="bg-blue-400 text-blue-800">Admin</Badge>
                                     </div>
                                     <div className="flex">
                                         <Label>{customer.company}</Label>

@@ -11,107 +11,289 @@ import Image from "next/image";
 import { Card } from "~/components/ui/card";
 import { FaAngleDown, FaAngleUp, FaPen } from "react-icons/fa";
 import { Separator } from "~/components/ui/separator";
+import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
+import {
+    Dialog,
+    DialogContent,
+    DialogDescription,
+    DialogHeader,
+    DialogTitle,
+    DialogTrigger,
+} from "~/components/ui/dialog";
+import { Textarea } from "~/components/ui/textarea";
+
 import { useState } from "react";
 import { customers } from "~/server/db/customersData";
 
 const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
+    subsets: ["latin"],
+    weight: ["400", "700"],
 });
 
-// TODO
-// NEW EMPLOYEE WINDOW
-
 const StaffPage = () => {
-  const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
+    const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
 
-  const toggleExpand = (id: number) => {
-    setExpandedCardId(expandedCardId === id ? null : id);
-  };
+    const toggleExpand = (id: number) => {
+        setExpandedCardId(expandedCardId === id ? null : id);
+    };
 
-  return (
-    <section
-      className={`h-auto w-screen p-5 ${poppins.className} m-10 flex flex-col gap-3`}
-    >
-      <div className="relative flex items-center justify-between">
-        <Label className="text-4xl font-bold">Staff</Label>
-        <div className="flex h-16 items-center gap-3">
-          <div className="relative flex h-auto w-full max-w-md gap-3">
-            <RxMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500" />
-            <Input placeholder="Search" className="bg-gray-100 p-5 pl-10" />
-            <div className="rounded-md bg-gray-100 p-3 hover:cursor-pointer hover:bg-gray-300">
-              <Image src={Filter_Icon} alt="filter icon" />
+    return (
+        <section
+            className={`h-auto w-screen p-5 ${poppins.className} m-10 flex flex-col gap-3`}
+        >
+            <div className="relative flex items-center justify-between">
+                <Label className="text-4xl font-bold">Staff</Label>
+                <div className="flex h-16 items-center gap-3">
+                    <div className="relative flex h-auto w-full max-w-md gap-3">
+                        <RxMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500" />
+                        <Input placeholder="Search" className="bg-gray-100 p-5 pl-10" />
+
+                        <div className="rounded-md bg-gray-100 p-3 hover:cursor-pointer hover:bg-gray-300">
+                            <Image src={Filter_Icon} alt="filter icon" />
+                        </div>
+                    </div>
+
+                    <Dialog>
+                        <DialogTrigger asChild>
+                            <Button className="bg-[#FF7B7B] p-5 font-bold">
+                                + New Staff
+                            </Button>
+                        </DialogTrigger>
+                        <DialogContent className="w-full max-w-5xl gap-5 p-10">
+                            <DialogHeader>
+                                <DialogTitle className="p-3 text-2xl font-bold">
+                                    NEW STAFF
+                                </DialogTitle>
+                            </DialogHeader>
+                            <div className="flex flex-col gap-1">
+                                <Label>
+                                    Customer <span className="text-red-600">*</span>
+                                </Label>
+                                <Input placeholder="Customer Name" className="p-5" required />
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <Label>
+                                    Business <span className="text-red-600">*</span>
+                                </Label>
+                                <Input placeholder="Business Name" className="p-5" required />
+                            </div>
+
+                            <div className="flex gap-3">
+                                <div className="flex w-full flex-col gap-1">
+                                    <Label>
+                                        Business <span className="text-red-600">*</span>
+                                    </Label>
+                                    <Input placeholder="Business Name" className="p-5" required />
+                                </div>
+
+                                <div className="flex w-full flex-col gap-1">
+                                    <Label>
+                                        Email <span className="text-red-600">*</span>
+                                    </Label>
+                                    <Input placeholder="Email" className="p-5" required />
+                                </div>
+                            </div>
+
+                            <div className="flex flex-col gap-1">
+                                <Label>
+                                    Address <span className="text-red-600">*</span>
+                                </Label>
+                                <Input placeholder="Address" className="p-5" required />
+                            </div>
+
+                            <div>
+                                <Textarea
+                                    placeholder="About this staff..."
+                                    rows={4}
+                                    className="resize-none"
+                                />
+                            </div>
+
+                            <div className="flex justify-end gap-3">
+                                <Button>Clear</Button>
+                                <Button>Save</Button>
+                            </div>
+                        </DialogContent>
+                    </Dialog>
+                </div>
             </div>
-          </div>
-          <Button className="bg-[#FF7B7B] p-5 font-bold">+ New Staff</Button>
-        </div>
-      </div>
 
-      {customers.map((customer) => (
-        <Card key={customer.id} className="flex flex-col gap-3 p-5">
-          <div className="flex items-center justify-between gap-5 rounded-md">
-            <div className="w-full">
-              <div className="flex items-center gap-5">
-                <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
-                <div className="flex flex-col gap-5">
-                  <div className="flex items-center gap-3">
-                    <Label>{customer.name}</Label>
-                  </div>
-                  <div className="flex">
-                    <Label>{customer.company}</Label>
-                  </div>
+            {/* <Card className="flex flex-col gap-3 p-5">
+        <div className="flex items-center justify-between gap-5 rounded-md">
+          <div className="w-full">
+            <div className="flex items-center gap-5">
+              <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+              <div className="flex flex-col gap-5">
+                <div className="flex items-center gap-3">
+                  <Label>Rich Adrian Huang</Label>
+
+                </div>
+
+                <div className="flex">
+                  <Label>The Huang Company</Label>
                 </div>
               </div>
             </div>
-
-            <div className="relative flex items-center">
-              <Separator orientation="vertical" className="h-16 w-[2px]" />
-            </div>
-
-            <div className="flex w-full flex-col gap-3">
-              <div className="flex items-center gap-3">
-                <AiFillPhone />
-                <Label>{customer.phone}</Label>
-              </div>
-              <div className="flex items-center gap-3">
-                <AiFillMail />
-                <Label>{customer.email}</Label>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex items-center justify-center rounded-md border-2 p-3">
-                <FaPen color="gray" />
-              </div>
-              <div
-                className="flex items-center justify-center rounded-md border-2 p-3"
-                onClick={() => toggleExpand(customer.id)}
-              >
-                {expandedCardId === customer.id ? (
-                  <FaAngleUp color="gray" />
-                ) : (
-                  <FaAngleDown color="gray" />
-                )}
-              </div>
-            </div>
           </div>
 
-          {expandedCardId === customer.id && (
-            <div className="flex p-3">
-              <div className="flex w-full flex-col gap-5">
-                <Label>Location</Label>
-                <Label>{customer.location}</Label>
-              </div>
-              <div className="flex w-full flex-col gap-5">
-                <Label>Notes</Label>
-                <Label>{customer.notes}</Label>
-              </div>
+          <div className="relative flex items-center">
+
+            <Separator orientation="vertical" className="h-16 w-[2px]" />
+          </div>
+
+          <div className="flex w-full flex-col gap-3">
+            <div className="flex items-center gap-3">
+              <AiFillPhone />
+              <Label>09xxxxxxxxxx</Label>
             </div>
-          )}
-        </Card>
-      ))}
-    </section>
-  );
+
+            <div className="flex items-center gap-3">
+              <AiFillMail />
+              <Label>email@gmail.com</Label>
+            </div>
+          </div>
+        </div>
+      </Card> */}
+
+            {customers.map((customer) => (
+                <Card key={customer.id} className="flex flex-col gap-3 p-5">
+                    <div className="flex items-center justify-between gap-5 rounded-md">
+                        <div className="w-full">
+                            <div className="flex items-center gap-5">
+                                <div className="h-20 w-20 rounded-md bg-[#D9D9D9]"></div>
+                                <div className="flex flex-col gap-5">
+                                    <div className="flex items-center gap-3">
+                                        <Label>{customer.name}</Label>
+                                    </div>
+                                    <div className="flex">
+                                        <Label>{customer.company}</Label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="relative flex items-center">
+                            <Separator orientation="vertical" className="h-16 w-[2px]" />
+                        </div>
+
+                        <div className="flex w-full flex-col gap-3">
+                            <div className="flex items-center gap-3">
+                                <AiFillPhone />
+                                <Label>{customer.phone}</Label>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <AiFillMail />
+                                <Label>{customer.email}</Label>
+                            </div>
+                        </div>
+
+                        <div className="flex gap-3">
+                            <Dialog>
+                                <DialogTrigger asChild>
+                                    <div className="flex items-center justify-center rounded-md border-2 p-3 hover:cursor-pointer">
+                                        <FaPen color="gray" />
+                                    </div>
+                                </DialogTrigger>
+                                <DialogContent className="w-full max-w-5xl gap-5 p-10">
+                                    <DialogHeader>
+                                        <DialogTitle className="p-3 text-2xl font-bold">
+                                            EDIT STAFF
+                                        </DialogTitle>
+                                    </DialogHeader>
+                                    <div className="flex flex-col gap-1">
+                                        <Label>
+                                            Customer <span className="text-red-600">*</span>
+                                        </Label>
+                                        <Input
+                                            placeholder="Customer Name"
+                                            className="p-5"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex flex-col gap-1">
+                                        <Label>
+                                            Business <span className="text-red-600">*</span>
+                                        </Label>
+                                        <Input
+                                            placeholder="Business Name"
+                                            className="p-5"
+                                            required
+                                        />
+                                    </div>
+
+                                    <div className="flex gap-3">
+                                        <div className="flex w-full flex-col gap-1">
+                                            <Label>
+                                                Business <span className="text-red-600">*</span>
+                                            </Label>
+                                            <Input
+                                                placeholder="Business Name"
+                                                className="p-5"
+                                                required
+                                            />
+                                        </div>
+
+                                        <div className="flex w-full flex-col gap-1">
+                                            <Label>
+                                                Email <span className="text-red-600">*</span>
+                                            </Label>
+                                            <Input placeholder="Email" className="p-5" required />
+                                        </div>
+                                    </div>
+
+                                    <div className="flex flex-col gap-1">
+                                        <Label>
+                                            Address <span className="text-red-600">*</span>
+                                        </Label>
+                                        <Input placeholder="Address" className="p-5" required />
+                                    </div>
+
+                                    <div>
+                                        <Textarea
+                                            placeholder="About this staff..."
+                                            rows={4}
+                                            className="resize-none"
+                                        />
+                                    </div>
+
+                                    <div className="flex justify-end gap-3">
+                                        <Button>Clear</Button>
+                                        <Button>Save</Button>
+                                    </div>
+                                </DialogContent>
+                            </Dialog>
+
+                            <div
+                                className="flex items-center justify-center rounded-md border-2 p-3"
+                                onClick={() => toggleExpand(customer.id)}
+                            >
+                                {expandedCardId === customer.id ? (
+                                    <FaAngleUp color="gray" />
+                                ) : (
+                                    <FaAngleDown color="gray" />
+                                )}
+                            </div>
+                        </div>
+                    </div>
+
+                    {expandedCardId === customer.id && (
+                        <div className="flex p-3">
+                            <div className="flex w-full flex-col gap-5">
+                                <Label>Location</Label>
+                                <Label>{customer.location}</Label>
+                            </div>
+                            <div className="flex w-full flex-col gap-5">
+                                <Label>Notes</Label>
+                                <Label>{customer.notes}</Label>
+                            </div>
+                        </div>
+                    )}
+                </Card>
+            ))}
+        </section>
+    );
 };
 
 export default StaffPage;

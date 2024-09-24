@@ -57,7 +57,7 @@ const CustomerPage = () => {
             <DialogContent className="w-full max-w-5xl gap-5 p-10">
               <DialogHeader>
                 <DialogTitle className="p-3 text-2xl font-bold">
-                  EDIT SUPPLIER
+                  NEW SUPPLIER
                 </DialogTitle>
               </DialogHeader>
               <div className="flex flex-col gap-1">
@@ -76,16 +76,16 @@ const CustomerPage = () => {
 
               <div className="flex gap-3">
                 <div className="flex w-full flex-col gap-1">
-                  <Label>
-                    Business <span className="text-red-600">*</span>
-                  </Label>
-                  <Input placeholder="Business Name" className="p-5" required />
+                  <Label>Contact Number</Label>
+                  <Input
+                    placeholder="Contact Number"
+                    className="p-5"
+                    required
+                  />
                 </div>
 
                 <div className="flex w-full flex-col gap-1">
-                  <Label>
-                    Email <span className="text-red-600">*</span>
-                  </Label>
+                  <Label>Email</Label>
                   <Input placeholder="Email" className="p-5" required />
                 </div>
               </div>
@@ -183,20 +183,16 @@ const CustomerPage = () => {
 
                   <div className="flex gap-3">
                     <div className="flex w-full flex-col gap-1">
-                      <Label>
-                        Business <span className="text-red-600">*</span>
-                      </Label>
+                      <Label>Contact Number</Label>
                       <Input
-                        placeholder="Business Name"
+                        placeholder="Contact Number"
                         className="p-5"
                         required
                       />
                     </div>
 
                     <div className="flex w-full flex-col gap-1">
-                      <Label>
-                        Email <span className="text-red-600">*</span>
-                      </Label>
+                      <Label>Email</Label>
                       <Input placeholder="Email" className="p-5" required />
                     </div>
                   </div>

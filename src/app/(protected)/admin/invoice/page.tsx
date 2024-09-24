@@ -11,6 +11,15 @@ import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import { Separator } from "~/components/ui/separator";
 import { FaEllipsisH } from "react-icons/fa";
 import { Badge } from "~/components/ui/badge";
+import {
+  Dialog,
+  DialogTrigger,
+  DialogContent,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { DialogHeader } from "~/components/ui/dialog";
+import { Textarea } from "~/components/ui/textarea";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -39,7 +48,170 @@ const InvoicePage = () => {
             </div>
           </div>
 
-          <Button className="bg-[#FF7B7B] p-5 font-bold">+ New Invoice</Button>
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button className="bg-[#FF7B7B] p-5 font-bold">
+                + New Invoice
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="w-full max-w-5xl p-10">
+              <DialogHeader>
+                <DialogTitle className="p-3 text-2xl font-bold">
+                  EDIT SUPPLIER
+                </DialogTitle>
+              </DialogHeader>
+              <Tabs className="">
+                <TabsList className="h-full max-h-16 w-full grid-cols-2 bg-[#FFCCCC] p-3">
+                  <TabsTrigger value="order" className="text- w-full p-3">
+                    Order
+                  </TabsTrigger>
+                  <TabsTrigger value="repackaging" className="w-full p-3">
+                    Repackaging
+                  </TabsTrigger>
+                </TabsList>
+
+                <TabsContent value="order" className="flex flex-col gap-5">
+                  <div className="flex flex-col gap-1">
+                    <Label>
+                      Customer <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      placeholder="Customer Name"
+                      className="p-5"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label>
+                      Customer Company <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      placeholder="Customer Company"
+                      className="p-5"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="flex w-full flex-col gap-1">
+                      <Label>
+                        Customer Company <span className="text-red-600">*</span>
+                      </Label>
+                      <Input
+                        placeholder="Customer Company"
+                        className="p-5"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex w-full flex-col gap-1">
+                      <Label>
+                        Term <span className="text-red-600">*</span>
+                      </Label>
+                      <Input placeholder="Term" className="p-5" required />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Input placeholder="Search" className="p-5" required />
+                  </div>
+
+                  <div className="w-full rounded-md bg-[#F0F1F4]">
+                    <div className="flex items-center gap-5 p-3">
+                      <div className="h-14 w-14 rounded-md bg-[#98A0B4]"></div>
+                      <div className="flex items-center gap-3">
+                        <Label>Brand</Label>
+                        <Label>-</Label>
+                        <Label>Item</Label>
+                        <Label>-</Label>
+                        <Label>Variant</Label>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-5 p-3">
+                      <div className="flex w-full flex-col gap-1">
+                        <Label className="ml-3">Quantity</Label>
+                        <Input placeholder="Quantity" className="p-5" />
+                      </div>
+
+                      <div className="flex w-full flex-col gap-1">
+                        <Label className="ml-3">Unit Price</Label>
+                        <Input placeholder="Unit Price" className="p-5" />
+                      </div>
+
+                      <div className="flex w-full flex-col gap-1">
+                        <Label className="ml-3">Discount</Label>
+                        <Input placeholder="Discount" className="p-5" />
+                      </div>
+                    </div>
+                  </div>
+                </TabsContent>
+
+                <TabsContent
+                  value="repackaging"
+                  className="flex flex-col gap-5"
+                >
+                  <div className="flex flex-col gap-1">
+                    <Label>
+                      Customer <span className="text-red-600">*</span>
+                    </Label>
+                    <Input placeholder="John Doe" className="p-5" required />
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Label>
+                      Customer Company <span className="text-red-600">*</span>
+                    </Label>
+                    <Input
+                      placeholder="John Doe Comapany"
+                      className="p-5"
+                      required
+                    />
+                  </div>
+
+                  <div className="flex gap-3">
+                    <div className="flex w-full flex-col gap-1">
+                      <Label>
+                        Customer Company <span className="text-red-600">*</span>
+                      </Label>
+                      <Input
+                        placeholder="Customer Company"
+                        className="p-5"
+                        required
+                      />
+                    </div>
+
+                    <div className="flex w-full flex-col gap-1">
+                      <Label>
+                        Term <span className="text-red-600">*</span>
+                      </Label>
+                      <Input placeholder="Term" className="p-5" required />
+                    </div>
+                  </div>
+
+                  <div className="flex flex-col gap-1">
+                    <Input placeholder="Search" className="p-5" required />
+                  </div>
+                </TabsContent>
+              </Tabs>
+
+              <div className="flex justify-end gap-3">
+                <Button
+                  size={"lg"}
+                  className="border-[#FF7B7B] bg-white font-bold text-[#FF7B7B] hover:bg-[#FF7B7B] hover:text-white"
+                >
+                  Clear
+                </Button>
+                <Button
+                  size={"lg"}
+                  className="border-2 border-[#FF7B7B] bg-white font-bold text-[#FF7B7B] hover:bg-[#FF7B7B] hover:text-white"
+                >
+                  Save
+                </Button>
+              </div>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
 

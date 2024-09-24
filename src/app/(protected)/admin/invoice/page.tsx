@@ -20,7 +20,7 @@ const poppins = Poppins({
 const InvoicePage = () => {
   return (
     <section
-      className={`h-auto w-screen p-5 ${poppins.className} m-10 mb-0 flex flex-col gap-3 overflow-y-scroll`}
+      className={`h-auto w-screen ${poppins.className} mb-0 flex flex-col gap-3 overflow-y-scroll p-10`}
     >
       <div className="relative flex items-center justify-between">
         <Label className="text-4xl font-bold">Invoice</Label>

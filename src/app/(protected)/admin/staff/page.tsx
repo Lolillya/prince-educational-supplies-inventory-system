@@ -41,7 +41,7 @@ const StaffPage = () => {
 
   return (
     <section
-      className={`h-auto w-screen p-5 ${poppins.className} m-10 flex flex-col gap-3`}
+      className={`h-auto w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
     >
       <div className="relative flex items-center justify-between">
         <Label className="text-4xl font-bold">Staff</Label>

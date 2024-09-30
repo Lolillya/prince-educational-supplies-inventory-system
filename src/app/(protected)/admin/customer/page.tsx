@@ -36,7 +36,7 @@ const CustomerPage = () => {
 
   return (
     <section
-      className={`h-auto w-screen p-5 ${poppins.className} m-10 flex flex-col gap-3`}
+      className={`h-auto w-screen overflow-y-scroll p-10 ${poppins.className} flex flex-col gap-3`}
     >
       <div className="relative flex items-center justify-between">
         <Label className="text-4xl font-bold">Customer</Label>

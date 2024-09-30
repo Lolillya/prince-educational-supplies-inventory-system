@@ -26,15 +26,10 @@ const poppins = Poppins({
   weight: ["400", "700"],
 });
 
-// TODO
-// NEW INVVOICE WINDOW
-// NEW INVOICE REPACKAGE WINDOW
-// INVOICE DETAILS
-
 const InvoicePage = () => {
   return (
     <section
-      className={`h-auto w-screen ${poppins.className} mb-0 flex flex-col gap-3 overflow-y-scroll p-10`}
+      className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-10`}
     >
       <div className="relative flex items-center justify-between">
         <Label className="text-4xl font-bold">Invoice</Label>

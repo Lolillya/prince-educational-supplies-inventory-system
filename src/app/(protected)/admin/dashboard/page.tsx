@@ -6,7 +6,6 @@ import {
   CardContent,
   CardDescription,
   CardFooter,
-  CardHeader,
 } from "~/components/ui/card";
 
 import Up_Trend_Icon from "public/icons/up-trend.svg";
@@ -24,7 +23,7 @@ const poppins = Poppins({
 const AdminDashboard = () => {
   return (
     <section
-      className={`h-auto w-screen p-5 ${poppins.className} m-10 flex flex-col gap-3`}
+      className={`h-auto w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
     >
       <div className="flex items-center justify-between">
         <Label className="text-4xl font-extrabold">Hello, Joshua</Label>

@@ -7,7 +7,7 @@ interface AdminLayoutProps {
 
 const AdminLayout: React.FC<AdminLayoutProps> = ({ children }) => {
   return (
-    <section className="relative flex h-screen w-screen">
+    <section className="relative flex max-h-[100vh] max-w-[100vw]">
       <Sidebar />
       {children}
     </section>

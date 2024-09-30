@@ -172,9 +172,9 @@ const Sidebar = () => {
     <div
       onMouseEnter={() => setExpanded(true)}
       onMouseLeave={() => setExpanded(false)}
-      className={`h-full ${
+      className={` ${
         expanded ? "w-[16rem]" : "w-[7rem]"
-      } bg-[#F0F1F4] p-5 transition-all duration-300 ${ralewaye.className} flex flex-col justify-between`}
+      } bg-[#F0F1F4] p-5 transition-all duration-300 ${ralewaye.className} flex h-screen flex-col justify-between overflow-y-scroll`}
     >
       <section>
         <section className="mb-10 flex items-center justify-center">

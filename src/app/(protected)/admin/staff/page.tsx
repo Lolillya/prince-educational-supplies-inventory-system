@@ -25,7 +25,7 @@ import { Textarea } from "~/components/ui/textarea";
 import { useState } from "react";
 import { customers } from "~/server/db/customersData";
 import { Badge } from "~/components/ui/badge";
-import SwitchComponent from "~/app/_components/switch";
+import SwitchComponent from "~/components/switch";
 
 const poppins = Poppins({
   subsets: ["latin"],

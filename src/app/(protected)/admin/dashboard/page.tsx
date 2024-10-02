@@ -13,7 +13,7 @@ import Down_Trend_Icon from "public/icons/down-trend.svg";
 import Stock_Icon from "public/icons/stock-icon.svg";
 import Sales_Icon from "public/icons/sales-icon.svg";
 import Image from "next/image";
-import { DashboardChart } from "~/app/_components/dashboard-chart";
+import { DashboardChart } from "~/components/dashboard-chart";
 
 const poppins = Poppins({
   subsets: ["latin"],

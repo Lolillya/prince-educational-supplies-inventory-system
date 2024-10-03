@@ -20,13 +20,24 @@ import {
 import { DialogHeader } from "~/components/ui/dialog";
 import { Textarea } from "~/components/ui/textarea";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "~/components/ui/tabs";
+import { prisma } from "~/server/db";
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
-const InvoicePage = () => {
+const InvoicePage = async () => {
+  // const invoice = await prisma.invoice.create({
+  //   data: {
+  //     IssueDate: ,
+  //     TotalAmount: ,
+  //     DiscountApplied: ,
+  //     order: ,
+
+  //   }
+  // })
+
   return (
     <section
       className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-10`}

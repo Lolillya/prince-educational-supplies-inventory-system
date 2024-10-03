@@ -2,23 +2,168 @@
 // learn more about it in the docs: https://pris.ly/d/prisma-schema
 
 generator client {
-    provider = "prisma-client-js"
-    previewFeatures = ["multiSchema"]
+  provider = "prisma-client-js"
+  previewFeatures = ["multiSchema"]
 }
 
 datasource db {
-    provider  = "postgresql"
-    url       = env("DATABASE_URL")
-    directUrl = env("DIRECT_URL")
-    schemas   = ["auth", "public"]
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+  schemas = ["public"]
 }
 
-model Post {
-    id        Int      @id @default(autoincrement())
-    name      String
-    createdAt DateTime @default(now())
-    updatedAt DateTime @updatedAt
+model Order {
+  OrderId       Int            @id @default(autoincrement())
+  OrderDate     DateTime       @default(now())
+  invoice       Invoice?
+  orderProducts OrderProduct[]
+  Warehouse     Warehouse      @relation(fields: [OrderId], references: [WarehouseId])
+  Customer      Customer[]
 
-    @@index([name])
-    @@schema("public")
+  @@schema("public")
+}
+
+enum Status {
+  Test
+  tset1
+
+  @@schema("public")
+}
+
+model Invoice {
+  InvoiceId       Int      @id @default(autoincrement())
+  IssueDate       DateTime @default(now())
+  TotalAmount     Decimal
+  DiscountApplied Decimal
+  order           Order    @relation(fields: [InvoiceId], references: [OrderId])
+
+  @@schema("public")
+}
+
+model OrderProduct {
+  OrderProductId Int       @id @default(autoincrement())
+  Quantity       Int
+  OrderId        Int
+  order          Order     @relation(fields: [OrderId], references: [OrderId])
+  product        Product[]
+
+  @@schema("public")
+}
+
+model Product {
+  ProductID            Int                  @id @default(autoincrement())
+  Name                 String
+  Description          String
+  Quantity             Int
+  WarehousePrice       Decimal
+  SpecialPrice         Decimal
+  orderproduct         OrderProduct         @relation(fields: [ProductID], references: [OrderProductId], map: "fk_Product_OrderProduct") // Correct foreign key constraint
+  category             Category             @relation(fields: [ProductID], references: [CategoryId], map: "fk_Product_Category") // Correct foreign key constraint
+  PurchaseOrderProduct PurchaseOrderProduct @relation(fields: [ProductID], references: [PurchaseOrderProductId], map: "fk_Product_PurchaseOrderProduct")
+  supplier             Supplier[]
+  User                 User[]
+
+  @@schema("public")
+}
+
+model Category {
+  CategoryId Int      @id @default(autoincrement())
+  Name       String
+  Descripion String
+  product    Product? // Optional one-to-one relationship
+
+  @@schema("public")
+}
+
+model PurchaseOrderProduct {
+  PurchaseOrderProductId       Int            @id @default(autoincrement())
+  Quanity                      Int
+  product                      Product[]
+  PurchaseOrder                PurchaseOrder? @relation(fields: [purchaseOrderPurchaseOrderId], references: [PurchaseOrderId])
+  purchaseOrderPurchaseOrderId Int?
+
+  @@schema("public")
+}
+
+model PurchaseOrder {
+  PurchaseOrderId      Int                    @id @default(autoincrement())
+  OrderDate            DateTime
+  PurchaseOrderProduct PurchaseOrderProduct[]
+
+  @@schema("public")
+}
+
+model Supplier {
+  SupplierId  Int       @id @default(autoincrement())
+  Name        String
+  ContactInfo String
+  product     Product[]
+
+  @@schema("public")
+}
+
+model Warehouse {
+  WarehouseId          Int        @id @default(autoincrement())
+  Address              String
+  Order                Order?
+  User                 User?      @relation(fields: [userUserId], references: [UserId])
+  userUserId           Int?
+  Inventory            Inventory? @relation(fields: [inventoryInventoryId], references: [InventoryId])
+  inventoryInventoryId Int?
+
+  @@schema("public")
+}
+
+model Customer {
+  CustomerId   Int    @id @default(autoincrement())
+  Name         String
+  PhoneNumber  String
+  Address      String
+  Order        Order? @relation(fields: [orderOrderId], references: [OrderId])
+  orderOrderId Int?
+
+  @@schema("public")
+}
+
+model User {
+  UserId           Int         @id @default(autoincrement())
+  Username         String
+  Password         String
+  Role             String
+  Warehouse        Warehouse[]
+  AuditLog         AuditLog?   @relation(fields: [auditLogLogId], references: [LogId])
+  auditLogLogId    Int?
+  Product          Product?    @relation(fields: [productProductID], references: [ProductID])
+  productProductID Int?
+
+  @@schema("public")
+}
+
+model AuditLog {
+  LogId     Int      @id @default(autoincrement())
+  Action    String
+  Timestamp DateTime
+  User      User[]
+
+  @@schema("public")
+}
+
+model Inventory {
+  InventoryId    Int         @id @default(autoincrement())
+  Location       String
+  LastUpdated    DateTime
+  Warehouse      Warehouse[]
+  Report         Report?     @relation(fields: [reportReportId], references: [ReportId])
+  reportReportId Int?
+
+  @@schema("public")
+}
+
+model Report {
+  ReportId   Int         @id @default(autoincrement())
+  ReportDate DateTime
+  Inventory  Inventory[]
+
+  @@schema("public")
 }

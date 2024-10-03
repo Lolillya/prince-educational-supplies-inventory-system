@@ -38,19 +38,22 @@ const authConfig: NextAuthConfig = {
 
   callbacks: {
     async jwt({ token, user }) {
-      if (!token.sub) return token;
-
-      const existingUser = await getUserById(token.sub);
-
-      if (!existingUser) return token;
-
       if (user) {
+        // Set the user data in the token only if a user is available
+        token.id = user.id;
         token.Role = user.Role;
-      }
+        token.Firstname = user.Firstname;
+        token.Lastname = user.Lastname;
+      } else if (token.sub) {
+        // Fetch existing user data based on token.sub (user ID)
+        const existingUser = await getUserById(token.sub);
 
-      token.Role = existingUser.Role;
-      token.Firstname = existingUser.Firstname;
-      token.Lastname = existingUser.Lastname;
+        if (existingUser) {
+          token.Role = existingUser.Role;
+          token.Firstname = existingUser.Firstname;
+          token.Lastname = existingUser.Lastname;
+        }
+      }
 
       return token;
     },

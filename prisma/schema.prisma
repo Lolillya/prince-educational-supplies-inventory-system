@@ -1,145 +1,183 @@
-// This is your Prisma schema file,
-// learn more about it in the docs: https://pris.ly/d/prisma-schema
-
 generator client {
   provider = "prisma-client-js"
-  
 }
 
 datasource db {
   provider  = "postgresql"
   url       = env("DATABASE_URL")
   directUrl = env("DIRECT_URL")
-  
 }
 
-model Order {
-  OrderId       Int            @id @default(autoincrement())
-  OrderDate     DateTime       @default(now())
-  invoice       Invoice?
-  orderProducts OrderProduct[]
-  Warehouse     Warehouse      @relation(fields: [OrderId], references: [WarehouseId])
-  Customer      Customer[]
+// model Order {
+//   OrderId       Int            @id @default(autoincrement())
+//   OrderDate     DateTime       @default(now())
+//   invoice       Invoice?
+//   orderProducts OrderProduct[]
+//   Warehouse     Warehouse      @relation(fields: [OrderId], references: [WarehouseId])
+//   Customer      Customer[]
+// }
 
-  
+// enum Status {
+//   Test
+//   tset1
+// }
+
+// model Invoice {
+//   InvoiceId       Int      @id @default(autoincrement())
+//   IssueDate       DateTime @default(now())
+//   TotalAmount     Decimal
+//   DiscountApplied Decimal
+//   order           Order    @relation(fields: [InvoiceId], references: [OrderId])
+// }
+
+// model OrderProduct {
+//   OrderProductId Int       @id @default(autoincrement())
+//   Quantity       Int
+//   OrderId        Int
+//   order          Order     @relation(fields: [OrderId], references: [OrderId])
+//   product        Product[]
+// }
+
+// model Product {
+//   ProductID            Int                  @id @default(autoincrement())
+//   Name                 String
+//   Description          String
+//   Quantity             Int
+//   WarehousePrice       Decimal
+//   SpecialPrice         Decimal
+//   orderproduct         OrderProduct         @relation(fields: [ProductID], references: [OrderProductId], map: "fk_Product_OrderProduct") // Correct foreign key constraint
+//   category             Category             @relation(fields: [ProductID], references: [CategoryId], map: "fk_Product_Category") // Correct foreign key constraint
+//   PurchaseOrderProduct PurchaseOrderProduct @relation(fields: [ProductID], references: [PurchaseOrderProductId], map: "fk_Product_PurchaseOrderProduct")
+//   supplier             Supplier[]
+//   User                 User[]
+// }
+
+// model Category {
+//   CategoryId Int      @id @default(autoincrement())
+//   Name       String
+//   Descripion String
+//   product    Product?
+// }
+
+// model PurchaseOrderProduct {
+//   PurchaseOrderProductId       Int            @id @default(autoincrement())
+//   Quanity                      Int
+//   product                      Product[]
+//   PurchaseOrder                PurchaseOrder? @relation(fields: [purchaseOrderPurchaseOrderId], references: [PurchaseOrderId])
+//   purchaseOrderPurchaseOrderId Int?
+// }
+
+// model PurchaseOrder {
+//   PurchaseOrderId      Int                    @id @default(autoincrement())
+//   OrderDate            DateTime
+//   PurchaseOrderProduct PurchaseOrderProduct[]
+// }
+
+// model Supplier {
+//   SupplierId  Int       @id @default(autoincrement())
+//   Name        String
+//   ContactInfo String
+//   product     Product[]
+// }
+
+// model Warehouse {
+//   WarehouseId          Int        @id @default(autoincrement())
+//   Address              String
+//   Order                Order?
+//   User                 User?      @relation(fields: [userUserId], references: [UserId])
+//   userUserId           String?
+//   Inventory            Inventory? @relation(fields: [inventoryInventoryId], references: [InventoryId])
+//   inventoryInventoryId Int?
+// }
+
+// model Customer {
+//   CustomerId   Int    @id @default(autoincrement())
+//   Name         String
+//   PhoneNumber  String
+//   Address      String
+//   Order        Order? @relation(fields: [orderOrderId], references: [OrderId])
+//   orderOrderId Int?
+// }
+
+// -----------------------------------------------------------------------------------------
+
+model Location {
+  location_Id      Int                @id @unique @default(autoincrement())
+  address_Line     String
+  city             String
+  State            String
+  Country          String
+  postal_Code      Int
+  Personal_Details Personal_Details[]
 }
 
-enum Status {
-  Test
-  tset1
-
-  
+model Personal_Details {
+  user_Id        String           @id @unique @default(uuid())
+  firstName      String
+  lastName       String
+  contact        Int?
+  company        String
+  Location       Location?        @relation(fields: [location_Id], references: [location_Id])
+  location_Id    Int?
+  Notes          String
+  Admin          Admin[]
+  Employee       Employee[]
+  Customer       Customer[]
+  Supplier       Supplier[]
+  Authentication Authentication[]
+  Role           Role?
 }
 
-model Invoice {
-  InvoiceId       Int      @id @default(autoincrement())
-  IssueDate       DateTime @default(now())
-  TotalAmount     Decimal
-  DiscountApplied Decimal
-  order           Order    @relation(fields: [InvoiceId], references: [OrderId])
+model Role {
+  role_Id          Int              @id @unique @default(autoincrement())
+  user_Id_Role     String           @unique
+  Personal_Details Personal_Details @relation(fields: [user_Id_Role], references: [user_Id])
+  Role_name        Roles
 
-  
+  Admin    Admin[]
+  Employee Employee[]
+  Customer Customer[]
+  Supplier Supplier[]
 }
 
-model OrderProduct {
-  OrderProductId Int       @id @default(autoincrement())
-  Quantity       Int
-  OrderId        Int
-  order          Order     @relation(fields: [OrderId], references: [OrderId])
-  product        Product[]
-
-  
+model Admin {
+  admin_Id            Int              @id @unique @default(autoincrement())
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  personal_Details_Id String           @unique
+  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  role_Id             Int
 }
 
-model Product {
-  ProductID            Int                  @id @default(autoincrement())
-  Name                 String
-  Description          String
-  Quantity             Int
-  WarehousePrice       Decimal
-  SpecialPrice         Decimal
-  orderproduct         OrderProduct         @relation(fields: [ProductID], references: [OrderProductId], map: "fk_Product_OrderProduct") // Correct foreign key constraint
-  category             Category             @relation(fields: [ProductID], references: [CategoryId], map: "fk_Product_Category") // Correct foreign key constraint
-  PurchaseOrderProduct PurchaseOrderProduct @relation(fields: [ProductID], references: [PurchaseOrderProductId], map: "fk_Product_PurchaseOrderProduct")
-  supplier             Supplier[]
-  User                 User[]
-
-  
-}
-
-model Category {
-  CategoryId Int      @id @default(autoincrement())
-  Name       String
-  Descripion String
-  product    Product? // Optional one-to-one relationship
-
-  
-}
-
-model PurchaseOrderProduct {
-  PurchaseOrderProductId       Int            @id @default(autoincrement())
-  Quanity                      Int
-  product                      Product[]
-  PurchaseOrder                PurchaseOrder? @relation(fields: [purchaseOrderPurchaseOrderId], references: [PurchaseOrderId])
-  purchaseOrderPurchaseOrderId Int?
-
-  
-}
-
-model PurchaseOrder {
-  PurchaseOrderId      Int                    @id @default(autoincrement())
-  OrderDate            DateTime
-  PurchaseOrderProduct PurchaseOrderProduct[]
-
-  
-}
-
-model Supplier {
-  SupplierId  Int       @id @default(autoincrement())
-  Name        String
-  ContactInfo String
-  product     Product[]
-
-  
-}
-
-model Warehouse {
-  WarehouseId          Int        @id @default(autoincrement())
-  Address              String
-  Order                Order?
-  User                 User?      @relation(fields: [userUserId], references: [UserId])
-  userUserId           String?
-  Inventory            Inventory? @relation(fields: [inventoryInventoryId], references: [InventoryId])
-  inventoryInventoryId Int?
-
-  
+model Employee {
+  employee_Id         Int              @id @unique @default(autoincrement())
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  personal_Details_Id String
+  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  role_Id             Int
 }
 
 model Customer {
-  CustomerId   Int    @id @default(autoincrement())
-  Name         String
-  PhoneNumber  String
-  Address      String
-  Order        Order? @relation(fields: [orderOrderId], references: [OrderId])
-  orderOrderId Int?
-
-  
+  customer_Id         Int              @id @unique @default(autoincrement())
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  personal_Details_Id String
+  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  role_Id             Int
 }
 
-model User {
-  UserId           String         @unique @id @default(uuid())
-  Username         String         @unique
-  Firstname        String
-  Lastname         String
-  Password         String
-  Role             Roles @default(EMPLOYEE)
-  Warehouse        Warehouse[]
-  AuditLog         AuditLog?   @relation(fields: [auditLogLogId], references: [LogId])
-  auditLogLogId    Int?
-  Product          Product?    @relation(fields: [productProductID], references: [ProductID])
-  productProductID Int?
+model Supplier {
+  supplier_Id         Int              @id @unique @default(autoincrement())
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  personal_Details_Id String
+  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  role_Id             Int
+}
 
-  
+model Authentication {
+  Authentication_Id   String           @id @unique @default(uuid())
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  personal_Details_Id String
+  username            String
+  password            String
 }
 
 enum Roles {
@@ -147,33 +185,31 @@ enum Roles {
   EMPLOYEE
 }
 
-model AuditLog {
-  LogId     Int      @id @default(autoincrement())
-  Action    String
-  Timestamp DateTime
-  User      User[]
+// SUPPLIER
+// CUSTOMER
+// STAFF
+// ADMIN
 
-  
-}
+// -----------------------------------------------------------------------------------------
 
-model Inventory {
-  InventoryId    Int         @id @default(autoincrement())
-  Location       String
-  LastUpdated    DateTime
-  Warehouse      Warehouse[]
-  Report         Report?     @relation(fields: [reportReportId], references: [ReportId])
-  reportReportId Int?
+// model AuditLog {
+//   LogId     Int      @id @default(autoincrement())
+//   Action    String
+//   Timestamp DateTime
+//   User      User[]
+// }
 
-  
-}
+// model Inventory {
+//   InventoryId    Int         @id @default(autoincrement())
+//   Location       String
+//   LastUpdated    DateTime
+//   Warehouse      Warehouse[]
+//   Report         Report?     @relation(fields: [reportReportId], references: [ReportId])
+//   reportReportId Int?
+// }
 
-model Report {
-  ReportId   Int         @id @default(autoincrement())
-  ReportDate DateTime
-  Inventory  Inventory[]
-
-  
-}
-
-
-
+// model Report {
+//   ReportId   Int         @id @default(autoincrement())
+//   ReportDate DateTime
+//   Inventory  Inventory[]
+// }

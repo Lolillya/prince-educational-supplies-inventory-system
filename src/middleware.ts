@@ -6,15 +6,15 @@ export async function middleware(req: NextRequest) {
   // Get the token from the request using the secret key
   const token = await getToken({
     req,
-    secret: process.env.NEXTAUTH_SECRET, // Ensure this is in your .env file
+    secret: process.env.NEXTAUTH_SECRET,
   });
+  console.log("Fetched Token: ", token); // Debugging log
 
   const { pathname } = req.nextUrl;
 
   // If the user is not logged in
   if (!token) {
-    console.log("Token: null");
-    console.log("Is Logged In: false");
+    console.log("Token: null - User is not logged in.");
 
     // Redirect unauthenticated users to login
     if (!pathname.startsWith("/auth/login")) {
@@ -22,25 +22,30 @@ export async function middleware(req: NextRequest) {
     }
   } else {
     console.log("Token:", token);
-    console.log("Is Logged In: true");
-    console.log("Role:", token.role); // Token should include role
+    console.log("User is logged in:", token.username);
 
-    // Get the user's role from the token
     const role = token.role;
 
-    // Restrict access to /admin routes to ADMIN users only
-    if (pathname.startsWith("/admin") && role !== "ADMIN") {
+    // Allow only admin and employee roles
+    const allowedRoles = ["Admin", "Employee"]; // Make sure role names match exactly
+
+    // Redirect users with unauthorized roles
+    if (
+      (pathname.startsWith("/admin") && role !== "Admin") ||
+      (pathname.startsWith("/employee") && role !== "Employee")
+    ) {
+      console.log(
+        `Unauthorized access attempt by ${token.username} with role ${role}`,
+      );
       return NextResponse.redirect(new URL("/auth/login", req.url));
     }
 
-    // Restrict access to /employee routes to EMPLOYEE users only
-    if (pathname.startsWith("/employee") && role !== "EMPLOYEE") {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
-    }
-
-    // Prevent logged-in users from accessing the login page
+    // Redirect logged-in users to their respective dashboards
     if (pathname.startsWith("/auth/login")) {
-      return NextResponse.redirect(new URL("/dashboard", req.url));
+      console.log("Redirecting logged-in user to their respective dashboard.");
+      const redirectUrl =
+        role === "Admin" ? "/admin/dashboard" : "/employee/dashboard";
+      return NextResponse.redirect(new URL(redirectUrl, req.url));
     }
   }
 
@@ -54,6 +59,6 @@ export const config = {
     "/admin/:path*",
     "/employee/:path*",
     "/auth/login",
-    "/dashboard/:path*",
+    "/dashboard/:path*", // Consider removing if you want specific routing
   ],
 };

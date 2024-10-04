@@ -1,9 +1,8 @@
-import { NextAuthConfig } from "next-auth";
+import { type NextAuthConfig } from "next-auth";
 import { LoginSchema } from "./schemas";
 
 import Credentials from "next-auth/providers/credentials";
-import {  getUserByUsername, getUserRole } from "./data/user";
-
+import { getUserByUsername, getUserRole } from "./data/user";
 
 const authConfig: NextAuthConfig = {
   providers: [
@@ -15,21 +14,16 @@ const authConfig: NextAuthConfig = {
           const { username, password } = validatedFields.data;
           console.log("validation success");
 
-          // Get the user by username
           const user = await getUserByUsername(username);
-          // console.log(user);
 
-          // Check if user exists and password matches
           if (user && user.password === password) {
-            // Return a simplified version of the user for NextAuth
-            const role = await getUserRole(user.personal_Details_Id)
-            // console.log(role)
+            const role = await getUserRole(user.personal_details_id);
             return {
-              id: user.Authentication_Id,
+              id: user.authentication_id,
               username: user.username,
-              firstName: user.Personal_Details.firstName,
-              lastName: user.Personal_Details.lastName,
-              role: role
+              firstName: user.personal_details.first_name,
+              lastName: user.personal_details.last_name,
+              role,
             };
           }
         }
@@ -53,7 +47,6 @@ const authConfig: NextAuthConfig = {
       return session;
     },
 
-    // Add additional fields to the JWT token
     async jwt({ token, user }) {
       if (user) {
         token.username = user.username;

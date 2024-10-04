@@ -9,38 +9,33 @@ const authConfig: NextAuthConfig = {
       async authorize(credentials) {
         const validatedFields = LoginSchema.safeParse(credentials);
 
-        if (!validatedFields.success) {
-          console.log("Validation failed", validatedFields.error);
-          return null; // Return null if validation fails
+        if (validatedFields.success) {
+          const { username, password } = validatedFields.data;
+          const user = await getUserByUsername(username);
+
+          // Verify credentials
+          if (user && user.password === password) {
+            // Extract role from user details
+            let role = null;
+
+            if (user.personal_details.admins.length > 0) {
+              role = user.personal_details.admins[0].role.role_name; // For admins
+            } else if (user.personal_details.employees.length > 0) {
+              role = user.personal_details.employees[0].role.role_name; // For employees
+            }
+
+            // Return user details along with role
+            return {
+              authentication_id: user.authentication_id,
+              personal_details_id: user.personal_details_id,
+              username: user.username,
+              first_name: user.personal_details.first_name,
+              last_name: user.personal_details.last_name,
+              role, // Ensure role is set correctly here
+            };
+          }
         }
-
-        const { username, password } = validatedFields.data;
-        console.log("Attempting to log in with username:", username);
-
-        // Fetch user by username
-        const user = await getUserByUsername(username);
-
-        if (!user) {
-          console.log("User not found");
-          return null; // User does not exist
-        }
-
-        // Verify password
-        if (user.password !== password) {
-          console.log("Password mismatch");
-          return null; // Passwords do not match
-        }
-
-        // Successful login
-        console.log("Login successful", user);
-        return {
-          authentication_id: user.authentication_id,
-          personal_details_id: user.personal_details_id,
-          username: user.username,
-          first_name: user.personal_details.first_name,
-          last_name: user.personal_details.last_name,
-          role: user.personal_details.admins[0]?.role.role_name || null,
-        };
+        return null; // Return null if credentials are invalid
       },
     }),
   ],
@@ -53,16 +48,12 @@ const authConfig: NextAuthConfig = {
         token.username = user.username;
         token.first_name = user.first_name;
         token.last_name = user.last_name;
-        console.log("User in JWT callback:", user);
-        token.role = user.role; // Ensure role is set
+        token.role = user.role; // Ensure this is set
       }
-      console.log("Token in JWT callback:", token);
       return token;
     },
 
     async session({ session, token }) {
-      console.log("Session in session callback:", session);
-      console.log("Token in session callback:", token);
       if (token) {
         session.user = {
           authentication_id: token.authentication_id,

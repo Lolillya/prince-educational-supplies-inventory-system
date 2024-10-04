@@ -15,12 +15,13 @@ export default auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
-  const role = user?.Personal_Details.Role.Role_name;
+  const role = user?.Personal_Details?.Role?.Role_name
+  // console.log(user)
 
-  console.log("ROUTE: ", req.nextUrl.pathname);
-  console.log("IS LOGGED IN: ", isLoggedIn);
-  console.log("ROLE: ", role); // This should now show the correct role
-  console.log("user: ", user);  // Make sure the user object is populated
+  // console.log("ROUTE: ", req.nextUrl.pathname);
+  // console.log("IS LOGGED IN: ", isLoggedIn);
+  // console.log("ROLE: ", role); 
+  console.log("user: ", user);  
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);

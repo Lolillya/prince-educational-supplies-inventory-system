@@ -1,23 +1,9 @@
-import { DefaultSession, NextAuthConfig } from "next-auth";
+import { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "./schemas";
 
 import Credentials from "next-auth/providers/credentials";
-import {  getUserByUsername } from "./data/user";
-import { Roles } from "@prisma/client";
+import {  getUserByUsername, getUserRole } from "./data/user";
 
-declare module "next-auth" {
-  interface Session {
-    user: {
-      Personal_Details: {
-        firstName: string,
-        lastName: string
-        Role: {
-          Role_name: Roles
-        }
-      }
-    } & DefaultSession["user"];
-  }
-}
 
 const authConfig: NextAuthConfig = {
   providers: [
@@ -28,11 +14,23 @@ const authConfig: NextAuthConfig = {
         if (validatedFields.success) {
           const { username, password } = validatedFields.data;
           console.log("validation success");
-          const user = await getUserByUsername(username)
-          console.log(user)
 
+          // Get the user by username
+          const user = await getUserByUsername(username);
+          // console.log(user);
+
+          // Check if user exists and password matches
           if (user && user.password === password) {
-            return user;
+            // Return a simplified version of the user for NextAuth
+            const role = await getUserRole(user.personal_Details_Id)
+            // console.log(role)
+            return {
+              id: user.Authentication_Id,
+              username: user.username,
+              firstName: user.Personal_Details.firstName,
+              lastName: user.Personal_Details.lastName,
+              role: role
+            };
           }
         }
         return null;
@@ -41,37 +39,30 @@ const authConfig: NextAuthConfig = {
   ],
 
   callbacks: {
-    // async jwt({ token, user }) {
-    //   if (user) {
-    //     // Set the user data in the token only if a user is available
-    //     token.id = user.id;
-    //     token.Role = user.Role;
-    //     token.Firstname = user.Firstname;
-    //     token.Lastname = user.Lastname;
-    //   } else if (token.sub) {
-    //     // Fetch existing user data based on token.sub (user ID)
-    //     const existingUser = await getUserById(token.sub);
+    async session({ session, token, user }) {
+      if (token) {
+        session.user = {
+          ...session.user,
+          id: token.sub,
+          username: token.username,
+          firstName: token.firstName,
+          lastName: token.lastName,
+          role: token.role,
+        };
+      }
+      return session;
+    },
 
-    //     if (existingUser) {
-    //       token.Role = existingUser.;
-    //       token.Firstname = existingUser.firstName;
-    //       token.Lastname = existingUser.lastName;
-    //     }
-    //   }
-
-    //   return token;
-    // },
-
-    // async session({ token, session }) {
-    //   if (token.sub && session.user) {
-    //     session.user.id = token.sub as string;
-    //     session.user.Role = token.Role as Roles;
-    //     session.user.Firstname = token.Firstname as string;
-    //     session.user.Lastname = token.Lastname as string;
-    //   }
-
-    //   return session;
-    // },
+    // Add additional fields to the JWT token
+    async jwt({ token, user }) {
+      if (user) {
+        token.username = user.username;
+        token.firstName = user.firstName;
+        token.lastName = user.lastName;
+        token.role = user.role;
+      }
+      return token;
+    },
   },
 };
 

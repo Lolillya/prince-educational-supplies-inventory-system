@@ -24,9 +24,9 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     });
     const user = await getUserByUsername(username);
 
+    console.log(user)
     if (user) {
-      const role = user.Personal_Details.Role?.Role_name
-      // console.log(role)
+      const role = user.Personal_Details.Admin[0]?.Role.Role_name
       
       return { success: true, role };
     }

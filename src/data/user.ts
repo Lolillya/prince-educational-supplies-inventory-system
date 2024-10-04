@@ -3,20 +3,24 @@ import { prisma } from "~/server/db";
 export const getUserByUsername = async (username: string) => {
   try {
     const user = await prisma.authentication.findFirst({
-      where: {
-        username: username,
-      },
+      where: { username: username as string },
       include: {
         Personal_Details: {
           select: {
             firstName: true,
             lastName: true,
-            Role: {
-              select: {Role_name: true}
-            }
-          }
-        }
-      }
+            Admin: {
+              select: {
+                Role: {
+                  select: {
+                    Role_name: true,
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
       
     });
     return user;
@@ -38,21 +42,32 @@ export const getUserDetails = async (id: string) => {
   }
 }
 
-export const getUserById = async (UserId: string) => {
+export const getUserRole = async(id: string) => {
   try {
-    const user = await prisma.user.findUnique({ where: { UserId } });
-    return user;
-  } catch {
-    return null;
-  }
-};
-
-export const getUserRole = async(User_Id: string) => {
-  try {
-    const role = await prisma.role
+    const role = await prisma.role.findUnique({
+      where: {
+        user_Id_Role: id
+      }
+    })
+    return role?.Role_name
   }
 
-  catch{
+  catch {
     return null
   }
 }
+
+  export const getUserById = async (id: string) => {
+    try {
+      const user = await prisma.personal_Details.findUnique({
+        where:{
+          user_Id: id
+        }
+      })
+      return user
+    }
+
+    catch {
+      return null
+    }
+  }

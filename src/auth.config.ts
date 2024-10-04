@@ -7,35 +7,30 @@ const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       async authorize(credentials) {
-        const validatedFields = LoginSchema.safeParse(credentials);
+        const validationResult = LoginSchema.safeParse(credentials);
 
-        if (validatedFields.success) {
-          const { username, password } = validatedFields.data;
-          const user = await getUserByUsername(username);
+        if (!validationResult.success) return null;
 
-          // Verify credentials
-          if (user && user.password === password) {
-            // Extract role from user details
-            let role = null;
+        const { username, password } = validationResult.data;
+        const user = await getUserByUsername(username);
 
-            if (user.personal_details.admins.length > 0) {
-              role = user.personal_details.admins[0].role.role_name; // For admins
-            } else if (user.personal_details.employees.length > 0) {
-              role = user.personal_details.employees[0].role.role_name; // For employees
-            }
+        if (user && user.password === password) {
+          const role =
+            user.personal_details.admins[0]?.role.role_name ??
+            user.personal_details.employees[0]?.role.role_name ??
+            null;
 
-            // Return user details along with role
-            return {
-              authentication_id: user.authentication_id,
-              personal_details_id: user.personal_details_id,
-              username: user.username,
-              first_name: user.personal_details.first_name,
-              last_name: user.personal_details.last_name,
-              role, // Ensure role is set correctly here
-            };
-          }
+          return {
+            authentication_id: user.authentication_id,
+            personal_details_id: user.personal_details_id,
+            username: user.username,
+            first_name: user.personal_details.first_name,
+            last_name: user.personal_details.last_name,
+            role,
+          };
         }
-        return null; // Return null if credentials are invalid
+
+        return null;
       },
     }),
   ],
@@ -43,12 +38,14 @@ const authConfig: NextAuthConfig = {
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.authentication_id = user.authentication_id;
-        token.personal_details_id = user.personal_details_id;
-        token.username = user.username;
-        token.first_name = user.first_name;
-        token.last_name = user.last_name;
-        token.role = user.role; // Ensure this is set
+        Object.assign(token, {
+          authentication_id: user.authentication_id,
+          personal_details_id: user.personal_details_id,
+          username: user.username,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          role: user.role,
+        });
       }
       return token;
     },
@@ -61,7 +58,7 @@ const authConfig: NextAuthConfig = {
           username: token.username,
           first_name: token.first_name,
           last_name: token.last_name,
-          role: token.role, // Make sure role is included
+          role: token.role,
         };
       }
       return session;

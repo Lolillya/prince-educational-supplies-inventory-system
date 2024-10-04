@@ -1,64 +1,69 @@
 import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { getToken } from "next-auth/jwt";
+import {
+  authRoutes,
+  DEFAULT_ADMIN_REDIRECT,
+  DEFAULT_EMPLOYEE_REDIRECT,
+} from "./routes";
 
 export async function middleware(req: NextRequest) {
-  // Get the token from the request using the secret key
   const token = await getToken({
     req,
-    secret: process.env.NEXTAUTH_SECRET,
+    secret: process.env.AUTH_SECRET,
   });
-  console.log("Fetched Token: ", token); // Debugging log
 
   const { pathname } = req.nextUrl;
 
-  // If the user is not logged in
   if (!token) {
-    console.log("Token: null - User is not logged in.");
-
-    // Redirect unauthenticated users to login
-    if (!pathname.startsWith("/auth/login")) {
-      return NextResponse.redirect(new URL("/auth/login", req.url));
-    }
-  } else {
-    console.log("Token:", token);
-    console.log("User is logged in:", token.username);
-
-    const role = token.role;
-
-    // Allow only admin and employee roles
-    const allowedRoles = ["Admin", "Employee"]; // Make sure role names match exactly
-
-    // Redirect users with unauthorized roles
-    if (
-      (pathname.startsWith("/admin") && role !== "Admin") ||
-      (pathname.startsWith("/employee") && role !== "Employee")
-    ) {
-      console.log(
-        `Unauthorized access attempt by ${token.username} with role ${role}`,
-      );
-      return NextResponse.redirect(new URL("/auth/login", req.url));
-    }
-
-    // Redirect logged-in users to their respective dashboards
-    if (pathname.startsWith("/auth/login")) {
-      console.log("Redirecting logged-in user to their respective dashboard.");
-      const redirectUrl =
-        role === "Admin" ? "/admin/dashboard" : "/employee/dashboard";
-      return NextResponse.redirect(new URL(redirectUrl, req.url));
-    }
+    return handleUnauthenticatedUser(pathname, req.url);
   }
 
-  // Continue to the requested page if no redirection is needed
+  return handleAuthenticatedUser(pathname, token.role, req.url);
+}
+
+function handleUnauthenticatedUser(pathname: string, requestUrl: string) {
+  if (!authRoutes.includes(pathname)) {
+    return NextResponse.redirect(new URL(authRoutes[0], requestUrl));
+  }
   return NextResponse.next();
 }
 
-// Define the paths that the middleware will run on
+function handleAuthenticatedUser(
+  pathname: string,
+  role: string,
+  requestUrl: string,
+) {
+  if (isUnauthorizedAccess(pathname, role)) {
+    return NextResponse.redirect(new URL(authRoutes[0], requestUrl));
+  }
+
+  if (pathname.startsWith("/auth/login")) {
+    const redirectUrl =
+      role === "Admin" ? DEFAULT_ADMIN_REDIRECT : DEFAULT_EMPLOYEE_REDIRECT;
+    return NextResponse.redirect(new URL(redirectUrl, requestUrl));
+  }
+
+  return NextResponse.next();
+}
+
+function isUnauthorizedAccess(pathname: string, role: string) {
+  const isAdminPath = pathname.startsWith("/admin");
+  const isEmployeePath = pathname.startsWith("/employee");
+  const allowedRoles = ["Admin", "Employee"];
+
+  return (
+    (isAdminPath && role !== "Admin") ||
+    (isEmployeePath && role !== "Employee") ||
+    !allowedRoles.includes(role)
+  );
+}
+
 export const config = {
   matcher: [
     "/admin/:path*",
     "/employee/:path*",
     "/auth/login",
-    "/dashboard/:path*", // Consider removing if you want specific routing
+    "/dashboard/:path*",
   ],
 };

@@ -1,53 +1,65 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { z } from "zod";
+import { type z } from "zod";
 import { signIn, signOut } from "~/auth";
-import { getUserByUsername } from "~/data/user";
+import { getUserByUsername, getUserRole } from "~/data/user";
 import { LoginSchema } from "~/schemas";
 
 export const login = async (values: z.infer<typeof LoginSchema>) => {
-  const validatedFields = LoginSchema.safeParse(values);
+  const validationResult = LoginSchema.safeParse(values);
 
-  if (!validatedFields.success) return { error: "invalid fields" };
+  if (!validationResult.success) {
+    return { error: "Invalid fields!" };
+  }
 
-  const { username, password } = validatedFields.data;
-
-  console.log("username: ", username);
-  console.log("password: ", password);
+  const { username, password } = validationResult.data;
 
   try {
-    await signIn("credentials", {
+    const result = await signIn("credentials", {
       username,
       password,
       redirect: false,
     });
-    const user = await getUserByUsername(username);
 
-    if (user) {
-      const role = user.Personal_Details.Role?.Role_name
-      // console.log(role)
-      
-      return { success: true, role };
-    }
+    return handleSignInResult(result, username);
   } catch (error) {
-    if (error instanceof AuthError) {
-      switch (error.type) {
-        case "CredentialsSignin":
-          return { error: "Invalid credentials!" };
-        default:
-          return { error: "Something went wrong!" };
-      }
-    }
-
-    throw error;
+    return handleLoginError(error);
   }
 };
 
+const handleSignInResult = async (result: any, username: string) => {
+  if (!result || result.error) {
+    return { error: result?.error || "Login failed!" };
+  }
+
+  const user = await getUserByUsername(username);
+  if (!user) {
+    return { error: "User not found!" };
+  }
+
+  const role = await getUserRole(user.personal_details_id);
+  if (!role) {
+    return { error: "User does not have a valid role!" };
+  }
+
+  return { success: true, role };
+};
+
+const handleLoginError = (error: unknown) => {
+  if (error instanceof AuthError) {
+    return {
+      error:
+        error.type === "CredentialsSignin"
+          ? "Invalid credentials!"
+          : "Authentication failed!",
+    };
+  }
+
+  return { error: "An unexpected error occurred!" };
+};
+
 export const logout = async () => {
-  await signOut({
-    redirectTo: "/auth/login",
-  }).then(() => {
-    window.location.reload();
-  });
+  await signOut({ redirectTo: "/auth/login" });
+  window.location.reload();
 };

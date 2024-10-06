@@ -1,12 +1,21 @@
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
 generator client {
   provider = "prisma-client-js"
 }
 
-datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+model role {
+  role_id   Int        @id @default(autoincrement())
+  role_name String     @unique
+  admins    admin[]
+  employees employee[]
+  customers customer[]
+  suppliers supplier[]
 }
+
 
 // model Order {
 //   OrderId       Int            @id @default(autoincrement())
@@ -123,107 +132,80 @@ model Location {
   Country          String
   postal_Code      Int
   Personal_Details Personal_Details[]
+
+model location {
+  location_id      Int                @id @default(autoincrement())
+  address_line     String? // Nullable
+  city             String? // Nullable
+  state            String? // Nullable
+  country          String? // Nullable
+  postal_code      String? // Nullable
+  personal_details personal_details[]
+
 }
 
-model Personal_Details {
-  user_Id        String           @id @unique @default(uuid())
-  firstName      String
-  lastName       String
-  contact        Int?
-  company        String
-  Location       Location?        @relation(fields: [location_Id], references: [location_Id])
-  location_Id    Int?
-  Notes          String
-  Admin          Admin[]
-  Employee       Employee[]
-  Customer       Customer[]
-  Supplier       Supplier[]
-  Authentication Authentication[]
-  Role           Role?
+model personal_details {
+  personal_details_id Int       @id @default(autoincrement())
+  first_name          String
+  last_name           String
+  contact             String? // Nullable
+  email               String? // Nullable
+  company             String? // Nullable
+  notes               String? // Nullable
+  location_id         Int? // Nullable
+  location            location? @relation(fields: [location_id], references: [location_id], onDelete: SetNull)
+
+  admins    admin[]
+  employees employee[]
+  customers customer[]
+  suppliers supplier[]
+  auth      authentication?
 }
 
-model Role {
-  role_Id          Int              @id @unique @default(autoincrement())
-  user_Id_Role     String           @unique
-  Personal_Details Personal_Details @relation(fields: [user_Id_Role], references: [user_Id])
-  Role_name        Roles
+model admin {
+  admin_id            Int              @id @default(autoincrement())
+  personal_details_id Int
+  role_id             Int
+  personal_details    personal_details @relation(fields: [personal_details_id], references: [personal_details_id])
+  role                role             @relation(fields: [role_id], references: [role_id])
 
-  Admin    Admin[]
-  Employee Employee[]
-  Customer Customer[]
-  Supplier Supplier[]
+  @@unique([admin_id, personal_details_id])
 }
 
-model Admin {
-  admin_Id            Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
-  personal_Details_Id String           @unique
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
+model employee {
+  employee_id         Int              @id @default(autoincrement())
+  personal_details_id Int
+  role_id             Int
+  personal_details    personal_details @relation(fields: [personal_details_id], references: [personal_details_id])
+  role                role             @relation(fields: [role_id], references: [role_id])
+
+  @@unique([employee_id, personal_details_id])
 }
 
-model Employee {
-  employee_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
-  personal_Details_Id String
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
+model customer {
+  customer_id         Int              @id @default(autoincrement())
+  personal_details_id Int
+  role_id             Int
+  personal_details    personal_details @relation(fields: [personal_details_id], references: [personal_details_id])
+  role                role             @relation(fields: [role_id], references: [role_id])
+
+  @@unique([customer_id, personal_details_id])
 }
 
-model Customer {
-  customer_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
-  personal_Details_Id String
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
+model supplier {
+  supplier_id         Int              @id @default(autoincrement())
+  personal_details_id Int
+  role_id             Int
+  personal_details    personal_details @relation(fields: [personal_details_id], references: [personal_details_id])
+  role                role             @relation(fields: [role_id], references: [role_id])
+
+  @@unique([supplier_id, personal_details_id])
 }
 
-model Supplier {
-  supplier_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
-  personal_Details_Id String
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
-}
-
-model Authentication {
-  Authentication_Id   String           @id @unique @default(uuid())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
-  personal_Details_Id String
-  username            String
+model authentication {
+  authentication_id   Int              @id @default(autoincrement())
+  personal_details_id Int              @unique
+  username            String           @unique
   password            String
+  personal_details    personal_details @relation(fields: [personal_details_id], references: [personal_details_id])
 }
-
-enum Roles {
-  ADMIN
-  EMPLOYEE
-}
-
-// SUPPLIER
-// CUSTOMER
-// STAFF
-// ADMIN
-
-// -----------------------------------------------------------------------------------------
-
-// model AuditLog {
-//   LogId     Int      @id @default(autoincrement())
-//   Action    String
-//   Timestamp DateTime
-//   User      User[]
-// }
-
-// model Inventory {
-//   InventoryId    Int         @id @default(autoincrement())
-//   Location       String
-//   LastUpdated    DateTime
-//   Warehouse      Warehouse[]
-//   Report         Report?     @relation(fields: [reportReportId], references: [ReportId])
-//   reportReportId Int?
-// }
-
-// model Report {
-//   ReportId   Int         @id @default(autoincrement())
-//   ReportDate DateTime
-//   Inventory  Inventory[]
-// }

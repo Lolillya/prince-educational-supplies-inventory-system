@@ -22,13 +22,27 @@ datasource db {
 //   tset1
 // }
 
-// model Invoice {
-//   InvoiceId       Int      @id @default(autoincrement())
-//   IssueDate       DateTime @default(now())
-//   TotalAmount     Decimal
-//   DiscountApplied Decimal
-//   order           Order    @relation(fields: [InvoiceId], references: [OrderId])
-// }
+enum DiscountType {
+  FIXED
+  PERCENTAGE
+}
+
+model Discount {
+  DiscountId Int          @id @default(autoincrement())
+  Type       DiscountType
+  Amount     Decimal
+  ExpiryDate DateTime?
+  Invoice    Invoice[]
+}
+
+model Invoice {
+  InvoiceId   Int      @id @default(autoincrement())
+  IssueDate   DateTime @default(now())
+  TotalAmount Decimal
+  DiscountId  Int?
+
+  discount Discount? @relation(fields: [InvoiceId], references: [DiscountId])
+}
 
 // model OrderProduct {
 //   OrderProductId Int       @id @default(autoincrement())

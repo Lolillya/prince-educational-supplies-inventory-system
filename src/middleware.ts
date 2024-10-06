@@ -15,13 +15,13 @@ export default auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
-  const role = user?.Personal_Details?.Role?.Role_name
+  const role = user?.Personal_Details?.Role?.Role_name;
   // console.log(user)
 
   // console.log("ROUTE: ", req.nextUrl.pathname);
   // console.log("IS LOGGED IN: ", isLoggedIn);
-  // console.log("ROLE: ", role); 
-  console.log("user: ", user);  
+  // console.log("ROLE: ", role);
+  console.log("user: ", user);
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
@@ -48,7 +48,7 @@ export default auth(async (req) => {
   if (isLoggedIn && role) {
     const { redirect, routes } = getRoleInfo(role);
     const hasAccess = routes.some((route: string) =>
-        nextUrl.pathname.startsWith(route),
+      nextUrl.pathname.startsWith(route),
     );
 
     if (!hasAccess) {
@@ -74,10 +74,10 @@ function getRoleInfo(role: string | undefined) {
   };
 
   return (
-      roleInfo[role as keyof typeof roleInfo] || {
-        redirect: DEFAULT_EMPLOYEE_REDIRECT,
-        routes: ["/admin/dashboard"],
-      }
+    roleInfo[role as keyof typeof roleInfo] || {
+      redirect: DEFAULT_EMPLOYEE_REDIRECT,
+      routes: ["/admin/dashboard"],
+    }
   );
 }
 

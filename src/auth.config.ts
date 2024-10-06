@@ -1,67 +1,67 @@
-import { NextAuthConfig } from "next-auth";
-import { LoginSchema } from "./schemas";
-
+import { type NextAuthConfig } from "next-auth";
 import Credentials from "next-auth/providers/credentials";
-import {  getUserByUsername, getUserRole } from "./data/user";
-
+import { getUserByUsername } from "./data/user";
+import { LoginSchema } from "./schemas";
 
 const authConfig: NextAuthConfig = {
   providers: [
     Credentials({
       async authorize(credentials) {
-        const validatedFields = LoginSchema.safeParse(credentials);
+        const validationResult = LoginSchema.safeParse(credentials);
 
-        if (validatedFields.success) {
-          const { username, password } = validatedFields.data;
-          console.log("validation success");
+        if (!validationResult.success) return null;
 
-          // Get the user by username
-          const user = await getUserByUsername(username);
-          // console.log(user);
+        const { username, password } = validationResult.data;
+        const user = await getUserByUsername(username);
 
-          // Check if user exists and password matches
-          if (user && user.password === password) {
-            // Return a simplified version of the user for NextAuth
-            const role = await getUserRole(user.personal_Details_Id)
-            // console.log(role)
-            return {
-              id: user.Authentication_Id,
-              username: user.username,
-              firstName: user.Personal_Details.firstName,
-              lastName: user.Personal_Details.lastName,
-              role: role
-            };
-          }
+        if (user && user.password === password) {
+          const role =
+            user.personal_details.admins[0]?.role.role_name ??
+            user.personal_details.employees[0]?.role.role_name ??
+            null;
+
+          return {
+            authentication_id: user.authentication_id,
+            personal_details_id: user.personal_details_id,
+            username: user.username,
+            first_name: user.personal_details.first_name,
+            last_name: user.personal_details.last_name,
+            role,
+          };
         }
+
         return null;
       },
     }),
   ],
 
   callbacks: {
-    async session({ session, token, user }) {
+    async jwt({ token, user }) {
+      if (user) {
+        Object.assign(token, {
+          authentication_id: user.authentication_id,
+          personal_details_id: user.personal_details_id,
+          username: user.username,
+          first_name: user.first_name,
+          last_name: user.last_name,
+          role: user.role,
+        });
+      }
+      return token;
+    },
+
+    async session({ session, token }) {
       if (token) {
         session.user = {
-          ...session.user,
-          id: token.sub,
+          authentication_id: token.authentication_id,
+          personal_details_id: token.personal_details_id,
           username: token.username,
-          firstName: token.firstName,
-          lastName: token.lastName,
+          first_name: token.first_name,
+          last_name: token.last_name,
           role: token.role,
         };
       }
       return session;
-    },
-
-    // Add additional fields to the JWT token
-    async jwt({ token, user }) {
-      if (user) {
-        token.username = user.username;
-        token.firstName = user.firstName;
-        token.lastName = user.lastName;
-        token.role = user.role;
-      }
-      return token;
     },
   },
 };

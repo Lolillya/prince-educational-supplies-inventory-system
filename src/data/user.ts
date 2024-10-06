@@ -1,73 +1,52 @@
 import { prisma } from "~/server/db";
 
 export const getUserByUsername = async (username: string) => {
-  try {
-    const user = await prisma.authentication.findFirst({
-      where: { username: username as string },
-      include: {
-        Personal_Details: {
-          select: {
-            firstName: true,
-            lastName: true,
-            Admin: {
-              select: {
-                Role: {
-                  select: {
-                    Role_name: true,
-                  },
-                },
-              },
-            },
-          },
+  return prisma.authentication.findUnique({
+    where: { username },
+    include: {
+      personal_details: {
+        include: {
+          admins: { include: { role: true } },
+          employees: { include: { role: true } },
         },
       },
-      
-    });
-    return user;
-  } catch {
-    return null;
-  }
+    },
+  });
 };
 
-export const getUserDetails = async (id: string) => {
-  try {
-    const user = await prisma.personal_Details.findUnique({
-      where:{
-        user_Id: id
-      }
-    })
-  }
-  catch {
-    return null
-  }
-}
+export const getUserRole = async (personal_details_id: number) => {
+  const [adminRole, employeeRole] = await Promise.all([
+    prisma.role.findFirst({
+      where: { admins: { some: { personal_details_id } } },
+    }),
+    prisma.role.findFirst({
+      where: { employees: { some: { personal_details_id } } },
+    }),
+  ]);
 
-export const getUserRole = async(id: string) => {
-  try {
-    const role = await prisma.role.findUnique({
-      where: {
-        user_Id_Role: id
-      }
-    })
-    return role?.Role_name
-  }
+  return adminRole?.role_name ?? employeeRole?.role_name ?? null;
+};
 
-  catch {
-    return null
-  }
-}
+// export const getUserDetails = async (id: string) => {
+//   try {
+//     return await prisma.personal_details.findUnique({
+//       where: { personal_details_id: Number(id) },
+//       include: {
+//         admins: { include: { role: true } },
+//         employees: { include: { role: true } },
+//       },
+//     });
+//   } catch {
+//     return null;
+//   }
+// };
 
-  export const getUserById = async (id: string) => {
-    try {
-      const user = await prisma.personal_Details.findUnique({
-        where:{
-          user_Id: id
-        }
-      })
-      return user
-    }
-
-    catch {
-      return null
-    }
-  }
+// export const getUserById = async (id: string) => {
+//   try {
+//     return await prisma.personal_details.findUnique({
+//       where: { personal_details_id: Number(id) },
+//     });
+//   } catch {
+//     return null;
+//   }
+// };

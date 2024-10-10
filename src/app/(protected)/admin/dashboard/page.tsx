@@ -1,19 +1,21 @@
+"use client";
+
 import { Label } from "~/components/ui/label";
 import { Poppins } from "next/font/google";
-import { Button } from "~/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-} from "~/components/ui/card";
+import { IoIosClose } from "react-icons/io";
 
-import Up_Trend_Icon from "public/icons/up-trend.svg";
-import Down_Trend_Icon from "public/icons/down-trend.svg";
-import Stock_Icon from "public/icons/stock-icon.svg";
-import Sales_Icon from "public/icons/sales-icon.svg";
-import Image from "next/image";
 import { DashboardChart } from "~/components/dashboard-chart";
+import ChartsContainer from "~/components/pie-Chart-Container";
+import { FaBell } from "react-icons/fa";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTrigger,
+} from "~/components/ui/dialog-transparent";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import DashboardStockedInOut from "~/components/dashboard-stock-in-out";
+import { useSession } from "next-auth/react";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -21,87 +23,65 @@ const poppins = Poppins({
 });
 
 const AdminDashboard = () => {
+  const session = useSession();
+
+  console.log(session);
+
   return (
     <section
       className={`h-auto w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
     >
       <div className="flex items-center justify-between">
-        <Label className="text-4xl font-extrabold">Hello, Joshua</Label>
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <Label className="text-4xl font-extrabold">
+              Hello, {session.data?.user.firstName}
+            </Label>
+            <Dialog>
+              <DialogTrigger asChild>
+                <FaBell
+                  size={20}
+                  color="#F93C65"
+                  className="transition-all hover:scale-125 hover:cursor-pointer"
+                />
+              </DialogTrigger>
+              <DialogContent className="m-5 rounded-lg">
+                <DialogHeader>
+                  <div className="my-2 flex flex-row items-center gap-1">
+                    <Label>Notifications</Label>
+                    <div className="mb-0.5 rounded-md bg-[#FFCCCC] p-0.5 px-1 text-xs text-[#FF7B7B]">
+                      23
+                    </div>
+                  </div>
 
-        <div className="flex items-center gap-3">
-          <Button
-            size={"lg"}
-            className="border-2 border-[#FF7B7B] bg-white font-bold text-[#FF7B7B] hover:bg-[#FF7B7B] hover:text-white"
-          >
-            Print
-          </Button>
-          <Button
-            size={"lg"}
-            className="border-2 border-[#FF7B7B] bg-[#FF7B7B] font-bold text-white hover:bg-white hover:text-[#FF7B7B]"
-          >
-            Save
-          </Button>
+                  <div className="flex items-center gap-3 border-y">
+                    <Avatar>
+                      <AvatarFallback>JD</AvatarFallback>
+                    </Avatar>
+
+                    <div className="flex w-full items-center justify-between gap-1 p-3">
+                      <div>
+                        <div className="flex gap-1">
+                          <span className="font-bold">John Doe</span>
+                          <span>made an edit to inventory</span>
+                        </div>
+                        <span className="text-slate-400">2 hours ago</span>
+                      </div>
+
+                      <IoIosClose size={25} />
+                    </div>
+                  </div>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
+          <Label>Today is Tuesday, October 1 2024</Label>
         </div>
+
+        <DashboardStockedInOut />
       </div>
 
-      <div className="mt-10 flex items-center justify-between gap-3">
-        <Card className="w-full p-5">
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex flex-col gap-3">
-              <CardDescription>Stocked In</CardDescription>
-              <CardContent className="pl-0">
-                <Label className="pb-3 pt-3 text-xl font-bold">40,689</Label>
-              </CardContent>
-            </div>
-            <Image src={Stock_Icon} alt="stock icon" />
-          </div>
-          <CardFooter className="p-0">
-            <div className="flex gap-1">
-              <Image src={Up_Trend_Icon} alt="uptrend icon" width={15} />
-              <Label className="text-[#00B69B]">8.5%</Label>
-              <Label>Up from past week</Label>
-            </div>
-          </CardFooter>
-        </Card>
-
-        <Card className="w-full p-5">
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex flex-col gap-3">
-              <CardDescription>Stocked Out</CardDescription>
-              <CardContent className="pl-0">
-                <Label className="pb-3 pt-3 text-xl font-bold">10,293</Label>
-              </CardContent>
-            </div>
-            <Image src={Stock_Icon} alt="stock icon" />
-          </div>
-          <CardFooter className="p-0">
-            <div className="flex gap-1">
-              <Image src={Up_Trend_Icon} alt="uptrend icon" width={15} />
-              <Label className="text-[#00B69B]">1.3%</Label>
-              <Label>Up from past week</Label>
-            </div>
-          </CardFooter>
-        </Card>
-
-        <Card className="w-full p-5">
-          <div className="mb-8 flex items-center justify-between">
-            <div className="flex flex-col gap-3">
-              <CardDescription>Stocked Out</CardDescription>
-              <CardContent className="pl-0">
-                <Label className="pb-3 pt-3 text-xl font-bold">10,293</Label>
-              </CardContent>
-            </div>
-            <Image src={Sales_Icon} alt="stock icon" />
-          </div>
-          <CardFooter className="p-0">
-            <div className="flex gap-1">
-              <Image src={Down_Trend_Icon} alt="uptrend icon" width={15} />
-              <Label className="text-[#F93C65]">1.3%</Label>
-              <Label>Up from past week</Label>
-            </div>
-          </CardFooter>
-        </Card>
-      </div>
+      <ChartsContainer />
 
       <div className="flex w-full justify-center">
         <DashboardChart />

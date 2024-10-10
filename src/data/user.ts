@@ -3,71 +3,55 @@ import { prisma } from "~/server/db";
 export const getUserByUsername = async (username: string) => {
   try {
     const user = await prisma.authentication.findFirst({
-      where: { username: username as string },
+      where: { username: username },
       include: {
         Personal_Details: {
-          select: {
-            firstName: true,
-            lastName: true,
-            Admin: {
-              select: {
-                Role: {
-                  select: {
-                    Role_name: true,
-                  },
-                },
-              },
-            },
+          include: {
+            Admin: { include: { Role: true } },
+            Employee: { include: { Role: true } },
           },
         },
       },
-      
     });
     return user;
   } catch {
     return null;
   }
 };
+// export const getUserDetails = async (id: string) => {
+//   try {
+//     const user = await prisma.personal_Details.findUnique({
+//       where: {
+//         user_Id: id,
+//       },
+//     });
+//   } catch {
+//     return null;
+//   }
+// };
 
-export const getUserDetails = async (id: string) => {
-  try {
-    const user = await prisma.personal_Details.findUnique({
-      where:{
-        user_Id: id
-      }
-    })
-  }
-  catch {
-    return null
-  }
-}
-
-export const getUserRole = async(id: string) => {
+export const getUserRole = async (user_Id_Role: string) => {
   try {
     const role = await prisma.role.findUnique({
       where: {
-        user_Id_Role: id
-      }
-    })
-    return role?.Role_name
+        user_Id_Role,
+      },
+    });
+    return role?.Role_name;
+  } catch {
+    return null;
   }
+};
 
-  catch {
-    return null
+export const getUserById = async (id: string) => {
+  try {
+    const user = await prisma.personal_Details.findUnique({
+      where: {
+        user_Id: id,
+      },
+    });
+    return user;
+  } catch {
+    return null;
   }
-}
-
-  export const getUserById = async (id: string) => {
-    try {
-      const user = await prisma.personal_Details.findUnique({
-        where:{
-          user_Id: id
-        }
-      })
-      return user
-    }
-
-    catch {
-      return null
-    }
-  }
+};

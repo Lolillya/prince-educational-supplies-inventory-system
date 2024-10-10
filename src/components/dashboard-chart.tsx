@@ -17,16 +17,27 @@ import {
   ChartTooltip,
   ChartTooltipContent,
 } from "~/components/ui/chart";
+import {
+  Select,
+  SelectContent,
+  SelectGroup,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "./ui/select";
+import { SelectLabel } from "@radix-ui/react-select";
+import Image from "next/image";
+import salesIcon from "public/icons/chart-sales-icon.svg";
 
-export const description = "A linear area chart";
+export const description = "An area chart with gradient fill";
 
 const chartData = [
-  { month: "January", desktop: 186 },
-  { month: "February", desktop: 305 },
-  { month: "March", desktop: 237 },
-  { month: "April", desktop: 73 },
-  { month: "May", desktop: 209 },
-  { month: "June", desktop: 214 },
+  { month: "January", desktop: 88, mobile: 855 },
+  { month: "February", desktop: 305, mobile: 200 },
+  { month: "March", desktop: 237, mobile: 120 },
+  { month: "April", desktop: 73, mobile: 190 },
+  { month: "May", desktop: 209, mobile: 130 },
+  { month: "June", desktop: 214, mobile: 140 },
 ];
 
 const chartConfig = {
@@ -34,23 +45,36 @@ const chartConfig = {
     label: "Desktop",
     color: "hsl(var(--chart-1))",
   },
+  mobile: {
+    label: "Mobile",
+    color: "hsl(var(--chart-2))",
+  },
 } satisfies ChartConfig;
-
-const thisisafucntion = () => {
-  return;
-};
 
 export function DashboardChart() {
   return (
     <Card className="w-full">
-      <CardHeader>
-        <CardTitle>Area Chart - Linear</CardTitle>
-        <CardDescription>
-          Showing total visitors for the last 6 months
-        </CardDescription>
+      <CardHeader className="flex w-full flex-row items-center justify-between">
+        <div className="flex items-center gap-1">
+          <Image src={salesIcon} alt={"salesIcon"} />
+          <CardTitle>Sales Details</CardTitle>
+        </div>
+        <Select>
+          <SelectTrigger className="w-[180px]">
+            <SelectValue placeholder="Month" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              <SelectLabel>Month</SelectLabel>
+              <SelectItem value="June">June</SelectItem>
+              <SelectItem value="July">July</SelectItem>
+              <SelectItem value="August">August</SelectItem>
+            </SelectGroup>
+          </SelectContent>
+        </Select>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="max-h-96 w-full">
+        <ChartContainer config={chartConfig} className="max-h-[19rem] w-full">
           <AreaChart
             accessibilityLayer
             data={chartData}
@@ -67,16 +91,48 @@ export function DashboardChart() {
               tickMargin={8}
               tickFormatter={(value) => value.slice(0, 3)}
             />
-            <ChartTooltip
-              cursor={false}
-              content={<ChartTooltipContent indicator="dot" hideLabel />}
+            <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
+            <defs>
+              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-desktop)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-desktop)"
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+              <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
+                <stop
+                  offset="5%"
+                  stopColor="var(--color-mobile)"
+                  stopOpacity={0.8}
+                />
+                <stop
+                  offset="95%"
+                  stopColor="var(--color-mobile)"
+                  stopOpacity={0.1}
+                />
+              </linearGradient>
+            </defs>
+            <Area
+              dataKey="mobile"
+              type="natural"
+              fill="url(#fillMobile)"
+              fillOpacity={0.4}
+              stroke="var(--color-mobile)"
+              stackId="a"
             />
             <Area
               dataKey="desktop"
-              type="linear"
-              fill="var(--color-desktop)"
+              type="natural"
+              fill="url(#fillDesktop)"
               fillOpacity={0.4}
               stroke="var(--color-desktop)"
+              stackId="a"
             />
           </AreaChart>
         </ChartContainer>

@@ -28,16 +28,6 @@ const poppins = Poppins({
 });
 
 const InvoicePage = async () => {
-  // const invoice = await prisma.invoice.create({
-  //   data: {
-  //     IssueDate: ,
-  //     TotalAmount: ,
-  //     DiscountApplied: ,
-  //     order: ,
-
-  //   }
-  // })
-
   return (
     <section
       className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-10`}

@@ -15,36 +15,32 @@ export default auth(async (req) => {
   const { nextUrl } = req;
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
-  const role = user?.Personal_Details?.Role?.Role_name;
-  // console.log(user)
+  const role = user?.role;
+  // console.log(user);
 
   // console.log("ROUTE: ", req.nextUrl.pathname);
   // console.log("IS LOGGED IN: ", isLoggedIn);
   // console.log("ROLE: ", role);
-  console.log("user: ", user);
+  // console.log("user: ", user);
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  // Allow API authentication routes without redirection
   if (isApiAuthRoute) {
     return;
   }
 
   const isLoginPage = nextUrl.pathname === "/auth/login";
 
-  // Handle redirection for authenticated users trying to access auth routes
   if (isAuthRoute && isLoggedIn) {
     return handleAuthRouteRedirect(role, nextUrl);
   }
 
-  // Redirect unauthenticated users trying to access protected routes
   if (!isLoggedIn && !isPublicRoute && !isLoginPage) {
     return NextResponse.redirect(new URL("/auth/login", nextUrl));
   }
 
-  // Check if the authenticated user has access to the requested route
   if (isLoggedIn && role) {
     const { redirect, routes } = getRoleInfo(role);
     const hasAccess = routes.some((route: string) =>
@@ -68,9 +64,18 @@ function getRoleInfo(role: string | undefined) {
   const roleInfo: Record<string, { redirect: string; routes: string[] }> = {
     ADMIN: {
       redirect: DEFAULT_ADMIN_REDIRECT,
-      routes: ["/admin/dashboard"],
+      routes: [
+        "/admin/dashboard",
+        "/admin/restock",
+        "/admin/restock/add-stock",
+        "/admin/invoice",
+        "/admin/suppliers",
+        "/admin/customer",
+        "/admin/inventory",
+        "/admin/staff",
+        "/admin/history",
+      ],
     },
-    // Add other roles and their respective redirects and routes as needed
   };
 
   return (
@@ -81,7 +86,6 @@ function getRoleInfo(role: string | undefined) {
   );
 }
 
-// Configure the matcher for the middleware
 export const config = {
   matcher: ["/((?!.*\\..*|_next).*)", "/", "/(api|trpc)(.*)"],
 };

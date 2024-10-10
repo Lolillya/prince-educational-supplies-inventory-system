@@ -24,12 +24,13 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     });
     const user = await getUserByUsername(username);
 
-    console.log(user)
-    if (user) {
-      const role = user.Personal_Details.Admin[0]?.Role.Role_name
-      
-      return { success: true, role };
-    }
+    console.log(user);
+    // if (user) {
+    //   const role = user.Personal_Details.Admin[0]?.Role.Role_name
+
+    // return { success: true, role };
+    return user;
+    // }
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

@@ -2,8 +2,7 @@ import { NextAuthConfig } from "next-auth";
 import { LoginSchema } from "./schemas";
 
 import Credentials from "next-auth/providers/credentials";
-import {  getUserByUsername, getUserRole } from "./data/user";
-
+import { getUserByUsername, getUserRole } from "./data/user";
 
 const authConfig: NextAuthConfig = {
   providers: [
@@ -22,14 +21,14 @@ const authConfig: NextAuthConfig = {
           // Check if user exists and password matches
           if (user && user.password === password) {
             // Return a simplified version of the user for NextAuth
-            const role = await getUserRole(user.personal_Details_Id)
+            const role = await getUserRole(user.personal_Details_Id);
             // console.log(role)
             return {
               id: user.Authentication_Id,
               username: user.username,
               firstName: user.Personal_Details.firstName,
               lastName: user.Personal_Details.lastName,
-              role: role
+              role: role,
             };
           }
         }

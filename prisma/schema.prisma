@@ -112,27 +112,25 @@ model Location {
 }
 
 model Personal_Details {
-  user_Id        String           @id @unique @default(uuid())
-  firstName      String
-  lastName       String
-  contact        Int?
-  company        String
-  Location       Location?        @relation(fields: [location_Id], references: [location_Id])
-  location_Id    Int?
-  Notes          String
-  Admin          Admin[]
-  Employee       Employee[]
-  Customer       Customer[]
-  Supplier       Supplier[]
-  Authentication Authentication[]
-  Role           Role?
+  Personal_Details_Id String           @id @unique @default(uuid())
+  firstName           String
+  lastName            String
+  contact             Int?
+  company             String
+  Location            Location?        @relation(fields: [location_Id], references: [location_Id])
+  location_Id         Int?
+  Notes               String
+  Admin               Admin[]
+  Employee            Employee[]
+  Customer            Customer[]
+  Supplier            Supplier[]
+  Authentication      Authentication[]
 }
 
 model Role {
-  role_Id          Int              @id @unique @default(autoincrement())
-  user_Id_Role     String           @unique
-  Personal_Details Personal_Details @relation(fields: [user_Id_Role], references: [user_Id])
-  Role_name        Roles
+  role_Id Int @id @unique @default(autoincrement())
+
+  Role_name Roles
 
   Admin    Admin[]
   Employee Employee[]
@@ -142,7 +140,7 @@ model Role {
 
 model Admin {
   admin_Id            Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
   personal_Details_Id String           @unique
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
   role_Id             Int
@@ -150,7 +148,7 @@ model Admin {
 
 model Employee {
   employee_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
   personal_Details_Id String
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
   role_Id             Int
@@ -158,7 +156,7 @@ model Employee {
 
 model Customer {
   customer_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
   personal_Details_Id String
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
   role_Id             Int
@@ -166,7 +164,7 @@ model Customer {
 
 model Supplier {
   supplier_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
   personal_Details_Id String
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
   role_Id             Int
@@ -174,9 +172,9 @@ model Supplier {
 
 model Authentication {
   Authentication_Id   String           @id @unique @default(uuid())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [user_Id])
+  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
   personal_Details_Id String
-  username            String
+  username            String           @unique
   password            String
 }
 

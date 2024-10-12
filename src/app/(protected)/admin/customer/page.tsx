@@ -22,7 +22,7 @@ import {
 } from "~/components/ui/dialog";
 import { Textarea } from "~/components/ui/textarea";
 import router from "next/router";
-import { SuppliersChart } from "~/components/suppliers-chard";
+import { SuppliersChart } from "~/components/suppliers-chart";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -40,7 +40,7 @@ const CustomerPage = () => {
     <section
       className={`h-full w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
     >
-      <div className="relative flex items-center justify-between">
+      <div className="relative flex items-center justify-between px-3">
         <div className="flex h-16 w-full items-center justify-between gap-3">
           <div className="relative flex h-auto w-full max-w-md gap-3">
             <RxMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500" />
@@ -60,12 +60,12 @@ const CustomerPage = () => {
         </div>
       </div>
 
-      <div className="relative flex h-full justify-between gap-3">
+      <div className="relative flex h-full justify-between gap-3 px-3">
         <div className="flex w-full flex-col">
           <span>Records</span>
           <div className="flex flex-col gap-3">
             {customers.map((customer) => (
-              <div className="flex items-center justify-between rounded-md px-7 py-5 hover:bg-gray-200">
+              <div className="flex items-center justify-between rounded-md py-5 pr-7 hover:bg-gray-200">
                 <div className="flex items-start gap-3">
                   <span>{customer.name}</span>
                   <span>{customer.id}</span>

@@ -16,7 +16,7 @@ export default auth(async (req) => {
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
   const role = user?.role;
-  // console.log(user);
+  // console.log(role);
 
   // console.log("ROUTE: ", req.nextUrl.pathname);
   // console.log("IS LOGGED IN: ", isLoggedIn);

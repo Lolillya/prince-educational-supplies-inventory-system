@@ -6,9 +6,12 @@ export const getUserByUsername = async (username: string) => {
       where: { username: username },
       include: {
         Personal_Details: {
-          include: {
-            Admin: { include: { Role: true } },
-            Employee: { include: { Role: true } },
+          select: {
+            firstName: true,
+            lastName: true,
+            contact: true,
+            company: true,
+            Notes: true,
           },
         },
       },
@@ -18,26 +21,22 @@ export const getUserByUsername = async (username: string) => {
     return null;
   }
 };
-// export const getUserDetails = async (id: string) => {
-//   try {
-//     const user = await prisma.personal_Details.findUnique({
-//       where: {
-//         user_Id: id,
-//       },
-//     });
-//   } catch {
-//     return null;
-//   }
-// };
 
-export const getUserRole = async (user_Id_Role: string) => {
+export const getUserRole = async (Personal_Details_Id: string) => {
   try {
-    const role = await prisma.role.findUnique({
+    const role = prisma.user_Role.findFirst({
       where: {
-        user_Id_Role,
+        Personal_Details_Id,
+      },
+      include: {
+        Role: {
+          select: {
+            Role_name: true,
+          },
+        },
       },
     });
-    return role?.Role_name;
+    return role;
   } catch {
     return null;
   }
@@ -47,7 +46,7 @@ export const getUserById = async (id: string) => {
   try {
     const user = await prisma.personal_Details.findUnique({
       where: {
-        user_Id: id,
+        Personal_Details_Id: id,
       },
     });
     return user;

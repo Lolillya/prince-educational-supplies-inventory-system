@@ -7,14 +7,16 @@ declare module "next-auth" {
       username: string;
       firstName: string;
       lastName: string;
-      role: string;
+      role: string | undefined;
     } & DefaultSession["user"];
   }
 
   interface User {
-    Authentication_Id: string;
-    personal_Details_Id: string;
+    id: string;
     username: string;
     password: string;
+    firstName: string;
+    lastName: string;
+    role: string | undefined;
   }
 }

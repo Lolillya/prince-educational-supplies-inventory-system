@@ -1,8 +1,9 @@
-import { NextAuthConfig } from "next-auth";
+import { NextAuthConfig, User } from "next-auth";
 import { LoginSchema } from "./schemas";
 
 import Credentials from "next-auth/providers/credentials";
 import { getUserByUsername, getUserRole } from "./data/user";
+import { Roles } from "@prisma/client";
 
 const authConfig: NextAuthConfig = {
   providers: [
@@ -12,24 +13,21 @@ const authConfig: NextAuthConfig = {
 
         if (validatedFields.success) {
           const { username, password } = validatedFields.data;
-          console.log("validation success");
+          // console.log("validation success");
 
-          // Get the user by username
           const user = await getUserByUsername(username);
           // console.log(user);
 
-          // Check if user exists and password matches
           if (user && user.password === password) {
-            // Return a simplified version of the user for NextAuth
             const role = await getUserRole(user.personal_Details_Id);
-            // console.log(role)
+            // console.log(role);
             return {
               id: user.Authentication_Id,
               username: user.username,
               firstName: user.Personal_Details.firstName,
               lastName: user.Personal_Details.lastName,
-              role: role,
-            };
+              role: role?.Role.Role_name,
+            } as unknown as User;
           }
         }
         return null;
@@ -42,11 +40,11 @@ const authConfig: NextAuthConfig = {
       if (token) {
         session.user = {
           ...session.user,
-          id: token.sub,
-          username: token.username,
-          firstName: token.firstName,
-          lastName: token.lastName,
-          role: token.role,
+          id: token.sub as string,
+          username: token.username as string,
+          firstName: token.firstName as string,
+          lastName: token.lastName as string,
+          role: token.role as Roles,
         };
       }
       return session;

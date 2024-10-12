@@ -105,7 +105,7 @@ model Location {
   location_Id      Int                @id @unique @default(autoincrement())
   address_Line     String
   city             String
-  State            String
+  Region           String
   Country          String
   postal_Code      Int
   Personal_Details Personal_Details[]
@@ -115,60 +115,61 @@ model Personal_Details {
   Personal_Details_Id String           @id @unique @default(uuid())
   firstName           String
   lastName            String
-  contact             Int?
+  contact             String           @unique
   company             String
+  email               String           @unique
   Location            Location?        @relation(fields: [location_Id], references: [location_Id])
   location_Id         Int?
   Notes               String
-  Admin               Admin[]
-  Employee            Employee[]
-  Customer            Customer[]
-  Supplier            Supplier[]
   Authentication      Authentication[]
+  User_Role           User_Role?
 }
 
 model Role {
-  role_Id Int @id @unique @default(autoincrement())
-
+  role_Id   Int         @id @unique @default(autoincrement())
   Role_name Roles
-
-  Admin    Admin[]
-  Employee Employee[]
-  Customer Customer[]
-  Supplier Supplier[]
+  User_Role User_Role[]
 }
 
-model Admin {
-  admin_Id            Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
-  personal_Details_Id String           @unique
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+model User_Role {
+  id                  String           @id @default(uuid())
+  Personal_Details_Id String           @unique
   role_Id             Int
+  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  Personal_Details    Personal_Details @relation(fields: [Personal_Details_Id], references: [Personal_Details_Id])
 }
 
-model Employee {
-  employee_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
-  personal_Details_Id String
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
-}
+// model Admin {
+//   admin_Id            Int              @id @unique @default(autoincrement())
+//   Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
+//   personal_Details_Id String           @unique
+//   Role                Role             @relation(fields: [role_Id], references: [role_Id])
+//   role_Id             Int
+// }
 
-model Customer {
-  customer_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
-  personal_Details_Id String
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
-}
+// model Employee {
+//   employee_Id         Int              @id @unique @default(autoincrement())
+//   Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
+//   personal_Details_Id String
+//   Role                Role             @relation(fields: [role_Id], references: [role_Id])
+//   role_Id             Int
+// }
 
-model Supplier {
-  supplier_Id         Int              @id @unique @default(autoincrement())
-  Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
-  personal_Details_Id String
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  role_Id             Int
-}
+// model Customer {
+//   customer_Id         Int              @id @unique @default(autoincrement())
+//   Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
+//   personal_Details_Id String
+//   Role                Role             @relation(fields: [role_Id], references: [role_Id])
+//   role_Id             Int
+// }
+
+// model Supplier {
+//   supplier_Id         Int              @id @unique @default(autoincrement())
+//   Personal_Details    Personal_Details @relation(fields: [personal_Details_Id], references: [Personal_Details_Id])
+//   personal_Details_Id String
+//   Role                Role             @relation(fields: [role_Id], references: [role_Id])
+//   role_Id             Int
+// }
 
 model Authentication {
   Authentication_Id   String           @id @unique @default(uuid())
@@ -181,6 +182,8 @@ model Authentication {
 enum Roles {
   ADMIN
   EMPLOYEE
+  STAFF
+  SUPPLIER
 }
 
 // SUPPLIER
@@ -211,3 +214,140 @@ enum Roles {
 //   ReportDate DateTime
 //   Inventory  Inventory[]
 // }
+
+// -----------------------------------------------------------------------------------------
+
+model Brand {
+  brand_id   Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  items      Item[]
+}
+
+model Category {
+  category_id Int      @id @default(autoincrement())
+  name        String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  items       Item[]
+}
+
+model Unit {
+  unit_id    Int       @id @default(autoincrement())
+  name       String    @unique
+  created_at DateTime  @default(now())
+  updated_at DateTime  @updatedAt
+  variants   Variant[]
+}
+
+model Item {
+  item_id     Int      @id @default(autoincrement())
+  name        String
+  brand_id    Int
+  category_id Int
+  description String?
+  notes       String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  brand    Brand     @relation(fields: [brand_id], references: [brand_id])
+  category Category  @relation(fields: [category_id], references: [category_id])
+  variants Variant[]
+}
+
+model Variant {
+  variant_id      Int      @id @default(autoincrement())
+  item_id         Int
+  base_price      Float
+  wholesale_price Float
+  special_price   Float
+  unit_id         Int
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+
+  item              Item                @relation(fields: [item_id], references: [item_id])
+  unit              Unit                @relation(fields: [unit_id], references: [unit_id])
+  inventory         Inventory[]
+  variantAttributes Variant_Attribute[]
+}
+
+model Attribute {
+  attribute_id    Int               @id @default(autoincrement())
+  name            String
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  attributeValues Attribute_Value[]
+}
+
+model Attribute_Value {
+  attribute_value_id Int      @id @default(autoincrement())
+  attribute_id       Int
+  value              String
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  attribute         Attribute           @relation(fields: [attribute_id], references: [attribute_id])
+  variantAttributes Variant_Attribute[]
+}
+
+model Variant_Attribute {
+  variant_attribute_id Int      @id @default(autoincrement())
+  variant_id           Int
+  attribute_value_id   Int
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+
+  variant        Variant         @relation(fields: [variant_id], references: [variant_id])
+  attributeValue Attribute_Value @relation(fields: [attribute_value_id], references: [attribute_value_id])
+}
+
+model Inventory {
+  inventory_id Int      @id @default(autoincrement())
+  variant_id   Int
+  quantity     Int
+  last_updated DateTime @default(now())
+
+  variant Variant @relation(fields: [variant_id], references: [variant_id])
+}
+
+model Discount {
+  discount_id   Int      @id @default(autoincrement())
+  discount_type String // e.g., "fixed" or "percentage"
+  value         Float // Discount value or percentage
+  created_at    DateTime @default(now())
+  updated_at    DateTime @updatedAt
+}
+
+model Inventory_Log {
+  log_id    Int      @id @default(autoincrement())
+  item_id   Int
+  action    String // e.g., "create", "update", "delete"
+  old_data  Json? // Previous data as JSON
+  new_data  Json? // New data as JSON
+  admin_id  Int
+  timestamp DateTime @default(now())
+
+  // item       Item     @relation(fields: [item_id], references: [item_id])  
+  // user       Employee @relation(fields: [user_id], references: [employee_id])
+}
+
+enum Pricing_Type {
+  TEST
+}
+
+enum Brand_Type {
+  TEST
+}
+
+enum Category_Type {
+  TEST
+}
+
+enum Variant_Type {
+  TEST
+}
+
+enum Unit_Type {
+  TEST
+}

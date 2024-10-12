@@ -21,7 +21,7 @@ import { customers } from "~/server/db/customersData";
 
 import Filter_Icon from "public/icons/filter-icon2.svg";
 import Image from "next/image";
-import { SuppliersChart } from "~/components/suppliers-chard";
+import { SuppliersChart } from "~/components/suppliers-chart";
 import { useRouter } from "next/navigation";
 
 const poppins = Poppins({
@@ -41,7 +41,7 @@ const SuppliersPage = () => {
     <section
       className={`h-full w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
     >
-      <div className="relative flex items-center justify-between">
+      <div className="relative flex items-center justify-between px-3">
         <div className="flex h-16 w-full items-center justify-between gap-3">
           <div className="relative flex h-auto w-full max-w-md gap-3">
             <RxMagnifyingGlass className="absolute left-3 top-1/2 -translate-y-1/2 transform text-gray-500" />
@@ -61,12 +61,12 @@ const SuppliersPage = () => {
         </div>
       </div>
 
-      <div className="relative flex h-full justify-between gap-3">
+      <div className="relative flex h-full justify-between gap-3 px-3">
         <div className="flex w-full flex-col">
           <span>Records</span>
           <div className="flex flex-col gap-3">
             {customers.map((customer) => (
-              <div className="flex items-center justify-between rounded-md px-7 py-5 hover:bg-gray-200">
+              <div className="flex items-center justify-between rounded-md py-5 hover:bg-gray-200">
                 <div className="flex items-start gap-3">
                   <span>{customer.name}</span>
                   <span>{customer.id}</span>

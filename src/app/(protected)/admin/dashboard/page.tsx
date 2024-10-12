@@ -5,7 +5,7 @@ import { Poppins } from "next/font/google";
 import { IoIosClose } from "react-icons/io";
 
 import { DashboardChart } from "~/components/dashboard-chart";
-import ChartsContainer from "~/components/pie-Chart-Container";
+import ChartsContainer from "~/components/dashboard-pie-Chart-Container";
 import { FaBell } from "react-icons/fa";
 import {
   Dialog,
@@ -25,7 +25,7 @@ const poppins = Poppins({
 const AdminDashboard = () => {
   const session = useSession();
 
-  console.log(session);
+  // console.log(session);
 
   return (
     <section

@@ -13,8 +13,8 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
 
   const { username, password } = validatedFields.data;
 
-  console.log("username: ", username);
-  console.log("password: ", password);
+  // console.log("username: ", username);
+  // console.log("password: ", password);
 
   try {
     await signIn("credentials", {
@@ -24,7 +24,7 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
     });
     const user = await getUserByUsername(username);
 
-    console.log(user);
+    // console.log(user);
     // if (user) {
     //   const role = user.Personal_Details.Admin[0]?.Role.Role_name
 

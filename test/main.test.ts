@@ -9,7 +9,7 @@ describe("#Get User Role", () => {
   });
 
   it("#should return an ADMIN role", async () => {
-    const result = getUserRole("f3ff267e-96eb-42d6-8001-e2158acc7d51");
+    const result = await getUserRole("f3ff267e-96eb-42d6-8001-e2158acc7d51");
     console.log(result);
     expect(result).toBe("ADMIN");
   });

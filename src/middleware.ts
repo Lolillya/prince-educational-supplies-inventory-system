@@ -4,10 +4,10 @@ import {
   DEFAULT_ADMIN_REDIRECT,
   DEFAULT_EMPLOYEE_REDIRECT,
   publicRoutes,
-} from "./routes";
+} from "~/routes";
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import { authConfig } from "./config";
+import authConfig from "./auth.config";
 
 const { auth } = NextAuth(authConfig);
 
@@ -16,7 +16,6 @@ export default auth(async (req) => {
   const isLoggedIn = !!req.auth;
   const user = req.auth?.user;
   const role = user?.role;
-  // console.log(user);
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);

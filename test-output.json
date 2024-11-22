@@ -1,0 +1,39 @@
+{
+  "numTotalTestSuites": 1,
+  "numPassedTestSuites": 0,
+  "numFailedTestSuites": 1,
+  "numPendingTestSuites": 0,
+  "numTotalTests": 0,
+  "numPassedTests": 0,
+  "numFailedTests": 0,
+  "numPendingTests": 0,
+  "numTodoTests": 0,
+  "snapshot": {
+    "added": 0,
+    "failure": false,
+    "filesAdded": 0,
+    "filesRemoved": 0,
+    "filesRemovedList": [],
+    "filesUnmatched": 0,
+    "filesUpdated": 0,
+    "matched": 0,
+    "total": 0,
+    "unchecked": 0,
+    "uncheckedKeysByFile": [],
+    "unmatched": 0,
+    "updated": 0,
+    "didUpdate": false
+  },
+  "startTime": 1732277067183,
+  "success": false,
+  "testResults": [
+    {
+      "assertionResults": [],
+      "startTime": 1732277067183,
+      "endTime": 1732277067183,
+      "status": "failed",
+      "message": "Failed to load url ~/server/data/user (resolved id: ~/server/data/user) in C:/coder/myProjects/prince-educational-supply-inventory-system/prince-inv-system2/test/main.test.ts. Does the file exist?",
+      "name": "C:/coder/myProjects/prince-educational-supply-inventory-system/prince-inv-system2/test/main.test.ts"
+    }
+  ]
+}

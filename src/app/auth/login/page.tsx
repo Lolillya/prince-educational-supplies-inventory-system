@@ -1,7 +1,8 @@
 "use client";
 
 // import { Button } from "~/components/ui/button";
-// import { input } from "~/components/ui/input";
+import { Input } from "~/components/ui/input";
+
 // import { label } from "~/components/ui/label";
 // import { FaEye, FaEyeSlash } from "react-icons/fa";
 import eyeIcon from "public/icons/eye.svg";
@@ -15,10 +16,7 @@ import { useForm } from "react-hook-form";
 import { LoginSchema } from "~/schemas";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useRouter } from "next/navigation";
-import {
-  DEFAULT_ADMIN_REDIRECT,
-  DEFAULT_EMPLOYEE_REDIRECT,
-} from "~/server/auth/routes";
+import { DEFAULT_ADMIN_REDIRECT, DEFAULT_EMPLOYEE_REDIRECT } from "~/routes";
 import { login } from "~/app/actions/actions";
 import { Eye, EyeClosed } from "lucide-react";
 
@@ -86,13 +84,13 @@ const LoginPage = () => {
         <div className="mb-6 flex flex-col gap-1">
           <label className="ml-3">Email</label>
           <div className="relative flex items-center">
-            <input
+            <Input
               placeholder="Email"
               required
               {...form.register("username")}
               disabled={isPending}
             />
-            <label className="absolute right-3 font-light text-gray-400">
+            <label className="text-gray-400 absolute right-3 font-light">
               @prince.com.ph
             </label>
           </div>
@@ -102,7 +100,7 @@ const LoginPage = () => {
         <div className="mb-6 flex flex-col gap-1">
           <label className="ml-3">Password</label>
           <div className="relative flex items-center">
-            <input
+            <Input
               type={showPassword ? "text" : "password"}
               placeholder="Enter password"
               required
@@ -119,7 +117,7 @@ const LoginPage = () => {
         </div>
 
         {/* Success/Error Message */}
-        {success && <p className="mb-4 text-center text-red-500">{success}</p>}
+        {success && <p className="text-red-500 mb-4 text-center">{success}</p>}
 
         {/* Submit Button */}
         <button type="submit" disabled={isPending} className="w-full">

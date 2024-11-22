@@ -2,7 +2,7 @@
 
 import { AuthError } from "next-auth";
 import { z } from "zod";
-import { signIn, signOut } from "~/server/auth";
+import { signIn, signOut } from "~/auth";
 import { getUserByUsername } from "~/server/data/user";
 import { LoginSchema } from "~/schemas";
 
@@ -20,7 +20,6 @@ export const login = async (values: z.infer<typeof LoginSchema>) => {
       redirect: false,
     });
     const user = await getUserByUsername(username);
-    console.log(user);
 
     return user;
     // }

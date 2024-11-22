@@ -21,7 +21,6 @@ const poppins = Poppins({
 
 const AdminDashboard = () => {
   const session = useSession();
-
   console.log(session);
 
   return (
@@ -31,7 +30,9 @@ const AdminDashboard = () => {
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <label className="text-4xl font-extrabold">Hello, Meow Meow</label>
+            <label className="text-4xl font-extrabold">
+              Hello, {session.data?.user.firstName}
+            </label>
             <Dialog>
               <DialogTrigger asChild>
                 <Bell

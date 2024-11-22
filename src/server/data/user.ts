@@ -1,8 +1,9 @@
+"use server";
 import { db } from "~/server/db";
 
 export const getUserByUsername = async (username: string) => {
   try {
-    const user = await db.authentication.findFirst({
+    const user = db.authentication.findFirst({
       where: { username: username },
       include: {
         personal_details: {
@@ -12,7 +13,6 @@ export const getUserByUsername = async (username: string) => {
             contact: true,
             company: true,
             notes: true,
-            User_Role: true,
           },
         },
       },
@@ -25,7 +25,7 @@ export const getUserByUsername = async (username: string) => {
 
 export const getUserRole = async (Personal_Details_Id: string) => {
   try {
-    const role = db.user_Role.findFirst({
+    const roleRecord = await db.user_Role.findFirst({
       where: {
         Personal_Details_Id,
       },
@@ -37,9 +37,11 @@ export const getUserRole = async (Personal_Details_Id: string) => {
         },
       },
     });
-    // console.log(role);
-    return role;
-  } catch {
+
+    // Return only the Role_name if the role is found
+    return roleRecord?.Role?.Role_name || null;
+  } catch (error) {
+    console.error("Error fetching user role:", error);
     return null;
   }
 };

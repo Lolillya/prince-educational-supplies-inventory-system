@@ -1,0 +1,313 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+model Location {
+  location_id      Int                @id @default(autoincrement())
+  address_line     String?
+  city             String?
+  region           String?
+  country          String?
+  postal_code      String?
+  personal_details Personal_Details[]
+}
+
+model Personal_Details {
+  personal_details_id String               @id @default(uuid())
+  first_name          String?
+  last_name           String?
+  contact             String?
+  email               String?
+  company             String?
+  notes               String?
+  location_id         Int?
+  auth                Authentication?
+  Authentication_Log  Authentication_Log[]
+  location            Location?            @relation(fields: [location_id], references: [location_id])
+  User_Role           User_Role?
+}
+
+model Role {
+  role_Id   Int         @id @unique @default(autoincrement())
+  Role_name Roles
+  User_Role User_Role[]
+}
+
+model User_Role {
+  id                  String           @id @default(uuid())
+  Personal_Details_Id String           @unique
+  role_Id             Int
+  History_Log         History_Log[]
+  Inventory_Log       Inventory_Log[]
+  Invoice             Invoice[]
+  SupplierUnit        SupplierUnit[]
+  Personal_Details    Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
+  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+}
+
+model Authentication {
+  authentication_id   Int              @id @default(autoincrement())
+  personal_details_id String           @unique
+  username            String           @unique
+  password            String
+  personal_details    Personal_Details @relation(fields: [personal_details_id], references: [personal_details_id])
+}
+
+model Authentication_Log {
+  log_id              Int              @id @default(autoincrement())
+  personal_details_id String
+  action              String
+  timestamp           DateTime         @default(now())
+  personal_details    Personal_Details @relation(fields: [personal_details_id], references: [personal_details_id])
+}
+
+model Brand {
+  brand_id   Int      @id @default(autoincrement())
+  name       String   @unique
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+  items      Item[]
+}
+
+model Category {
+  category_id Int      @id @default(autoincrement())
+  name        String   @unique
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+  items       Item[]
+}
+
+model Unit {
+  unit_id             Int              @id @default(autoincrement())
+  name                String           @unique
+  created_at          DateTime         @default(now())
+  updated_at          DateTime         @updatedAt
+  conversionRatesFrom ConversionRate[] @relation("FromUnit")
+  conversionRatesTo   ConversionRate[] @relation("ToUnit")
+  SupplierUnit        SupplierUnit[]
+  Variant             Variant[]
+}
+
+model Item {
+  item_id       Int             @id @default(autoincrement())
+  name          String
+  brand_id      Int
+  category_id   Int
+  description   String?
+  created_at    DateTime        @default(now())
+  updated_at    DateTime        @updatedAt
+  discount_id   Int?
+  Inventory_Log Inventory_Log[]
+  brand         Brand           @relation(fields: [brand_id], references: [brand_id])
+  category      Category        @relation(fields: [category_id], references: [category_id])
+  discount      Discount?       @relation(fields: [discount_id], references: [discount_id])
+  variants      Variant[]
+}
+
+model Variant {
+  variant_id        Int                 @id @default(autoincrement())
+  item_id           Int
+  name              String
+  description       String?
+  discount_id       Int?
+  created_at        DateTime            @default(now())
+  updated_at        DateTime            @updatedAt
+  unit_id           Int?
+  Batch             Batch[]
+  inventory         Inventory[]
+  LineItem          Line_Item[]
+  discount          Discount?           @relation(fields: [discount_id], references: [discount_id])
+  item              Item                @relation(fields: [item_id], references: [item_id])
+  Unit              Unit?               @relation(fields: [unit_id], references: [unit_id])
+  variantAttributes Variant_Attribute[]
+}
+
+model Batch {
+  batch_id      Int            @id @default(autoincrement())
+  variant_id    Int
+  quantity      Int
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  variant       Variant        @relation(fields: [variant_id], references: [variant_id])
+  supplierUnits SupplierUnit[]
+}
+
+model SupplierUnit {
+  supplier_unit_id  Int              @id @default(autoincrement())
+  batch_id          Int
+  supplier_id       String
+  unit_id           Int
+  price             Float
+  quantity_per_unit Int
+  total_quantity    Int
+  discount_id       Int?
+  created_at        DateTime         @default(now())
+  updated_at        DateTime         @updatedAt
+  ConversionRate    ConversionRate[]
+  batch             Batch            @relation(fields: [batch_id], references: [batch_id])
+  discount          Discount?        @relation(fields: [discount_id], references: [discount_id])
+  supplier          User_Role        @relation(fields: [supplier_id], references: [Personal_Details_Id])
+  unit              Unit             @relation(fields: [unit_id], references: [unit_id])
+}
+
+model ConversionRate {
+  conversion_id    Int          @id @default(autoincrement())
+  supplier_unit_id Int
+  from_unit_id     Int
+  to_unit_id       Int
+  conversion_rate  Float
+  created_at       DateTime     @default(now())
+  updated_at       DateTime     @updatedAt
+  fromUnit         Unit         @relation("FromUnit", fields: [from_unit_id], references: [unit_id])
+  supplierUnit     SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id])
+  toUnit           Unit         @relation("ToUnit", fields: [to_unit_id], references: [unit_id])
+}
+
+model Attribute {
+  attribute_id    Int               @id @default(autoincrement())
+  name            String
+  created_at      DateTime          @default(now())
+  updated_at      DateTime          @updatedAt
+  attributeValues Attribute_Value[]
+}
+
+model Attribute_Value {
+  attribute_value_id Int                 @id @default(autoincrement())
+  attribute_id       Int
+  value              String
+  created_at         DateTime            @default(now())
+  updated_at         DateTime            @updatedAt
+  attribute          Attribute           @relation(fields: [attribute_id], references: [attribute_id])
+  variantAttributes  Variant_Attribute[]
+}
+
+model Variant_Attribute {
+  variant_attribute_id Int             @id @default(autoincrement())
+  variant_id           Int
+  attribute_value_id   Int
+  created_at           DateTime        @default(now())
+  updated_at           DateTime        @updatedAt
+  attributeValue       Attribute_Value @relation(fields: [attribute_value_id], references: [attribute_value_id])
+  variant              Variant         @relation(fields: [variant_id], references: [variant_id])
+}
+
+model Inventory {
+  inventory_id Int      @id @default(autoincrement())
+  variant_id   Int
+  quantity     Int
+  last_updated DateTime @default(now())
+  variant      Variant  @relation(fields: [variant_id], references: [variant_id])
+}
+
+model Discount {
+  discount_id   Int            @id @default(autoincrement())
+  discount_type String
+  value         Float
+  applies_to    String
+  created_at    DateTime       @default(now())
+  updated_at    DateTime       @updatedAt
+  variant_id    Int?
+  unit_id       Int?
+  item_id       Int?
+  Item          Item[]
+  SupplierUnit  SupplierUnit[]
+  Variant       Variant[]
+}
+
+model Inventory_Log {
+  log_id    Int       @id @default(autoincrement())
+  item_id   Int
+  action    String
+  old_data  Json?
+  new_data  Json?
+  user_id   String
+  timestamp DateTime  @default(now())
+  item      Item      @relation(fields: [item_id], references: [item_id])
+  user      User_Role @relation(fields: [user_id], references: [Personal_Details_Id])
+}
+
+model Invoice {
+  invoice_id      Int           @id @default(autoincrement())
+  invoice_number  String        @unique
+  customer_id     String
+  created_at      DateTime      @default(now())
+  updated_at      DateTime      @updatedAt
+  total_amount    Float         @default(0.0)
+  discount        Float?
+  status          String
+  payment_term_id Int
+  customer        User_Role     @relation(fields: [customer_id], references: [Personal_Details_Id])
+  payment_term    Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
+  line_items      Line_Item[]
+  Payment         Payment[]
+  payment_logs    Payment_Log[]
+}
+
+model Line_Item {
+  line_item_id Int      @id @default(autoincrement())
+  invoice_id   Int
+  variant_id   Int
+  quantity     Int
+  unit_price   Float
+  total_price  Float
+  created_at   DateTime @default(now())
+  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id])
+  variant      Variant  @relation(fields: [variant_id], references: [variant_id])
+}
+
+model Payment_Term {
+  payment_term_id Int       @id @default(autoincrement())
+  term_name       String    @unique
+  description     String?
+  created_at      DateTime  @default(now())
+  updated_at      DateTime  @updatedAt
+  invoices        Invoice[]
+}
+
+model Payment {
+  payment_id     Int           @id @default(autoincrement())
+  invoice_id     Int
+  amount         Float
+  payment_date   DateTime      @default(now())
+  payment_method String
+  created_at     DateTime      @default(now())
+  updated_at     DateTime      @updatedAt
+  invoice        Invoice       @relation(fields: [invoice_id], references: [invoice_id])
+  PaymentLog     Payment_Log[]
+}
+
+model Payment_Log {
+  payment_log_id Int      @id @default(autoincrement())
+  invoice_id     Int
+  payment_id     Int
+  status         String
+  timestamp      DateTime @default(now())
+  created_at     DateTime @default(now())
+  updated_at     DateTime @updatedAt
+  invoice        Invoice  @relation(fields: [invoice_id], references: [invoice_id])
+  payment        Payment  @relation(fields: [payment_id], references: [payment_id])
+}
+
+model History_Log {
+  history_log_id Int        @id @default(autoincrement())
+  action         String
+  entity_type    String
+  entity_id      Int
+  user_id        String?
+  timestamp      DateTime   @default(now())
+  details        Json?
+  user           User_Role? @relation(fields: [user_id], references: [Personal_Details_Id])
+}
+
+enum Roles {
+  ADMIN
+  EMPLOYEE
+  CUSTOMER
+  SUPPLIER
+}

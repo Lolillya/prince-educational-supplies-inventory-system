@@ -1,5 +1,9 @@
 // import { useRouter } from "next/navigation";
+// import { api } from "~/trpc/query-client";
+// import { api } from "~/trpc/react";
 import { api } from "~/trpc/server";
+// import P{api}
+
 import SupplierPageUI from "./_components/suppliers-page";
 // import { useState } from "react";
 
@@ -15,10 +19,8 @@ const SuppliersPage = async () => {
   // const handleEditSupplier = (supplierId: number) => {
   //   router.push(`/admin/suppliers/editSupplier/${supplierId}`);
   // };
-
-  // TODO: FIX BACKEND
-  const suppliers = api.suppliers.list;
-  console.log(suppliers);
+  const data = await api.suppliers.list();
+  console.log(data);
 
   // const toggleExpand = (id: number) => {
   //   setExpandedCardId(expandedCardId === id ? null : id);
@@ -38,7 +40,7 @@ const SuppliersPage = async () => {
   //   return <div>Loading...</div>;
   // }
 
-  return <div>{JSON.stringify(suppliers)}</div>;
+  return <div>{JSON.stringify(data)}</div>;
   // <SupplierPageUI
   //   filteredSuppliers={filteredSuppliers}
   //   expandedCardId={expandedCardId}

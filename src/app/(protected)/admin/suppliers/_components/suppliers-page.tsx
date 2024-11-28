@@ -1,17 +1,11 @@
 // src/components/ui/supplierpageui.tsx
 "use client";
 
-import { Poppins } from "next/font/google";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Pencil, Search, ListFilter } from "lucide-react";
 import { UsersChart } from "~/components/users-chart";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
 
 const SupplierPageUI = ({
   filteredSuppliers,
@@ -38,9 +32,7 @@ const SupplierPageUI = ({
     (supplier) => supplier.supplier_id === expandedCardId,
   );
   return (
-    <section
-      className={`h-screen w-screen p-10 ${poppins.className} flex flex-col gap-3`}
-    >
+    <section className={`flex h-screen w-screen flex-col gap-3 p-10`}>
       {/* Search and New Supplier Button */}
       <div className="flex items-center justify-between">
         <div className="flex h-16 w-full items-center justify-between gap-3">

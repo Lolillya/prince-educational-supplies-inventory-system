@@ -1,13 +1,15 @@
 import {
   apiAuthPrefix,
+  apiTRPCPrefix,
   authRoutes,
   DEFAULT_ADMIN_REDIRECT,
   DEFAULT_EMPLOYEE_REDIRECT,
   publicRoutes,
 } from "~/routes";
+
 import NextAuth from "next-auth";
 import { NextResponse } from "next/server";
-import authConfig from "./auth.config";
+import authConfig from "~/auth.config";
 
 const { auth } = NextAuth(authConfig);
 
@@ -18,11 +20,13 @@ export default auth(async (req) => {
   const role = user?.role;
 
   const isApiAuthRoute = nextUrl.pathname.startsWith(apiAuthPrefix);
+  const isApiTrpcRoute = nextUrl.pathname.startsWith(apiTRPCPrefix);
   const isPublicRoute = publicRoutes.includes(nextUrl.pathname);
   const isAuthRoute = authRoutes.includes(nextUrl.pathname);
 
-  if (isApiAuthRoute) {
-    return;
+  // Allow api/trpc requests to pass through
+  if (isApiAuthRoute || isApiTrpcRoute) {
+    return NextResponse.next();
   }
 
   const isLoginPage = nextUrl.pathname === "/auth/login";
@@ -53,7 +57,7 @@ export default auth(async (req) => {
     }
   }
 
-  return;
+  return NextResponse.next();
 });
 
 function handleAuthRouteRedirect(role: string | undefined, nextUrl: URL) {
@@ -96,7 +100,7 @@ export const config = {
   matcher: [
     "/((?!.*\\..*|_next).*)",
     "/",
-    "/(api|trpc)(.*)",
+    "/(api|auth)(.*)", // Allow both api/auth and api/trpc
     "/admin/employees/edit-employee/:id*",
   ],
 };

@@ -14,6 +14,7 @@ export default {
         lightGreen: "rgba(0, 182, 155, 16)",
         black: "#20232C",
         gray: "#F0F1F4",
+        textGray: "#989FB3",
         blue: "#BFE8FF",
         lavender: "#E1E1FF",
         purple: "#8280FF",

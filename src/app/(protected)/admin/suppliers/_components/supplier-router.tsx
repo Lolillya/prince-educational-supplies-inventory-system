@@ -60,7 +60,7 @@ const NewSupplierRouter = ({ title }: NewSupplierRouterProps) => {
           </DialogContent>
         </Dialog>
         <span className="font-bold">{title}</span>
-        <span className="text-gray-400 ml-3 text-sm font-light">#12345</span>
+        <span className="text-gray-400 ml-3 text-sm font-light"></span>
       </div>
     </div>
   );

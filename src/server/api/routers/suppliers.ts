@@ -1,3 +1,4 @@
+import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
@@ -13,4 +14,17 @@ export const supplierRouter = createTRPCRouter({
     });
     return suppliers ?? null;
   }),
+
+  getById: publicProcedure
+    .input(z.object({ id: z.string() }))
+    .query(async ({ input }) => {
+      const { id } = input;
+      const supplierData = await db.personal_Details.findFirst({
+        where: { personal_details_id: id },
+        include: {
+          location: true,
+        },
+      });
+      return supplierData ?? null; // If not found, return null
+    }),
 });

@@ -50,8 +50,8 @@ const SuppliersPage = () => {
     router.push("/admin/suppliers/new-supplier");
   };
 
-  const handleEditSupplier = (supplierId: string) => {
-    router.push(`/admin/suppliers/edit-supplier/${supplierId}`);
+  const handleEditSupplier = (id: string) => {
+    router.push(`/admin/suppliers/edit-supplier/${id}`);
   };
   const { data, isError, isLoading } = api.suppliers.list.useQuery();
   console.log(data);

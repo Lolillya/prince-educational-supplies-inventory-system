@@ -3,7 +3,7 @@
 import { Poppins } from "next/font/google";
 import NewSupplierRouter from "../_components/supplier-router";
 import NewSupplierState from "../_components/new-supplier";
-import { api } from "~/trpc/server";
+import { api } from "~/trpc/react";
 import { useState } from "react";
 
 const poppins = Poppins({
@@ -43,9 +43,9 @@ const NewSupplier = () => {
   // console.log(supplierData.businessName);
   return (
     <section
-      className={`h-screen w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
+      className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
     >
-      <NewSupplierRouter />
+      <NewSupplierRouter title="NEW SUPPLIER" />
       <NewSupplierState />
     </section>
   );

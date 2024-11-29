@@ -43,7 +43,7 @@ const chartConfig = {
 export function UsersChart({}) {
   return (
     <Card className="flex w-full justify-center bg-transparent shadow-none">
-      <CardContent className="w-full max-w-xl">
+      <CardContent className="w-full max-w-sm">
         <ChartContainer config={chartConfig} className="w-full max-w-xl">
           <BarChart accessibilityLayer data={chartData}>
             <CartesianGrid vertical={false} />

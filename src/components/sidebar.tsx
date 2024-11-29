@@ -119,11 +119,11 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`w-[7rem] bg-[#F0F1F4] p-5 transition-all duration-300 ${ralewaye.className} group z-10 flex h-screen flex-col justify-between overflow-y-scroll hover:w-[16rem]`}
+      className={`bg-[#F0F1F4] p-5 transition-all duration-300 ${ralewaye.className} group z-10 flex h-screen w-[16rem] flex-col justify-between overflow-y-scroll`}
     >
       <section>
         <section className="mb-10 flex items-center justify-center">
-          <div className="flex w-full items-center justify-center gap-3 px-2 hover:cursor-pointer group-hover:justify-start">
+          <div className="flex w-full items-center justify-start gap-3 px-2 hover:cursor-pointer">
             <Image
               src={Company_Logo}
               alt="Company Logo"
@@ -132,7 +132,7 @@ const Sidebar = () => {
               className="min-w-[30px]"
             />
 
-            <Label className="hidden w-0 overflow-hidden text-2xl font-extrabold text-red-500 transition-all duration-300 group-hover:block group-hover:w-fit">
+            <Label className="text-red-500 w-fit overflow-hidden text-2xl font-extrabold transition-all duration-300">
               Prince
             </Label>
           </div>
@@ -143,10 +143,10 @@ const Sidebar = () => {
             <div
               key={key}
               onClick={() => router.push(value.redirect)}
-              className={`flex items-center justify-center rounded-lg p-2 hover:cursor-pointer hover:bg-white group-hover:justify-start`}
+              className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white`}
             >
               {value.icon}
-              <Label className="ml-2 hidden hover:cursor-pointer group-hover:block">
+              <Label className="ml-2 block hover:cursor-pointer">
                 {value.text}
               </Label>
             </div>
@@ -154,7 +154,7 @@ const Sidebar = () => {
         </section>
 
         <section className="my-3 flex flex-col gap-3">
-          <Label className="hidden w-0 overflow-x-hidden font-extralight text-gray-400 group-hover:block group-hover:w-full">
+          <Label className="text-gray-400 block w-full overflow-x-hidden font-extralight">
             Records
           </Label>
 
@@ -162,10 +162,10 @@ const Sidebar = () => {
             <div
               key={key}
               onClick={() => router.push(value.redirect)}
-              className={`hover: flex cursor-pointer items-center justify-center rounded-lg p-2 hover:bg-white group-hover:justify-start`}
+              className={`flex cursor-pointer items-center justify-start rounded-lg p-3 hover:bg-white`}
             >
               {value.icon}
-              <Label className="ml-2 hidden w-0 overflow-hidden transition-all duration-300 hover:cursor-pointer group-hover:block group-hover:w-fit">
+              <Label className="ml-2 block w-fit overflow-hidden transition-all duration-300 hover:cursor-pointer">
                 {value.text}
               </Label>
             </div>
@@ -185,10 +185,10 @@ const Sidebar = () => {
                     ? handleLogoutClick
                     : () => router.push(value.redirect)
                 }
-                className="m-0 flex items-center gap-2 rounded-lg p-3 transition-all duration-300 hover:cursor-pointer hover:bg-[#FF7B7B] hover:text-white group-hover:justify-start"
+                className="m-0 flex items-center gap-2 rounded-lg p-3 transition-all duration-300 hover:cursor-pointer hover:bg-green hover:text-white group-hover:justify-start"
               >
                 {value.icon}
-                <Label className="hidden w-0 overflow-hidden opacity-0 transition-all duration-300 ease-in-out group-hover:block group-hover:w-fit group-hover:opacity-100">
+                <Label className="w-fit opacity-100 transition-all duration-300 ease-in-out hover:cursor-pointer">
                   {value.text}
                 </Label>
               </div>
@@ -209,16 +209,13 @@ const Sidebar = () => {
         </div>
 
         {/* Profile Section */}
-        <div className="flex items-center justify-center rounded-lg bg-white p-3">
+        <div className="flex items-center justify-evenly rounded-lg bg-white p-3">
           <Avatar>
-            <AvatarImage
-              src="https://github.com/shadcn.png"
-              alt="profile avatar"
-            />
+            <AvatarImage src="" alt="profile avatar" />
             <AvatarFallback>CN</AvatarFallback>
           </Avatar>
 
-          <div className="group ml-3 hidden w-0 flex-col overflow-x-hidden transition-all duration-300 group-hover:flex group-hover:w-fit">
+          <div className="ml-3 flex w-fit flex-col transition-all duration-300">
             <Label className="font-bold">John Doe</Label>
             <Label className="font-extralight">Admin</Label>
           </div>

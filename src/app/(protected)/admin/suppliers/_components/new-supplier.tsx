@@ -9,6 +9,8 @@ import {
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { useState } from "react";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 
 const NewSupplierState = () => {
   const [businessName, setBusinessName] = useState("");
@@ -26,9 +28,9 @@ const NewSupplierState = () => {
         <div className="flex h-full w-full flex-col justify-center gap-7">
           <div className="flex flex-col gap-2">
             <Label>
-              Supplier business <span className="text-red-600">*</span>
+              Business <span className="text-red-600">*</span>
             </Label>
-            <input
+            <Input
               placeholder="Customer Name"
               className="p-7"
               required
@@ -42,13 +44,13 @@ const NewSupplierState = () => {
               Salesperson <span className="text-red-600">*</span>
             </Label>
             <div className="flex items-center gap-3">
-              <input
+              <Input
                 placeholder="Firstname"
                 className="p-7"
                 onChange={(e) => setFirstName(e.target.value)}
                 value={firstName}
               />
-              <input
+              <Input
                 placeholder="Lastname"
                 className="p-7"
                 onChange={(e) => setLastName(e.target.value)}
@@ -60,7 +62,7 @@ const NewSupplierState = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>Contact Number</Label>
-              <input
+              <Input
                 placeholder="Contact Number"
                 className="p-7"
                 required
@@ -71,7 +73,7 @@ const NewSupplierState = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Email</Label>
-              <input
+              <Input
                 placeholder="Email"
                 className="p-7"
                 required
@@ -85,14 +87,14 @@ const NewSupplierState = () => {
             <Label>
               Address <span className="text-red-600">*</span>
             </Label>
-            <input placeholder="Address" className="p-7" required />
+            <Input placeholder="Address" className="p-7" required />
           </div>
 
           <div>
-            <textarea
+            <Textarea
               placeholder="About this supplier..."
               rows={4}
-              className="resize-none"
+              className="resize-none bg-gray"
               onChange={(e) => setNotes(e.target.value)}
               value={notes}
             />
@@ -104,8 +106,8 @@ const NewSupplierState = () => {
       <div className="flex w-full items-center justify-end gap-3">
         <Dialog>
           <DialogTrigger asChild>
-            <Button className="p-7 text-lg font-bold" variant={"destructive"}>
-              Delete
+            <Button className="bg-transparent p-7 text-lg font-bold text-green">
+              Clear
             </Button>
           </DialogTrigger>
           <DialogContent className="max-h- flex w-full max-w-lg flex-col p-10">
@@ -131,7 +133,7 @@ const NewSupplierState = () => {
             </div>
           </DialogContent>
         </Dialog>
-        <Button className="p-7 text-lg font-bold">Save</Button>
+        <Button className="bg-green p-7 text-lg font-bold">Save</Button>
       </div>
     </div>
   );

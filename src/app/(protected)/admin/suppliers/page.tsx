@@ -6,9 +6,10 @@ import { useState } from "react";
 import { ListFilter, Pencil, Search } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Card } from "~/components/ui/card";
+import { Card, CardTitle } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { UsersChart } from "../customers/_components/users-chart";
+import { Separator } from "~/components/ui/separator";
 
 interface PersonalDetails {
   personal_details_id: string;
@@ -75,7 +76,7 @@ const SuppliersPage = () => {
   }
 
   return (
-    <section className="flex h-screen w-screen flex-col gap-3 p-10">
+    <section className="flex w-full flex-col gap-3 p-10">
       <div className="flex items-center justify-between">
         <div className="flex h-16 w-full items-center justify-between gap-3">
           <div className="relative flex w-full max-w-md items-center gap-3">
@@ -99,10 +100,10 @@ const SuppliersPage = () => {
         </div>
       </div>
 
-      <div className="mt-5 flex h-full gap-10">
-        <div className="my-4 flex w-1/2 flex-col">
+      <div className="flex gap-10">
+        <div className="flex w-1/2 flex-col rounded-md">
           <span>Records</span>
-          <div className="mt-2 flex max-h-[75vh] min-h-[50vh] flex-col overflow-y-auto md:max-h-[80vh]">
+          <div className="mt-2 flex max-h-[75vh] min-h-[50vh] flex-col overflow-y-auto pr-5 md:max-h-[80vh]">
             {data?.map((supplier) => (
               <Card
                 key={supplier.Personal_Details_Id}
@@ -135,9 +136,9 @@ const SuppliersPage = () => {
           </div>
         </div>
 
-        <div className="flex h-full w-3/6 flex-col">
+        <div className="flex h-full w-1/2 flex-col">
           <span>Details</span>
-          <div className="flex h-full w-full flex-col rounded-lg bg-gray p-5">
+          <div className="mt-2 flex h-full flex-col overflow-y-hidden rounded-md bg-gray p-3 pr-5 md:max-h-[80vh]">
             {selectedSupplier ? (
               <div className="flex flex-col gap-5">
                 {/* <UsersChart /> */}
@@ -187,10 +188,67 @@ const SuppliersPage = () => {
                   </span>
                 </div>
                 <div className="flex flex-col gap-1">
-                  <span className="text-gray-400 font-light">Notes</span>
+                  <span className="text-textGray font-light">Notes</span>
                   <span>{selectedSupplier.Personal_Details.notes}</span>
                 </div>
-                {/* Additional supplier details here */}
+                <div className="flex w-full flex-col">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-textGray">Restocks</Label>
+                    <Button variant={"link"} className="m-0 p-0 text-green">
+                      View all
+                    </Button>
+                  </div>
+                  <Separator orientation="horizontal" />
+                  <div
+                    className="mt-3 flex flex-col gap-3 overflow-y-auto pb-3 pr-3"
+                    style={{ maxHeight: "200px" }}
+                  >
+                    <Card className="flex w-full items-center justify-between p-5">
+                      <div className="flex flex-col gap-3">
+                        <Label>{selectedSupplier.id}</Label>
+                        <Label className="text-textGray">
+                          {selectedSupplier.Personal_Details.first_name}{" "}
+                          {selectedSupplier.Personal_Details.last_name}
+                        </Label>
+                      </div>
+
+                      <div className="text-textGray flex flex-col gap-3">
+                        <Label>Date: 10/15/24</Label>
+                        <Label>Time: 9:00 AM</Label>
+                      </div>
+                    </Card>
+
+                    <Card className="flex w-full items-center justify-between p-5">
+                      <div className="flex flex-col gap-3">
+                        <Label>{selectedSupplier.id}</Label>
+                        <Label className="text-textGray">
+                          {selectedSupplier.Personal_Details.first_name}{" "}
+                          {selectedSupplier.Personal_Details.last_name}
+                        </Label>
+                      </div>
+
+                      <div className="text-textGray flex flex-col gap-3">
+                        <Label>Date: 10/15/24</Label>
+                        <Label>Time: 9:00 AM</Label>
+                      </div>
+                    </Card>
+
+                    <Card className="flex w-full items-center justify-between p-5">
+                      <div className="flex flex-col gap-3">
+                        <Label>{selectedSupplier.id}</Label>
+                        <Label className="text-textGray">
+                          {selectedSupplier.Personal_Details.first_name}{" "}
+                          {selectedSupplier.Personal_Details.last_name}
+                        </Label>
+                      </div>
+
+                      <div className="text-textGray flex flex-col gap-3">
+                        <Label>Date: 10/15/24</Label>
+                        <Label>Time: 9:00 AM</Label>
+                      </div>
+                    </Card>
+                  </div>
+                </div>
               </div>
             ) : (
               <p className="text-gray-500 mt-6 text-center">

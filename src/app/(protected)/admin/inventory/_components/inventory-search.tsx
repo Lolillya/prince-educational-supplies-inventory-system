@@ -31,7 +31,7 @@ const InventorySearchAndButtonRouter = () => {
           <DialogTrigger asChild>
             <Button
               className="bg-green p-5 font-bold"
-              onClick={() => router.push("/admin/inventory/newItem")}
+              onClick={() => router.push("/admin/inventory/new-item")}
             >
               + New Item
             </Button>

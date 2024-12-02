@@ -7,14 +7,11 @@ import {
   DialogTitle,
 } from "~/components/ui/dialog";
 
-import { Poppins } from "next/font/google";
 import { Search, Ellipsis, ListFilter } from "lucide-react";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
-import Image from "next/image";
-import Filter_Icon from "public/icons/filter-icon2.svg";
 import { useRouter } from "next/navigation";
 import {
   Table,
@@ -25,20 +22,16 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { Input } from "~/components/ui/input";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
+import { useState } from "react";
 
 const RestockPage = () => {
   const router = useRouter();
+  const [isOpen, setisOpen] = useState(false);
   return (
     <section
-      className={`h-auto w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
+      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10`}
     >
       <div className="relative flex items-center justify-between">
-        {/* <Label className="text-4xl font-bold">Restock</Label> */}
         <div className="flex h-16 items-center gap-3">
           <div className="relative flex h-auto w-full max-w-md items-center gap-3">
             <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
@@ -53,7 +46,7 @@ const RestockPage = () => {
         <Button
           size={"lg"}
           onClick={() => router.push("restock/add-stock")}
-          className="font-boldbg-[#FF7B7B] border-[#FF7B7B] bg-[#FF7B7B] py-5 font-bold shadow-md hover:border hover:bg-white hover:text-[#FF7B7B]"
+          className="bg-green py-5 font-bold"
         >
           + Add Stock
         </Button>
@@ -116,19 +109,29 @@ const RestockPage = () => {
                           <TableRow>
                             <TableCell>Item - Brand - Variant</TableCell>
                             <TableCell>200</TableCell>
-                            <TableCell>Boxes</TableCell>
+                            <TableCell>
+                              Boxes{" "}
+                              <Label className="text-textGray">
+                                3 Conversions
+                              </Label>
+                            </TableCell>
                           </TableRow>
                         </TableBody>
                       </Table>
                       <div className="bottom-0 flex w-full justify-end">
-                        <div className="flex items-center gap-3">
-                          <span>TOTAL: 000000</span>
-                          <Button
-                            className="bg-[#FF7B7B] px-7 font-bold"
-                            size={"lg"}
-                          >
-                            Save
-                          </Button>
+                        <div className="flex w-full items-center justify-between gap-3">
+                          <span className="font-bold">TOTAL: 000000</span>
+                          <div className="flex items-center gap-3">
+                            <Button size={"lg"} className="font-bold">
+                              Close
+                            </Button>
+                            <Button
+                              className="bg-green px-7 font-bold"
+                              size={"lg"}
+                            >
+                              Save
+                            </Button>
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -176,7 +179,7 @@ const RestockPage = () => {
             <div className="flex w-full justify-center p-5">
               <Button
                 size={"lg"}
-                className="bg-transparent font-bold text-[#FF7B7B] shadow-none transition-all duration-300 hover:scale-110 hover:cursor-pointer hover:bg-transparent hover:shadow-md"
+                className="bg-transparent font-bold text-green shadow-none transition duration-300 hover:scale-110 hover:cursor-pointer"
               >
                 View All
               </Button>

@@ -1,14 +1,12 @@
 "use client";
 
-import { Poppins } from "next/font/google";
-import { X, Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { useRouter } from "next/navigation";
 import StockCard from "../_components/stock-card";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
@@ -23,17 +21,10 @@ import {
 } from "~/components/ui/table";
 import { Label } from "~/components/ui/label";
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
-
 const InvoiceAddStock = () => {
   const router = useRouter();
   return (
-    <section
-      className={`h-auto w-screen p-10 ${poppins.className} mb-20 flex flex-col gap-3 overflow-y-scroll`}
-    >
+    <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-1">
           <Dialog>
@@ -85,7 +76,7 @@ const InvoiceAddStock = () => {
         <StockCard />
       </div>
 
-      <div className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-between gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
+      <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
         <span>TOTAL: 0000.00</span>
         <Dialog>
           <DialogTrigger asChild>

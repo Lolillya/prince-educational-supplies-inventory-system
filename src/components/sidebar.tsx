@@ -11,8 +11,8 @@ import { Label } from "~/components/ui/label";
 import {
   Dialog,
   DialogContent,
-  DialogHeader,
   DialogFooter,
+  DialogTitle,
 } from "~/components/ui/dialog";
 import {
   Settings,
@@ -100,10 +100,6 @@ const Sidebar = () => {
     },
   };
 
-  const handleLogout = () => {
-    logout();
-  };
-
   const handleLogoutClick = () => {
     setIsDialogOpen(true); // Open confirmation dialog
   };
@@ -119,7 +115,7 @@ const Sidebar = () => {
 
   return (
     <div
-      className={`bg-[#F0F1F4] p-5 transition-all duration-300 ${ralewaye.className} group z-10 flex h-screen w-[16rem] flex-col justify-between overflow-y-scroll`}
+      className={`bg-gray p-5 transition-all duration-300 ${ralewaye.className} group z-10 flex h-screen w-[16rem] flex-col justify-between overflow-y-scroll`}
     >
       <section>
         <section className="mb-10 flex items-center justify-center">
@@ -197,7 +193,7 @@ const Sidebar = () => {
             {/* Logout Confirmation Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent>
-                <DialogHeader>Confirm Logout</DialogHeader>
+                <DialogTitle>Confirm Logout</DialogTitle>
                 <p>Are you sure you want to log out?</p>
                 <DialogFooter>
                   <button onClick={confirmLogout}>Yes</button>

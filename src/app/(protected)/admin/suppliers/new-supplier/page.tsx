@@ -46,7 +46,7 @@ const NewSupplier = () => {
       className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
     >
       <NewSupplierRouter title="NEW SUPPLIER" />
-      <NewSupplierState />
+      <NewSupplierState id="" />
     </section>
   );
 };

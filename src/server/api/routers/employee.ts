@@ -1,29 +1,27 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "../trpc";
 
-export const customerRouter = createTRPCRouter({
+export const employeeRouter = createTRPCRouter({
   list: publicProcedure.query(({ ctx }) => {
-    const customers = ctx.db.user_Role.findMany({
-      where: { role_Id: 3 },
+    const employees = ctx.db.user_Role.findMany({
+      where: { role_Id: 2 },
       include: {
         Personal_Details: {
           include: { location: true },
         },
       },
     });
-    return customers ?? null;
+    return employees ?? null;
   }),
 
   getById: publicProcedure
     .input(z.object({ id: z.string() }))
-    .query(({ input, ctx }) => {
+    .query(({ ctx, input }) => {
       const { id } = input;
-      const customerData = ctx.db.personal_Details.findFirst({
+      const employeeData = ctx.db.personal_Details.findFirst({
         where: { personal_details_id: id },
-        include: {
-          location: true,
-        },
+        include: { location: true },
       });
-      return customerData ?? null;
+      return employeeData ?? null;
     }),
 });

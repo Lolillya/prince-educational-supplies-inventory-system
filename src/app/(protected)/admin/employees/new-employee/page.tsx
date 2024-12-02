@@ -6,12 +6,8 @@ import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
-import { api } from "~/utils/api";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
+import { api } from "~/trpc/react";
+import { Input } from "~/components/ui/input";
 
 const NewEmployee = () => {
   const router = useRouter();
@@ -58,8 +54,8 @@ const NewEmployee = () => {
     },
   });
 
-  const handleinputChange = (
-    e: React.ChangeEvent<HTMLinputElement | HTMLTextAreaElement>,
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setEmployeeForm((prev) => ({
@@ -207,7 +203,7 @@ const NewEmployee = () => {
 
   return (
     <section
-      className={`h-screen w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
+      className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
     >
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-2">
@@ -229,12 +225,12 @@ const NewEmployee = () => {
               <Label>
                 First Name <span className="text-red-600">*</span>
               </Label>
-              <input
+              <Input
                 name="firstname"
                 placeholder="First Name"
                 className="p-7"
                 value={employeeForm.firstname}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.firstname && (
                 <span className="text-red-500">{errors.firstname}</span>
@@ -245,12 +241,12 @@ const NewEmployee = () => {
               <Label>
                 Last Name <span className="text-red-600">*</span>
               </Label>
-              <input
+              <Input
                 name="lastname"
                 placeholder="Last Name"
                 className="p-7"
                 value={employeeForm.lastname}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.lastname && (
                 <span className="text-red-500">{errors.lastname}</span>
@@ -261,12 +257,12 @@ const NewEmployee = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>Contact Number</Label>
-              <input
+              <Input
                 name="contact"
                 placeholder="Contact Number"
                 className="p-7"
                 value={employeeForm.contact}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.contact && (
                 <span className="text-red-500">{errors.contact}</span>
@@ -275,12 +271,12 @@ const NewEmployee = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Email</Label>
-              <input
+              <Input
                 name="email"
                 placeholder="Email"
                 className="p-7"
                 value={employeeForm.email}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.email && (
                 <span className="text-red-500">{errors.email}</span>
@@ -290,12 +286,12 @@ const NewEmployee = () => {
 
           <div className="flex flex-col gap-2">
             <Label>Address</Label>
-            <input
+            <Input
               name="addressLine"
               placeholder="Address Line"
               className="p-7"
               value={employeeForm.addressLine}
-              onChange={handleinputChange}
+              onChange={handleInputChange}
             />
             {errors.addressLine && (
               <span className="text-red-500">{errors.addressLine}</span>
@@ -305,12 +301,12 @@ const NewEmployee = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>City</Label>
-              <input
+              <Input
                 name="city"
                 placeholder="City"
                 className="p-7"
                 value={employeeForm.city}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.city && (
                 <span className="text-red-500">{errors.city}</span>
@@ -319,12 +315,12 @@ const NewEmployee = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Region</Label>
-              <input
+              <Input
                 name="region"
                 placeholder="Region"
                 className="p-7"
                 value={employeeForm.region}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.region && (
                 <span className="text-red-500">{errors.region}</span>
@@ -335,12 +331,12 @@ const NewEmployee = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>Country</Label>
-              <input
+              <Input
                 name="country"
                 placeholder="Country"
                 className="p-7"
                 value={employeeForm.country}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.country && (
                 <span className="text-red-500">{errors.country}</span>
@@ -349,12 +345,12 @@ const NewEmployee = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Postal Code</Label>
-              <input
+              <Input
                 name="postalCode"
                 placeholder="Postal Code"
                 className="p-7"
                 value={employeeForm.postalCode}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.postalCode && (
                 <span className="text-red-500">{errors.postalCode}</span>
@@ -367,12 +363,12 @@ const NewEmployee = () => {
               <Label>
                 Username <span className="text-red-600">*</span>
               </Label>
-              <input
+              <Input
                 name="username"
                 placeholder="Username"
                 className="p-7"
                 value={employeeForm.username}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.username && (
                 <span className="text-red-500">{errors.username}</span>
@@ -383,13 +379,13 @@ const NewEmployee = () => {
               <Label>
                 Password <span className="text-red-600">*</span>
               </Label>
-              <input
+              <Input
                 name="password"
                 type="password" // Ensure password is masked
                 placeholder="Password"
                 className="p-7"
                 value={employeeForm.password}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.password && (
                 <span className="text-red-500">{errors.password}</span>
@@ -404,7 +400,7 @@ const NewEmployee = () => {
               placeholder="Notes"
               className="p-7"
               value={employeeForm.notes}
-              onChange={handleinputChange}
+              onChange={handleInputChange}
             />
             {errors.notes && (
               <span className="text-red-500">{errors.notes}</span>

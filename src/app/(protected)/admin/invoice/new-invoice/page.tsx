@@ -25,9 +25,7 @@ import { useRouter } from "next/navigation";
 const NewInvoice = () => {
   const router = useRouter();
   return (
-    <section
-      className={`mb-20 flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10`}
-    >
+    <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-1">
           <Dialog>
@@ -79,7 +77,7 @@ const NewInvoice = () => {
         </div>
       </div>
 
-      <div className="mt-4 grid auto-rows-auto grid-cols-3 gap-3">
+      <div className="mt-4 grid auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
         <InvoiceCard />
         <InvoiceCard />
         <InvoiceCard />
@@ -88,36 +86,8 @@ const NewInvoice = () => {
         <InvoiceCard />
       </div>
 
-      <div className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 font-bold drop-shadow-2xl">
+      <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
         <span>TOTAL: -----</span>
-        {/* <Dialog>
-          <DialogTrigger asChild>
-            <Button size={"lg"} className="bg-green py-8 text-xl font-bold">
-              Confirm Order
-            </Button>
-          </DialogTrigger>
-          <DialogContent className="max-h- flex w-full max-w-sm flex-col p-10">
-            <DialogTitle className="text-center">VERIFY IT'S YOU</DialogTitle>
-
-            <div className="flex flex-col gap-1">
-              <Label className="text-gray-400 ml-3">Password</Label>
-              <Input
-                placeholder="Enter Password"
-                type="password"
-                className="p-6 text-xs"
-              />
-            </div>
-
-            <div className="flex w-full justify-center">
-              <Button
-                size={"lg"}
-                className="bg-green p-6 text-lg font-bold text-white"
-              >
-                Continue
-              </Button>
-            </div>
-          </DialogContent>
-        </Dialog> */}
         <Dialog>
           <DialogTrigger asChild>
             <Button

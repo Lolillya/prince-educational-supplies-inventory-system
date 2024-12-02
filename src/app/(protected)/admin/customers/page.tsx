@@ -1,7 +1,7 @@
 "use client";
 // src/app/admin/customers/page.tsx
 import { useRouter } from "next/navigation";
-import { api } from "~/utils/api";
+import { api } from "~/trpc/react";
 import CustomersPageUI from "./_components/customerpage";
 import { useState } from "react";
 

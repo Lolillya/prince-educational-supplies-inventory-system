@@ -1,10 +1,6 @@
 "use client";
 
-// import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-
-// import { label } from "~/components/ui/label";
-// import { FaEye, FaEyeSlash } from "react-icons/fa";
 import eyeIcon from "public/icons/eye.svg";
 import eyeClosedIcon from "public/icons/eye-closed.svg";
 import Company_Logo from "public/Company_Logo.svg";

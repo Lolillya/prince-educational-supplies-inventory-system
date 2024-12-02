@@ -16,11 +16,11 @@ const authConfig: NextAuthConfig = {
           // console.log("validation success");
 
           const user = await getUserByUsername(username);
-          // console.log(user);
+          console.log(user);
 
           if (user && user.password === password) {
             const role = await getUserRole(user.personal_details_id);
-            // console.log(role);
+            console.log(role);
             return {
               id: user.authentication_id,
               username: user.username,

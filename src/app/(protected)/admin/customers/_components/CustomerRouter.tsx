@@ -52,7 +52,7 @@ const CustomerRouter = ({ title }: CustomerRouterProps) => {
               <Button
                 size={"lg"}
                 className="bg-green p-6 text-lg font-bold text-white"
-                onClick={() => router.push("/admin/suppliers")}
+                onClick={() => router.push("/admin/customers")}
               >
                 Leave
               </Button>

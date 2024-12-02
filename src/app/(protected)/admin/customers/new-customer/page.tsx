@@ -1,6 +1,5 @@
 "use client";
 
-import { Poppins } from "next/font/google";
 import { ArrowLeft } from "lucide-react";
 
 import { useRouter } from "next/navigation";
@@ -8,12 +7,9 @@ import { useState } from "react";
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
 
-import { api } from "~/utils/api";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
+import { api } from "~/trpc/react";
+import { Input } from "~/components/ui/input";
+import { Textarea } from "~/components/ui/textarea";
 
 const NewCustomer = () => {
   const router = useRouter();
@@ -58,8 +54,8 @@ const NewCustomer = () => {
     },
   });
 
-  const handleinputChange = (
-    e: React.ChangeEvent<HTMLinputElement | HTMLTextAreaElement>,
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setCustomerForm((prev) => ({
@@ -199,9 +195,7 @@ const NewCustomer = () => {
   };
 
   return (
-    <section
-      className={`h-screen w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
-    >
+    <section className={`flex h-screen w-screen flex-col gap-3 p-10`}>
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-2">
           <ArrowLeft
@@ -215,17 +209,17 @@ const NewCustomer = () => {
         </div>
       </div>
 
-      <div className="flex h-full flex-col gap-5 px-52">
-        <div className="flex h-full w-full flex-col justify-center gap-7">
+      <div className="flex h-full flex-col gap-3 px-52">
+        <div className="flex h-full w-full flex-col justify-center gap-3 overflow-y-scroll">
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>First Name</Label>
-              <input
+              <Input
                 name="firstname"
                 placeholder="First Name"
                 className="p-7"
                 value={customerForm.firstname}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.firstname && (
                 <span className="text-red-500">{errors.firstname}</span>
@@ -234,12 +228,12 @@ const NewCustomer = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Last Name</Label>
-              <input
+              <Input
                 name="lastname"
                 placeholder="Last Name"
                 className="p-7"
                 value={customerForm.lastname}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.lastname && (
                 <span className="text-red-500">{errors.lastname}</span>
@@ -251,12 +245,12 @@ const NewCustomer = () => {
             <Label>
               Business <span className="text-red-600">*</span>
             </Label>
-            <input
+            <Input
               name="businessName"
               placeholder="Business Name"
               className="p-7"
               value={customerForm.businessName}
-              onChange={handleinputChange}
+              onChange={handleInputChange}
             />
             {errors.businessName && (
               <span className="text-red-500">{errors.businessName}</span>
@@ -266,12 +260,12 @@ const NewCustomer = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>Contact Number</Label>
-              <input
+              <Input
                 name="contact"
                 placeholder="Contact Number"
                 className="p-7"
                 value={customerForm.contact}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.contact && (
                 <span className="text-red-500">{errors.contact}</span>
@@ -280,12 +274,12 @@ const NewCustomer = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Email</Label>
-              <input
+              <Input
                 name="email"
                 placeholder="Email"
                 className="p-7"
                 value={customerForm.email}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.email && (
                 <span className="text-red-500">{errors.email}</span>
@@ -295,12 +289,12 @@ const NewCustomer = () => {
 
           <div className="flex flex-col gap-2">
             <Label>Address</Label>
-            <input
+            <Input
               name="addressLine"
               placeholder="Address Line"
               className="p-7"
               value={customerForm.addressLine}
-              onChange={handleinputChange}
+              onChange={handleInputChange}
             />
             {errors.addressLine && (
               <span className="text-red-500">{errors.addressLine}</span>
@@ -310,12 +304,12 @@ const NewCustomer = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>City</Label>
-              <input
+              <Input
                 name="city"
                 placeholder="City"
                 className="p-7"
                 value={customerForm.city}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.city && (
                 <span className="text-red-500">{errors.city}</span>
@@ -324,12 +318,12 @@ const NewCustomer = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Region</Label>
-              <input
+              <Input
                 name="region"
                 placeholder="Region"
                 className="p-7"
                 value={customerForm.region}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.region && (
                 <span className="text-red-500">{errors.region}</span>
@@ -340,12 +334,12 @@ const NewCustomer = () => {
           <div className="flex gap-3">
             <div className="flex w-full flex-col gap-2">
               <Label>Country</Label>
-              <input
+              <Input
                 name="country"
                 placeholder="Country"
                 className="p-7"
                 value={customerForm.country}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.country && (
                 <span className="text-red-500">{errors.country}</span>
@@ -354,12 +348,12 @@ const NewCustomer = () => {
 
             <div className="flex w-full flex-col gap-2">
               <Label>Postal Code</Label>
-              <input
+              <Input
                 name="postalCode"
                 placeholder="Postal Code"
                 className="p-7"
                 value={customerForm.postalCode}
-                onChange={handleinputChange}
+                onChange={handleInputChange}
               />
               {errors.postalCode && (
                 <span className="text-red-500">{errors.postalCode}</span>
@@ -369,12 +363,12 @@ const NewCustomer = () => {
 
           <div className="flex flex-col gap-2">
             <Label>Notes</Label>
-            <textarea
+            <Textarea
               name="notes"
               placeholder="Notes"
               className="p-7"
               value={customerForm.notes}
-              onChange={handleinputChange}
+              onChange={handleInputChange}
             />
             {errors.notes && (
               <span className="text-red-500">{errors.notes}</span>
@@ -382,10 +376,21 @@ const NewCustomer = () => {
           </div>
 
           <div className="flex justify-end gap-3">
-            <Button variant="outline" onClick={handleClear}>
+            <Button
+              variant="outline"
+              onClick={handleClear}
+              className="border-none font-bold text-green"
+              size={"lg"}
+            >
               Clear
             </Button>
-            <Button onClick={handleSave}>Save</Button>
+            <Button
+              onClick={handleSave}
+              className="bg-green font-bold"
+              size={"lg"}
+            >
+              Save
+            </Button>
           </div>
         </div>
       </div>

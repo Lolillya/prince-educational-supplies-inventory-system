@@ -18,6 +18,7 @@ import BatchAccordion from "./_components/batch-accordion";
 import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Batch, Variant_Attribute } from "@prisma/client";
+import { LoadingSpinner } from "~/components/loading";
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[]; // Ensure this is always defined as an array
@@ -70,7 +71,24 @@ const InventoryPage = () => {
   const router = useRouter();
   const [expandedCardId, setExpandedCardId] = useState<number | null>(null);
   const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
-  const { data: inventoryItems } = api.inventory.listInventory.useQuery();
+  const {
+    data: inventoryItems,
+    isLoading,
+    isError,
+  } = api.inventory.listInventory.useQuery();
+
+  if (isLoading)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
+  if (isError)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <span>Error fetching data...</span>
+      </section>
+    );
 
   const handleNewInventory = () => {
     router.push("/admin/inventory/newItem"); // Redirect to create new inventory
@@ -81,7 +99,7 @@ const InventoryPage = () => {
 
   return (
     <section
-      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10`}
+      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10 pb-0`}
     >
       <InventorySearchAndButtonRouter />
       <div className="relative flex flex-grow gap-3 overflow-hidden px-3">
@@ -90,7 +108,7 @@ const InventoryPage = () => {
           <span>Records</span>
           <div className="scrollbar-hidden overflow-y-scroll">
             {/* <ScrollArea> */}
-            <div className="flex flex-col gap-3 pr-3">
+            <div className="flex flex-col gap-3 pb-3 pr-3">
               {Array.isArray(inventoryItems) && inventoryItems.length > 0 ? (
                 inventoryItems.map((item) => (
                   <div

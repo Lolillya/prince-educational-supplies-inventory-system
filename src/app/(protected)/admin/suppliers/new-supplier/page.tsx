@@ -6,11 +6,6 @@ import NewSupplierState from "../_components/new-supplier";
 import { api } from "~/trpc/react";
 import { useState } from "react";
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
-
 type SupplierData = {
   businessName: string;
   firstName: string;

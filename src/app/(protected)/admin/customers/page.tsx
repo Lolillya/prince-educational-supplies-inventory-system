@@ -10,6 +10,7 @@ import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
+import { LoadingSpinner } from "~/components/loading";
 
 interface PersonalDetails {
   personal_details_id: string;
@@ -54,7 +55,7 @@ const CustomersPage = () => {
     router.push(`/admin/customers/edit-customer/${customerId}`); // Redirect to edit customer
   };
 
-  const { data: customers, isLoading } = api.customer.list.useQuery();
+  const { data: customers, isLoading, isError } = api.customer.list.useQuery();
 
   const toggleExpand = (id: number) => {
     setExpandedCardId(expandedCardId === id ? null : id);
@@ -70,9 +71,18 @@ const CustomersPage = () => {
   //   return companyName.includes(searchValue);
   // });
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
+  if (isLoading)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
+  if (isError)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <span>Error fetching data...</span>
+      </section>
+    );
 
   return (
     <section className="flex w-full flex-col gap-3 p-10">

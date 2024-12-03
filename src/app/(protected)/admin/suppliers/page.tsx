@@ -10,6 +10,8 @@ import { Card, CardTitle } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { UsersChart } from "../customers/_components/users-chart";
 import { Separator } from "~/components/ui/separator";
+import { LoadingSpinner } from "~/components/loading";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 interface PersonalDetails {
   personal_details_id: string;
@@ -57,15 +59,25 @@ const SuppliersPage = () => {
   console.log(data);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
   }
 
   if (isError) {
-    return <div>Error fetching data...</div>;
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <span>Error fetching data...</span>
+      </section>
+    );
   }
 
   return (
-    <section className="flex w-full flex-col gap-3 p-10">
+    <section
+      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10 pb-0`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex h-16 w-full items-center justify-between gap-3">
           <div className="relative flex w-full max-w-md items-center gap-3">
@@ -89,10 +101,10 @@ const SuppliersPage = () => {
         </div>
       </div>
 
-      <div className="flex gap-10">
-        <div className="flex w-[80%] flex-col rounded-md">
+      <div className="flex gap-10 overflow-hidden">
+        <div className="flex w-1/2 flex-col rounded-md">
           <span>Records</span>
-          <div className="mt-2 flex max-h-[75vh] min-h-[50vh] flex-col overflow-y-auto pr-5 md:max-h-[80vh]">
+          <div className="mt-2 flex flex-col overflow-y-scroll pr-5">
             {data?.map((supplier) => (
               <Card
                 key={supplier.Personal_Details_Id}
@@ -126,9 +138,9 @@ const SuppliersPage = () => {
           </div>
         </div>
 
-        <div className="flex h-full w-full flex-col">
+        <div className="flex h-full w-1/2 flex-col">
           <span>Details</span>
-          <div className="mt-2 flex h-full flex-col overflow-y-hidden rounded-md bg-gray p-3 pr-5 md:max-h-[80vh]">
+          <div className="mt-2 flex h-full flex-col overflow-y-hidden rounded-md bg-gray p-3 pr-5">
             {selectedSupplier ? (
               <div className="flex gap-5">
                 <div className="flex h-full w-full flex-col gap-3">
@@ -149,17 +161,17 @@ const SuppliersPage = () => {
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">
+                    <span className="font-light text-textGray">
                       Contact Number
                     </span>
                     <span>{selectedSupplier.Personal_Details.contact}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">Email</span>
+                    <span className="font-light text-textGray">Email</span>
                     <span>{selectedSupplier.Personal_Details.email}</span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">Location</span>
+                    <span className="font-light text-textGray">Location</span>
                     <span>
                       {selectedSupplier.Personal_Details.location
                         ?.address_line || "N/A"}
@@ -182,14 +194,14 @@ const SuppliersPage = () => {
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">Notes</span>
+                    <span className="font-light text-textGray">Notes</span>
                     <span>{selectedSupplier.Personal_Details.notes}</span>
                   </div>
                 </div>
 
                 <Separator orientation="vertical" />
 
-                <div className="flex w-full flex-col">
+                <div className="flex w-full flex-col overflow-y-hidden">
                   <div className="flex items-center justify-between">
                     <Label className="text-textGray">Restocks</Label>
                     <Button variant={"link"} className="m-0 p-0 text-green">
@@ -197,95 +209,32 @@ const SuppliersPage = () => {
                     </Button>
                   </div>
 
-                  <div className="mt-3 flex flex-col gap-3 overflow-y-auto pb-3">
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
+                  <div className="mt-3 flex flex-col pb-3">
+                    <ScrollArea className="h-[calc(100vh-200px)] w-full">
+                      <div className="mt-3 flex flex-col gap-3 pb-3 pr-3">
+                        {[...Array(6)].map((_, index) => (
+                          <Card
+                            key={index}
+                            className="flex w-full items-center justify-between p-5"
+                          >
+                            <div className="flex flex-col gap-3">
+                              <Label className="text-xs">
+                                {selectedSupplier.id}
+                              </Label>
+                              <Label className="text-gray-600 text-xs">
+                                {selectedSupplier.Personal_Details.first_name}{" "}
+                                {selectedSupplier.Personal_Details.last_name}
+                              </Label>
+                            </div>
 
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
+                            <div className="text-gray-600 flex flex-col gap-3">
+                              <Label className="text-xs">Date: 10/15/24</Label>
+                              <Label className="text-xs">Time: 9:00 AM</Label>
+                            </div>
+                          </Card>
+                        ))}
                       </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
+                    </ScrollArea>
                   </div>
                 </div>
               </div>

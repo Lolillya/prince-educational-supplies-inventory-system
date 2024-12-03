@@ -6,6 +6,7 @@ import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
+import { LoadingSpinner } from "~/components/loading";
 
 const NewSupplierState = ({ id }: { id: string }) => {
   const [supplierForm, setSupplierForm] = useState({
@@ -46,8 +47,18 @@ const NewSupplierState = ({ id }: { id: string }) => {
     }
   }, [isLoading, supplierData]);
 
-  if (isLoading) return <div>Loading...</div>;
-  if (isError) return <div>Error fetching data...</div>;
+  if (isLoading)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
+  if (isError)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <span>Error fetching data...</span>
+      </section>
+    );
 
   const handleSubmit = () => {
     // Handle submit logic

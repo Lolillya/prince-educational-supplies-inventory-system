@@ -181,23 +181,20 @@ const SuppliersPage = () => {
                         <span className="font-light text-textGray">Location</span>
                         <span>
                       {selectedSupplier.Personal_Details.location
-                          ?.address_line || "N/A"}
+                          ?.address_line ?? "N/A"}
                     </span>
                         <span>
-                      {selectedSupplier.Personal_Details.location?.city ||
-                          "N/A"}
+                      {selectedSupplier.Personal_Details.location?.city ?? "N/A"}
                     </span>
                         <span>
-                      {selectedSupplier.Personal_Details.location?.region ||
-                          "N/A"}
+                      {selectedSupplier.Personal_Details.location?.region ?? "N/A"}
                     </span>
                         <span>
-                      {selectedSupplier.Personal_Details.location?.country ||
-                          "N/A"}
+                      {selectedSupplier.Personal_Details.location?.country ?? "N/A"}
                     </span>
                         <span>
                       {selectedSupplier.Personal_Details.location
-                          ?.postal_code || "N/A"}
+                          ?.postal_code ?? "N/A"}
                     </span>
                       </div>
                       <div className="flex flex-col gap-1">

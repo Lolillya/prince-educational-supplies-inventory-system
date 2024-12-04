@@ -156,7 +156,6 @@ const NewSupplierState = ({ id }: { id: string }) => {
         return newErrors;
     };
 
-
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
 

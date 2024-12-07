@@ -219,39 +219,39 @@ export const inventoryRouter = createTRPCRouter({
       });
     }),
 
-  listAllData: publicProcedure.query(async () => {
-      const brands = await prisma.brand.findMany();
-      const categories = await prisma.category.findMany();
-      const units = await prisma.unit.findMany();
-      const items = await prisma.item.findMany({
-          include: {
-              variants: true, // Include variants associated with each item
-          },
-      });
-      const attributes = await prisma.attribute.findMany({
-          include: {
-              attributeValues: true, // Include attribute values
-          },
-      });
-
-      // Extract all variants into a flat list
-      const variants = items.flatMap(item =>
-          item.variants.map(variant => ({
-              variant_id: variant.variant_id,
-              name: variant.name,
-              item_id: item.item_id, // Include item_id for reference
-          }))
-      );
-
-      return {
-          brands,
-          categories,
-          units,
-          items,
-          variants, // Return the flat list of variants
-          attributes, // Return attributes data
-      };
-  }),
+  // listAllData: publicProcedure.query(async () => {
+  //     const brands = await prisma.brand.findMany();
+  //     const categories = await prisma.category.findMany();
+  //     const units = await prisma.unit.findMany();
+  //     const items = await prisma.item.findMany({
+  //         include: {
+  //             variants: true, // Include variants associated with each item
+  //         },
+  //     });
+  //     const attributes = await prisma.attribute.findMany({
+  //         include: {
+  //             attributeValues: true, // Include attribute values
+  //         },
+  //     });
+  //
+  //     // Extract all variants into a flat list
+  //     const variants = items.flatMap(item =>
+  //         item.variants.map(variant => ({
+  //             variant_id: variant.variant_id,
+  //             name: variant.name,
+  //             item_id: item.item_id, // Include item_id for reference
+  //         }))
+  //     );
+  //
+  //     return {
+  //         brands,
+  //         categories,
+  //         units,
+  //         items,
+  //         variants, // Return the flat list of variants
+  //         attributes, // Return attributes data
+  //     };
+  // }),
 
   // Create a new item
   createItem: publicProcedure.input(itemSchema).mutation(async ({ input }) => {

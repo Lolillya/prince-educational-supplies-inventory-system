@@ -285,7 +285,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                 <div className="flex h-full w-full flex-col justify-center gap-7">
                     <div className="flex flex-col gap-2">
                         <Label>
-                            Business <span className="text-red">*</span>
+                            Business <span className="text-red"></span>
                         </Label>
                         <Input
                             name="businessName"
@@ -302,7 +302,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
 
                     <div className="flex flex-col gap-2">
                         <Label>
-                            Salesperson <span className="text-red"></span>
+                            Salesperson <span className="text-red">*</span>
                         </Label>
                         <div className="flex items-center gap-3">
                             <Input
@@ -441,7 +441,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                     <div className="flex gap-3">
                         <div className="flex w-full flex-col gap-2">
                             <Label>
-                                Username <span className="text-red"></span>
+                                Username <span className="text-red">*</span>
                             </Label>
                             <Input
                                 name="username"
@@ -456,7 +456,9 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                         </div>
 
                         <div className="flex w-full flex-col gap-2">
-                            <Label>Password</Label>
+                            <Label>
+                                Password <span className="text-red">*</span>
+                            </Label>
                             <Input
                                 type="password"
                                 name="password"

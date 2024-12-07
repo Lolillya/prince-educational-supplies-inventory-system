@@ -2,14 +2,16 @@
 
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
-import { useState } from "react";
+import {useEffect, useState} from "react";
 import { ListFilter, Pencil, Search } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
-import { Card, CardTitle } from "~/components/ui/card";
+import { Card } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { UsersChart } from "../customers/_components/users-chart";
 import { Separator } from "~/components/ui/separator";
+import { LoadingSpinner } from "~/components/loading";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 interface PersonalDetails {
   personal_details_id: string;
@@ -53,19 +55,55 @@ const SuppliersPage = () => {
   const handleEditSupplier = (id: string) => {
     router.push(`/admin/suppliers/edit-supplier/${id}`);
   };
-  const { data, isError, isLoading } = api.suppliers.list.useQuery();
+  const { data, isError, isLoading, refetch } = api.suppliers.list.useQuery();
   console.log(data);
 
+  // Filter suppliers based on search term
+  const filteredSuppliers = data?.filter((supplier) => {
+    const company = supplier.Personal_Details.company?.toLowerCase() ?? "";
+    const contact = supplier.Personal_Details.contact?.toLowerCase() ?? "";
+    const email = supplier.Personal_Details.email?.toLowerCase() ?? "";
+
+    return (
+        company.includes(searchTerm.toLowerCase()) ??
+        contact.includes(searchTerm.toLowerCase()) ??
+        email.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  useEffect(() => {
+    const handleRouteChange = () => {
+      refetch(); // Refetch data whenever route changes
+    };
+
+    router.events?.on("routeChangeComplete", handleRouteChange);
+
+    return () => {
+      router.events?.off("routeChangeComplete", handleRouteChange);
+    };
+  }, [refetch, router.events]);
+
+
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
   }
 
   if (isError) {
-    return <div>Error fetching data...</div>;
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <span>Error fetching data...</span>
+      </section>
+    );
   }
 
   return (
-    <section className="flex w-full flex-col gap-3 p-10">
+    <section
+      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10 pb-0`}
+    >
       <div className="flex items-center justify-between">
         <div className="flex h-16 w-full items-center justify-between gap-3">
           <div className="relative flex w-full max-w-md items-center gap-3">
@@ -89,11 +127,11 @@ const SuppliersPage = () => {
         </div>
       </div>
 
-      <div className="flex gap-10">
-        <div className="flex w-[80%] flex-col rounded-md">
+      <div className="flex gap-10 overflow-hidden">
+        <div className="flex w-1/2 flex-col rounded-md">
           <span>Records</span>
-          <div className="mt-2 flex max-h-[75vh] min-h-[50vh] flex-col overflow-y-auto pr-5 md:max-h-[80vh]">
-            {data?.map((supplier) => (
+          <div className="mt-2 flex flex-col overflow-y-scroll pr-5">
+            {filteredSuppliers?.map((supplier) => (
               <Card
                 key={supplier.Personal_Details_Id}
                 className={`flex cursor-pointer flex-col gap-3 p-7 transition-transform ${
@@ -126,173 +164,111 @@ const SuppliersPage = () => {
           </div>
         </div>
 
-        <div className="flex h-full w-full flex-col">
+        <div className="flex h-full w-1/2 flex-col">
           <span>Details</span>
-          <div className="mt-2 flex h-full flex-col overflow-y-hidden rounded-md bg-gray p-3 pr-5 md:max-h-[80vh]">
+          <div
+              className="mt-2 flex h-full flex-col rounded-md bg-gray p-3 pr-5 min-h-[calc(100vh-200px)] overflow-auto">
             {selectedSupplier ? (
-              <div className="flex gap-5">
-                <div className="flex h-full w-full flex-col gap-3">
-                  <UsersChart />
-                  <div className="flex items-center gap-5 text-xs">
+                <div className="flex gap-5">
+                  <div className="flex h-full w-full flex-col gap-3">
+                    <UsersChart/>
+                    <div className="flex items-center gap-5 text-xs">
                     <span className="font-bold">
                       {selectedSupplier.Personal_Details.company}
                     </span>
-                    <span>{selectedSupplier.Personal_Details_Id}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
+                      <span>{selectedSupplier.Personal_Details_Id}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
                     <span className="font-ligh text-textGray">
                       Sales Person
                     </span>
-                    <span>
+                      <span>
                       {selectedSupplier.Personal_Details.first_name}{" "}
-                      {selectedSupplier.Personal_Details.last_name}
+                        {selectedSupplier.Personal_Details.last_name}
                     </span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">
+                    </div>
+                    <div className="flex flex-col gap-1">
+                    <span className="font-light text-textGray">
                       Contact Number
                     </span>
-                    <span>{selectedSupplier.Personal_Details.contact}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">Email</span>
-                    <span>{selectedSupplier.Personal_Details.email}</span>
-                  </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">Location</span>
-                    <span>
+                      <span>{selectedSupplier.Personal_Details.contact}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-light text-textGray">Email</span>
+                      <span>{selectedSupplier.Personal_Details.email}</span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-light text-textGray">Location</span>
+                      <span>
                       {selectedSupplier.Personal_Details.location
-                        ?.address_line || "N/A"}
+                          ?.address_line ?? "N/A"}
                     </span>
-                    <span>
-                      {selectedSupplier.Personal_Details.location?.city ||
-                        "N/A"}
+                      <span>
+                      {selectedSupplier.Personal_Details.location?.city ??
+                          "N/A"}
                     </span>
-                    <span>
-                      {selectedSupplier.Personal_Details.location?.region ||
-                        "N/A"}
+                      <span>
+                      {selectedSupplier.Personal_Details.location?.region ??
+                          "N/A"}
                     </span>
-                    <span>
-                      {selectedSupplier.Personal_Details.location?.country ||
-                        "N/A"}
+                      <span>
+                      {selectedSupplier.Personal_Details.location?.country ??
+                          "N/A"}
                     </span>
-                    <span>
+                      <span>
                       {selectedSupplier.Personal_Details.location
-                        ?.postal_code || "N/A"}
+                          ?.postal_code ?? "N/A"}
                     </span>
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <span className="font-light text-textGray">Notes</span>
+                      <span>{selectedSupplier.Personal_Details.notes}</span>
+                    </div>
                   </div>
-                  <div className="flex flex-col gap-1">
-                    <span className="text-textGray font-light">Notes</span>
-                    <span>{selectedSupplier.Personal_Details.notes}</span>
+
+                  <Separator orientation="vertical"/>
+
+                  <div className="flex w-full flex-col overflow-y-hidden">
+                    <div className="flex items-center justify-between">
+                      <Label className="text-textGray">Restocks</Label>
+                      <Button variant={"link"} className="m-0 p-0 text-green">
+                        View all
+                      </Button>
+                    </div>
+
+                    <div className="mt-3 flex flex-col pb-3">
+                      <ScrollArea className="h-[calc(100vh-200px)] w-full">
+                        <div className="mt-3 flex flex-col gap-3 pb-3 pr-3">
+                          {[...Array(6)].map((_, index) => (
+                              <Card
+                                  key={index}
+                                  className="flex w-full items-center justify-between p-5"
+                              >
+                                <div className="flex flex-col gap-3">
+                                  <Label className="text-xs">
+                                    {selectedSupplier.id}
+                                  </Label>
+                                  <Label className="text-gray-600 text-xs">
+                                    {selectedSupplier.Personal_Details.first_name}{" "}
+                                    {selectedSupplier.Personal_Details.last_name}
+                                  </Label>
+                                </div>
+
+                                <div className="text-gray-600 flex flex-col gap-3">
+                                  <Label className="text-xs">Date: 10/15/24</Label>
+                                  <Label className="text-xs">Time: 9:00 AM</Label>
+                                </div>
+                              </Card>
+                          ))}
+                        </div>
+                      </ScrollArea>
+                    </div>
                   </div>
                 </div>
-
-                <Separator orientation="vertical" />
-
-                <div className="flex w-full flex-col">
-                  <div className="flex items-center justify-between">
-                    <Label className="text-textGray">Restocks</Label>
-                    <Button variant={"link"} className="m-0 p-0 text-green">
-                      View all
-                    </Button>
-                  </div>
-
-                  <div className="mt-3 flex flex-col gap-3 overflow-y-auto pb-3">
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-                    <Card className="flex w-full items-center justify-between p-5">
-                      <div className="flex flex-col gap-3">
-                        <Label className="text-xs">{selectedSupplier.id}</Label>
-                        <Label className="text-textGray text-xs">
-                          {selectedSupplier.Personal_Details.first_name}{" "}
-                          {selectedSupplier.Personal_Details.last_name}
-                        </Label>
-                      </div>
-
-                      <div className="text-textGray flex flex-col gap-3">
-                        <Label className="text-xs">Date: 10/15/24</Label>
-                        <Label className="text-xs">Time: 9:00 AM</Label>
-                      </div>
-                    </Card>
-                  </div>
-                </div>
-              </div>
             ) : (
-              <p className="text-gray-500 mt-6 text-center">
-                Select a supplier to view details
-              </p>
+                <p className="text-gray-500 mt-6 text-center">
+                  Select a supplier to view details
+                </p>
             )}
           </div>
         </div>

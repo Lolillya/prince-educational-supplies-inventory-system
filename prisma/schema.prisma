@@ -141,7 +141,7 @@ model Batch {
 model SupplierUnit {
   supplier_unit_id  Int              @id @default(autoincrement())
   batch_id          Int
-  supplier_id       String
+  supplier_id       String // References User_Role.id
   unit_id           Int
   price             Float
   quantity_per_unit Int
@@ -152,7 +152,7 @@ model SupplierUnit {
   ConversionRate    ConversionRate[]
   batch             Batch            @relation(fields: [batch_id], references: [batch_id])
   discount          Discount?        @relation(fields: [discount_id], references: [discount_id])
-  supplier          User_Role        @relation(fields: [supplier_id], references: [Personal_Details_Id])
+  supplier          User_Role        @relation(fields: [supplier_id], references: [id]) // Changed to reference User_Role.id
   unit              Unit             @relation(fields: [unit_id], references: [unit_id])
 }
 

@@ -19,6 +19,7 @@ import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Batch, Variant_Attribute } from "@prisma/client";
 import { LoadingSpinner } from "~/components/loading";
+import {ScrollArea} from "~/components/ui/scroll-area";
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[]; // Ensure this is always defined as an array
@@ -212,9 +213,22 @@ const InventoryPage = () => {
 
             {/* Scrollable batches section */}
             {/* <ScrollArea className={"scrollbar-hidden"}> */}
-            <div className="mt-5 flex flex-col gap-5 rounded-lg">
-              <BatchAccordion />
-            </div>
+            <ScrollArea className={"scrollbar-hidden"}>
+              <div className="mt-5 flex flex-col gap-5 rounded-lg">
+                {selectedItem?.variant.Batch &&
+                selectedItem.variant.Batch.length > 0 ? (
+                    selectedItem.variant.Batch.map((batch) => (
+                        <BatchAccordion key={batch.batch_id} batch={batch} />
+                    ))
+                ) : (
+                    <div className="py-10 text-center">
+                      <p className="text-lg font-semibold text-gray-500">
+                        No batches available
+                      </p>
+                    </div>
+                )}
+              </div>
+            </ScrollArea>
             {/* </ScrollArea> */}
           </div>
         </div>

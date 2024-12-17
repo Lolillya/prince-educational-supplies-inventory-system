@@ -26,7 +26,7 @@ const CustomerRouter = ({ title }: CustomerRouterProps) => {
           <DialogTrigger asChild>
             <ArrowLeft
               size={25}
-              color="#FF7B7B"
+              color={"#00B69B"}
               className="transition-all duration-300 hover:scale-125 hover:cursor-pointer"
             />
           </DialogTrigger>
@@ -60,7 +60,9 @@ const CustomerRouter = ({ title }: CustomerRouterProps) => {
           </DialogContent>
         </Dialog>
         <span className="font-bold">{title}</span>
-        <span className="text-gray-400 ml-3 text-sm font-light"></span>
+        <span className="ml-3 text-sm font-light text-textGray">
+          INSERT COMPANY NAME
+        </span>
       </div>
     </div>
   );

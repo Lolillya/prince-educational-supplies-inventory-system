@@ -132,8 +132,8 @@ const EditItem = () => {
         )}
       </div>
       <div className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
-        <Button size={"lg"} className="py-8 text-sm font-bold">
-          SAVE
+        <Button size={"lg"} className="bg-green py-8 text-sm font-bold">
+          Save Changes
         </Button>
       </div>
     </section>

@@ -142,9 +142,9 @@ const Sidebar = () => {
               className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white`}
             >
               {value.icon}
-              <Label className="ml-2 block hover:cursor-pointer">
+              <span className="ml-2 block text-sm hover:cursor-pointer">
                 {value.text}
-              </Label>
+              </span>
             </div>
           ))}
         </section>
@@ -161,9 +161,9 @@ const Sidebar = () => {
               className={`flex cursor-pointer items-center justify-start rounded-lg p-3 hover:bg-white`}
             >
               {value.icon}
-              <Label className="ml-2 block w-fit overflow-hidden transition-all duration-300 hover:cursor-pointer">
+              <span className="ml-2 block w-fit overflow-hidden text-sm transition-all duration-300 hover:cursor-pointer">
                 {value.text}
-              </Label>
+              </span>
             </div>
           ))}
         </section>
@@ -184,9 +184,9 @@ const Sidebar = () => {
                 className="m-0 flex items-center gap-2 rounded-lg p-3 transition-all duration-300 hover:cursor-pointer hover:bg-green hover:text-white group-hover:justify-start"
               >
                 {value.icon}
-                <Label className="w-fit opacity-100 transition-all duration-300 ease-in-out hover:cursor-pointer">
+                <span className="w-fit text-sm opacity-100 transition-all duration-300 ease-in-out hover:cursor-pointer">
                   {value.text}
-                </Label>
+                </span>
               </div>
             ))}
 
@@ -212,8 +212,8 @@ const Sidebar = () => {
           </Avatar>
 
           <div className="ml-3 flex w-fit flex-col transition-all duration-300">
-            <Label className="font-bold">John Doe</Label>
-            <Label className="font-extralight">Admin</Label>
+            <span className="text-sm font-bold">John Doe</span>
+            <span className="text-sm font-extralight">Admin</span>
           </div>
         </div>
       </section>

@@ -1,6 +1,5 @@
 "use client";
 
-import { Poppins } from "next/font/google";
 import { X, Bell } from "lucide-react";
 import { DashboardChart } from "./_components/dashboard-chart";
 import ChartsContainer from "./_components/pie-chart-container";

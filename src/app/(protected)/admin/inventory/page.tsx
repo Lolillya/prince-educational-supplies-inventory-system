@@ -190,22 +190,16 @@ const InventoryPage = () => {
                   </Button>
                 </DialogTrigger>
                 <DialogContent>
-                  <div className="relative flex w-full max-w-2xl flex-col gap-5 rounded-lg bg-white p-6 shadow-lg">
-                    <DialogTitle>Verify it's you!</DialogTitle>
+                  <DialogTitle className="text-center font-bold">
+                    Verify it's you!
+                  </DialogTitle>
 
-                    <div className="flex flex-col gap-1">
-                      <Label className="text-slate-400">Password</Label>
-                      <Input placeholder="Enter Password" className="p-6" />
-                    </div>
-                    <div className="flex justify-center gap-3">
-                      <Button size={"lg"}>Continue</Button>
-                      <Button
-                        size={"lg"}
-                        // onClick={() => setIsDialogOpen(!isDialogOpen)}
-                      >
-                        Cancel
-                      </Button>
-                    </div>
+                  <div className="flex flex-col gap-1">
+                    <Label className="text-slate-400">Password</Label>
+                    <Input placeholder="Enter Password" className="p-6" />
+                  </div>
+                  <div className="flex justify-center gap-3">
+                    <Button size={"lg"}>Continue</Button>
                   </div>
                 </DialogContent>
               </Dialog>

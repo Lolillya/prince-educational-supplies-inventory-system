@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import InventoryCard from "../../_components/inventory-card";
-import { api } from "~/utils/api";
+import { api } from "~/trpc/react";
 import { useParams } from "next/navigation";
 import { Button } from "~/components/ui/button";
 

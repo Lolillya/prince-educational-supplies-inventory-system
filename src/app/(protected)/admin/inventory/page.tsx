@@ -19,7 +19,9 @@ import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
 import { Batch, Variant_Attribute } from "@prisma/client";
 import { LoadingSpinner } from "~/components/loading";
-import {ScrollArea} from "~/components/ui/scroll-area";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import { DialogTitle } from "@radix-ui/react-dialog";
+import { Input } from "~/components/ui/input";
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[]; // Ensure this is always defined as an array
@@ -187,14 +189,13 @@ const InventoryPage = () => {
                     View All
                   </Button>
                 </DialogTrigger>
-                <DialogContent className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 p-4">
+                <DialogContent>
                   <div className="relative flex w-full max-w-2xl flex-col gap-5 rounded-lg bg-white p-6 shadow-lg">
-                    <DialogHeader className="flex items-center text-2xl font-bold">
-                      <span>Verify it's you!</span>
-                    </DialogHeader>
+                    <DialogTitle>Verify it's you!</DialogTitle>
+
                     <div className="flex flex-col gap-1">
                       <Label className="text-slate-400">Password</Label>
-                      <input placeholder="Enter Password" className="p-6" />
+                      <Input placeholder="Enter Password" className="p-6" />
                     </div>
                     <div className="flex justify-center gap-3">
                       <Button size={"lg"}>Continue</Button>
@@ -217,15 +218,15 @@ const InventoryPage = () => {
               <div className="mt-5 flex flex-col gap-5 rounded-lg">
                 {selectedItem?.variant.Batch &&
                 selectedItem.variant.Batch.length > 0 ? (
-                    selectedItem.variant.Batch.map((batch) => (
-                        <BatchAccordion key={batch.batch_id} batch={batch} />
-                    ))
+                  selectedItem.variant.Batch.map((batch) => (
+                    <BatchAccordion key={batch.batch_id} batch={batch} />
+                  ))
                 ) : (
-                    <div className="py-10 text-center">
-                      <p className="text-lg font-semibold text-gray-500">
-                        No batches available
-                      </p>
-                    </div>
+                  <div className="py-10 text-center">
+                    <p className="text-gray-500 text-lg font-semibold">
+                      No batches available
+                    </p>
+                  </div>
                 )}
               </div>
             </ScrollArea>

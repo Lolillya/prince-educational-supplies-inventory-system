@@ -34,11 +34,14 @@ const RestockPage = () => {
       <div className="relative flex items-center justify-between">
         <div className="flex h-16 items-center gap-3">
           <div className="relative flex h-auto w-full max-w-md items-center gap-3">
-            <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
-            <Input placeholder="Search" className="bg-gray-100 p-5 pl-10" />
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-textGray" />
+            <Input
+              placeholder="Search"
+              className="bg-gray p-6 pl-10 placeholder:text-textGray"
+            />
 
-            <div className="bg-gray-100 hover:bg-gray-300 rounded-md p-3 hover:cursor-pointer">
-              <ListFilter />
+            <div className="rounded-md bg-gray p-3 hover:cursor-pointer">
+              <ListFilter color="#989FB3" />
             </div>
           </div>
         </div>

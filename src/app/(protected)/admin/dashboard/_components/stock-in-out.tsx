@@ -9,6 +9,7 @@ import {
   Dialog,
   DialogContent,
   DialogHeader,
+  DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
 import {
@@ -20,6 +21,7 @@ import {
   TableBody,
   TableCell,
 } from "~/components/ui/table";
+import { Button } from "~/components/ui/button";
 // import { button } from "./ui/button";
 
 const DashboardStockedInOut = () => {
@@ -45,10 +47,12 @@ const DashboardStockedInOut = () => {
         </DialogTrigger>
         <DialogContent className="flex h-full max-h-[80%] w-full max-w-5xl flex-col justify-start">
           <DialogHeader className="h-fit">
-            <div className="flex items-center gap-1">
-              <span>STOCKED IN</span>
-              <span>(OCTOBER)</span>
-            </div>
+            <DialogTitle className="flex items-center gap-1">
+              STOCKED IN
+              <Label className="font-light text-textGray">
+                MM/DD/YY - MM/DD/YY
+              </Label>
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex h-full w-full flex-col justify-between overflow-x-auto">
@@ -65,36 +69,26 @@ const DashboardStockedInOut = () => {
                 <TableRow>
                   <TableCell>Acme Corp</TableCell>
                   <TableCell>John Doe</TableCell>
-                  <TableCell>2023-05-15</TableCell>
-                  <TableCell>50</TableCell>
+                  <TableCell>October 1, 2024</TableCell>
+                  <TableCell>+ 50</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Global Supplies Inc.</TableCell>
                   <TableCell>Jane Smith</TableCell>
-                  <TableCell>2023-05-14</TableCell>
-                  <TableCell>75</TableCell>
+                  <TableCell>October 1, 2024</TableCell>
+                  <TableCell>+ 75</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Tech Innovations Ltd.</TableCell>
                   <TableCell>Bob Johnson</TableCell>
-                  <TableCell>2023-05-13</TableCell>
-                  <TableCell>100</TableCell>
+                  <TableCell>October 1, 2024</TableCell>
+                  <TableCell>+ 100</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
-            <div className="m-3 mt-4 flex justify-end gap-3 text-center text-sm text-gray-500">
-              <button
-                // size={"lg"}
-                className="border-[#FF7B7B] bg-white font-bold text-[#FF7B7B] hover:bg-[#FF7B7B] hover:text-white"
-              >
-                Print
-              </button>
-              <button
-                // size={"lg"}
-                className="bg-[#FF7B7B] font-bold text-white hover:bg-white hover:text-[#FF7B7B]"
-              >
-                Save
-              </button>
+            <div className="m-3 mt-4 flex items-center justify-end gap-3 text-center text-sm">
+              <Button variant={"link"}>Close</Button>
+              <Button variant={"default"}>Export</Button>
             </div>
           </div>
         </DialogContent>
@@ -120,10 +114,12 @@ const DashboardStockedInOut = () => {
         </DialogTrigger>
         <DialogContent className="flex h-full max-h-[80%] w-full max-w-5xl flex-col justify-start">
           <DialogHeader className="h-fit">
-            <div className="flex items-center gap-1">
-              <span>STOCKED OUT</span>
-              <span>(OCTOBER)</span>
-            </div>
+            <DialogTitle className="flex items-center gap-1">
+              STOCKED OUT
+              <span className="text-sm font-light text-textGray">
+                MM/DD/YY - MM/DD/YY
+              </span>
+            </DialogTitle>
           </DialogHeader>
 
           <div className="flex h-full w-full flex-col justify-between overflow-x-auto">
@@ -140,36 +136,26 @@ const DashboardStockedInOut = () => {
                 <TableRow>
                   <TableCell>Acme Corp</TableCell>
                   <TableCell>John Doe</TableCell>
-                  <TableCell>2023-05-15</TableCell>
-                  <TableCell>50</TableCell>
+                  <TableCell>October 1, 2024</TableCell>
+                  <TableCell>+ 50</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Global Supplies Inc.</TableCell>
                   <TableCell>Jane Smith</TableCell>
-                  <TableCell>2023-05-14</TableCell>
-                  <TableCell>75</TableCell>
+                  <TableCell>October 1, 2024</TableCell>
+                  <TableCell>+ 75</TableCell>
                 </TableRow>
                 <TableRow>
                   <TableCell>Tech Innovations Ltd.</TableCell>
                   <TableCell>Bob Johnson</TableCell>
-                  <TableCell>2023-05-13</TableCell>
-                  <TableCell>100</TableCell>
+                  <TableCell>October 1, 2024</TableCell>
+                  <TableCell>+ 100</TableCell>
                 </TableRow>
               </TableBody>
             </Table>
-            <div className="m-3 mt-4 flex justify-end gap-3 text-center text-sm text-gray-500">
-              <button
-                // size={"lg"}
-                className="border-[#FF7B7B] bg-white font-bold text-[#FF7B7B] hover:bg-[#FF7B7B] hover:text-white"
-              >
-                Print
-              </button>
-              <button
-                // size={"lg"}
-                className="bg-[#FF7B7B] font-bold text-white hover:bg-white hover:text-[#FF7B7B]"
-              >
-                Save
-              </button>
+            <div className="m-3 mt-4 flex items-center justify-end gap-3 text-center text-sm">
+              <Button variant={"link"}>Close</Button>
+              <Button variant={"default"}>Export</Button>
             </div>
           </div>
         </DialogContent>

@@ -117,15 +117,7 @@ export const inventoryRouter = createTRPCRouter({
                 category: true,
               },
             },
-            variantAttributes: {
-              include: {
-                attributeValue: {
-                  select: {
-                    value: true,
-                  },
-                },
-              },
-            },
+
             Batch: {
               include: {
                 supplierUnits: {
@@ -175,15 +167,7 @@ export const inventoryRouter = createTRPCRouter({
                   category: true,
                 },
               },
-              variantAttributes: {
-                include: {
-                  attributeValue: {
-                    select: {
-                      value: true,
-                    },
-                  },
-                },
-              },
+
               Batch: {
                 include: {
                   supplierUnits: {

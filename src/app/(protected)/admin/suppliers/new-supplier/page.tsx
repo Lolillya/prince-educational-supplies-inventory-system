@@ -1,7 +1,7 @@
 "use client";
 
 import { Poppins } from "next/font/google";
-import NewSupplierRouter from "../_components/supplier-router";
+import SupplierRouter from "../_components/supplier-router";
 import NewSupplierState from "../_components/new-supplier";
 import { api } from "~/trpc/react";
 import { useState } from "react";
@@ -40,7 +40,7 @@ const NewSupplier = () => {
     <section
       className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
     >
-      <NewSupplierRouter title="NEW SUPPLIER" />
+      <SupplierRouter title="NEW SUPPLIER" />
       <NewSupplierState id="" />
     </section>
   );

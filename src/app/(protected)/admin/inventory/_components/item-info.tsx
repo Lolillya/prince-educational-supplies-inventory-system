@@ -16,9 +16,9 @@ import { useRouter } from "next/navigation";
 import BatchAccordion from "./batch-accordion";
 import { useState } from "react";
 
-// interface InventoryItemInfoProps {
-//   inventoryItems: InventoryItem[];
-// }
+interface InventoryItemInfoProps {
+  inventoryItems: InventoryItem[];
+}
 
 interface Unit {
   unit_id: number;
@@ -44,28 +44,34 @@ interface Item {
   category: Category;
 }
 
-// interface Variant {
-//   variant_id: number;
-//   item_id: number;
-//   unit: Unit;
-//   item: Item;
-//   name?: string;
-//   description?: string;
-//   Batch: Batch[];
-//   variantAttributes: Variant_Attribute[];
-// }
+interface Variant {
+  variant_id: number;
+  item_id: number;
+  unit: Unit;
+  item: Item;
+  name?: string;
+  description?: string;
+  Batch: Batch[];
+  variantAttributes: Variant_Attribute[];
+}
 
-// interface InventoryItem {
-//   inventory_id: number;
-//   variant_id: number;
-//   quantity: number;
-//   variant: Variant;
-// }
+interface InventoryItem {
+  inventory_id: number;
+  variant_id: number;
+  quantity: number;
+  variant: Variant;
+}
 
 const InventoryItemInfo = ({ inventoryItems = [] }) => {
-  const [selectedItem, setSelectedItem] = useState(null);
+  // const [selectedItem, setSelectedItem] = useState(null);
   const router = useRouter();
 
+  const [selectedItem, setSelectedItem] = useState<InventoryItem | null>(null);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+
+  const handleUserClick = (item: InventoryItem) => {
+    setSelectedItem(item);
+  };
   const handleEditItem = (variantId: number) => {
     router.push(`/admin/inventory/editItem/${variantId}`);
   };
@@ -279,9 +285,22 @@ const InventoryItemInfo = ({ inventoryItems = [] }) => {
 
           {/* Scrollable batches section */}
           {/* <ScrollArea className={"scrollbar-hidden"}> */}
-          <div className="mt-5 flex flex-col gap-5 rounded-lg">
-            <BatchAccordion />
-          </div>
+          <ScrollArea className={"scrollbar-hidden"}>
+            <div className="mt-5 flex flex-col gap-5 rounded-lg">
+              {selectedItem?.variant.Batch &&
+              selectedItem.variant.Batch.length > 0 ? (
+                  selectedItem.variant.Batch.map((batch) => (
+                      <BatchAccordion key={batch.batch_id} batch={batch} />
+                  ))
+              ) : (
+                  <div className="py-10 text-center">
+                    <p className="text-lg font-semibold text-gray-500">
+                      No batches available
+                    </p>
+                  </div>
+              )}
+            </div>
+          </ScrollArea>
           {/* </ScrollArea> */}
         </div>
       </div>

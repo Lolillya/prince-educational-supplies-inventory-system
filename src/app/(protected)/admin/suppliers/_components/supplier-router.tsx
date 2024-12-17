@@ -16,7 +16,7 @@ interface NewSupplierRouterProps {
   title: string; // Title to display in the header
 }
 
-const NewSupplierRouter = ({ title }: NewSupplierRouterProps) => {
+const SupplierRouter = ({ title }: NewSupplierRouterProps) => {
   const [isOpen, setIsOpen] = useState(false);
   const router = useRouter();
   return (
@@ -66,4 +66,4 @@ const NewSupplierRouter = ({ title }: NewSupplierRouterProps) => {
   );
 };
 
-export default NewSupplierRouter;
+export default SupplierRouter;

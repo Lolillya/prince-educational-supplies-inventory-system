@@ -14,18 +14,12 @@ import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import DashboardStockedInOut from "./_components/stock-in-out";
 import { useSession } from "next-auth/react";
 
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
-
 const AdminDashboard = () => {
   const session = useSession();
-  console.log(session);
 
   return (
     <section
-      className={`h-auto w-screen p-10 ${poppins.className} flex flex-col gap-3 overflow-y-scroll`}
+      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10`}
     >
       <div className="flex items-center justify-between">
         <div className="flex flex-col gap-2">

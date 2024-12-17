@@ -17,7 +17,7 @@ import { Separator } from "~/components/ui/separator";
 import BatchAccordion from "./_components/batch-accordion";
 import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
-import { Batch, Variant_Attribute } from "@prisma/client";
+import { Batch } from "@prisma/client";
 import { LoadingSpinner } from "~/components/loading";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { DialogTitle } from "@radix-ui/react-dialog";
@@ -60,7 +60,6 @@ interface Variant {
   name?: string; // Optional field for the variant name
   description?: string; // Optional description
   Batch: Batch[]; // Assuming Batch is defined elsewhere
-  variantAttributes: Variant_Attribute[]; // Include variantAttributes
 }
 
 interface InventoryItem {
@@ -115,9 +114,9 @@ const InventoryPage = () => {
               {Array.isArray(inventoryItems) && inventoryItems.length > 0 ? (
                 inventoryItems.map((item) => (
                   <div
-                    className={`font-poppins border-gray-300 hover:bg-gray-100 flex cursor-pointer items-center justify-between rounded-md border p-7 shadow-md transition-all duration-200 ${
+                    className={`flex cursor-pointer items-center justify-between rounded-md border p-7 shadow-md transition-all duration-300 hover:bg-gray ${
                       selectedItem?.inventory_id === item.inventory_id
-                        ? "bg-gray-300"
+                        ? "bg-gray"
                         : ""
                     }`}
                     key={item.inventory_id}
@@ -127,7 +126,7 @@ const InventoryPage = () => {
                       <span>{item.variant.item.name}</span>
                       <span> - {item.variant.name || "N/A"}</span>
                       <span> - {item.variant.item.brand.name}</span>
-                      <span className="text-gray-400 text-xs">
+                      <span className="text-xs text-textGray">
                         {item.variant.variant_id || "N/A"}
                       </span>
                     </div>
@@ -195,8 +194,11 @@ const InventoryPage = () => {
                   </DialogTitle>
 
                   <div className="flex flex-col gap-1">
-                    <Label className="text-slate-400">Password</Label>
-                    <Input placeholder="Enter Password" className="p-6" />
+                    <Label className="text-textGray">Password</Label>
+                    <Input
+                      placeholder="Enter Password"
+                      className="p-6 placeholder:text-textGray"
+                    />
                   </div>
                   <div className="flex justify-center gap-3">
                     <Button size={"lg"}>Continue</Button>

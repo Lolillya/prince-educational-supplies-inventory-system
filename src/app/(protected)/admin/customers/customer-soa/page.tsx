@@ -1,3 +1,5 @@
+"use client";
+
 import { Button } from "~/components/ui/button";
 import CustomerRouter from "../_components/customer-router";
 import { Card } from "~/components/ui/card";
@@ -21,8 +23,55 @@ import { DialogHeader } from "~/components/ui/dialog-transparent";
 import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
 import { Textarea } from "~/components/ui/textarea";
+import { useState } from "react";
+import { OrderDialog } from "../_components/order-dialog";
+import { PaymentDialog } from "../_components/payment-dialog";
+
+// DUMMY DATA --------------
+
+type Transaction = {
+  date: string;
+  type: "Payment" | "Order";
+  reference: string;
+  amount: string;
+};
+
+const transactions: Transaction[] = [
+  {
+    date: "MM/DD/YY",
+    type: "Payment",
+    reference: "#123456",
+    amount: "+ Php 2,000.00",
+  },
+  {
+    date: "MM/DD/YY",
+    type: "Order",
+    reference: "#123456",
+    amount: "+ Php 2,000.00",
+  },
+  {
+    date: "MM/DD/YY",
+    type: "Payment",
+    reference: "#123456",
+    amount: "+ Php 2,000.00",
+  },
+  {
+    date: "MM/DD/YY",
+    type: "Order",
+    reference: "#123456",
+    amount: "+ Php 2,000.00",
+  },
+];
+
+// --------------------------
 
 const SOA = () => {
+  const [selectedTransaction, setSelectedTransaction] =
+    useState<Transaction | null>(null);
+
+  const handleRowClick = (transaction: Transaction) => {
+    setSelectedTransaction(transaction);
+  };
   return (
     <section className="flex h-screen max-h-screen w-screen flex-col gap-3 overflow-y-scroll p-10 pb-0">
       <CustomerRouter title="STATEMENT OF ACCOUNT" />
@@ -76,35 +125,40 @@ const SOA = () => {
             </TableRow>
           </TableHeader>
           <TableBody>
-            <TableRow>
-              <TableCell>MM/DD/YY</TableCell>
-              <TableCell>Order</TableCell>
-              <TableCell className="text-green">#123456</TableCell>
-              <TableCell className="text-right">+ Php 2,000.00</TableCell>
-            </TableRow>
-
-            <TableRow>
-              <TableCell>MM/DD/YY</TableCell>
-              <TableCell>Order</TableCell>
-              <TableCell className="text-green">#123456</TableCell>
-              <TableCell className="text-right">+ Php 2,000.00</TableCell>
-            </TableRow>
-
-            <TableRow>
-              <TableCell>MM/DD/YY</TableCell>
-              <TableCell>Order</TableCell>
-              <TableCell className="text-green">#123456</TableCell>
-              <TableCell className="text-right">+ Php 2,000.00</TableCell>
-            </TableRow>
-
-            <TableRow>
-              <TableCell>MM/DD/YY</TableCell>
-              <TableCell>Order</TableCell>
-              <TableCell className="text-green">#123456</TableCell>
-              <TableCell className="text-right">+ Php 2,000.00</TableCell>
-            </TableRow>
+            {transactions.map((transaction, index) => (
+              <TableRow
+                key={index}
+                onClick={() => handleRowClick(transaction)}
+                className="cursor-pointer"
+              >
+                <TableCell>{transaction.date}</TableCell>
+                <TableCell>{transaction.type}</TableCell>
+                <TableCell className="text-green-500">
+                  {transaction.reference}
+                </TableCell>
+                <TableCell className="text-right">
+                  {transaction.amount}
+                </TableCell>
+              </TableRow>
+            ))}
           </TableBody>
         </Table>
+
+        {selectedTransaction?.type === "Payment" && (
+          <PaymentDialog
+            isOpen={!!selectedTransaction}
+            onClose={() => setSelectedTransaction(null)}
+            transaction={selectedTransaction}
+          />
+        )}
+
+        {selectedTransaction?.type === "Order" && (
+          <OrderDialog
+            isOpen={!!selectedTransaction}
+            onClose={() => setSelectedTransaction(null)}
+            transaction={selectedTransaction}
+          />
+        )}
       </div>
     </section>
   );

@@ -189,7 +189,7 @@ const CustomersPage = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-green">Php 5,000.00</span>
                       <Button
-                        variant={"default"}
+                        variant={"link"}
                         onClick={() =>
                           router.push("/admin/customers/customer-soa/")
                         }

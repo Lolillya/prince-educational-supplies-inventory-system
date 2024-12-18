@@ -1,6 +1,6 @@
 "use client";
 
-import { Search, ArrowLeft } from "lucide-react";
+import { Search, ArrowLeft, ArrowRight } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { useRouter } from "next/navigation";
 import StockCard from "../_components/stock-card";
@@ -21,7 +21,9 @@ import {
 } from "~/components/ui/table";
 import { Label } from "~/components/ui/label";
 import { useState, useEffect } from "react";
-import { api } from "~/trpc/react"; // Assuming this is the same API structure used in the example
+import { api } from "~/trpc/react";
+import SupplierDropdown from "../_components/Supplier-Dropdown";
+import { HoverCard, HoverCardTrigger, HoverCardContent } from "../_components/Hover-Card"
 
 // Define the data structure for inventory items
 type InventoryItem = {
@@ -42,9 +44,19 @@ const InvoiceAddStock = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
+  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({}); // Stock values as strings
 
   const { data: inventoryItems, isLoading, isError } =
       api.inventory.listInventory.useQuery();
+
+  // Fetch the next available batch_id
+  const { data: nextBatchId, isLoading: isLoadingBatch, isError: isErrorBatch } =
+      api.restock.getBatchId.useQuery();
+
+  const { data: suppliers } =
+      api.restock.getSuppliers.useQuery();
+  const [selectedSupplier, setSelectedSupplier] = useState("");
+
 
   // Filter inventory items based on the search term
   useEffect(() => {
@@ -64,16 +76,36 @@ const InvoiceAddStock = () => {
   const handleSelectItem = (item: InventoryItem) => {
     if (!selectedItems.some((selected) => selected.inventory_id === item.inventory_id)) {
       setSelectedItems([...selectedItems, item]);
+      setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
     }
-    setSearchTerm(""); // Clear search input after selection
+    setSearchTerm(""); // Clear the search term to hide the dropdown
   };
+
 
   // Handle removing an item
   const handleRemoveItem = (inventoryId: number) => {
     setSelectedItems(selectedItems.filter((item) => item.inventory_id !== inventoryId));
+    setStockTotals((prev) => {
+      const updated = { ...prev };
+      delete updated[inventoryId]; // Remove stock for the deleted item
+      return updated;
+    });
   };
 
-  if (isLoading) {
+  const handleStockChange = (inventoryId: number, newStock: string) => {
+    setStockTotals((prev) => ({
+      ...prev,
+      [inventoryId]: newStock, // Update stock for the specific item
+    }));
+  };
+
+  // Calculate total stock
+  const totalStock = Object.values(stockTotals).reduce(
+      (sum, stock) => sum + Number(stock || 0),
+      0
+  );
+
+  if (isLoading || isLoadingBatch) {
     return (
         <section className="flex h-screen w-full items-center justify-center">
           <span>Loading...</span>
@@ -81,7 +113,7 @@ const InvoiceAddStock = () => {
     );
   }
 
-  if (isError) {
+  if (isError || isErrorBatch) {
     return (
         <section className="flex h-screen w-full items-center justify-center">
           <span>Error fetching data...</span>
@@ -90,7 +122,7 @@ const InvoiceAddStock = () => {
   }
 
   return (
-      <section className="flex h-auto w-screen flex-col gap-3 p-10">
+      <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
         <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
           <div className="flex items-center gap-1">
             <Dialog>
@@ -105,7 +137,8 @@ const InvoiceAddStock = () => {
                 <DialogTitle className="text-center">Confirm</DialogTitle>
                 <div className="flex flex-col gap-3 text-center">
                 <span>
-                  You have unsaved changes. Are you sure you want to leave this page?
+                  You have unsaved changes. Are you sure you want to leave this
+                  page?
                 </span>
                   <div className="flex items-center justify-center gap-3">
                     <Button className="border-2 border-green bg-transparent font-bold text-green">
@@ -122,14 +155,14 @@ const InvoiceAddStock = () => {
               </DialogContent>
             </Dialog>
             <span className="font-bold">ADD STOCK</span>
-            <span className="text-gray-400 ml-3 text-sm font-light">#12345</span>
+            <span className="text-gray-400 ml-3 text-sm font-light">#{nextBatchId}</span>
           </div>
         </div>
 
-        {/* Search Input */}
+
         <div className="flex w-full justify-center gap-3">
           <div className="relative flex w-full max-w-md items-center justify-center">
-            <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
+            <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform"/>
             <Input
                 placeholder="Search"
                 className="bg-gray p-5 pl-10"
@@ -146,11 +179,8 @@ const InvoiceAddStock = () => {
                             onClick={() => handleSelectItem(item)}
                         >
                           <div className="font-bold">{item.variant.item.name}</div>
-                          {/* Item Name */}
                           <div className="text-gray-500">{item.variant.item.brand.name}</div>
-                          {/* Brand Name */}
                           <div className="text-sm">{item.variant.name || "N/A"}</div>
-                          {/* Variant Name */}
                         </li>
                     ))}
                   </ul>
@@ -159,19 +189,20 @@ const InvoiceAddStock = () => {
           </div>
         </div>
 
-        {/* Display Selected Items */}
-        <div className="grid grid-cols-2 gap-4 mt-4">
+        <div className="grid grid-cols-2 gap-4">
           {selectedItems.map((item) => (
               <StockCard
                   key={item.inventory_id}
                   item={item}
                   onRemove={() => handleRemoveItem(item.inventory_id)}
+                  stockValue={stockTotals[item.inventory_id] || ""} // Pass stock value to StockCard
+                  onStockChange={(newStock) => handleStockChange(item.inventory_id, newStock)}
               />
           ))}
         </div>
 
         <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
-          <span>TOTAL: 0000.00</span>
+          <span>TOTAL: {totalStock}</span>
           <Dialog>
             <DialogTrigger asChild>
               <Button
@@ -182,12 +213,16 @@ const InvoiceAddStock = () => {
               </Button>
             </DialogTrigger>
             <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">
-              <DialogTitle>RESTOCK CONFIRMATION</DialogTitle>
-              {/* Confirmation Details */}
+              <DialogTitle>RESTOCK CONFIRMATION #{nextBatchId}</DialogTitle>
+
               <div className="flex w-full flex-col gap-3">
                 <div className="text-gray-400 flex flex-col gap-1">
                   <Label>Supplier</Label>
-                  <Input placeholder="Supplier Name" />
+                  <SupplierDropdown
+                      suppliers={suppliers || []}
+                      selectedSupplier={selectedSupplier}
+                      setSelectedSupplier={setSelectedSupplier}
+                  />
                 </div>
               </div>
 
@@ -201,16 +236,50 @@ const InvoiceAddStock = () => {
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    <TableRow>
-                      <TableCell>Item - Brand - Variant</TableCell>
-                      <TableCell>200</TableCell>
-                      <TableCell>Boxes (10 Cases ( 20 Pieces ))</TableCell>
-                    </TableRow>
+                    {selectedItems.map((item) => (
+                        <TableRow key={item.inventory_id}>
+                          <TableCell>
+                            {item.variant.item.name} - {item.variant.item.brand.name} -{" "}
+                            {item.variant.name || "N/A"}
+                          </TableCell>
+                          <TableCell>{stockTotals[item.inventory_id] || 0}</TableCell>
+                          <TableCell>
+                            <HoverCard>
+                              <HoverCardTrigger>
+                        <span className="pl-4 text-black text-opacity-60 hover:underline cursor-default">
+                          <span>3</span> Conversions
+                        </span>
+                              </HoverCardTrigger>
+                              <HoverCardContent>
+                                <div className="flex flex-col gap-2">
+                                  <div className="flex gap-2 items-center">
+                                    <p>Boxes</p>
+                                    <ArrowRight  className="w-4 h-4"/>
+                                    <p><span>20</span> Cases</p>
+                                  </div>
+
+                                  <div className="flex gap-2 items-center">
+                                    <p>Cases</p>
+                                    <ArrowRight className="w-4 h-4" />
+                                    <p><span>20</span> Packs</p>
+                                  </div>
+
+                                  <div className="flex gap-2 items-center">
+                                    <p>Packs</p>
+                                    <ArrowRight className="w-4 h-4" />
+                                    <p><span>20</span> Pieces</p>
+                                  </div>
+                                </div>
+                              </HoverCardContent>
+                            </HoverCard>
+                          </TableCell>
+                        </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
                 <div className="bottom-0 flex w-full justify-end">
                   <div className="flex items-center gap-3">
-                    <span>TOTAL: 000000</span>
+                    <span>TOTAL: {totalStock}</span>
                     <Button className="bg-green px-7 font-bold" size={"lg"}>
                       Save
                     </Button>

@@ -124,7 +124,6 @@ model Variant {
   discount    Discount?   @relation(fields: [discount_id], references: [discount_id])
   item        Item        @relation(fields: [item_id], references: [item_id])
   Unit        Unit?       @relation(fields: [unit_id], references: [unit_id])
-  // variantAttributes Variant_Attribute[]
 }
 
 model Batch {
@@ -140,7 +139,7 @@ model Batch {
 model SupplierUnit {
   supplier_unit_id  Int              @id @default(autoincrement())
   batch_id          Int
-  supplier_id       String // References User_Role.id
+  supplier_id       String
   unit_id           Int
   price             Float
   quantity_per_unit Int
@@ -151,7 +150,7 @@ model SupplierUnit {
   ConversionRate    ConversionRate[]
   batch             Batch            @relation(fields: [batch_id], references: [batch_id])
   discount          Discount?        @relation(fields: [discount_id], references: [discount_id])
-  supplier          User_Role        @relation(fields: [supplier_id], references: [id]) // Changed to reference User_Role.id
+  supplier          User_Role        @relation(fields: [supplier_id], references: [id])
   unit              Unit             @relation(fields: [unit_id], references: [unit_id])
 }
 
@@ -167,34 +166,6 @@ model ConversionRate {
   supplierUnit     SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id])
   toUnit           Unit         @relation("ToUnit", fields: [to_unit_id], references: [unit_id])
 }
-
-// model Attribute {
-//   attribute_id    Int               @id @default(autoincrement())
-//   name            String
-//   created_at      DateTime          @default(now())
-//   updated_at      DateTime          @updatedAt
-//   attributeValues Attribute_Value[]
-// }
-
-// model Attribute_Value {
-//   attribute_value_id Int                 @id @default(autoincrement())
-//   attribute_id       Int
-//   value              String
-//   created_at         DateTime            @default(now())
-//   updated_at         DateTime            @updatedAt
-//   attribute          Attribute           @relation(fields: [attribute_id], references: [attribute_id])
-//   variantAttributes  Variant_Attribute[]
-// }
-
-// model Variant_Attribute {
-//   variant_attribute_id Int             @id @default(autoincrement())
-//   variant_id           Int
-//   attribute_value_id   Int
-//   created_at           DateTime        @default(now())
-//   updated_at           DateTime        @updatedAt
-//   attributeValue       Attribute_Value @relation(fields: [attribute_value_id], references: [attribute_value_id])
-//   variant              Variant         @relation(fields: [variant_id], references: [variant_id])
-// }
 
 model Inventory {
   inventory_id Int      @id @default(autoincrement())

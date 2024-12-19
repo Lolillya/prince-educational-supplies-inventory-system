@@ -26,6 +26,7 @@ import {
 } from "~/components/ui/table";
 import { useRouter } from "next/navigation";
 import { Input } from "~/components/ui/input";
+import SearchBar from "../_components/search-bar";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,27 +37,22 @@ const InvoicePage = () => {
   const router = useRouter();
   return (
     <section
-      className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-10`}
+      className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-5`}
     >
-      <div className="relative flex items-center">
-        <div className="flex h-16 w-full items-center justify-between gap-3">
-          <div className="relative flex h-auto w-full max-w-md items-center gap-3">
-            <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
-            <Input placeholder="Search" className="bg-gray p-5 pl-10" />
+      <div className="relative flex justify-between items-center">
 
-            <div className="bg-gray-100 hover:bg-gray-300 rounded-md p-3 hover:cursor-pointer">
-              {/* <Image src={Filter_Icon} alt="filter icon" /> */}
-              <ListFilter />
-            </div>
-          </div>
-
+        <div className="flex gap-3 items-center">
+          <SearchBar />
           <Button
-            onClick={() => router.push("/admin/invoice/new-invoice")}
-            className="bg-green p-5 font-bold"
-          >
-            + New Invoice
+            className="bg-slate-100 hover:bg-slate-200 p-3">
+            <ListFilter className="text-slate-500 hover:text-slate-600" strokeWidth={2.5}/>
           </Button>
         </div>
+        <Button
+          onClick={() => router.push("/admin/invoice/new-invoice")}
+          className="bg-green hover:bg-lightGreen">
+          + New Invoice
+        </Button>
       </div>
 
       <Card className="flex flex-col gap-3 p-5">

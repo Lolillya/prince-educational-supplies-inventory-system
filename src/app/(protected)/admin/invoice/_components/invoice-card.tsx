@@ -17,6 +17,7 @@ import {
 } from "~/components/ui/select";
 import { Label } from "~/components/ui/label";
 import Link from "next/link";
+import { Input } from "~/components/ui/input";
 
 const InvoiceCard = () => {
   const [quantity, setQuantity] = useState("");
@@ -43,8 +44,8 @@ const InvoiceCard = () => {
               <div className="flex flex-col gap-2">
                 <Label className="text-left">Quantity & Stock</Label>
                 <div className="flex">
-                  <input
-                    className="rounded-r-none"
+                  <Input
+                    className="rounded-r-none border shadow-none"
                     placeholder="000"
                     value={quantity}
                     onChange={(e) => setQuantity(e.target.value)}
@@ -68,8 +69,8 @@ const InvoiceCard = () => {
               <div className="flex flex-col gap-2">
                 <Label className="text-left">Pricing</Label>
                 <div className="flex">
-                  <input
-                    className="rounded-r-none"
+                  <Input
+                    className="rounded-r-none border shadow-none"
                     placeholder="0000.00"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
@@ -92,8 +93,8 @@ const InvoiceCard = () => {
               <div className="flex flex-col gap-2">
                 <Label className="text-left">Discount</Label>
                 <div className="flex">
-                  <input
-                    className="rounded-r-none"
+                  <Input
+                    className="rounded-r-none border shadow-none"
                     placeholder="00"
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}

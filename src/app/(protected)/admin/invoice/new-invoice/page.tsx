@@ -69,10 +69,10 @@ const NewInvoice = () => {
 
       <div className="relative flex h-auto w-full justify-center gap-3">
         <div className="relative flex w-2/3 items-center">
-          <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
+          <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-textGray" />
           <Input
             placeholder="Search"
-            className="bg-gray p-5 pl-10 placeholder-slate-500"
+            className="bg-gray p-6 pl-10 placeholder:text-textGray"
           />
         </div>
       </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import { Poppins } from "next/font/google";
-import { Search, Ellipsis, ListFilter } from "lucide-react";
+import { Search, Ellipsis, ListFilter, Plus } from "lucide-react";
 import Image from "next/image";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
@@ -25,8 +25,9 @@ import {
   TableCell,
 } from "~/components/ui/table";
 import { useRouter } from "next/navigation";
-import { Input } from "~/components/ui/input";
 import SearchBar from "../_components/search-bar";
+import Filter from "../_components/filter";
+import InvoiceRecord from "./_components/invoice-record";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,23 +37,23 @@ const poppins = Poppins({
 const InvoicePage = () => {
   const router = useRouter();
   return (
-    <section
-      className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-5`}
-    >
-      <div className="relative flex justify-between items-center">
-
+    <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
+      <div className="flex justify-between items-center">
         <div className="flex gap-3 items-center">
           <SearchBar />
-          <Button
-            className="bg-slate-100 hover:bg-slate-200 p-3">
-            <ListFilter className="text-slate-500 hover:text-slate-600" strokeWidth={2.5}/>
-          </Button>
+          <Filter />
         </div>
         <Button
           onClick={() => router.push("/admin/invoice/new-invoice")}
-          className="bg-green hover:bg-lightGreen">
-          + New Invoice
+          className="bg-green hover:bg-green/80">
+          <Plus strokeWidth={3}/> New Invoice
         </Button>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-4">
+        <InvoiceRecord />
+        <InvoiceRecord />
+        <InvoiceRecord /> 
       </div>
 
       <Card className="flex flex-col gap-3 p-5">

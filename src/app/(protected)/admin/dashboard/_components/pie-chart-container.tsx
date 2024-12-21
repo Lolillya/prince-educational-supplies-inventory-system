@@ -1,23 +1,20 @@
 import { ComponentType } from "react";
 import dynamic from "next/dynamic";
 
-// Explicitly type the dynamic imports
-const PieChartLeft = dynamic<{}>(
-  () =>
-    import("./left-pie-chart").then((mod) => mod.default as ComponentType<{}>),
-  { ssr: false },
-);
-const PieChartRight = dynamic<{}>(
-  () =>
-    import("./right-pie-chart").then((mod) => mod.default as ComponentType<{}>),
-  { ssr: false },
+interface CategoryPieCardProps {
+  pieChartData: { category: string; sales: number; fill: string }[];
+  pieChartConfig: { [key: string]: { label: string; color: string } };
+  totalSales: number;
+}
+
+// Explicitly type the dynamic imports with CategoryPieCardProps
+const CategoryPie = dynamic<CategoryPieCardProps>(
+  () => import("./category-pie").then((mod) => mod.CategoryPie as ComponentType<CategoryPieCardProps>),
+  { ssr: false }
 );
 
-export default function ChartsContainer() {
-  return (
-    <div className="flex w-full items-center gap-3">
-      <PieChartLeft />
-      <PieChartRight />
-    </div>
-  );
-}
+const PieContainer: React.FC<CategoryPieCardProps> = ({ pieChartData, pieChartConfig, totalSales }) => {
+  return <CategoryPie pieChartData={pieChartData} pieChartConfig={pieChartConfig} totalSales={totalSales} />;
+};
+
+export default PieContainer;

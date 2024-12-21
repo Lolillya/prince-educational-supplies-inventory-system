@@ -52,6 +52,7 @@ const chartConfig = {
   },
 } satisfies ChartConfig;
 
+
 export function DashboardChart() {
   return (
     <Card className="w-full">
@@ -94,7 +95,7 @@ export function DashboardChart() {
             />
             <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
             <defs>
-              <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
+              {/* <linearGradient id="fillDesktop" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
                   stopColor="var(--color-desktop)"
@@ -105,7 +106,7 @@ export function DashboardChart() {
                   stopColor="var(--color-desktop)"
                   stopOpacity={0.1}
                 />
-              </linearGradient>
+              </linearGradient> */}
               <linearGradient id="fillMobile" x1="0" y1="0" x2="0" y2="1">
                 <stop
                   offset="5%"
@@ -127,14 +128,14 @@ export function DashboardChart() {
               stroke="var(--color-mobile)"
               stackId="a"
             />
-            <Area
+            {/* <Area
               dataKey="desktop"
               type="natural"
               fill="url(#fillDesktop)"
               fillOpacity={0.4}
               stroke="var(--color-desktop)"
               stackId="a"
-            />
+            /> */}
           </AreaChart>
         </ChartContainer>
       </CardContent>

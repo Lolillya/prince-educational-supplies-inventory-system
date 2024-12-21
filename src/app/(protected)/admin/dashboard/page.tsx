@@ -1,17 +1,12 @@
 "use client";
 
-import { X, Bell } from "lucide-react";
+import { Bell, X } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "~/components/ui/dialog";
 import { DashboardChart } from "./_components/dashboard-chart";
 import ChartsContainer from "./_components/pie-chart-container";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTrigger,
-} from "~/components/ui/dialog-transparent";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import DashboardStockedInOut from "./_components/stock-in-out";
-import { useSession } from "next-auth/react";
 
 const AdminDashboard = () => {
   const session = useSession();
@@ -70,7 +65,7 @@ const AdminDashboard = () => {
         <DashboardStockedInOut />
       </div>
 
-      <ChartsContainer />
+      {/* <ChartsContainer /> */}
 
       <div className="flex w-full justify-center">
         <DashboardChart />

@@ -60,9 +60,6 @@ const CustomerRouter = ({ title }: CustomerRouterProps) => {
           </DialogContent>
         </Dialog>
         <span className="font-bold">{title}</span>
-        <span className="ml-3 text-sm font-light text-textGray">
-          INSERT COMPANY NAME
-        </span>
       </div>
     </div>
   );

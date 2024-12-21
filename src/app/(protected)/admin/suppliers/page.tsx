@@ -120,8 +120,7 @@ const SuppliersPage = () => {
           </div>
           <Button
             onClick={handleNewSupplier}
-            className="bg-green p-5 font-bold"
-          >
+            className="bg-green p-5 font-bold">
             + New Supplier
           </Button>
         </div>
@@ -166,8 +165,7 @@ const SuppliersPage = () => {
 
         <div className="flex h-full w-1/2 flex-col">
           <span>Details</span>
-          <div
-              className="mt-2 flex h-full flex-col rounded-md bg-gray p-3 pr-5 min-h-[calc(100vh-200px)] overflow-auto">
+          <div className="mt-2 flex h-full flex-col rounded-md bg-gray p-3 pr-5 min-h-[calc(100vh-200px)] overflow-auto">
             {selectedSupplier ? (
                 <div className="flex gap-5">
                   <div className="flex h-full w-full flex-col gap-3">
@@ -180,7 +178,7 @@ const SuppliersPage = () => {
                     </div>
                     <div className="flex flex-col gap-1">
                     <span className="font-ligh text-textGray">
-                      Sales Person
+                      Representative
                     </span>
                       <span>
                       {selectedSupplier.Personal_Details.first_name}{" "}

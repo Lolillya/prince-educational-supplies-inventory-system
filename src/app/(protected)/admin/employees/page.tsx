@@ -180,7 +180,7 @@ const EmployeesPage = () => {
                       </div>
                       <div className="flex flex-col gap-1">
                     <span className="font-ligh text-textGray">
-                      Sales Person
+                      Employee Name
                     </span>
                         <span>
                       {selectedEmployee.Personal_Details.first_name}{" "}
@@ -230,7 +230,7 @@ const EmployeesPage = () => {
 
                     <div className="flex w-full flex-col overflow-y-hidden">
                       <div className="flex items-center justify-between">
-                        <Label className="text-textGray">Restocks</Label>
+                        <Label className="text-textGray">Log Record</Label>
                         <Button variant={"link"} className="m-0 p-0 text-green">
                           View all
                         </Button>

@@ -5,23 +5,46 @@ import MoreOptions from './more-options'
 import InvoiceItem from './invoice-item'
 import { Button } from '~/components/ui/button'
 
-const InvoiceRecord = () => {
+interface InvoiceProps {
+	invoiceId: number;
+	date: string;
+	customer: string;
+	grandTotal: number;
+	orderItems: {
+		variant: string;
+		item: string;
+		brand: string;
+		quantity: number;
+		unit: string;
+		unitPrice: number;
+		discountValue: string;
+		subtotal: number;
+	}[];
+}
+
+const InvoiceRecord: React.FC<InvoiceProps> = ({
+	invoiceId,
+	date,
+	customer,
+	grandTotal,
+	orderItems,
+}) => {
 	return (
 		<div className='bg-slate-100 p-10 rounded-lg text-slate-700 flex flex-col gap-8'>
 
 			<div className='flex justify-center items-center px-6'>
 
 				<div className='w-1/2 flex flex-col gap-4'>
-					<p className='text-xl'>#12345678</p>
+					<p className='text-xl'>#{invoiceId}</p>
 					<div className='text-slate-400 flex gap-6 items-center'>
 						<div className='flex items-center gap-3 text-slate-400'>
 							<Calendar className='w-4 h-4' />
-							<p className='text-sm'>September 27, 2024</p>
+							<p className='text-sm'>{date}</p>
 						</div>
 						<Separator orientation='vertical' className=' h-6 w-[2px] bg-slate-200' />
 						<div className='flex items-center gap-3'>
 							<SquareArrowRight className='w-4 h-4' />
-							<p className='text-sm'>Adrian Huang</p>
+							<p className='text-sm'>{customer}</p>
 						</div>
 					</div>
 				</div>
@@ -30,7 +53,7 @@ const InvoiceRecord = () => {
 
 				<div className='w-1/2 flex items-center justify-between pl-8'>
 					<div className='flex flex-col gap-4'>
-						<p className='text-xl'>₱ 0,000.00</p>
+						<p className='text-xl'>₱ {grandTotal.toLocaleString()}</p>
 						<div className='text-slate-400 flex gap-8 items-center'>
 							<div className='flex items-center gap-3 text-slate-400'>
 								<p className='text-sm'>Grand Total</p>
@@ -45,13 +68,31 @@ const InvoiceRecord = () => {
 			</div>
 
 			<div className='flex flex-col gap-3'>
-				<InvoiceItem />
-				<InvoiceItem />
+
+				{orderItems.slice(0, 2).map((item, index) => {
+					return (
+						<InvoiceItem
+							key={index}
+							variant={item.variant}
+							item={item.item}
+							brand={item.brand}
+							quantity={item.quantity}
+							unit={item.unit}
+							unitPrice={item.unitPrice}
+							discountValue={item.discountValue}
+							subtotal={item.subtotal} />
+					)
+				})}
+
 				<div className='bg-white px-6 py-3 rounded-lg flex items-center justify-between text-slate-400'>
-					<p><span>4</span> more items...</p>
+					{orderItems.length > 2 ? (
+						<p>{orderItems.length - 2} more item{orderItems.length - 2 > 1 ? "s" : ""}...</p>
+					) : orderItems.length <= 2 && (
+						<p>No more items...</p>
+					)}
 					<Button className='text-slate-400 hover:text-slate-500 tracking-wide hover:bg-slate-200' variant={'ghost'}>
 						View All
-						<ArrowRight strokeWidth={2.5}/>
+						<ArrowRight strokeWidth={2.5} />
 					</Button>
 				</div>
 			</div>

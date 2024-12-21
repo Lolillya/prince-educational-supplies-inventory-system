@@ -1,3 +1,4 @@
+import { TrendingUp } from 'lucide-react';
 import React from 'react'
 import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart'
@@ -12,7 +13,10 @@ const SalesAreaCard: React.FC<SalesAreaCardProps> = ({ areaChartData, areaChartC
 		<div className="bg-slate-100 p-6 rounded-lg w-full h-full flex" >
 			<div className='w-1/4 flex flex-col gap-1 items-start justify-end'>
 				<p className='text-slate-500'>Sales over</p>
-				<p className='text-slate-700 font-bold text-2xl'>Time</p>
+				<div className=' flex items-center gap-2'>
+					<TrendingUp className='text-slate-700 h-6 w-6' strokeWidth={2.5} />
+					<p className='text-slate-700 font-bold text-2xl'>Time</p>
+				</div>
 			</div>
 			<div className='w-3/4 flex items-end justify-center'>
 				<ChartContainer config={areaChartConfig} className="h-full w-full">

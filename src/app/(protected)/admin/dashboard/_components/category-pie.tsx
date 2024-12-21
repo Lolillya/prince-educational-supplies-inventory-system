@@ -1,7 +1,8 @@
-import React from 'react'
-import PieContainer from './pie-chart-container'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart'
-import { Label, Pie, PieChart } from 'recharts'
+import { Box } from 'lucide-react';
+import React from 'react';
+import { Label, Pie, PieChart } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart';
+import PieContainer from './pie-chart-container';
 
 interface CategoryPieCardProps {
 	pieChartData: { category: string; sales: number; fill: string }[];
@@ -14,7 +15,10 @@ export const CategoryPieCard: React.FC<CategoryPieCardProps> = ({ pieChartData, 
 		<div className="bg-slate-100 p-6 rounded-lg w-full h-full flex" >
 			<div className='w-1/4 flex flex-col gap-1 items-start justify-end'>
 				<p className='text-slate-500'>Sales per</p>
-				<p className='text-slate-700 font-bold text-2xl'>Category</p>
+				<div className=' flex items-center gap-2'>
+					<Box className='text-slate-700 h-6 w-6' strokeWidth={2.5} />
+					<p className='text-slate-700 font-bold text-2xl'>Category</p>
+				</div>
 			</div>
 			<div className='w-3/4 flex items-center justify-center'>
 				<PieContainer pieChartData={pieChartData} pieChartConfig={pieChartConfig} totalSales={totalSales}/>

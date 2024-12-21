@@ -28,6 +28,7 @@ import { useRouter } from "next/navigation";
 import SearchBar from "../_components/search-bar";
 import Filter from "../_components/filter";
 import InvoiceRecord from "./_components/invoice-record";
+import { WeekNumberLabel } from "react-day-picker";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -36,6 +37,64 @@ const poppins = Poppins({
 
 const InvoicePage = () => {
   const router = useRouter();
+
+  interface InvoiceProps {
+    invoiceId: number;
+    date: string;
+    customer: string;
+    grandTotal: number;
+    orderItems: {
+      variant: string;
+      item: string;
+      brand: string;
+      quantity: number;
+      unit: string;
+      unitPrice: number;
+      discountValue: string;
+      subtotal: number;
+    }[];
+  }
+
+  const sampleInvoice: InvoiceProps = {
+    invoiceId: 12345,
+    date: "September 21, 2024",
+    customer: "Adrian Huang",
+    grandTotal: 2500.0,
+    orderItems: [
+      {
+        variant: "Red - Large",
+        item: "T-shirt",
+        brand: "Brand A",
+        quantity: 3,
+        unit: "pcs",
+        unitPrice: 250.0,
+        discountValue: "5%",
+        subtotal: 750.0,
+      },
+      {
+        variant: "Blue - Medium",
+        item: "Jeans",
+        brand: "Brand B",
+        quantity: 2,
+        unit: "pcs",
+        unitPrice: 600.0,
+        discountValue: "10%",
+        subtotal: 1200.0,
+      },
+      {
+        variant: "Black - 42",
+        item: "Shoes",
+        brand: "Brand C",
+        quantity: 1,
+        unit: "pair",
+        unitPrice: 550.0,
+        discountValue: "0%",
+        subtotal: 550.0,
+      },
+      
+    ],
+  };
+
   return (
     <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
       <div className="flex justify-between items-center">
@@ -46,14 +105,18 @@ const InvoicePage = () => {
         <Button
           onClick={() => router.push("/admin/invoice/new-invoice")}
           className="bg-green hover:bg-green/80">
-          <Plus strokeWidth={3}/> New Invoice
+          <Plus strokeWidth={3} /> New Invoice
         </Button>
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        <InvoiceRecord />
-        <InvoiceRecord />
-        <InvoiceRecord /> 
+        <InvoiceRecord
+          invoiceId={sampleInvoice.invoiceId}
+          date={sampleInvoice.date}
+          customer={sampleInvoice.customer}
+          grandTotal={sampleInvoice.grandTotal}
+          orderItems={sampleInvoice.orderItems}
+      />
       </div>
 
       <Card className="flex flex-col gap-3 p-5">

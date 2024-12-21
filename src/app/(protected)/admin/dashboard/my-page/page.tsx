@@ -11,69 +11,69 @@ import Ranking from "../_components/ranking";
 import SalesAreaCard from "../_components/sales-area";
 import { CustomerStatus, StockInStatus, StockOutStatus, SupplierStatus } from "../_components/status-card";
 
+// PIE CHART DATA
+interface PieChartData {
+	category: string;
+	sales: number;
+	fill: string;
+};
+
+interface PieChartConfig {
+	[key: string]: {
+		label: string;
+		color: string;
+	};
+};
+
+const pieChartData: PieChartData[] = [
+	{ category: "Stationery", sales: 275, fill: "hsl(var(--chart-1))" },
+	{ category: "Computer Items", sales: 200, fill: "hsl(var(--chart-2))" },
+	{ category: "Office Supplies", sales: 187, fill: "hsl(var(--chart-3))" },
+	{ category: "Electronics", sales: 173, fill: "hsl(var(--chart-4))" },
+	{ category: "Furniture", sales: 90, fill: "hsl(var(--chart-5))" },
+];
+
+const pieChartConfig: PieChartConfig = pieChartData.reduce((config, item) => {
+	config[item.category] = {
+		label: item.category.charAt(0).toUpperCase() + item.category.slice(1),
+		color: item.fill,
+	};
+	return config;
+}, {} as PieChartConfig);
+
+// AREA CHART DATA
+interface AreaChartData {
+	month: string;
+	sales: number;
+};
+
+interface AreaChartConfig {
+	[key: string]: {
+		label: string;
+		color: string;
+	};
+};
+
+const areaChartData: AreaChartData[] = [
+	{ month: "January", sales: 123 },
+	{ month: "February", sales: 456 },
+	{ month: "March", sales: 254 },
+	{ month: "April", sales: 335 },
+	{ month: "May", sales: 221 },
+	{ month: "June", sales: 165 },
+	{ month: "July", sales: 193 },
+];
+
+const areaChartConfig: AreaChartConfig = {
+	mobile: {
+		label: "Sales",
+		color: "hsl(var(--chart-2))",
+	},
+};
+
 const AdminDashboard = () => {
 
 	const session = useSession();
-
-	// PIE CHART DATA
-	interface PieChartData {
-		category: string;
-		sales: number;
-		fill: string;
-	};
-
-	interface PieChartConfig {
-		[key: string]: {
-			label: string;
-			color: string;
-		};
-	};
-
-	const pieChartData: PieChartData[] = [
-		{ category: "Stationery", sales: 275, fill: "hsl(var(--chart-1))" },
-		{ category: "Computer Items", sales: 200, fill: "hsl(var(--chart-2))" },
-		{ category: "Office Supplies", sales: 187, fill: "hsl(var(--chart-3))" },
-		{ category: "Electronics", sales: 173, fill: "hsl(var(--chart-4))" },
-		{ category: "Furniture", sales: 90, fill: "hsl(var(--chart-5))" },
-	];
-
-	const pieChartConfig: PieChartConfig = pieChartData.reduce((config, item) => {
-		config[item.category] = {
-			label: item.category.charAt(0).toUpperCase() + item.category.slice(1),
-			color: item.fill,
-		};
-		return config;
-	}, {} as PieChartConfig);
-
-	// AREA CHART DATA
-	interface AreaChartData {
-		month: string;
-		sales: number;
-	};
-
-	interface AreaChartConfig {
-		[key: string]: {
-			label: string;
-			color: string;
-		};
-	};
-
-	const areaChartData: AreaChartData[] = [
-		{ month: "January", sales: 123 },
-		{ month: "February", sales: 456 },
-		{ month: "March", sales: 254 },
-		{ month: "April", sales: 335 },
-		{ month: "May", sales: 221 },
-		{ month: "June", sales: 165 },
-		{ month: "July", sales: 193 },
-	];
-
-	const areaChartConfig: AreaChartConfig = {
-		mobile: {
-			label: "Sales",
-			color: "hsl(var(--chart-2))",
-		},
-	};
 
 	return (
 

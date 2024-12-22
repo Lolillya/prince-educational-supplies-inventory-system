@@ -2,17 +2,20 @@
 
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogTitle,
+  DialogTrigger,
 } from "~/components/ui/dialog";
 
-import { Search, Ellipsis, ListFilter } from "lucide-react";
-import { Label } from "~/components/ui/label";
+import { Ellipsis, Plus } from "lucide-react";
+import { Poppins } from "next/font/google";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
-import { useRouter } from "next/navigation";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Table,
   TableBody,
@@ -21,38 +24,104 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Input } from "~/components/ui/input";
-import { useState } from "react";
+import Filter from "../_components/filter";
+import SearchBar from "../_components/search-bar";
+import RestockRecord from "./_components/restock-record";
+
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
+
 
 const RestockPage = () => {
+  
   const router = useRouter();
   const [isOpen, setisOpen] = useState(false);
+
+  interface RestockProps {
+    restockId: number;
+    date: string;
+    customer: string;
+    addedStock: number;
+    restockItems: {
+      variant: string;
+      item: string;
+      brand: string;
+      quantity: number;
+      mainUnit: string;
+      unitConversion: {
+        from: string;
+        count: number;
+        to: string;
+      }[];
+    }[];
+  }
+  
+  const sampleRestock: RestockProps = {
+    restockId: 12345678,
+    date: "December 21, 2024",
+    customer: "Adrian Huang",
+    addedStock: 90,
+    restockItems: [
+      {
+        variant: "Red - Large",
+        item: "T-shirt",
+        brand: "Brand A",
+        quantity: 50,
+        mainUnit: "box",
+        unitConversion: [
+          { from: "box", count: 10, to: "bundle" },
+          { from: "bundle", count: 10, to: "pack" },
+          { from: "pack", count: 5, to: "piece" },
+        ],
+      },
+      {
+        variant: "Blue - Medium",
+        item: "Jeans",
+        brand: "Brand B",
+        quantity: 30,
+        mainUnit: "case",
+        unitConversion: [
+          { from: "case", count: 5, to: "bundle" },
+          { from: "bundle", count: 4, to: "piece" },
+        ],
+      },
+      {
+        variant: "Black - 42",
+        item: "Shoes",
+        brand: "Brand C",
+        quantity: 10,
+        mainUnit: "carton",
+        unitConversion: [
+          { from: "carton", count: 8, to: "pair" },
+        ],
+      },
+    ],
+  };
+  
   return (
-    <section
-      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10`}
-    >
-      <div className="relative flex items-center justify-between">
-        <div className="flex h-16 items-center gap-3">
-          <div className="relative flex h-auto w-full max-w-md items-center gap-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-textGray" />
-            <Input
-              placeholder="Search"
-              className="bg-gray p-6 pl-10 placeholder:text-textGray"
-            />
-
-            <div className="rounded-md bg-gray p-3 hover:cursor-pointer">
-              <ListFilter color="#989FB3" />
-            </div>
-          </div>
+    <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
+      <div className="flex justify-between items-center">
+        <div className="flex gap-3 items-center">
+          <SearchBar />
+          <Filter />
         </div>
-
         <Button
-          size={"lg"}
           onClick={() => router.push("restock/add-stock")}
-          className="bg-green py-5 font-bold"
-        >
-          + Add Stock
+          className="bg-green hover:bg-green/80">
+          <Plus strokeWidth={3} /> Add Stock
         </Button>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-4">
+        <RestockRecord
+          restockId={sampleRestock.restockId}
+          date={sampleRestock.date}
+          customer={sampleRestock.customer}
+          addedStock={sampleRestock.addedStock}
+          restockItems={sampleRestock.restockItems}
+        />
       </div>
 
       <div className="flex flex-col gap-3">

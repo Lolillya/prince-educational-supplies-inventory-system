@@ -1,28 +1,31 @@
-import { Banknote, Box, SquarePercent } from 'lucide-react'
-import { Separator } from '~/components/ui/separator'
-import MoreOptions from '../../_components/more-options'
+import { Box } from 'lucide-react';
+import React from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
+import { Separator } from '~/components/ui/separator';
+import MoreOptions from '../../_components/more-options';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card';
+import UnitLine from './unit-line';
 
-interface OrderItemsProps {
+interface RestockItemsProps {
 	variant: string;
 	item: string;
 	brand: string;
 	quantity: number;
-	unit: string;
-	unitPrice: number;
-	discountValue: string;
-	subtotal: number;
+	mainUnit: string;
+	unitConversion: {
+		from: string;
+		count: number;
+		to: string;
+	}[];
 }
 
-const InvoiceItem: React.FC<OrderItemsProps> = ({
+const RestockItem: React.FC<RestockItemsProps> = ({
 	variant,
 	item,
 	brand,
 	quantity,
-	unit,
-	unitPrice,
-	discountValue,
-	subtotal,
+	mainUnit,
+	unitConversion,
 }) => {
 	return (
 		<div className='bg-white/70 p-6 rounded-lg'>
@@ -35,12 +38,21 @@ const InvoiceItem: React.FC<OrderItemsProps> = ({
 					<div className='text-slate-400 flex gap-5 items-center'>
 						<div className='flex items-center gap-3 text-slate-400'>
 							<Box className='w-4 h-4' />
-							<p className='text-sm'>{quantity} {unit}</p>
+							<p className='text-sm'>{mainUnit}</p>
 						</div>
+
 						<Separator orientation='vertical' className=' h-4 w-[1px] bg-slate-200' />
-						<p className='text-sm'>₱ {unitPrice.toLocaleString()}</p>
-						<Separator orientation='vertical' className=' h-4 w-[1px] bg-slate-200' />
-						<p className='text-sm'>{discountValue} discount</p>
+
+						<HoverCard>
+							<HoverCardTrigger className='hover:underline text-sm'>
+								{unitConversion.length} Conversions
+							</HoverCardTrigger>
+							<HoverCardContent className='shadow-none flex flex-col gap-3'>
+								{unitConversion.map((unit, index) => (
+									<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to} />
+								))}
+							</HoverCardContent>
+						</HoverCard>
 					</div>
 				</div>
 
@@ -48,10 +60,10 @@ const InvoiceItem: React.FC<OrderItemsProps> = ({
 
 				<div className='w-1/2 flex items-center justify-between pl-8'>
 					<div className='flex flex-col gap-4'>
-						<p>₱ {subtotal.toLocaleString()}</p>
+						<p>{quantity.toLocaleString()}</p>
 						<div className='text-slate-400 flex gap-8 items-center'>
 							<div className='flex items-center gap-3 text-slate-400'>
-								<p className='text-sm'>Subtotal</p>
+								<p className='text-sm'>Added Items</p>
 							</div>
 						</div>
 					</div>
@@ -74,4 +86,4 @@ const InvoiceItem: React.FC<OrderItemsProps> = ({
 	)
 }
 
-export default InvoiceItem
+export default RestockItem

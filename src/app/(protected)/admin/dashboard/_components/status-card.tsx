@@ -1,24 +1,36 @@
-import { ArrowBigDownDashIcon, ArrowBigUpDashIcon, ChevronsUp, Truck, UsersRound } from 'lucide-react'
+import { ArrowBigDownDashIcon, ArrowBigUpDashIcon, ChevronsDown, ChevronsRight, ChevronsUp, Truck, UsersRound } from 'lucide-react'
 
 type StatusProps = {
 	percentage?: number,
 	count: number
 }
 
-export const StockInStatus: React.FC<StatusProps> = ({ 
+export const StockInStatus: React.FC<StatusProps> = ({
 	percentage = 0,
 	count
- }) => {
+}) => {
 	return (
 		<div className='p-6 bg-slate-100 rounded-lg w-1/4'>
 			<div className='flex gap-3 items-center justify-between'>
 				<div className='flex flex-col gap-3'>
 					<div className='flex gap-3'>
 						<p className='text-slate-500'>Stocked In</p>
-						<div className='text-green flex items-center'>
-							<ChevronsUp className='w-4 h-4' />
-							<p className='tracking-wide'><span>{percentage.toFixed(1)}</span>%</p>
-						</div>
+						{percentage > 0 ? (
+							<div className='text-green flex items-center'>
+								<ChevronsUp className='w-4 h-4' />
+								<p className='tracking-wide'><span>{percentage.toFixed(1)}</span>%</p>
+							</div>
+						) : percentage < 0 ? (
+							<div className='text-red flex items-center'>
+								<ChevronsDown className='w-4 h-4' />
+									<p className='tracking-wide'><span>{(percentage * -1).toFixed(1)}</span>%</p>
+							</div>
+						) : (
+							<div className='text-amber-500 flex items-center'>
+								<ChevronsRight className='w-4 h-4' />
+								<p className='tracking-wide'><span>{percentage.toFixed(1)}</span>%</p>
+							</div>
+						)}
 					</div>
 					<p className='font-bold text-2xl text-slate-700'>{count.toLocaleString()}</p>
 				</div>
@@ -40,10 +52,22 @@ export const StockOutStatus: React.FC<StatusProps> = ({
 				<div className='flex flex-col gap-3'>
 					<div className='flex gap-3'>
 						<p className='text-slate-500'>Stocked Out</p>
-						<div className='text-green flex items-center'>
-							<ChevronsUp className='w-4 h-4' />
-							<p className='tracking-wide'><span>{percentage.toFixed(1)}</span>%</p>
-						</div>
+						{percentage > 0 ? (
+							<div className='text-green flex items-center'>
+								<ChevronsUp className='w-4 h-4' />
+								<p className='tracking-wide'><span>{percentage.toFixed(1)}</span>%</p>
+							</div>
+						) : percentage < 0 ? (
+							<div className='text-red flex items-center'>
+								<ChevronsDown className='w-4 h-4' />
+								<p className='tracking-wide'><span>{(percentage * -1).toFixed(1)}</span>%</p>
+							</div>
+						) : (
+							<div className='text-amber-500 flex items-center'>
+								<ChevronsRight className='w-4 h-4' />
+								<p className='tracking-wide'><span>{percentage.toFixed(1)}</span>%</p>
+							</div>
+						)}
 					</div>
 					<p className='font-bold text-2xl text-slate-700'>{count.toLocaleString()}</p>
 				</div>

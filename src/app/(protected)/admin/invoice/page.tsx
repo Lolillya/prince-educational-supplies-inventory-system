@@ -56,7 +56,7 @@ const InvoicePage = () => {
   }
 
   const sampleInvoice: InvoiceProps = {
-    invoiceId: 12345,
+    invoiceId: 12345678,
     date: "September 21, 2024",
     customer: "Adrian Huang",
     grandTotal: 2500.0,
@@ -91,7 +91,7 @@ const InvoicePage = () => {
         discountValue: "0%",
         subtotal: 550.0,
       },
-      
+
     ],
   };
 
@@ -116,7 +116,7 @@ const InvoicePage = () => {
           customer={sampleInvoice.customer}
           grandTotal={sampleInvoice.grandTotal}
           orderItems={sampleInvoice.orderItems}
-      />
+        />
       </div>
 
       <Card className="flex flex-col gap-3 p-5">

@@ -97,7 +97,7 @@ const AdminDashboard = () => {
 			<Separator orientation="horizontal" className="mt-4 h-[2px]" />
 
 			<div className="flex justify-between items-center gap-4 mt-4">
-				<StockInStatus percentage={1} count={1234} />
+				<StockInStatus percentage={0} count={1234} />
 				<StockOutStatus percentage={24} count={4567} />
 				<CustomerStatus count={324} />
 				<SupplierStatus count={463} />

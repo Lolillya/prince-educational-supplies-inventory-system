@@ -1,9 +1,10 @@
-import { ArrowRight, Banknote, Calendar, Plus, SquareArrowRight } from 'lucide-react'
+import { ArrowRight, Calendar, SquareArrowRight } from 'lucide-react'
 import React from 'react'
-import { Separator } from '~/components/ui/separator'
-import MoreOptions from './more-options'
-import InvoiceItem from './invoice-item'
 import { Button } from '~/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
+import { Separator } from '~/components/ui/separator'
+import InvoiceItem from './invoice-item'
+import MoreOptions from './more-options'
 
 interface InvoiceProps {
 	invoiceId: number;
@@ -61,7 +62,21 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 						</div>
 					</div>
 					<div>
-						<MoreOptions />
+						<DropdownMenu>
+							<DropdownMenuTrigger>
+								<MoreOptions />
+							</DropdownMenuTrigger>
+							<DropdownMenuContent className='shadow-none text-slate-700'>
+								<DropdownMenuItem className='hover:!bg-slate-200 focus:!bg-slate-200'>Print</DropdownMenuItem>
+								<DropdownMenuItem className='hover:!bg-slate-200 focus:!bg-slate-200'>Export</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem className='hover:!bg-slate-200 focus:!bg-slate-200'>View Invoice</DropdownMenuItem>
+								<DropdownMenuItem className='hover:!bg-slate-200 focus:!bg-slate-200'>View Customer</DropdownMenuItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem className='hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red text-red'>Void</DropdownMenuItem>
+								<DropdownMenuItem className='hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red text-red'>Delete</DropdownMenuItem>
+							</DropdownMenuContent>
+						</DropdownMenu>
 					</div>
 				</div>
 
@@ -84,7 +99,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 					)
 				})}
 
-				<div className='bg-white px-6 py-3 rounded-lg flex items-center justify-between text-slate-400'>
+				<div className='bg-white/70 px-6 py-3 rounded-lg flex items-center justify-between text-slate-400'>
 					{orderItems.length > 2 ? (
 						<p>{orderItems.length - 2} more item{orderItems.length - 2 > 1 ? "s" : ""}...</p>
 					) : orderItems.length <= 2 && (

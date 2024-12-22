@@ -1,23 +1,24 @@
-import { ArrowRight, Award, PersonStanding, Truck, Users2 } from 'lucide-react'
-import React from 'react'
-import { Separator } from '~/components/ui/separator'
-import LeaderboardItem from './leaderboard-item'
+import { ArrowUpRight, Award, Truck, Users2 } from 'lucide-react';
+import { Separator } from '~/components/ui/separator';
+import LeaderboardItem from './leaderboard-item';
 
 interface LeaderboardProps {
 	rank: number;
 	record: string;
+	stockCount?: number;
+	salesCount?: number;
 };
 
 const supplierLeaderboard: LeaderboardProps[] = [
-	{ rank: 1, record: "Adrian Huang" },
-	{ rank: 2, record: "Kenji Azriel Mende" },
-	{ rank: 3, record: "Stacey Andrew Gonzaga" },
+	{ rank: 1, record: "Adrian Huang", stockCount: 800},
+	{ rank: 2, record: "Kenji Azriel Mende", stockCount: 700 },
+	{ rank: 3, record: "Stacey Andrew Gonzaga", stockCount: 750 },
 ];
 
 const customerLeaderboard: LeaderboardProps[] = [
-	{ rank: 1, record: "Joshua Sevilla" },
-	{ rank: 2, record: "John Doe" },
-	{ rank: 3, record: "Jerald Dagaang" },
+	{ rank: 1, record: "Joshua Sevilla", salesCount: 5000 },
+	{ rank: 2, record: "John Doe", salesCount: 4000 },
+	{ rank: 3, record: "Jerald Dagaang", salesCount: 3000 },
 ];
 
 const Ranking = () => {
@@ -44,13 +45,13 @@ const Ranking = () => {
 					</div>
 					<div className='flex gap-2 mt-4 items-center group'>
 						<p className='text-slate-400 group-hover:text-slate-500 transition-colors duration-300'>View full ranking</p>
-						<ArrowRight className='text-slate-400 h-5 w-5 group-hover:text-slate-500 transition-colors duration-300' />
+						<ArrowUpRight className='text-slate-400 h-5 w-5 group-hover:text-slate-500 transition-colors duration-300' />
 					</div>
 				</div>
 				<div className='flex flex-col items-center gap-4'>
-					{supplierLeaderboard.map((item, index) => {
+					{supplierLeaderboard.slice(0, 3).map((item, index) => {
 						return (
-							<LeaderboardItem key={index} rank={item.rank} record={item.record} />
+							<LeaderboardItem key={index} rank={item.rank} record={item.record} stockCount={item.stockCount} />
 						)
 					})}
 				</div>
@@ -60,17 +61,17 @@ const Ranking = () => {
 						<div className='h-12 w-12 rounded-xl flex items-center justify-center bg-pink-200'>
 							<Users2 className='text-pink-500' />
 						</div>
-						<p className='font-bold text-xl text-slate-700 pl-4'>Suppliers</p>
+						<p className='font-bold text-xl text-slate-700 pl-4'>Customers</p>
 					</div>
 					<div className='flex gap-2 mt-4 items-center group'>
 						<p className='text-slate-400 group-hover:text-slate-500 transition-colors duration-300'>View full ranking</p>
-						<ArrowRight className='text-slate-400 h-5 w-5 group-hover:text-slate-500 transition-colors duration-300' />
+						<ArrowUpRight className='text-slate-400 h-5 w-5 group-hover:text-slate-500 transition-colors duration-300' />
 					</div>
 				</div>
 				<div className='flex flex-col items-center gap-4'>
 					{customerLeaderboard.map((item, index) => {
 						return (
-							<LeaderboardItem key={index} rank={item.rank} record={item.record} />
+							<LeaderboardItem key={index} rank={item.rank} record={item.record} salesCount={item.salesCount}/>
 						)
 					})}
 				</div>

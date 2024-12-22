@@ -1,75 +1,206 @@
 "use client";
 
-import { Bell, X } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { Avatar, AvatarFallback } from "~/components/ui/avatar";
-import { Dialog, DialogContent, DialogHeader, DialogTrigger } from "~/components/ui/dialog";
-import { DashboardChart } from "./_components/dashboard-chart";
-import ChartsContainer from "./_components/pie-chart-container";
-import DashboardStockedInOut from "./_components/stock-in-out";
+import { Button } from "~/components/ui/button";
+import { Separator } from "~/components/ui/separator";
+import { CategoryPieCard } from "./_components/category-pie";
+import { CalendarDateRangePicker } from "./_components/date-range-picker";
+import Notification from "./_components/notifications";
+import Ranking from "./_components/ranking";
+import SalesAreaCard from "./_components/sales-area";
+import { CustomerStatus, StockInStatus, StockOutStatus, SupplierStatus } from "./_components/status-card";
+
+// ALL OF THE DATA HERE ARE CONSTANTS. KULANG LANG QUERY KAY DI KO KABALO :(
+// PIE CHART DATA
+interface PieChartData {
+  category: string;
+  sales: number;
+  fill: string;
+};
+
+interface PieChartConfig {
+  [key: string]: {
+    label: string;
+    color: string;
+  };
+};
+
+const pieChartData: PieChartData[] = [
+  { category: "Stationery", sales: 275, fill: "hsl(var(--chart-1))" },
+  { category: "Computer Items", sales: 200, fill: "hsl(var(--chart-2))" },
+  { category: "Office Supplies", sales: 187, fill: "hsl(var(--chart-3))" },
+  { category: "Electronics", sales: 173, fill: "hsl(var(--chart-4))" },
+  { category: "Furniture", sales: 90, fill: "hsl(var(--chart-5))" },
+];
+
+const pieChartConfig: PieChartConfig = pieChartData.reduce((config, item) => {
+  config[item.category] = {
+    label: item.category.charAt(0).toUpperCase() + item.category.slice(1),
+    color: item.fill,
+  };
+  return config;
+}, {} as PieChartConfig);
+
+// AREA CHART DATA
+interface AreaChartData {
+  month: string;
+  sales: number;
+};
+
+interface AreaChartConfig {
+  [key: string]: {
+    label: string;
+    color: string;
+  };
+};
+
+const areaChartData: AreaChartData[] = [
+  { month: "January", sales: 123 },
+  { month: "February", sales: 456 },
+  { month: "March", sales: 254 },
+  { month: "April", sales: 335 },
+  { month: "May", sales: 221 },
+  { month: "June", sales: 165 },
+  { month: "July", sales: 193 },
+];
+
+const areaChartConfig: AreaChartConfig = {
+  mobile: {
+    label: "Sales",
+    color: "hsl(var(--chart-2))",
+  },
+};
+
+// NOTIFICATION DATA
+
+interface Notifications {
+  date: string;
+  time: string;
+  type: 'restocked' | 'stocked out' | 'edit' | 'delete';
+  employee: string;
+  details: {
+    supplier?: string;
+    customer?: string;
+    recordType?: 'inventory' | 'suppliers' | 'customers' | 'other';
+    recordName?: string;
+  };
+}
+
+const notifications: Notifications[] = [
+  {
+    date: '2024-12-22',
+    time: '10:30 AM',
+    type: 'restocked',
+    employee: 'John Doe',
+    details: {
+      supplier: 'ABC Supplies',
+    },
+  },
+  {
+    date: '2024-12-22',
+    time: '11:15 AM',
+    type: 'stocked out',
+    employee: 'Jane Smith',
+    details: {
+      customer: 'XYZ Retail',
+    },
+  },
+  {
+    date: '2024-12-22',
+    time: '1:45 PM',
+    type: 'edit',
+    employee: 'John Doe',
+    details: {
+      recordType: 'inventory',
+      recordName: 'Product ABC',
+    },
+  },
+  {
+    date: '2024-12-22',
+    time: '2:00 PM',
+    type: 'delete',
+    employee: 'Jane Smith',
+    details: {
+      recordType: 'customers',
+      recordName: 'Customer XYZ',
+    },
+  },
+  {
+    date: '2024-12-22',
+    time: '2:00 PM',
+    type: 'delete',
+    employee: 'Jane Smith',
+    details: {
+      recordType: 'customers',
+      recordName: 'Customer XYZ',
+    },
+  },
+];
+
+// RANKING DATA
+
+interface Leaderboard {
+  rank: number;
+  record: string;
+  stockCount?: number;
+  salesCount?: number;
+};
+
+const supplierLeaderboard: Leaderboard[] = [
+  { rank: 1, record: "Adrian Huang", stockCount: 800 },
+  { rank: 2, record: "Kenji Azriel Mende", stockCount: 700 },
+  { rank: 3, record: "Stacey Andrew Gonzaga", stockCount: 750 },
+];
+
+const customerLeaderboard: Leaderboard[] = [
+  { rank: 1, record: "Joshua Sevilla", salesCount: 5000 },
+  { rank: 2, record: "John Doe", salesCount: 4000 },
+  { rank: 3, record: "Jerald Dagaang", salesCount: 3000 },
+];
 
 const AdminDashboard = () => {
+
   const session = useSession();
 
   return (
-    <section
-      className={`flex h-auto w-screen flex-col gap-3 overflow-y-scroll p-10`}
-    >
-      <div className="flex items-center justify-between">
-        <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-3">
-            <label className="text-4xl font-extrabold">
-              Hello, {session.data?.user.firstName}
-            </label>
-            <Dialog>
-              <DialogTrigger asChild>
-                <Bell
-                  size={20}
-                  color="#F93C65"
-                  className="transition-all hover:scale-125 hover:cursor-pointer"
-                />
-              </DialogTrigger>
-              <DialogContent title="Notification" className="m-5 rounded-lg">
-                <DialogHeader>
-                  <div className="my-2 flex flex-row items-center gap-1">
-                    <label>Notifications</label>
-                    <div className="mb-0.5 rounded-md bg-[#FFCCCC] p-0.5 px-1 text-xs text-[#FF7B7B]">
-                      23
-                    </div>
-                  </div>
 
-                  <div className="flex items-center gap-3 border-y">
-                    <Avatar>
-                      <AvatarFallback>JD</AvatarFallback>
-                    </Avatar>
+    <section className="flex flex-col min-h-screen py-10 px-20">
 
-                    <div className="flex w-full items-center justify-between gap-1 p-3">
-                      <div>
-                        <div className="flex gap-1">
-                          <span className="font-bold">John Doe</span>
-                          <span>made an edit to inventory</span>
-                        </div>
-                        <span className="text-slate-400">2 hours ago</span>
-                      </div>
-
-                      <X size={25} />
-                    </div>
-                  </div>
-                </DialogHeader>
-              </DialogContent>
-            </Dialog>
-          </div>
-          <label>Today is Thursday, October 10 2024</label>
+      <div className="flex justify-between items-center">
+        <h2 className="font-bold text-3xl text-slate-700">
+          Hello, {session.data?.user.firstName}!
+        </h2>
+        <div className="flex gap-4 items-center">
+          <Notification notifications={notifications} />
+          <Separator orientation="vertical" className="h-10 bg-slate-200 w-[2px]" />
+          <CalendarDateRangePicker />
+          <Button className="bg-green hover:bg-green/80">
+            Export Report
+            <ArrowUpRight strokeWidth={2.5} />
+          </Button>
         </div>
-
-        <DashboardStockedInOut />
       </div>
 
-      {/* <ChartsContainer /> */}
+      <Separator orientation="horizontal" className="mt-4 h-[2px]" />
 
-      <div className="flex w-full justify-center">
-        <DashboardChart />
+      <div className="flex justify-between items-center gap-4 mt-4">
+        <StockInStatus percentage={-10} count={1234} />
+        <StockOutStatus percentage={24} count={4567} />
+        <CustomerStatus count={324} />
+        <SupplierStatus count={463} />
       </div>
+
+      <div className="mt-4 flex items-center justify-between gap-4 w-full h-full">
+        <div className="flex flex-col gap-4 w-1/2 h-full">
+          <CategoryPieCard pieChartData={pieChartData} pieChartConfig={pieChartConfig} totalSales={1110} />
+          <SalesAreaCard areaChartData={areaChartData} areaChartConfig={areaChartConfig} />
+        </div>
+        <div className="w-1/2 h-full">
+          <Ranking suppliers={supplierLeaderboard} customers={customerLeaderboard} />
+        </div>
+      </div>
+
     </section>
   );
 };

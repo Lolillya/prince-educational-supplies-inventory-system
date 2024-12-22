@@ -1,16 +1,21 @@
 import { ArrowBigDownDashIcon, ArrowBigUpDashIcon, ChevronsDown, ChevronsRight, ChevronsUp, Truck, UsersRound } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 
 type StatusProps = {
 	percentage?: number,
 	count: number
 }
 
+
 export const StockInStatus: React.FC<StatusProps> = ({
 	percentage = 0,
 	count
 }) => {
+
+	const router = useRouter();
+
 	return (
-		<div className='p-6 bg-slate-100 rounded-lg w-1/4'>
+		<div className='p-6 bg-slate-100 hover:bg-slate-200/80 hover:cursor-pointer transition-colors duration-300 rounded-lg w-1/4' onClick={() => router.push("/admin/restock")}>
 			<div className='flex gap-3 items-center justify-between'>
 				<div className='flex flex-col gap-3'>
 					<div className='flex gap-3'>
@@ -46,8 +51,11 @@ export const StockOutStatus: React.FC<StatusProps> = ({
 	percentage = 0,
 	count
 }) => {
+
+	const router = useRouter();
+
 	return (
-		<div className='p-6 bg-slate-100 rounded-lg w-1/4'>
+		<div className='p-6 bg-slate-100 hover:bg-slate-200/80 hover:cursor-pointer transition-colors duration-300 rounded-lg w-1/4' onClick={() => router.push("/admin/invoice")}>
 			<div className='flex gap-3 items-center justify-between'>
 				<div className='flex flex-col gap-3'>
 					<div className='flex gap-3'>
@@ -80,8 +88,11 @@ export const StockOutStatus: React.FC<StatusProps> = ({
 }
 
 export const CustomerStatus: React.FC<StatusProps> = ({ count }) => {
+
+	const router = useRouter();
+
 	return (
-		<div className='p-6 bg-slate-100 rounded-lg w-1/4'>
+		<div className='p-6 bg-slate-100 hover:bg-slate-200/80 hover:cursor-pointer transition-colors duration-300 rounded-lg w-1/4' onClick={() => router.push("/admin/customers")}>
 			<div className='flex gap-3 items-center justify-between'>
 				<div className='flex flex-col gap-3'>
 					<p className='text-slate-500'>Customers</p>
@@ -96,8 +107,11 @@ export const CustomerStatus: React.FC<StatusProps> = ({ count }) => {
 }
 
 export const SupplierStatus: React.FC<StatusProps> = ({ count }) => {
+
+	const router = useRouter();
+
 	return (
-		<div className='p-6 bg-slate-100 rounded-lg w-1/4'>
+		<div className='p-6 bg-slate-100 hover:bg-slate-200/80 hover:cursor-pointer transition-colors duration-300 rounded-lg w-1/4' onClick={() => router.push("/admin/suppliers")}>
 			<div className='flex gap-3 items-center justify-between'>
 				<div className='flex flex-col gap-3'>
 					<p className='text-slate-500'>Suppliers</p>

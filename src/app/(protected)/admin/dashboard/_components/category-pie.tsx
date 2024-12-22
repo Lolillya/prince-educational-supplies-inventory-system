@@ -66,7 +66,7 @@ export const CategoryPie: React.FC<CategoryPieCardProps> = ({ pieChartData, pieC
 											y={(viewBox.cy || 0) + 20}
 											className="fill-muted-foreground"
 										>
-											this week
+											total sales
 										</tspan>
 									</text>
 								)

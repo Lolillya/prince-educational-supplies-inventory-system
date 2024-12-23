@@ -30,6 +30,7 @@ import {
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ScrollArea } from "./ui/scroll-area";
 import { Button } from "./ui/button";
+import { useSession } from "next-auth/react";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -39,6 +40,7 @@ const poppins = Poppins({
 const Sidebar = () => {
   const router = useRouter();
   const pathname = usePathname();
+  const session = useSession();
 
   // Moved the useState call inside the component
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -183,11 +185,11 @@ const Sidebar = () => {
           <PopoverTrigger>
             <div className="flex items-center gap-4 rounded-full bg-white p-3">
               <Avatar>
-                <AvatarFallback className="bg-pink-200 text-slate-700">CN</AvatarFallback>
+                <AvatarFallback className="bg-pink-200 text-slate-700">{session.data?.user.firstName.charAt(0)}{session.data?.user.lastName.charAt(0)}</AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start">
-                <p className="text-base font-bold text-slate-700">John Doe</p>
-                <p className="text-sm font-extralight text-slate-500">Admin</p>
+                <p className="text-base font-bold text-slate-700">{session.data?.user.firstName} {session.data?.user.lastName}</p>
+                <p className="text-sm font-extralight text-slate-500">{session.data?.user.role}</p>
               </div>
             </div>
           </PopoverTrigger>

@@ -154,7 +154,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
         }
 
         if (addressLine && addressLine.trim().length < 5) {
-            newErrors.addressLine = "Address must be at least 5 characters long.";
+        newErrors.addressLine = "Address must be at least 5 characters long.";
         } else if (addressLine && addressLine.trim().length > 100) {
             newErrors.addressLine = "Address Line must be at most 100 characters long.";
         }

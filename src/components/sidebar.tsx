@@ -1,8 +1,8 @@
 "use client";
 
 import { useState } from "react";
-import { Raleway } from "next/font/google";
-import { useRouter } from "next/navigation";
+import { Poppins } from "next/font/google";
+import { useRouter, usePathname } from "next/navigation";
 import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
 import Company_Logo from "public/Company_Logo.svg";
 import Image from "next/image";
@@ -27,11 +27,20 @@ import {
   IdCard,
   History,
 } from "lucide-react";
+import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
+import { ScrollArea } from "./ui/scroll-area";
+import { Button } from "./ui/button";
+import { useSession } from "next-auth/react";
 
-const ralewaye = Raleway({ subsets: ["latin"] });
+const poppins = Poppins({
+  subsets: ["latin"],
+  weight: ["400", "700"],
+});
 
 const Sidebar = () => {
   const router = useRouter();
+  const pathname = usePathname();
+  const session = useSession();
 
   // Moved the useState call inside the component
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -41,61 +50,61 @@ const Sidebar = () => {
       dashboard: {
         text: "Dashboard",
         redirect: "/admin/dashboard",
-        icon: <ChartPie width={20} height={20} />,
+        icon: <ChartPie width={24} height={24} />,
       },
       restock: {
         text: "Restock",
         redirect: "/admin/restock",
-        icon: <Archive width={20} height={20} />,
+        icon: <Archive width={24} height={24} />,
       },
       invoice: {
         text: "Invoice",
         redirect: "/admin/invoice",
-        icon: <NotebookText width={20} height={20} />,
+        icon: <NotebookText width={24} height={24} />,
       },
     },
     records: {
       suppliers: {
         text: "Suppliers",
         redirect: "/admin/suppliers",
-        icon: <Truck width={20} height={20} />,
+        icon: <Truck width={24} height={24} />,
       },
       customers: {
         text: "Customers",
         redirect: "/admin/customers",
-        icon: <Users width={20} height={20} />,
+        icon: <Users width={24} height={24} />,
       },
       inventory: {
         text: "Inventory",
         redirect: "/admin/inventory",
-        icon: <Package2 width={20} height={20} />,
+        icon: <Package2 width={24} height={24} />,
       },
       employees: {
         text: "Employees",
         redirect: "/admin/employees",
-        icon: <IdCard width={20} height={20} />,
+        icon: <IdCard width={24} height={24} />,
       },
       history: {
         text: "History",
         redirect: "/admin/history",
-        icon: <History width={20} height={20} />,
+        icon: <History width={24} height={24} />,
       },
     },
     controls: {
       settings: {
         text: "Settings",
         redirect: "",
-        icon: <Settings width={20} height={20} />,
+        icon: <Settings width={24} height={24} />,
       },
       about: {
         text: "About",
         redirect: "",
-        icon: <Info width={20} height={20} />,
+        icon: <Info width={24} height={24} />,
       },
       logout: {
         text: "Logout",
         redirect: "",
-        icon: <LogOut width={20} height={20} />,
+        icon: <LogOut width={24} height={24} />,
       },
     },
   };
@@ -114,65 +123,78 @@ const Sidebar = () => {
   };
 
   return (
-    <div
-      className={`bg-gray p-5 transition-all duration-300 ${ralewaye.className} group z-10 flex h-screen w-[16rem] flex-col justify-between overflow-y-scroll`}
-    >
+    <div className={`bg-slate-100 py-10 px-5 transition-all duration-300 ${poppins.className} flex h-screen w-1/6 flex-col justify-between`}>
       <section>
-        <section className="mb-10 flex items-center justify-center">
-          <div className="flex w-full items-center justify-start gap-3 px-2 hover:cursor-pointer">
+        <div className="flex items-center justify-center">
+          <div className="flex w-full items-center justify-start gap-4 pl-2 hover:cursor-pointer">
             <Image
               src={Company_Logo}
               alt="Company Logo"
-              width={30}
-              height={30}
-              className="min-w-[30px]"
+              className="min-w-[30px] w-8 h-8"
             />
-
-            <Label className="text-red-500 w-fit overflow-hidden text-2xl font-extrabold transition-all duration-300">
+            <Label className="text-slate-700 w-fit overflow-hidden text-3xl font-extrabold transition-all duration-300">
               Prince
             </Label>
           </div>
-        </section>
+        </div>
 
-        <section className="my-3 flex flex-col gap-3">
-          {Object.entries(sidebarContent.main).map(([key, value]) => (
-            <div
-              key={key}
-              onClick={() => router.push(value.redirect)}
-              className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white`}
-            >
-              {value.icon}
-              <span className="ml-2 block text-sm hover:cursor-pointer">
-                {value.text}
-              </span>
+        <ScrollArea className="" >
+          <>
+            <div className="mt-6 flex flex-col gap-2">
+              {Object.entries(sidebarContent.main).map(([key, value]) => (
+                <div
+                  key={key}
+                  onClick={() => router.push(value.redirect)}
+                  className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white transition-colors duration-300 text-slate-600 
+                ${pathname.startsWith(value.redirect) ? "bg-white text-slate-800" : ""}`}
+                >
+                  {value.icon}
+                  <span className="pl-5 text-lg">
+                    {value.text}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </section>
 
-        <section className="my-3 flex flex-col gap-3">
-          <Label className="text-gray-400 block w-full overflow-x-hidden font-extralight">
-            Records
-          </Label>
+            <div className="mt-6 flex flex-col gap-2">
+              <Label className="text-slate-500 pl-3 text-base mb-1">
+                Records
+              </Label>
 
-          {Object.entries(sidebarContent.records).map(([key, value]) => (
-            <div
-              key={key}
-              onClick={() => router.push(value.redirect)}
-              className={`flex cursor-pointer items-center justify-start rounded-lg p-3 hover:bg-white`}
-            >
-              {value.icon}
-              <span className="ml-2 block w-fit overflow-hidden text-sm transition-all duration-300 hover:cursor-pointer">
-                {value.text}
-              </span>
+              {Object.entries(sidebarContent.records).map(([key, value]) => (
+                <div
+                  key={key}
+                  onClick={() => router.push(value.redirect)}
+                  className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white transition-colors duration-300 text-slate-600 
+                ${pathname.startsWith(value.redirect) ? "bg-white text-slate-800" : ""}`}
+                >
+                  {value.icon}
+                  <span className="pl-5 text-lg">
+                    {value.text}
+                  </span>
+                </div>
+              ))}
             </div>
-          ))}
-        </section>
+          </>
+        </ScrollArea>
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-3 ">
         {/* Controls Section */}
-        <div className="max-w-full rounded-lg bg-white p-3">
-          <div className="flex flex-col justify-center gap-3 text-xl">
+        <Popover>
+          <PopoverTrigger>
+            <div className="flex items-center gap-4 rounded-full bg-white p-3">
+              <Avatar>
+                <AvatarFallback className="bg-pink-200 text-slate-700">{session.data?.user.firstName.charAt(0)}{session.data?.user.lastName.charAt(0)}</AvatarFallback>
+              </Avatar>
+              <div className="flex flex-col items-start">
+                <p className="text-base font-bold text-slate-700">{session.data?.user.firstName} {session.data?.user.lastName}</p>
+                <p className="text-sm font-extralight text-slate-500">{session.data?.user.role}</p>
+              </div>
+            </div>
+          </PopoverTrigger>
+          <PopoverContent className="flex flex-col gap-1 p-2 shadow-none my-3 ml-3">
+
             {Object.entries(sidebarContent.controls).map(([key, value]) => (
               <div
                 key={key}
@@ -181,10 +203,10 @@ const Sidebar = () => {
                     ? handleLogoutClick
                     : () => router.push(value.redirect)
                 }
-                className="m-0 flex items-center gap-2 rounded-lg p-3 transition-all duration-300 hover:cursor-pointer hover:bg-green hover:text-white group-hover:justify-start"
+                className="flex items-center gap-4 rounded-lg py-2 px-4 transition-colors duration-300 hover:cursor-pointer text-slate-700 hover:bg-slate-100 "
               >
                 {value.icon}
-                <span className="w-fit text-sm opacity-100 transition-all duration-300 ease-in-out hover:cursor-pointer">
+                <span className="text-base">
                   {value.text}
                 </span>
               </div>
@@ -193,29 +215,29 @@ const Sidebar = () => {
             {/* Logout Confirmation Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent>
-                <DialogTitle>Confirm Logout</DialogTitle>
-                <p>Are you sure you want to log out?</p>
+                <DialogTitle className="text-slate-700 items-center">Confirm Logout</DialogTitle>
+                <p className="text-slate-700">Are you sure you want to log out?</p>
                 <DialogFooter>
-                  <button onClick={confirmLogout}>Yes</button>
-                  <button onClick={cancelLogout}>No</button>
+                  <Button
+                    onClick={cancelLogout}
+                    className="text-slate-700 hover:bg-slate-300"
+                    variant={'secondary'}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={confirmLogout}
+                    className="bg-green hover:bg-green/80"
+                  >
+                    Logout
+                  </Button>
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-          </div>
-        </div>
 
-        {/* Profile Section */}
-        <div className="flex items-center justify-evenly rounded-lg bg-white p-3">
-          <Avatar>
-            <AvatarImage src="" alt="profile avatar" />
-            <AvatarFallback>CN</AvatarFallback>
-          </Avatar>
+          </PopoverContent>
+        </Popover>
 
-          <div className="ml-3 flex w-fit flex-col transition-all duration-300">
-            <span className="text-sm font-bold">John Doe</span>
-            <span className="text-sm font-extralight">Admin</span>
-          </div>
-        </div>
       </section>
     </div>
   );

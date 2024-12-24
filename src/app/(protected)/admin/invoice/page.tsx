@@ -1,7 +1,10 @@
 "use client";
 
 import { Poppins } from "next/font/google";
-import { Search, ListFilter } from "lucide-react";
+
+import { Search, Ellipsis, ListFilter, Plus } from "lucide-react";
+import Image from "next/image";
+
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
@@ -22,7 +25,10 @@ import {
   TableCell,
 } from "~/components/ui/table";
 import { useRouter } from "next/navigation";
-import { Input } from "~/components/ui/input";
+import SearchBar from "../_components/search-bar";
+import Filter from "../_components/filter";
+import InvoiceRecord from "./_components/invoice-record";
+import { WeekNumberLabel } from "react-day-picker";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -31,32 +37,86 @@ const poppins = Poppins({
 
 const InvoicePage = () => {
   const router = useRouter();
+
+  interface InvoiceProps {
+    invoiceId: number;
+    date: string;
+    customer: string;
+    grandTotal: number;
+    orderItems: {
+      variant: string;
+      item: string;
+      brand: string;
+      quantity: number;
+      unit: string;
+      unitPrice: number;
+      discountValue: string;
+      subtotal: number;
+    }[];
+  }
+
+  const sampleInvoice: InvoiceProps = {
+    invoiceId: 12345678,
+    date: "September 21, 2024",
+    customer: "Adrian Huang",
+    grandTotal: 2500.0,
+    orderItems: [
+      {
+        variant: "Red - Large",
+        item: "T-shirt",
+        brand: "Brand A",
+        quantity: 3,
+        unit: "pcs",
+        unitPrice: 250.0,
+        discountValue: "5%",
+        subtotal: 750.0,
+      },
+      {
+        variant: "Blue - Medium",
+        item: "Jeans",
+        brand: "Brand B",
+        quantity: 2,
+        unit: "pcs",
+        unitPrice: 600.0,
+        discountValue: "10%",
+        subtotal: 1200.0,
+      },
+      {
+        variant: "Black - 42",
+        item: "Shoes",
+        brand: "Brand C",
+        quantity: 1,
+        unit: "pair",
+        unitPrice: 550.0,
+        discountValue: "0%",
+        subtotal: 550.0,
+      },
+
+    ],
+  };
+
   return (
-    <section
-      className={`h-auto w-screen ${poppins.className} flex flex-col gap-3 overflow-y-scroll p-10`}
-    >
-      <div className="relative flex items-center">
-        <div className="flex h-16 w-full items-center justify-between gap-3">
-          <div className="relative flex h-auto w-full max-w-md items-center gap-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-textGray" />
-            <Input
-              placeholder="Search"
-              className="bg-gray p-6 pl-10 shadow-none placeholder:text-textGray"
-            />
-
-            <div className="hover:bg-gray-300 rounded-md bg-gray p-3 hover:cursor-pointer">
-              {/* <Image src={Filter_Icon} alt="filter icon" /> */}
-              <ListFilter className="text-textGray" />
-            </div>
-          </div>
-
-          <Button
-            onClick={() => router.push("/admin/invoice/new-invoice")}
-            className="bg-green p-5 font-bold"
-          >
-            + New Invoice
-          </Button>
+    <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
+      <div className="flex justify-between items-center">
+        <div className="flex gap-3 items-center">
+          <SearchBar />
+          <Filter />
         </div>
+        <Button
+          onClick={() => router.push("/admin/invoice/new-invoice")}
+          className="bg-green hover:bg-green/80">
+          <Plus strokeWidth={3} /> New Invoice
+        </Button>
+      </div>
+
+      <div className="mt-5 flex flex-col gap-4">
+        <InvoiceRecord
+          invoiceId={sampleInvoice.invoiceId}
+          date={sampleInvoice.date}
+          customer={sampleInvoice.customer}
+          grandTotal={sampleInvoice.grandTotal}
+          orderItems={sampleInvoice.orderItems}
+        />
       </div>
 
       <Card>

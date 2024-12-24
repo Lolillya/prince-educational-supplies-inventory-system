@@ -1,8 +1,6 @@
 "use client";
 
 import { Input } from "~/components/ui/input";
-import eyeIcon from "public/icons/eye.svg";
-import eyeClosedIcon from "public/icons/eye-closed.svg";
 import Company_Logo from "public/Company_Logo.svg";
 import Image from "next/image";
 import * as z from "zod";
@@ -15,6 +13,8 @@ import { useRouter } from "next/navigation";
 import { DEFAULT_ADMIN_REDIRECT, DEFAULT_EMPLOYEE_REDIRECT } from "~/routes";
 import { login } from "~/app/actions/actions";
 import { Eye, EyeClosed } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Label } from "~/components/ui/label";
 
 const LoginPage = () => {
   const [isPending, setIsPending] = useState(false);
@@ -37,7 +37,6 @@ const LoginPage = () => {
 
     try {
       const data = await login(values);
-      console.log(data);
 
       if (!data) {
         setSuccess("Login failed, please try again!");
@@ -71,30 +70,31 @@ const LoginPage = () => {
         {/* Company Logo */}
         <div className="mb-8 flex items-center gap-3 p-3">
           <Image src={Company_Logo} alt="Company Logo" width={160} />
-          <label className="text-5xl font-bold">
+          <Label className="text-5xl font-bold">
             Prince Educational Supply
-          </label>
+          </Label>
         </div>
 
         {/* Email Field */}
         <div className="mb-6 flex flex-col gap-1">
-          <label className="ml-3">Email</label>
+          <Label className="ml-3">Email</Label>
           <div className="relative flex items-center">
             <Input
               placeholder="Email"
               required
               {...form.register("username")}
               disabled={isPending}
+              className="placeholder:text-textGray"
             />
-            <label className="text-gray-400 absolute right-3 font-light">
+            <Label className="absolute right-3 font-light text-textGray">
               @prince.com.ph
-            </label>
+            </Label>
           </div>
         </div>
 
         {/* Password Field */}
         <div className="mb-6 flex flex-col gap-1">
-          <label className="ml-3">Password</label>
+          <Label className="ml-3">Password</Label>
           <div className="relative flex items-center">
             <Input
               type={showPassword ? "text" : "password"}
@@ -102,23 +102,32 @@ const LoginPage = () => {
               required
               {...form.register("password")}
               disabled={isPending}
+              className="placeholder:text-textGray"
             />
             <div
               className="absolute right-3 cursor-pointer"
               onClick={() => setShowPassword(!showPassword)}
             >
-              {showPassword ? <Eye /> : <EyeClosed />}
+              {showPassword ? (
+                <Eye color="#989FB3" />
+              ) : (
+                <EyeClosed color="#989FB3" />
+              )}
             </div>
           </div>
         </div>
 
         {/* Success/Error Message */}
-        {success && <p className="text-red-500 mb-4 text-center">{success}</p>}
+        {success && <p className="mb-4 text-center text-red">{success}</p>}
 
         {/* Submit Button */}
-        <button type="submit" disabled={isPending} className="w-full">
-          {isPending ? "Logging in..." : "Login"}
-        </button>
+        <Button
+          type="submit"
+          disabled={isPending}
+          className="w-full bg-primary"
+        >
+          {isPending ? "Logging in..." : "Sign in"}
+        </Button>
       </form>
     </section>
   );

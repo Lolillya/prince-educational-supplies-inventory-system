@@ -12,6 +12,7 @@ import { Poppins } from "next/font/google";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import { Input } from "~/components/ui/input";
@@ -101,11 +102,13 @@ const RestockPage = () => {
   };
   
   return (
+
     <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
       <div className="flex justify-between items-center">
         <div className="flex gap-3 items-center">
           <SearchBar />
           <Filter />
+
         </div>
         <Button
           onClick={() => router.push("restock/add-stock")}
@@ -113,6 +116,7 @@ const RestockPage = () => {
           <Plus strokeWidth={3} /> Add Stock
         </Button>
       </div>
+
 
       <div className="mt-5 flex flex-col gap-4">
         <RestockRecord
@@ -209,56 +213,115 @@ const RestockPage = () => {
                     </div>
                   </DialogContent>
                 </Dialog>
+
               </div>
             </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-[#F0F1F4] p-5">
-              <div className="flex w-full flex-col gap-3">
-                <span>#1233478 - September 20, 2024</span>
-                <span>Units</span>
-              </div>
-
-              <div className="flex w-full items-center justify-between">
-                <div className="flex flex-col gap-3">
-                  <span>Added Items</span>
-                  <span>250</span>
-                </div>
-
-                <div className="rounded-md border-2 border-[#D3D6DF] p-3">
-                  <Ellipsis color="gray" />
-                </div>
+            <div className="flex w-full items-center justify-between">
+              <div className="flex flex-col gap-3 border-l-2 pl-3">
+                <span>Added Stock</span>
+                <span>500</span>
               </div>
             </div>
+          </div>
 
-            <div className="flex items-center justify-between rounded-lg bg-[#F0F1F4] p-5">
-              <div className="flex w-full flex-col gap-3">
-                <span>#1233478 - September 20, 2024</span>
-                <span>Units</span>
-              </div>
-
-              <div className="flex w-full items-center justify-between">
-                <div className="flex flex-col gap-3">
-                  <span>Added Items</span>
-                  <span>250</span>
-                </div>
-
-                <div className="rounded-md border-2 border-[#D3D6DF] p-3">
-                  <Ellipsis color="gray" />
-                </div>
-              </div>
+          <div className="flex items-center justify-between rounded-lg bg-[#F0F1F4] p-5">
+            <div className="flex w-full flex-col gap-3">
+              <span>#1233478 - September 20, 2024</span>
+              <span className="text-sm text-textGray">
+                30 Boxes (No conversions)
+              </span>
             </div>
 
-            <div className="flex w-full justify-center p-5">
-              <Button
-                size={"lg"}
-                className="bg-transparent font-bold text-green shadow-none transition duration-300 hover:scale-110 hover:cursor-pointer"
-              >
-                View All
-              </Button>
+            <div className="flex w-full items-center justify-between">
+              <div className="flex flex-col gap-3 border-l-2 pl-3">
+                <span>Added Items</span>
+                <span>250</span>
+              </div>
             </div>
-          </CardContent>
-        </Card>
-      </div>
+          </div>
+
+          <div className="flex items-center justify-between rounded-lg bg-[#F0F1F4] p-5">
+            <div className="flex w-full flex-col gap-3">
+              <span>#1233478 - September 20, 2024</span>
+              <span className="text-sm text-textGray">
+                30 Boxes (3 conversions)
+              </span>
+            </div>
+
+            <div className="flex w-full items-center justify-between">
+              <div className="flex flex-col gap-3 border-l-2 pl-3">
+                <span>Added Items</span>
+                <span>250</span>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex w-full justify-center p-5">
+            <Dialog>
+              <DialogTrigger asChild>
+                <Button
+                  size={"lg"}
+                  variant={"link"}
+                  className="font-bold shadow-none transition duration-300 hover:scale-110 hover:cursor-pointer"
+                >
+                  View All
+                </Button>
+              </DialogTrigger>
+              <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">
+                <DialogTitle>#1233478 - Semptember 29, 2024</DialogTitle>
+
+                <div className="flex w-full flex-col gap-3">
+                  <div className="text-gray-400 flex flex-col gap-1">
+                    <Label>Supplier</Label>
+                    <Input placeholder="Supplier Name" />
+                  </div>
+
+                  <div className="w text-gray-400 flex flex-col gap-1">
+                    <Label>Recorded by</Label>
+                    <Input placeholder="Employee Name" />
+                  </div>
+                </div>
+
+                <div className="flex h-full w-full flex-col justify-between overflow-y-scroll">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Quantity</TableHead>
+                        <TableHead>Unit</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow>
+                        <TableCell>Item - Brand - Variant</TableCell>
+                        <TableCell>200</TableCell>
+                        <TableCell>
+                          Boxes{" "}
+                          <Label className="text-textGray">3 Conversions</Label>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                  <div className="bottom-0 flex w-full justify-end">
+                    <div className="flex w-full items-center justify-between gap-3">
+                      <span className="font-bold">TOTAL: 000000</span>
+                      <div className="flex items-center gap-3">
+                        <Button size={"lg"} className="font-bold">
+                          Close
+                        </Button>
+                        <Button className="bg-green px-7 font-bold" size={"lg"}>
+                          Save
+                        </Button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
+        </CardContent>
+      </Card>
     </section>
   );
 };

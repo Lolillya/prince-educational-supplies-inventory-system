@@ -4,9 +4,11 @@ import { Button } from '~/components/ui/button'
 
 const MoreOptions = () => {
 	return (
-		<div className="flex items-center justify-center rounded-xl bg-transparent hover:bg-slate-200 h-12 w-12">
-			<Ellipsis className="text-slate-500 hover:text-slate-600 !h-5 !w-5" strokeWidth={2.5}/>
-		</div>
+		<Button asChild>
+			<div className="flex items-center justify-center rounded-xl bg-transparent hover:bg-slate-200 h-12 w-12 transition-colors duration-300">
+				<Ellipsis className="text-slate-500 hover:text-slate-600 !h-5 !w-5" strokeWidth={2.5}/>
+			</div>
+		</Button>
 	)
 }
 

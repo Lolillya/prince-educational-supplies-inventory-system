@@ -1,4 +1,4 @@
-import { ArrowBigDownDashIcon, ArrowBigUpDashIcon, ChevronsDown, ChevronsRight, ChevronsUp, Truck, UsersRound } from 'lucide-react'
+import { Archive, ChevronsDown, ChevronsRight, ChevronsUp, NotebookText, Truck, UsersRound } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 type StatusProps = {
@@ -40,7 +40,7 @@ export const StockInStatus: React.FC<StatusProps> = ({
 					<p className='font-bold text-2xl text-slate-700'>{count.toLocaleString()}</p>
 				</div>
 				<div className='h-16 w-16 rounded-2xl bg-sky-200 flex justify-center items-center'>
-					<ArrowBigUpDashIcon className='text-sky-500 h-10 w-10' strokeWidth={1.5} />
+					<Archive className='text-sky-500 h-10 w-10' strokeWidth={1.5} />
 				</div>
 			</div>
 		</div>
@@ -80,7 +80,7 @@ export const StockOutStatus: React.FC<StatusProps> = ({
 					<p className='font-bold text-2xl text-slate-700'>{count.toLocaleString()}</p>
 				</div>
 				<div className='h-16 w-16 rounded-2xl bg-sky-200 flex justify-center items-center'>
-					<ArrowBigDownDashIcon className='text-sky-500 h-10 w-10' strokeWidth={1.5} />
+					<NotebookText className='text-sky-500 h-10 w-10' strokeWidth={1.5} />
 				</div>
 			</div>
 		</div>

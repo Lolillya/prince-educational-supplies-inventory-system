@@ -1,34 +1,29 @@
 "use client";
 
+import { Ellipsis, Plus } from "lucide-react";
 import { Poppins } from "next/font/google";
-import { Search, Ellipsis, ListFilter, Plus } from "lucide-react";
-import Image from "next/image";
 import { Button } from "~/components/ui/button";
 import { Card } from "~/components/ui/card";
-import { Label } from "~/components/ui/label";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import { Separator } from "~/components/ui/separator";
-import { Badge } from "~/components/ui/badge";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogTitle,
+  DialogTrigger
 } from "~/components/ui/dialog";
+import { Label } from "~/components/ui/label";
+import { Separator } from "~/components/ui/separator";
 
+import { useRouter } from "next/navigation";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "~/components/ui/table";
-import { useRouter } from "next/navigation";
-import SearchBar from "../_components/search-bar";
 import Filter from "../_components/filter";
+import SearchBar from "../_components/search-bar";
 import InvoiceRecord from "./_components/invoice-record";
-import { WeekNumberLabel } from "react-day-picker";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -58,40 +53,59 @@ const InvoicePage = () => {
   const sampleInvoice: InvoiceProps = {
     invoiceId: 12345678,
     date: "September 21, 2024",
-    customer: "Adrian Huang",
+    customer: "Rich Adrian Huang",
     grandTotal: 2500.0,
     orderItems: [
       {
-        variant: "Red - Large",
-        item: "T-shirt",
-        brand: "Brand A",
-        quantity: 3,
-        unit: "pcs",
-        unitPrice: 250.0,
-        discountValue: "5%",
-        subtotal: 750.0,
+        variant: 'Dustless Small',
+        item: 'Eraser',
+        brand: 'Joy',
+        quantity: 15,
+        unit: 'Boxes',
+        unitPrice: 100,
+        discountValue: '0%',
+        subtotal: 1500,
       },
       {
-        variant: "Blue - Medium",
-        item: "Jeans",
-        brand: "Brand B",
-        quantity: 2,
-        unit: "pcs",
-        unitPrice: 600.0,
-        discountValue: "10%",
-        subtotal: 1200.0,
+        variant: 'Gel Fine Tip',
+        item: 'Pen',
+        brand: 'SmoothWrite',
+        quantity: 20,
+        unit: 'Packs',
+        unitPrice: 50,
+        discountValue: '10%',
+        subtotal: 900,
       },
       {
-        variant: "Black - 42",
-        item: "Shoes",
-        brand: "Brand C",
-        quantity: 1,
-        unit: "pair",
-        unitPrice: 550.0,
-        discountValue: "0%",
-        subtotal: 550.0,
+        variant: 'A4',
+        item: 'Notebook',
+        brand: 'NotePro',
+        quantity: 10,
+        unit: 'Pieces',
+        unitPrice: 120,
+        discountValue: '5%',
+        subtotal: 1140,
       },
-
+      {
+        variant: 'Plastic Cover',
+        item: 'Book Cover',
+        brand: 'CoverShield',
+        quantity: 25,
+        unit: 'Rolls',
+        unitPrice: 80,
+        discountValue: '0%',
+        subtotal: 2000,
+      },
+      {
+        variant: 'Neon Colors',
+        item: 'Highlighter',
+        brand: 'BrightMark',
+        quantity: 30,
+        unit: 'Sets',
+        unitPrice: 75,
+        discountValue: '15%',
+        subtotal: 1912.5,
+      },
     ],
   };
 

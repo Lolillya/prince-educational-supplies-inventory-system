@@ -8,25 +8,24 @@ import { Label } from '~/components/ui/label';
 import { Separator } from '~/components/ui/separator';
 import RecordEditor from '../../_components/record-editor';
 
+
 const poppins = Poppins({
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });
 
-type InvoiceProps = {
-	invoiceId: number;
+type RestockProps = {
+	restockId: number;
 	date: string;
-	customer: string;
-	grandTotal: number;
-	discountValue: string;
+	supplier: string;
+	addedStock: number;
 }
 
-const ViewFullInvoice: React.FC<InvoiceProps> = ({
-	invoiceId,
+const ViewFullRestock: React.FC<RestockProps> = ({
+	restockId,
 	date,
-	customer,
-	grandTotal,
-	discountValue,
+	supplier,
+	addedStock,
 }) => {
 
 	const [isEditing, setIsEditing] = useState(false);
@@ -69,7 +68,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
 				<DialogHeader className={`text-xl ${poppins.className} font-normal h-full`}>
 					<div className='flex items-center justify-between'>
 						<div className='flex flex-col justify-between h-full gap-2'>
-							<DialogTitle className='font-normal text-xl text-slate-700'>#{invoiceId}</DialogTitle>
+							<DialogTitle className='font-normal text-xl text-slate-700'>#{restockId}</DialogTitle>
 							<div className='flex items-center gap-3 text-slate-400'>
 								<Calendar className='w-4 h-4' />
 								<DialogDescription className='text-sm tracking-wide'>{date}</DialogDescription>
@@ -81,11 +80,9 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
 				<Separator orientation="horizontal" className="h-[2px]" />
 				<div className='flex gap-3'>
 					<div className='flex flex-col gap-2 group w-1/2'>
-						<Label className='text-slate-400'>Customer & Term</Label>
+						<Label className='text-slate-400'>Supplier</Label>
 						<div className='flex items-center focus-within:outline focus-within:outline-2 focus-within:outline-slate-200 rounded-lg'>
-							<Input className='shadow-none bg-slate-100 rounded-r-none w-3/4 text-slate-700' disabled={!isEditing} value={customer} />
-							<Separator orientation="vertical" className="w-[3px]" />
-							<Input className='shadow-none bg-slate-100 rounded-l-none w-1/4 text-slate-700' disabled={!isEditing} />
+							<Input className='shadow-none bg-slate-100 text-slate-700' disabled={!isEditing} value={supplier}/>
 						</div>
 					</div>
 					<div className='flex flex-col gap-2 group w-1/2'>
@@ -101,11 +98,9 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
 				<Separator orientation="horizontal" className="h-[2px]" />
 				<div className='flex items-center justify-between'>
 					<div className='flex flex-col justify-between h-full gap-1'>
-						<p className='font-normal text-base text-slate-700'>₱{grandTotal}</p>
+						<p className='font-normal text-base text-slate-700'>{addedStock}</p>
 						<div className='flex items-center gap-3 text-slate-400'>
-							<p className='text-sm tracking-wide'>Grand Total</p>
-							<Separator orientation='vertical' className=' h-4 w-[2px] bg-slate-200' />
-							<p className='text-sm tracking-wide'>{discountValue} discount</p>
+							<p className='text-sm tracking-wide'>Added Stock</p>
 						</div>
 					</div>
 					<div className='flex items-center gap-2'>
@@ -137,4 +132,4 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
 	)
 }
 
-export default ViewFullInvoice
+export default ViewFullRestock

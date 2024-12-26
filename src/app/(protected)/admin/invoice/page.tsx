@@ -40,6 +40,7 @@ const InvoicePage = () => {
     date: string;
     customer: string;
     grandTotal: number;
+    discountValue: string;
     orderItems: {
       variant: string;
       item: string;
@@ -57,6 +58,7 @@ const InvoicePage = () => {
     date: "September 21, 2024",
     customer: "Rich Adrian Huang",
     grandTotal: 2500.0,
+    discountValue: '0%',
     orderItems: [
       {
         variant: 'Dustless Small',
@@ -132,6 +134,7 @@ const InvoicePage = () => {
           customer={sampleInvoice.customer}
           grandTotal={sampleInvoice.grandTotal}
           orderItems={sampleInvoice.orderItems}
+          discountValue={sampleInvoice.discountValue}
         />
       </div>
 

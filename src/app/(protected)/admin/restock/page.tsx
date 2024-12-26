@@ -34,72 +34,88 @@ const poppins = Poppins({
   weight: ["400", "700"],
 });
 
+interface RestockProps {
+  restockId: number;
+  date: string;
+  supplier: string;
+  addedStock: number;
+  restockItems: {
+    variant: string;
+    item: string;
+    brand: string;
+    quantity: number;
+    mainUnit: string;
+    unitConversion: {
+      from: string;
+      count: number;
+      to: string;
+    }[];
+  }[];
+}
+
+const sampleRestock: RestockProps = {
+  restockId: 12345678,
+  date: "December 21, 2024",
+  supplier: "Rich Adrian Huang",
+  addedStock: 500,
+  restockItems: [
+    {
+      variant: "Dustless Small",
+      item: "Eraser",
+      brand: "Joy",
+      quantity: 100,
+      mainUnit: "Boxes",
+      unitConversion: [
+        { from: "Cartons", count: 20, to: "Boxes" },
+        { from: "Boxes", count: 5, to: "Pieces" },
+      ],
+    },
+    {
+      variant: "Gel Finetip",
+      item: "Pen",
+      brand: "Smoothwrite",
+      quantity: 20,
+      mainUnit: "Boxes",
+      unitConversion: [
+        { from: "Boxes", count: 10, to: "Pieces" },
+      ],
+    },
+    {
+      variant: "A4",
+      item: "Notebook",
+      brand: "Notepro",
+      quantity: 300,
+      mainUnit: "Pieces",
+      unitConversion: [
+        { from: "Pieces", count: 1, to: "Pieces" },
+      ],
+    },
+    {
+      variant: 'Plastic Cover',
+      item: 'Book Cover',
+      brand: 'CoverShield',
+      quantity: 50,
+      mainUnit: "Cartons",
+      unitConversion: [
+        { from: "Cartons", count: 10, to: "Pieces" },
+      ],
+    },
+    {
+      variant: 'Neon Colors',
+      item: 'Highlighter',
+      brand: 'BrightMark',
+      quantity: 30,
+      mainUnit: "Boxes",
+      unitConversion: [
+        { from: "Boxes", count: 10, to: "Cases" },
+      ],
+    },
+  ],
+};
 
 const RestockPage = () => {
-
+  
   const router = useRouter();
-  const [isOpen, setisOpen] = useState(false);
-
-  interface RestockProps {
-    restockId: number;
-    date: string;
-    customer: string;
-    addedStock: number;
-    restockItems: {
-      variant: string;
-      item: string;
-      brand: string;
-      quantity: number;
-      mainUnit: string;
-      unitConversion: {
-        from: string;
-        count: number;
-        to: string;
-      }[];
-    }[];
-  }
-
-  const sampleRestock: RestockProps = {
-    restockId: 12345678,
-    date: "December 21, 2024",
-    customer: "Adrian Huang",
-    addedStock: 90,
-    restockItems: [
-      {
-        variant: "Red - Large",
-        item: "T-shirt",
-        brand: "Brand A",
-        quantity: 50,
-        mainUnit: "box",
-        unitConversion: [
-          { from: "box", count: 10, to: "bundle" },
-          { from: "bundle", count: 10, to: "pack" },
-          { from: "pack", count: 5, to: "piece" },
-        ],
-      },
-      {
-        variant: "Blue - Medium",
-        item: "Jeans",
-        brand: "Brand B",
-        quantity: 30,
-        mainUnit: "case",
-        unitConversion: [
-          { from: "case", count: 5, to: "bundle" },
-          { from: "bundle", count: 4, to: "piece" },
-        ],
-      },
-      {
-        variant: "Black - 42",
-        item: "Shoes",
-        brand: "Brand C",
-        quantity: 10,
-        mainUnit: "carton",
-        unitConversion: [
-          { from: "carton", count: 8, to: "pair" },
-        ],
-      },
-    ],
-  };
 
   return (
 
@@ -122,7 +138,7 @@ const RestockPage = () => {
         <RestockRecord
           restockId={sampleRestock.restockId}
           date={sampleRestock.date}
-          customer={sampleRestock.customer}
+          supplier={sampleRestock.supplier}
           addedStock={sampleRestock.addedStock}
           restockItems={sampleRestock.restockItems}
         />

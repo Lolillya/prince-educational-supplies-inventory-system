@@ -11,6 +11,7 @@ interface InvoiceProps {
 	date: string;
 	customer: string;
 	grandTotal: number;
+	discountValue: string;
 	orderItems: {
 		variant: string;
 		item: string;
@@ -29,6 +30,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 	customer,
 	grandTotal,
 	orderItems,
+	discountValue,
 }) => {
 	return (
 		<div className='bg-slate-100 p-10 rounded-lg text-slate-700 flex flex-col gap-8'>
@@ -105,7 +107,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 					) : orderItems.length <= 2 && (
 						<p>No more items...</p>
 					)}
-					<ViewFullInvoice />
+					<ViewFullInvoice invoiceId={invoiceId} date={date} customer={customer} grandTotal={grandTotal} discountValue={discountValue} />
 				</div>
 			</div>
 

@@ -16,7 +16,6 @@ import {DialogTitle} from "@radix-ui/react-dialog";
 interface EmployeeFormState {
     firstName: string;
     lastName: string;
-    businessName: string;
     contact: string;
     email: string;
     addressLine: string;
@@ -32,7 +31,6 @@ interface EmployeeFormState {
 interface EmployeeFormErrors {
     firstName?: string;
     lastName?: string;
-    businessName?: string;
     contact?: string;
     email?: string;
     addressLine?: string;
@@ -49,7 +47,6 @@ interface EmployeeFormErrors {
 const defaultEmployeeForm: EmployeeFormState = {
     firstName: "",
     lastName: "",
-    businessName: "",
     contact: "",
     email: "",
     addressLine: "",
@@ -84,7 +81,6 @@ const NewEmployeeState = ({ id }: { id: string }) => {
     const [employeeForm, setEmployeeForm] = useState({
         firstName: "",
         lastName: "",
-        businessName: "",
         contact: "",
         email: "",
         addressLine: "",
@@ -108,7 +104,6 @@ const NewEmployeeState = ({ id }: { id: string }) => {
             setEmployeeForm({
                 firstName: employeeData.first_name ?? "",
                 lastName: employeeData.last_name ?? "",
-                businessName: employeeData.company ?? "",
                 contact: employeeData.contact ?? "",
                 email: employeeData.email ?? "",
                 addressLine: employeeData.location?.address_line ?? "",
@@ -152,7 +147,7 @@ const NewEmployeeState = ({ id }: { id: string }) => {
 
     const validateForm = (): EmployeeFormErrors => {
         const newErrors: EmployeeFormErrors = {};
-        const { firstName, lastName, businessName, contact, email, addressLine, city, region, country, postalCode, notes,username,password } = employeeForm;
+        const { firstName, lastName, contact, email, addressLine, city, region, country, postalCode, notes,username,password } = employeeForm;
 
         if (!firstName) {
             newErrors.firstName = "First Name is required.";
@@ -184,12 +179,6 @@ const NewEmployeeState = ({ id }: { id: string }) => {
             newErrors.password = "Password must be at least 8 characters long.";
         } else if (password.length > 50) {
             newErrors.password = "Password must be at most 50 characters long.";
-        }
-
-        if (businessName && businessName.trim().length < 2) {
-            newErrors.businessName = "Business Name must be at least 2 characters long.";
-        } else if (businessName && businessName.trim().length > 100) {
-            newErrors.businessName = "Business Name must be at most 100 characters long.";
         }
 
         if (contact && !/^\d{9,15}$/.test(contact)) {
@@ -244,7 +233,6 @@ const NewEmployeeState = ({ id }: { id: string }) => {
         if (Object.keys(formErrors).length === 0) {
             try {
                 await createEmployee.mutateAsync({
-                    company: employeeForm.businessName,
                     firstName: employeeForm.firstName,
                     lastName: employeeForm.lastName,
                     contact: employeeForm.contact,
@@ -276,29 +264,12 @@ const NewEmployeeState = ({ id }: { id: string }) => {
                 <div className="flex h-full w-full flex-col justify-center gap-7">
                     <div className="flex flex-col gap-2">
                         <Label>
-                            Business <span className="text-red"></span>
-                        </Label>
-                        <Input
-                            name="businessName"
-                            placeholder="Business Name"
-                            className="p-7"
-                            required
-                            value={employeeForm.businessName}
-                            onChange={handleInputChange}
-                        />
-                        {errors.businessName && (
-                            <span className="text-red">{errors.businessName}</span>
-                        )}
-                    </div>
-
-                    <div className="flex flex-col gap-2">
-                        <Label>
-                            Salesperson <span className="text-red">*</span>
+                            Employee <span className="text-red">*</span>
                         </Label>
                         <div className="flex items-center gap-3">
                             <Input
                                 name="firstName"
-                                placeholder="FirstName"
+                                placeholder="First Name"
                                 className="p-7"
                                 value={employeeForm.firstName}
                                 onChange={handleInputChange}
@@ -308,7 +279,7 @@ const NewEmployeeState = ({ id }: { id: string }) => {
                             )}
                             <Input
                                 name="lastName"
-                                placeholder="LastName"
+                                placeholder="Last Name"
                                 className="p-7"
                                 value={employeeForm.lastName}
                                 onChange={handleInputChange}

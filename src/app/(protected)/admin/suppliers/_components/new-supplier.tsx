@@ -263,12 +263,12 @@ const NewSupplierState = ({ id }: { id: string }) => {
 
             <div className="flex flex-col gap-2">
               <Label>
-                Salesperson <span className="text-red"></span>
+                Representative <span className="text-red"></span>
               </Label>
               <div className="flex items-center gap-3">
                 <Input
                     name="firstName"
-                    placeholder="FirstName"
+                    placeholder="First Name"
                     className="p-7"
                     value={supplierForm.firstName}
                     onChange={handleInputChange}
@@ -278,7 +278,7 @@ const NewSupplierState = ({ id }: { id: string }) => {
                 )}
                 <Input
                     name="lastName"
-                    placeholder="LastName"
+                    placeholder="Last Name"
                     className="p-7"
                     value={supplierForm.lastName}
                     onChange={handleInputChange}

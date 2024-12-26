@@ -1,36 +1,36 @@
 "use client";
 
-import { useState } from "react";
+import {
+  Archive,
+  ChartPie,
+  History,
+  IdCard,
+  Info,
+  LogOut,
+  NotebookText,
+  Package2,
+  Settings,
+  Truck,
+  Users2
+} from "lucide-react";
+import { useSession } from "next-auth/react";
 import { Poppins } from "next/font/google";
-import { useRouter, usePathname } from "next/navigation";
-import { Avatar, AvatarFallback, AvatarImage } from "~/components/ui/avatar";
-import Company_Logo from "public/Company_Logo.svg";
 import Image from "next/image";
+import { usePathname, useRouter } from "next/navigation";
+import Company_Logo from "public/Company_Logo.svg";
+import { useState } from "react";
 import { logout } from "~/app/actions/actions";
-import { Label } from "~/components/ui/label";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import {
   Dialog,
   DialogContent,
   DialogFooter,
   DialogTitle,
 } from "~/components/ui/dialog";
-import {
-  Settings,
-  Info,
-  LogOut,
-  ChartPie,
-  Archive,
-  NotebookText,
-  Truck,
-  Users,
-  Package2,
-  IdCard,
-  History,
-} from "lucide-react";
+import { Label } from "~/components/ui/label";
+import { Button } from "./ui/button";
 import { Popover, PopoverContent, PopoverTrigger } from "./ui/popover";
 import { ScrollArea } from "./ui/scroll-area";
-import { Button } from "./ui/button";
-import { useSession } from "next-auth/react";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -72,7 +72,7 @@ const Sidebar = () => {
       customers: {
         text: "Customers",
         redirect: "/admin/customers",
-        icon: <Users width={24} height={24} />,
+        icon: <Users2 width={24} height={24} />,
       },
       inventory: {
         text: "Inventory",
@@ -214,7 +214,7 @@ const Sidebar = () => {
 
             {/* Logout Confirmation Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-              <DialogContent>
+              <DialogContent className="[&>button]:hidden">
                 <DialogTitle className="text-slate-700 items-center">Confirm Logout</DialogTitle>
                 <p className="text-slate-700">Are you sure you want to log out?</p>
                 <DialogFooter>

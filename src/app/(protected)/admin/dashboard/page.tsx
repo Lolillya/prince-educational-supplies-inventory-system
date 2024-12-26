@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowUpRight } from "lucide-react";
+import { Download } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Button } from "~/components/ui/button";
 import { Separator } from "~/components/ui/separator";
@@ -176,8 +176,8 @@ const AdminDashboard = () => {
           <Separator orientation="vertical" className="h-10 bg-slate-200 w-[2px]" />
           <CalendarDateRangePicker />
           <Button className="bg-green hover:bg-green/80">
+            <Download strokeWidth={2.5} />
             Export Report
-            <ArrowUpRight strokeWidth={2.5} />
           </Button>
         </div>
       </div>

@@ -5,11 +5,12 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Separator } from '~/components/ui/separator'
 import MoreOptions from '../../_components/more-options'
 import RestockItem from './restock-item'
+import ViewFullRestock from './view-full-restock'
 
 interface RestockProps {
 	restockId: number;
 	date: string;
-	customer: string;
+	supplier: string;
 	addedStock: number;
 	restockItems: {
 		variant: string;
@@ -28,7 +29,7 @@ interface RestockProps {
 const RestockRecord: React.FC<RestockProps> = ({
 	restockId,
 	date,
-	customer,
+	supplier,
 	addedStock,
 	restockItems,
 }) => {
@@ -47,7 +48,7 @@ const RestockRecord: React.FC<RestockProps> = ({
 						<Separator orientation='vertical' className=' h-6 w-[2px] bg-slate-200' />
 						<div className='flex items-center gap-3'>
 							<Truck className='w-4 h-4' />
-							<p className='text-sm'>{customer}</p>
+							<p className='text-sm'>{supplier}</p>
 						</div>
 					</div>
 				</div>
@@ -106,10 +107,7 @@ const RestockRecord: React.FC<RestockProps> = ({
 					) : restockItems.length <= 2 && (
 						<p>No more items...</p>
 					)}
-					<Button className='text-slate-400 hover:text-slate-500 tracking-wide hover:bg-slate-200' variant={'ghost'}>
-						View All
-						<ArrowRight strokeWidth={2.5} />
-					</Button>
+					<ViewFullRestock restockId={restockId} date={date} supplier={supplier} addedStock={addedStock} />
 				</div>
 			</div>
 

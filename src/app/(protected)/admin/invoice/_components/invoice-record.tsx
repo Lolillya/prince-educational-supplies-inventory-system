@@ -1,16 +1,17 @@
-import { ArrowRight, Calendar, Users2 } from 'lucide-react'
+import { Calendar, Users2 } from 'lucide-react'
 import React from 'react'
-import { Button } from '~/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Separator } from '~/components/ui/separator'
 import MoreOptions from '../../_components/more-options'
 import InvoiceItem from './invoice-item'
+import ViewFullInvoice from './view-full-invoice'
 
 interface InvoiceProps {
 	invoiceId: number;
 	date: string;
 	customer: string;
 	grandTotal: number;
+	discountValue: string;
 	orderItems: {
 		variant: string;
 		item: string;
@@ -29,6 +30,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 	customer,
 	grandTotal,
 	orderItems,
+	discountValue,
 }) => {
 	return (
 		<div className='bg-slate-100 p-10 rounded-lg text-slate-700 flex flex-col gap-8'>
@@ -105,10 +107,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 					) : orderItems.length <= 2 && (
 						<p>No more items...</p>
 					)}
-					<Button className='text-slate-400 hover:text-slate-500 tracking-wide hover:bg-slate-200' variant={'ghost'}>
-						View All
-						<ArrowRight strokeWidth={2.5} />
-					</Button>
+					<ViewFullInvoice invoiceId={invoiceId} date={date} customer={customer} grandTotal={grandTotal} discountValue={discountValue} />
 				</div>
 			</div>
 

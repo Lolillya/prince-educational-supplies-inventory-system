@@ -16,6 +16,9 @@ import {
 import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { Separator } from "~/components/ui/separator";
+import MasterList from "~/app/(protected)/admin/inventory/_components/MasterList";
+import PriceList from "~/app/(protected)/admin/inventory/_components/PriceList";
+import StockList from "~/app/(protected)/admin/inventory/_components/StockList";
 
 const InventorySearchAndButtonRouter = () => {
   const [isPricelistOpen, setIsPricelistOpen] = useState(false);
@@ -61,216 +64,16 @@ const InventorySearchAndButtonRouter = () => {
           </DropdownMenu>
 
           <Dialog onOpenChange={setIsPricelistOpen} open={isPricelistOpen}>
-            <DialogContent className="flex h-full max-h-[80%] max-w-3xl flex-col">
-              <div className="flex items-center gap-3">
-                <DialogTitle>ITEM PRICE LIST</DialogTitle>
-                <Label className="text-textGray">MM/DD/YY</Label>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex w-fit gap-3">
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>All Items</Label>
-                    </SelectTrigger>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>Select Items</Label>
-                    </SelectTrigger>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>Category</Label>
-                    </SelectTrigger>
-                  </Select>
-                </div>
-
-                <Separator orientation="horizontal" />
-
-                <div className="flex flex-col gap-3">
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
+            <PriceList />
           </Dialog>
 
           <Dialog onOpenChange={setIsMasterlistOpen} open={isMasterlistOpen}>
-            <DialogContent className="flex h-full max-h-[80%] max-w-3xl flex-col">
-              <div className="flex items-center gap-3">
-                <DialogTitle>ITEM MASTERLIST</DialogTitle>
-                <Label className="text-textGray">MM/DD/YY</Label>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex w-fit gap-3">
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>All Items</Label>
-                    </SelectTrigger>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>Select Items</Label>
-                    </SelectTrigger>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>Category</Label>
-                    </SelectTrigger>
-                  </Select>
-                </div>
-
-                <Separator orientation="horizontal" />
-
-                <div className="flex flex-col gap-3">
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
+            <MasterList />
           </Dialog>
 
+
           <Dialog onOpenChange={setIsStocklistOpen} open={isStocklistOpen}>
-            <DialogContent className="flex h-full max-h-[80%] max-w-3xl flex-col">
-              <div className="flex items-center gap-3">
-                <DialogTitle>ITEM STOCKLIST</DialogTitle>
-                <Label className="text-textGray">MM/DD/YY</Label>
-              </div>
-
-              <div className="flex flex-col gap-3">
-                <div className="flex w-fit gap-3">
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>All Items</Label>
-                    </SelectTrigger>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>Select Items</Label>
-                    </SelectTrigger>
-                  </Select>
-
-                  <Select>
-                    <SelectTrigger className="border-none">
-                      <Label>Category</Label>
-                    </SelectTrigger>
-                  </Select>
-                </div>
-
-                <Separator orientation="horizontal" />
-
-                <div className="flex flex-col gap-3">
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-
-                  <div className="flex w-full items-center justify-between rounded-lg bg-gray p-3">
-                    <div className="flex items-center gap-3">
-                      <Label>ITEM</Label>
-                      <Label>BRAND</Label>
-                      <Label>VARIANT</Label>
-                    </div>
-
-                    <div>
-                      <X color="gray" />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </DialogContent>
+            <StockList />
           </Dialog>
 
           <Button

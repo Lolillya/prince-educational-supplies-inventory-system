@@ -9,9 +9,7 @@ import { Input } from "~/components/ui/input";
 import { Card } from "~/components/ui/card";
 import { Label } from "~/components/ui/label";
 import { UsersChart } from "../customers/_components/users-chart";
-import { Separator } from "~/components/ui/separator";
 import { LoadingSpinner } from "~/components/loading";
-import { ScrollArea } from "~/components/ui/scroll-area";
 
 interface PersonalDetails {
   personal_details_id: string;
@@ -162,11 +160,11 @@ const CustomersPage = () => {
 
         <div className="flex w-1/2 flex-col rounded-md">
           <span>Details</span>
-          <div className="mt-2 flex h-full flex-col rounded-md bg-gray p-3 pr-5 min-h-[calc(100vh-200px)] overflow-auto">
+          <div className="mt-2 flex h-full min-h-[calc(100vh-200px)] flex-col overflow-auto rounded-md bg-gray p-3 pr-5">
             {selectedCustomer ? (
               <div className="flex flex-col gap-5">
                 <div className="flex h-full w-full flex-col gap-3">
-                  <UsersChart/>
+                  <UsersChart />
                   <div className="flex items-center gap-5 text-xs">
                     <span className="font-bold">
                       {selectedCustomer.Personal_Details.company}
@@ -189,10 +187,10 @@ const CustomersPage = () => {
                     <div className="flex items-center gap-3">
                       <span className="text-green">Php 5,000.00</span>
                       <Button
-                          variant={"link"}
-                          onClick={() =>
-                              router.push("/admin/customers/customer-soa/")
-                          }
+                        variant={"link"}
+                        onClick={() =>
+                          router.push("/admin/customers/customer-soa/")
+                        }
                       >
                         View Payables
                       </Button>
@@ -212,23 +210,23 @@ const CustomersPage = () => {
                     <span className="font-light text-textGray">Location</span>
                     <span>
                       {selectedCustomer.Personal_Details.location
-                          ?.address_line ?? "N/A"}
+                        ?.address_line ?? "N/A"}
                     </span>
                     <span>
                       {selectedCustomer.Personal_Details.location?.city ??
-                          "N/A"}
+                        "N/A"}
                     </span>
                     <span>
                       {selectedCustomer.Personal_Details.location?.region ??
-                          "N/A"}
+                        "N/A"}
                     </span>
                     <span>
                       {selectedCustomer.Personal_Details.location?.country ??
-                          "N/A"}
+                        "N/A"}
                     </span>
                     <span>
                       {selectedCustomer.Personal_Details.location
-                          ?.postal_code ?? "N/A"}
+                        ?.postal_code ?? "N/A"}
                     </span>
                   </div>
                   <div className="flex flex-col gap-1">
@@ -251,36 +249,36 @@ const CustomersPage = () => {
                     {/* <ScrollArea className="h-auto w-full"> */}
                     <div className="mt-3 flex flex-col gap-3 pb-3 pr-3">
                       {[...Array(6)].map((_, index) => (
-                          <Card
-                              key={index}
-                              className="flex w-full items-center justify-between p-5"
-                          >
-                            <div className="flex flex-col gap-3">
-                              <Label className="text-xs">
-                                {selectedCustomer.id}
-                              </Label>
-                              <Label className="text-gray-600 text-xs">
-                                {selectedCustomer.Personal_Details.first_name}{" "}
-                                {selectedCustomer.Personal_Details.last_name}
-                              </Label>
-                            </div>
+                        <Card
+                          key={index}
+                          className="flex w-full items-center justify-between p-5"
+                        >
+                          <div className="flex flex-col gap-3">
+                            <Label className="text-xs">
+                              {selectedCustomer.id}
+                            </Label>
+                            <Label className="text-gray-600 text-xs">
+                              {selectedCustomer.Personal_Details.first_name}{" "}
+                              {selectedCustomer.Personal_Details.last_name}
+                            </Label>
+                          </div>
 
-                            <div className="text-gray-600 flex flex-col gap-3">
-                              <Label className="text-xs">Date: 10/15/24</Label>
-                              <Label className="text-xs">Time: 9:00 AM</Label>
-                            </div>
-                          </Card>
+                          <div className="text-gray-600 flex flex-col gap-3">
+                            <Label className="text-xs">Date: 10/15/24</Label>
+                            <Label className="text-xs">Time: 9:00 AM</Label>
+                          </div>
+                        </Card>
                       ))}
                     </div>
                     {/* </ScrollArea> */}
                   </div>
                 </div>
               </div>
-          ) : (
+            ) : (
               <p className="text-gray-500 mt-6 text-center">
                 Select a customer to view details
               </p>
-          )}
+            )}
           </div>
         </div>
       </div>

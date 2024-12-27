@@ -78,12 +78,12 @@ const NewInvoice = () => {
       </div>
 
       <div className="mt-4 grid auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
-        <InvoiceCard />
-        <InvoiceCard />
-        <InvoiceCard />
-        <InvoiceCard />
-        <InvoiceCard />
-        <InvoiceCard />
+        {/* <InvoiceCard /> */}
+
+        {/* CONDITIONAL RENDERING */}
+        <Label className="w-full text-center">
+          Search and add an item to get started.
+        </Label>
       </div>
 
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">

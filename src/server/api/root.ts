@@ -7,7 +7,7 @@ import inventoryRouter from "./routers/inventory";
 import { inventoryDataRouter } from "~/server/api/routers/inventory-data"; // Import the supplier router
 import { restockRouter } from "./routers/restock";
 import { listsRouter } from "./routers/lists";
-
+import { invoiceRouter } from "./routers/invoice";
 
 /**
  * This is the primary router for your server.
@@ -21,7 +21,8 @@ export const appRouter = createTRPCRouter({
   inventory: inventoryRouter,
   inventoryData: inventoryDataRouter,
   restock: restockRouter,
-  lists: listsRouter
+  invoice: invoiceRouter,
+  lists: listsRouter,
 });
 
 // export type definition of API

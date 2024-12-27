@@ -3,30 +3,12 @@
 import { Plus } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { Button } from "~/components/ui/button";
-import { Card, CardContent } from "~/components/ui/card";
-
-import {
-  Dialog,
-  DialogContent,
-  DialogTitle,
-  DialogTrigger,
-} from "~/components/ui/dialog";
-import { Label } from "~/components/ui/label";
-
 import { useRouter } from "next/navigation";
-import { Input } from "~/components/ui/input";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
+import { useState } from "react";
+
 import Filter from "../_components/filter";
 import SearchBar from "../_components/search-bar";
 import InvoiceRecord from "./_components/invoice-record";
-import { useState } from "react";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -35,7 +17,8 @@ const poppins = Poppins({
 
 const InvoicePage = () => {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState<String>("");
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  // TODO: SEARCH FEATURE
 
   interface InvoiceProps {
     invoiceId: number;
@@ -148,13 +131,22 @@ const InvoicePage = () => {
     },
   ];
 
+  const filteredInvoices = sampleInvoice.filter(
+    (invoice) =>
+      invoice.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      invoice.invoiceId.toString().includes(searchTerm),
+  );
+
   return (
     <section
       className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll px-20 py-10`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <SearchBar />
+          <SearchBar
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
           <Filter />
         </div>
         <Button
@@ -166,7 +158,7 @@ const InvoicePage = () => {
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        {sampleInvoice.map((invoice, index) => (
+        {filteredInvoices.map((invoice, index) => (
           <InvoiceRecord
             key={index}
             invoiceId={invoice.invoiceId}
@@ -177,6 +169,9 @@ const InvoicePage = () => {
             discountValue={invoice.discountValue}
           />
         ))}
+        {filteredInvoices.length === 0 && (
+          <p className="text-center text-slate-500">No invoices found.</p>
+        )}
       </div>
     </section>
   );

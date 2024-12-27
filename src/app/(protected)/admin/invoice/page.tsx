@@ -55,65 +55,130 @@ const InvoicePage = () => {
     }[];
   }
 
-  const sampleInvoice: InvoiceProps = {
-    invoiceId: 12345678,
-    date: "September 21, 2024",
-    customer: "Rich Adrian Huang",
-    grandTotal: 2500.0,
-    discountValue: "0%",
-    orderItems: [
-      {
-        variant: "Dustless Small",
-        item: "Eraser",
-        brand: "Joy",
-        quantity: 15,
-        unit: "Boxes",
-        unitPrice: 100,
-        discountValue: "0%",
-        subtotal: 1500,
-      },
-      {
-        variant: "Gel Fine Tip",
-        item: "Pen",
-        brand: "SmoothWrite",
-        quantity: 20,
-        unit: "Packs",
-        unitPrice: 50,
-        discountValue: "10%",
-        subtotal: 900,
-      },
-      {
-        variant: "A4",
-        item: "Notebook",
-        brand: "NotePro",
-        quantity: 10,
-        unit: "Pieces",
-        unitPrice: 120,
-        discountValue: "5%",
-        subtotal: 1140,
-      },
-      {
-        variant: "Plastic Cover",
-        item: "Book Cover",
-        brand: "CoverShield",
-        quantity: 25,
-        unit: "Rolls",
-        unitPrice: 80,
-        discountValue: "0%",
-        subtotal: 2000,
-      },
-      {
-        variant: "Neon Colors",
-        item: "Highlighter",
-        brand: "BrightMark",
-        quantity: 30,
-        unit: "Sets",
-        unitPrice: 75,
-        discountValue: "15%",
-        subtotal: 1912.5,
-      },
-    ],
-  };
+  type Invoices = InvoiceProps[];
+
+  const sampleInvoice: Invoices = [
+    {
+      invoiceId: 12345678,
+      date: "September 21, 2024",
+      customer: "Rich Adrian Huang",
+      grandTotal: 2500.0,
+      discountValue: "0%",
+      orderItems: [
+        {
+          variant: "Dustless Small",
+          item: "Eraser",
+          brand: "Joy",
+          quantity: 15,
+          unit: "Boxes",
+          unitPrice: 100,
+          discountValue: "0%",
+          subtotal: 1500,
+        },
+        {
+          variant: "Gel Fine Tip",
+          item: "Pen",
+          brand: "SmoothWrite",
+          quantity: 20,
+          unit: "Packs",
+          unitPrice: 50,
+          discountValue: "10%",
+          subtotal: 900,
+        },
+        {
+          variant: "A4",
+          item: "Notebook",
+          brand: "NotePro",
+          quantity: 10,
+          unit: "Pieces",
+          unitPrice: 120,
+          discountValue: "5%",
+          subtotal: 1140,
+        },
+        {
+          variant: "Plastic Cover",
+          item: "Book Cover",
+          brand: "CoverShield",
+          quantity: 25,
+          unit: "Rolls",
+          unitPrice: 80,
+          discountValue: "0%",
+          subtotal: 2000,
+        },
+        {
+          variant: "Neon Colors",
+          item: "Highlighter",
+          brand: "BrightMark",
+          quantity: 30,
+          unit: "Sets",
+          unitPrice: 75,
+          discountValue: "15%",
+          subtotal: 1912.5,
+        },
+
+        {
+          variant: "Neon Colors",
+          item: "Highlighter",
+          brand: "BrightMark",
+          quantity: 30,
+          unit: "Sets",
+          unitPrice: 75,
+          discountValue: "15%",
+          subtotal: 1912.5,
+        },
+
+        {
+          variant: "Neon Colors",
+          item: "Highlighter",
+          brand: "BrightMark",
+          quantity: 30,
+          unit: "Sets",
+          unitPrice: 75,
+          discountValue: "15%",
+          subtotal: 1912.5,
+        },
+      ],
+    },
+    {
+      invoiceId: 12345678,
+      date: "September 21, 2024",
+      customer: "Jerald Dagaang",
+      grandTotal: 2500.0,
+      discountValue: "0%",
+      orderItems: [
+        {
+          variant: "Dustless Small",
+          item: "Eraser",
+          brand: "Joy",
+          quantity: 15,
+          unit: "Boxes",
+          unitPrice: 100,
+          discountValue: "0%",
+          subtotal: 1500,
+        },
+        {
+          variant: "Gel Fine Tip",
+          item: "Pen",
+          brand: "SmoothWrite",
+          quantity: 20,
+          unit: "Packs",
+          unitPrice: 50,
+          discountValue: "10%",
+          subtotal: 900,
+        },
+        {
+          variant: "A4",
+          item: "Notebook",
+          brand: "NotePro",
+          quantity: 10,
+          unit: "Pieces",
+          unitPrice: 120,
+          discountValue: "5%",
+          subtotal: 1140,
+        },
+      ],
+    },
+  ];
 
   return (
     <section
@@ -133,17 +198,20 @@ const InvoicePage = () => {
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        <InvoiceRecord
-          invoiceId={sampleInvoice.invoiceId}
-          date={sampleInvoice.date}
-          customer={sampleInvoice.customer}
-          grandTotal={sampleInvoice.grandTotal}
-          orderItems={sampleInvoice.orderItems}
-          discountValue={sampleInvoice.discountValue}
-        />
+        {sampleInvoice.map((invoice, index) => (
+          <InvoiceRecord
+            key={index}
+            invoiceId={invoice.invoiceId}
+            date={invoice.date}
+            customer={invoice.customer}
+            grandTotal={invoice.grandTotal}
+            orderItems={invoice.orderItems}
+            discountValue={invoice.discountValue}
+          />
+        ))}
       </div>
 
-      <Card>
+      {/* <Card>
         <CardContent className="flex w-full flex-col gap-3 rounded-lg p-5">
           <div className="flex items-center justify-between p-5">
             <div className="flex w-full flex-col justify-center">
@@ -259,7 +327,7 @@ const InvoicePage = () => {
             </Dialog>
           </div>
         </CardContent>
-      </Card>
+      </Card> */}
     </section>
   );
 };

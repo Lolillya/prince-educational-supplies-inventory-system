@@ -71,7 +71,6 @@ const InvoiceAddStock = () => {
   } = api.restock.getBatchId.useQuery();
 
   const { data: suppliers } = api.restock.getSuppliers.useQuery();
-
   const [selectedSupplier, setSelectedSupplier] = useState("");
 
   // Filter inventory items based on the search term
@@ -111,7 +110,7 @@ const InvoiceAddStock = () => {
     setSelectedItems(
       selectedItems.filter((item) => item.inventory_id !== inventoryId),
     );
-    setStock((prev) => {
+    setStockTotals((prev) => {
       const updated = { ...prev };
       delete updated[inventoryId]; // Remove stock for the deleted item
       return updated;
@@ -125,142 +124,11 @@ const InvoiceAddStock = () => {
     }));
   };
 
-  // Function to calculate the total stock for each item, including the conversion quantities
-  const totalStock = (inventoryId: number) => {
-    const stockValue = Number(stock[inventoryId] || 0);
-    const itemStockUnits = stockUnits[inventoryId] || [];
-    const totalConversions = itemStockUnits.reduce(
-      (sum, unit) => sum + (Number(unit.conversionQty) || 0),
-      0,
-    );
-    return stockValue + totalConversions;
-  };
-
-  const overAllTotalStock = selectedItems.reduce((sum, item) => {
-    return sum + totalStock(item.inventory_id);
-  }, 0);
-
-  const getConversionData = (inventoryId: number) => {
-    const itemStockUnits = stockUnits[inventoryId] || [];
-
-    return itemStockUnits.map((unit, index) => {
-      const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
-      const currentUnit = previousUnit
-        ? previousUnit.conversionUnit
-        : unit.unit;
-      return (
-        <div key={index} className="flex items-center gap-2">
-          <p>{currentUnit}</p>
-          <ArrowRight className="h-4 w-4" />
-          <p>
-            <span>{unit.conversionQty || "N/A"}</span>{" "}
-            {unit.conversionUnit || "N/A"}
-          </p>
-        </div>
-      );
-    });
-  };
-
-  // Modified: Get number of conversions dynamically
-  const getConversionCount = (inventoryId: number) => {
-    const itemStockUnits = stockUnits[inventoryId] || [];
-    return itemStockUnits.length;
-  };
-  const handlePriceChange = (inventoryId: number, newPrice: string) => {
-    setPrice((prev) => ({ ...prev, [inventoryId]: newPrice }));
-  };
-
-  const handleUnitChange = (inventoryId: number, newUnit: string) => {
-    setUnit((prev) => ({ ...prev, [inventoryId]: newUnit }));
-  };
-  const handleStockUnitsChange = (
-    inventoryId: number,
-    newStockUnits: any[],
-  ) => {
-    setStockUnits((prev) => {
-      const currentUnits = prev[inventoryId];
-
-      if (
-        !currentUnits ||
-        currentUnits.length !== newStockUnits.length ||
-        !currentUnits.every((unit, index) => unit === newStockUnits[index])
-      ) {
-        return { ...prev, [inventoryId]: newStockUnits };
-      }
-
-      return prev;
-    });
-  };
-
-  const logData = () => {
-    selectedItems.forEach((item) => {
-      console.log(`StockUnit for item ${item.variant.item.name}:`);
-      console.log(`Stock Value: ${stock[item.inventory_id] || ""}`);
-      console.log(`Price: ${price[item.inventory_id] || "undefined"}`);
-      console.log(`Unit: ${unit[item.inventory_id] || "undefined"}`);
-
-      const totalItemStock = totalStock(item.inventory_id); // Get the total stock for the item
-      console.log(
-        `Total Stock for ${item.variant.item.name}: ${totalItemStock}`,
-      );
-
-      const itemStockUnits = stockUnits[item.inventory_id] || [];
-      console.log("StockUnits Data:");
-      itemStockUnits.forEach((unit, index) => {
-        if (!unit.unit) {
-          unit.unit =
-            index > 0 ? itemStockUnits[index - 1].conversionUnit : unit.unit;
-        }
-        console.log(`StockUnit ${index + 1}: `, unit);
-      });
-    });
-  };
-
-  const { mutateAsync: saveRestock } = api.restock.saveRestock.useMutation();
-  const handleSave = async (selectedItems, supplierId) => {
-    if (!supplierId) {
-      setDialogMessage("Supplier ID is missing. Please select a supplier.");
-      setDialogType("error");
-      setIsDialogOpen(true);
-      return;
-    }
-
-    try {
-      const payload = selectedItems.map((item) => ({
-        inventory_id: item.inventory_id,
-        variant_id: item.variant_id,
-        totalStock: totalStock(item.inventory_id),
-        stockUnits:
-          stockUnits[item.inventory_id]?.map((stockUnit) => ({
-            stock: Number(stockUnit.stock), // Ensure numeric values
-            price: Number(stockUnit.price),
-            unit: stockUnit.unit,
-            conversionQty: Number(stockUnit.conversionQty),
-            conversionUnit: stockUnit.conversionUnit,
-          })) || [],
-      }));
-
-      console.log("Payload before mutation:", payload);
-
-      // Perform mutation (save data)
-      await saveRestock({ selectedItems: payload, supplierId });
-
-      // Show success dialog
-      setDialogMessage("Restock data saved successfully!");
-      setDialogType("success");
-      setIsDialogOpen(true);
-
-      // Redirect to /admin/restock after success
-      setTimeout(() => {
-        router.push("/admin/restock");
-      }, 2000); // Delay redirect to let the user see the success message
-    } catch (error) {
-      console.error("Error saving restock data:", error);
-      setDialogMessage("Failed to save restock data.");
-      setDialogType("error");
-      setIsDialogOpen(true);
-    }
-  };
+  // Calculate total stock
+  const totalStock = Object.values(stockTotals).reduce(
+    (sum, stock) => sum + Number(stock || 0),
+    0,
+  );
 
   if (isLoading || isLoadingBatch) {
     return (
@@ -282,37 +150,6 @@ const InvoiceAddStock = () => {
     <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-1">
-          {/* Dialog Component */}
-          <Dialog onOpenChange={setIsDialogOpen} open={isDialogOpen}>
-            <DialogContent className="max-h- flex w-full max-w-lg flex-col p-6">
-              <DialogTitle className="text-center">Status</DialogTitle>
-              <DialogHeader>
-                <div className="flex w-full justify-center text-center text-lg">
-                  <span>{dialogMessage}</span>
-                </div>
-              </DialogHeader>
-
-              <div className="mt-4 flex w-full items-center justify-center gap-3">
-                <Button
-                  size={"lg"}
-                  className={`border-2 p-3 ${dialogType === "error" ? "border-red-500 bg-red-100 text-red-700" : "border-green-500 bg-green-100 text-green-700"}`}
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Close
-                </Button>
-                {dialogType === "success" && (
-                  <Button
-                    size={"lg"}
-                    className="border-gray-300 text-gray-700 border-2 bg-white p-3 hover:bg-green"
-                    onClick={() => setIsDialogOpen(false)}
-                  >
-                    Ok
-                  </Button>
-                )}
-              </div>
-            </DialogContent>
-          </Dialog>
-
           <Dialog>
             <DialogTrigger>
               <ArrowLeft
@@ -386,33 +223,16 @@ const InvoiceAddStock = () => {
             key={item.inventory_id}
             item={item}
             onRemove={() => handleRemoveItem(item.inventory_id)}
-            stockValue={stock[item.inventory_id] || ""} // Pass stock value to StockCard
+            stockValue={stockTotals[item.inventory_id] || ""} // Pass stock value to StockCard
             onStockChange={(newStock) =>
               handleStockChange(item.inventory_id, newStock)
-            }
-            onPriceChange={(newPrice) =>
-              handlePriceChange(item.inventory_id, newPrice)
-            }
-            onUnitChange={(newUnit) =>
-              handleUnitChange(item.inventory_id, newUnit)
-            }
-            onStockUnitsChange={(newStockUnits) =>
-              handleStockUnitsChange(item.inventory_id, newStockUnits)
             }
           />
         ))}
       </div>
 
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
-        <span>TOTAL: {overAllTotalStock}</span>
-        <Button
-          size={"lg"}
-          className="bg-green py-8 text-sm font-bold text-white"
-          onClick={logData} // Trigger the log function
-        >
-          Show Logs
-        </Button>
-
+        <span>TOTAL: {totalStock}</span>
         <Dialog>
           <DialogTrigger asChild>
             <Button
@@ -453,21 +273,41 @@ const InvoiceAddStock = () => {
                         {item.variant.item.brand.name} -{" "}
                         {item.variant.name || "N/A"}
                       </TableCell>
-                      <TableCell>{totalStock(item.inventory_id)}</TableCell>
-                      {/*<TableCell>{stock[item.inventory_id] || 0}</TableCell> //replace this part to totalStock*/}
+                      <TableCell>
+                        {stockTotals[item.inventory_id] || 0}
+                      </TableCell>
                       <TableCell>
                         <HoverCard>
                           <HoverCardTrigger>
                             <span className="cursor-default pl-4 text-black text-opacity-60 hover:underline">
-                              <span>
-                                {getConversionCount(item.inventory_id)}
-                              </span>{" "}
-                              Conversions
+                              <span>3</span> Conversions
                             </span>
                           </HoverCardTrigger>
                           <HoverCardContent>
                             <div className="flex flex-col gap-2">
-                              {getConversionData(item.inventory_id)}
+                              <div className="flex items-center gap-2">
+                                <p>Boxes</p>
+                                <ArrowRight className="h-4 w-4" />
+                                <p>
+                                  <span>20</span> Cases
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <p>Cases</p>
+                                <ArrowRight className="h-4 w-4" />
+                                <p>
+                                  <span>20</span> Packs
+                                </p>
+                              </div>
+
+                              <div className="flex items-center gap-2">
+                                <p>Packs</p>
+                                <ArrowRight className="h-4 w-4" />
+                                <p>
+                                  <span>20</span> Pieces
+                                </p>
+                              </div>
                             </div>
                           </HoverCardContent>
                         </HoverCard>
@@ -478,25 +318,8 @@ const InvoiceAddStock = () => {
               </Table>
               <div className="bottom-0 flex w-full justify-end">
                 <div className="flex items-center gap-3">
-                  <span>TOTAL: {overAllTotalStock}</span>
-                  <Button
-                    className="bg-green px-7 font-bold"
-                    size={"lg"}
-                    onClick={() => {
-                      if (!selectedSupplier) {
-                        alert("Please select a supplier before saving.");
-                        return;
-                      }
-                      console.log(
-                        "Selected Supplier:",
-                        selectedSupplier?.name,
-                        "ID:",
-                        selectedSupplier?.id,
-                      );
-                      logData();
-                      handleSave(selectedItems, selectedSupplier.id);
-                    }}
-                  >
+                  <span>TOTAL: {totalStock}</span>
+                  <Button className="bg-green px-7 font-bold" size={"lg"}>
                     Save
                   </Button>
                 </div>

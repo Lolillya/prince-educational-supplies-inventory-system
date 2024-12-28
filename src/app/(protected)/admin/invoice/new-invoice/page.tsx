@@ -21,9 +21,77 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { api } from "~/trpc/react";
+import { LoadingSpinner } from "~/components/loading";
+import { Batch } from "@prisma/client";
+
+type InventoryItem = {
+  inventory_id: number;
+  variant: {
+    name: string | null;
+    Batch: Batch[];
+    item: {
+      name: string;
+      brand: {
+        name: string;
+      };
+    };
+  };
+};
 
 const NewInvoice = () => {
   const router = useRouter();
+
+  const [searchTerm, setSearchTerm] = useState<string>("");
+  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
+  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
+
+  const {
+    data: inventoryItems,
+    isLoading,
+    isError,
+  } = api.inventory.listInventory.useQuery();
+
+  const handleSelectItem = (item: InventoryItem) => {
+    if (
+      !selectedItems.some(
+        (selected) => selected.inventory_id === item.inventory_id,
+      )
+    ) {
+      setSelectedItems([...selectedItems, item]);
+      setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
+    }
+    setSearchTerm(""); // Clear the search term to hide the dropdown
+  };
+
+  useEffect(() => {
+    if (searchTerm && inventoryItems) {
+      const results = inventoryItems.filter(
+        (item: InventoryItem) =>
+          item.variant.item.name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()) ||
+          item.variant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.variant.item.brand.name
+            .toLowerCase()
+            .includes(searchTerm.toLowerCase()),
+      );
+      setFilteredItems(results);
+    } else {
+      setFilteredItems([]);
+    }
+  }, [searchTerm, inventoryItems]);
+
+  if (isLoading) {
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
+  }
+
   return (
     <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
@@ -67,23 +135,72 @@ const NewInvoice = () => {
         </div>
       </div>
 
-      <div className="relative flex h-auto w-full justify-center gap-3">
-        <div className="relative flex w-2/3 items-center">
+      <div className="flex w-full justify-center gap-3">
+        <div className="relative flex w-full max-w-md items-center justify-center">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-textGray" />
           <Input
             placeholder="Search"
-            className="bg-gray p-6 pl-10 placeholder:text-textGray"
+            className="bg-gray p-5 pl-10"
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
           />
+          {searchTerm && filteredItems.length > 0 && (
+            <div className="absolute top-full z-10 mt-2 w-full rounded-lg bg-white p-3 shadow-md">
+              <ul className="max-h-64 overflow-auto">
+                {filteredItems.map((item) => (
+                  <li
+                    key={item.inventory_id}
+                    className="flex cursor-pointer items-center rounded-lg p-3 hover:bg-gray"
+                    onClick={() => handleSelectItem(item)}
+                  >
+                    <div className="flex w-full items-center justify-between gap-1">
+                      <div className="flex items-center gap-1">
+                        <Label className="text-xs">
+                          {item.variant.item.name} -
+                        </Label>
+                        <Label className="text-xs">
+                          {item.variant.item.brand.name} -
+                        </Label>
+                        <Label className="text-xs">
+                          {item.variant.name || "N/A"}
+                        </Label>
+                      </div>
+
+                      <Label className="text-xs text-textGray">
+                        {item.variant.Batch.length} Batche/s
+                      </Label>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
         </div>
       </div>
 
-      <div className="mt-4 grid auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
+      <div className="relative mt-4 grid h-full w-full auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
         {/* <InvoiceCard /> */}
 
+        {selectedItems.map((item, index) =>
+          item.variant.Batch.map((batch, batchIndex) => (
+            <InvoiceCard
+              key={`${item.inventory_id}-${batchIndex}`}
+              batchNumber={batchIndex + 1}
+              itemName={item.variant.item.name}
+              brandName={item.variant.item.brand.name}
+              variant={item.variant.name}
+              batch={batch}
+            />
+          )),
+        )}
+
         {/* CONDITIONAL RENDERING */}
-        <Label className="w-full text-center">
-          Search and add an item to get started.
-        </Label>
+
+        {selectedItems.length === 0 && (
+          <Label className="absolute w-full self-center text-center">
+            Search and add an item to get started.
+          </Label>
+        )}
       </div>
 
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">

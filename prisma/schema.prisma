@@ -91,7 +91,6 @@ model Unit {
   conversionRatesFrom ConversionRate[] @relation("FromUnit")
   conversionRatesTo   ConversionRate[] @relation("ToUnit")
   SupplierUnit        SupplierUnit[]
-  Variant             Variant[]
 }
 
 model Item {
@@ -111,34 +110,42 @@ model Item {
 }
 
 model Variant {
-  variant_id  Int         @id @default(autoincrement())
-  item_id     Int
-  name        String
-  discount_id Int?
-  created_at  DateTime    @default(now())
-  updated_at  DateTime    @updatedAt
-  unit_id     Int?
-  Batch       Batch[]
-  inventory   Inventory[]
-  LineItem    Line_Item[]
-  discount    Discount?   @relation(fields: [discount_id], references: [discount_id])
-  item        Item        @relation(fields: [item_id], references: [item_id])
-  Unit        Unit?       @relation(fields: [unit_id], references: [unit_id])
+  variant_id   Int            @id @default(autoincrement())
+  item_id      Int
+  name         String
+  discount_id  Int?
+  created_at   DateTime       @default(now())
+  updated_at   DateTime       @updatedAt
+  inventory    Inventory[]
+  LineItem     Line_Item[]
+  discount     Discount?      @relation(fields: [discount_id], references: [discount_id])
+  item         Item           @relation(fields: [item_id], references: [item_id])
+  StockLevel   StockLevel?
+  BatchVariant BatchVariant[]
 }
 
 model Batch {
   batch_id      Int            @id @default(autoincrement())
-  variant_id    Int
+  batch_code    String?        @unique
   quantity      Int
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
-  variant       Variant        @relation(fields: [variant_id], references: [variant_id])
-  supplierUnits SupplierUnit[]
+  batchVariants BatchVariant[]
+}
+
+model BatchVariant {
+  batch_variant_id Int            @id @default(autoincrement())
+  batch_id         Int
+  variant_id       Int
+  quantity         Int
+  batch            Batch          @relation(fields: [batch_id], references: [batch_id])
+  variant          Variant        @relation(fields: [variant_id], references: [variant_id])
+  SupplierUnit     SupplierUnit[]
 }
 
 model SupplierUnit {
   supplier_unit_id  Int              @id @default(autoincrement())
-  batch_id          Int
+  batch_variant_id  Int
   supplier_id       String
   unit_id           Int
   price             Float
@@ -148,7 +155,7 @@ model SupplierUnit {
   created_at        DateTime         @default(now())
   updated_at        DateTime         @updatedAt
   ConversionRate    ConversionRate[]
-  batch             Batch            @relation(fields: [batch_id], references: [batch_id])
+  batchVariant      BatchVariant     @relation(fields: [batch_variant_id], references: [batch_variant_id])
   discount          Discount?        @relation(fields: [discount_id], references: [discount_id])
   supplier          User_Role        @relation(fields: [supplier_id], references: [id])
   unit              Unit             @relation(fields: [unit_id], references: [unit_id])
@@ -173,6 +180,18 @@ model Inventory {
   quantity     Int
   last_updated DateTime @default(now())
   variant      Variant  @relation(fields: [variant_id], references: [variant_id])
+}
+
+model StockLevel {
+  stock_level_id         Int       @id @default(autoincrement())
+  variant_id             Int       @unique
+  low_stock              Int
+  very_low_stock         Int
+  restock_alert          Boolean   @default(false)
+  last_notification_sent DateTime?
+  created_at             DateTime  @default(now())
+  updated_at             DateTime  @updatedAt
+  variant                Variant   @relation(fields: [variant_id], references: [variant_id])
 }
 
 model Discount {

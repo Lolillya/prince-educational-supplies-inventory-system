@@ -17,7 +17,7 @@ import { Separator } from "~/components/ui/separator";
 import BatchAccordion from "./_components/batch-accordion";
 import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
-import { Batch } from "@prisma/client";
+import { Batch, BatchVariant } from "@prisma/client";
 import { LoadingSpinner } from "~/components/loading";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { DialogTitle } from "@radix-ui/react-dialog";
@@ -59,7 +59,7 @@ interface Variant {
   item: Item;
   name?: string; // Optional field for the variant name
   description?: string; // Optional description
-  Batch: Batch[]; // Assuming Batch is defined elsewhere
+  BatchVariant: BatchVariant[];
 }
 
 interface InventoryItem {
@@ -78,6 +78,8 @@ const InventoryPage = () => {
     isLoading,
     isError,
   } = api.inventory.listInventory.useQuery();
+
+  console.log(inventoryItems);
 
   if (isLoading)
     return (
@@ -181,7 +183,7 @@ const InventoryPage = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span>{selectedItem?.variant.Batch.length} Batches</span>
+              <span>{selectedItem?.variant.BatchVariant.length} Batches</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant={"link"} className="text-green">
@@ -210,11 +212,11 @@ const InventoryPage = () => {
 
             {/* Scrollable batches section */}
             {/* <ScrollArea className={"scrollbar-hidden"}> */}
-            <ScrollArea className={"scrollbar-hidden"}>
+            {/* <ScrollArea className={"scrollbar-hidden"}>
               <div className="mt-5 flex flex-col gap-5 rounded-lg">
-                {selectedItem?.variant.Batch &&
-                selectedItem.variant.Batch.length > 0 ? (
-                  selectedItem.variant.Batch.map((batch) => (
+                {selectedItem?.variant.BatchVariant.Batch &&
+                selectedItem.variant.BatchVariant.length > 0 ? (
+                  selectedItem.variant.BatchVariant.Batch.map((batch) => (
                     <BatchAccordion key={batch.batch_id} batch={batch} />
                   ))
                 ) : (
@@ -225,7 +227,7 @@ const InventoryPage = () => {
                   </div>
                 )}
               </div>
-            </ScrollArea>
+            </ScrollArea> */}
             {/* </ScrollArea> */}
           </div>
         </div>

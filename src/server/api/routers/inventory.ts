@@ -117,34 +117,10 @@ export const inventoryRouter = createTRPCRouter({
                 category: true,
               },
             },
-
-            Batch: {
+            BatchVariant: {
               include: {
-                supplierUnits: {
-                  include: {
-                    supplier: {
-                      include: {
-                        Personal_Details: true,
-                      },
-                    },
-                    unit: true,
-                    ConversionRate: {
-                      select: {
-                        conversion_rate: true,
-                        fromUnit: {
-                          select: {
-                            name: true,
-                          },
-                        },
-                        toUnit: {
-                          select: {
-                            name: true,
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
+                batch: true,
+                SupplierUnit: true,
               },
             },
           },
@@ -152,143 +128,144 @@ export const inventoryRouter = createTRPCRouter({
       },
     });
   }),
-
-  getInventoryItem: publicProcedure
-    .input(z.object({ id: z.number() })) // Using zod for validation
-    .query(async ({ input }) => {
-      return db.inventory.findUnique({
-        where: { inventory_id: input.id }, // Ensure inventory_id is the correct field
-        include: {
-          variant: {
-            include: {
-              item: {
-                include: {
-                  brand: true,
-                  category: true,
-                },
-              },
-
-              Batch: {
-                include: {
-                  supplierUnits: {
-                    include: {
-                      supplier: {
-                        include: {
-                          Personal_Details: true,
-                        },
-                      },
-                      unit: true,
-                      ConversionRate: {
-                        select: {
-                          conversion_rate: true,
-                          fromUnit: {
-                            select: {
-                              name: true,
-                            },
-                          },
-                          toUnit: {
-                            select: {
-                              name: true,
-                            },
-                          },
-                        },
-                      },
-                    },
-                  },
-                },
-              },
-            },
-          },
-        },
-      });
-    }),
-
-  // listAllData: publicProcedure.query(async () => {
-  //     const brands = await prisma.brand.findMany();
-  //     const categories = await prisma.category.findMany();
-  //     const units = await prisma.unit.findMany();
-  //     const items = await prisma.item.findMany({
-  //         include: {
-  //             variants: true, // Include variants associated with each item
-  //         },
-  //     });
-  //     const attributes = await prisma.attribute.findMany({
-  //         include: {
-  //             attributeValues: true, // Include attribute values
-  //         },
-  //     });
-  //
-  //     // Extract all variants into a flat list
-  //     const variants = items.flatMap(item =>
-  //         item.variants.map(variant => ({
-  //             variant_id: variant.variant_id,
-  //             name: variant.name,
-  //             item_id: item.item_id, // Include item_id for reference
-  //         }))
-  //     );
-  //
-  //     return {
-  //         brands,
-  //         categories,
-  //         units,
-  //         items,
-  //         variants, // Return the flat list of variants
-  //         attributes, // Return attributes data
-  //     };
-  // }),
-
-  // Create a new item
-  createItem: publicProcedure.input(itemSchema).mutation(async ({ input }) => {
-    const { name, brandId, categoryId, description } = input;
-
-    const newItem = await db.item.create({
-      data: {
-        name,
-        brand_id: brandId,
-        category_id: categoryId,
-        description,
-      },
-    });
-
-    return newItem;
-  }),
-
-  // Create a new variant
-  createVariant: publicProcedure
-    .input(variantSchema)
-    .mutation(async ({ input }) => {
-      const { itemId, name, description } = input;
-
-      const newVariant = await db.variant.create({
-        data: {
-          item_id: itemId,
-          name,
-          description,
-        },
-      });
-
-      return newVariant;
-    }),
-
-  // Create a new inventory record
-  createInventory: publicProcedure
-    .input(inventorySchema)
-    .mutation(async ({ input }) => {
-      const { variantId, quantity } = input;
-
-      const newInventory = await db.inventory.create({
-        data: {
-          variant_id: variantId,
-          quantity,
-        },
-      });
-
-      return newInventory;
-    }),
-
-  // Other CRUD operations (placeholders for now)
-  // Update item, variant, and inventory, delete operations, etc. can be added here
 });
+
+// getInventoryItem: publicProcedure
+//   .input(z.object({ id: z.number() })) // Using zod for validation
+//   .query(async ({ input }) => {
+//     return db.inventory.findUnique({
+//       where: { inventory_id: input.id }, // Ensure inventory_id is the correct field
+//       include: {
+//         variant: {
+//           include: {
+//             item: {
+//               include: {
+//                 brand: true,
+//                 category: true,
+//               },
+//             },
+
+//             Batch: {
+//               include: {
+//                 supplierUnits: {
+//                   include: {
+//                     supplier: {
+//                       include: {
+//                         Personal_Details: true,
+//                       },
+//                     },
+//                     unit: true,
+//                     ConversionRate: {
+//                       select: {
+//                         conversion_rate: true,
+//                         fromUnit: {
+//                           select: {
+//                             name: true,
+//                           },
+//                         },
+//                         toUnit: {
+//                           select: {
+//                             name: true,
+//                           },
+//                         },
+//                       },
+//                     },
+//                   },
+//                 },
+//               },
+//             },
+//           },
+//         },
+//       },
+//     });
+//   }),
+
+// listAllData: publicProcedure.query(async () => {
+//     const brands = await prisma.brand.findMany();
+//     const categories = await prisma.category.findMany();
+//     const units = await prisma.unit.findMany();
+//     const items = await prisma.item.findMany({
+//         include: {
+//             variants: true, // Include variants associated with each item
+//         },
+//     });
+//     const attributes = await prisma.attribute.findMany({
+//         include: {
+//             attributeValues: true, // Include attribute values
+//         },
+//     });
+//
+//     // Extract all variants into a flat list
+//     const variants = items.flatMap(item =>
+//         item.variants.map(variant => ({
+//             variant_id: variant.variant_id,
+//             name: variant.name,
+//             item_id: item.item_id, // Include item_id for reference
+//         }))
+//     );
+//
+//     return {
+//         brands,
+//         categories,
+//         units,
+//         items,
+//         variants, // Return the flat list of variants
+//         attributes, // Return attributes data
+//     };
+// }),
+
+// Create a new item
+// createItem: publicProcedure.input(itemSchema).mutation(async ({ input }) => {
+//   const { name, brandId, categoryId, description } = input;
+
+//   const newItem = await db.item.create({
+//     data: {
+//       name,
+//       brand_id: brandId,
+//       category_id: categoryId,
+//       description,
+//     },
+//   });
+
+//   return newItem;
+// }),
+
+// Create a new variant
+//   createVariant: publicProcedure
+//     .input(variantSchema)
+//     .mutation(async ({ input }) => {
+//       const { itemId, name, description } = input;
+
+//       const newVariant = await db.variant.create({
+//         data: {
+//           item_id: itemId,
+//           name,
+//           description,
+//         },
+//       });
+
+//       return newVariant;
+//     }),
+
+//   // Create a new inventory record
+//   createInventory: publicProcedure
+//     .input(inventorySchema)
+//     .mutation(async ({ input }) => {
+//       const { variantId, quantity } = input;
+
+//       const newInventory = await db.inventory.create({
+//         data: {
+//           variant_id: variantId,
+//           quantity,
+//         },
+//       });
+
+//       return newInventory;
+//     }),
+
+//   // Other CRUD operations (placeholders for now)
+//   // Update item, variant, and inventory, delete operations, etc. can be added here
+// });
 
 // Exporting the router
 export default inventoryRouter;

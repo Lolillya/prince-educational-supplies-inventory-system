@@ -1,15 +1,18 @@
-import { Ellipsis } from 'lucide-react'
-import React from 'react'
-import { Button } from '~/components/ui/button'
+import { Ellipsis } from "lucide-react";
+import React from "react";
+import { Button } from "~/components/ui/button";
 
 const MoreOptions = () => {
-	return (
-		<Button asChild>
-			<div className="flex items-center justify-center rounded-xl bg-transparent hover:bg-slate-200 h-12 w-12 transition-colors duration-300">
-				<Ellipsis className="text-slate-500 hover:text-slate-600 !h-5 !w-5" strokeWidth={2.5}/>
-			</div>
-		</Button>
-	)
-}
+  return (
+    <Button asChild>
+      <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-transparent transition-colors duration-300 hover:bg-slate-200">
+        <Ellipsis
+          className="!h-5 !w-5 text-slate-500 hover:text-slate-600"
+          strokeWidth={2.5}
+        />
+      </div>
+    </Button>
+  );
+};
 
-export default MoreOptions
+export default MoreOptions;

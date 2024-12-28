@@ -11,31 +11,14 @@ import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
-
-interface InvoiceProps {
-  invoiceId: number;
-  date: string;
-  customer: string;
-  grandTotal: number;
-  discountValue: string;
-  orderItems: {
-    variant: string;
-    item: string;
-    brand: string;
-    quantity: number;
-    unit: string;
-    unitPrice: number;
-    discountValue: string;
-    subtotal: number;
-  }[];
-}
+import { InvoiceProps } from "../page";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   invoiceId,
   date,
   customer,
   grandTotal,
-  orderItems,
+  orderItem,
   discountValue,
 }) => {
   return (
@@ -109,30 +92,23 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
       </div>
 
       <div className="flex flex-col gap-3">
-        {orderItems.slice(0, 2).map((item, index) => {
+        {orderItem.slice(0, 2).map((item, index) => {
           return (
             <InvoiceItem
               key={index}
-              variant={item.variant}
-              item={item.item}
-              brand={item.brand}
-              quantity={item.quantity}
-              unit={item.unit}
-              unitPrice={item.unitPrice}
-              discountValue={item.discountValue}
-              subtotal={item.subtotal}
+              orderItem={item}
             />
           );
         })}
 
         <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">
-          {orderItems.length > 2 ? (
+          {orderItem.length > 2 ? (
             <p>
-              {orderItems.length - 2} more item
-              {orderItems.length - 2 > 1 ? "s" : ""}...
+              {orderItem.length - 2} more item
+              {orderItem.length - 2 > 1 ? "s" : ""}...
             </p>
           ) : (
-            orderItems.length <= 2 && <p>No more items...</p>
+            orderItem.length <= 2 && <p>No more items...</p>
           )}
           <ViewFullInvoice
             invoiceId={invoiceId}
@@ -140,7 +116,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             customer={customer}
             grandTotal={grandTotal}
             discountValue={discountValue}
-            orderItems={orderItems}
+            orderItem={orderItem}
           />
         </div>
       </div>

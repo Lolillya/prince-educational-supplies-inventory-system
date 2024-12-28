@@ -9,24 +9,9 @@ import { Separator } from '~/components/ui/separator';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Button } from '~/components/ui/button';
+import { InvoiceProps } from '../page';
 
-type OrderItem = {
-	variant: string;
-	item: string;
-	brand: string;
-	quantity: number;
-	unit: string;
-	unitPrice: number;
-	discountValue: string;
-	subtotal: number;
-};
-
-type InvoiceProps = {
-	orderItems: OrderItem[];
-};
-
-
-const InvoiceTable = ({ orderItems, isEditing }: { orderItems: InvoiceProps['orderItems']; isEditing: boolean }) => {
+const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['orderItem']; isEditing: boolean }) => {
 	return (
 		<div>
 			<Table className="w-full table-fixed">
@@ -51,7 +36,7 @@ const InvoiceTable = ({ orderItems, isEditing }: { orderItems: InvoiceProps['ord
 			<ScrollArea className="h-40" type="always">
 				<Table className="w-full table-fixed">
 					<TableBody>
-						{orderItems.map((item, index) => (
+						{orderItem.map((item, index) => (
 							<TableRow key={index} className="border-none text-slate-700">
 								<TableCell className="rounded-l-xl w-48">
 									<TooltipProvider>
@@ -75,7 +60,7 @@ const InvoiceTable = ({ orderItems, isEditing }: { orderItems: InvoiceProps['ord
 										<TableCell className="rounded-r-xl w-20">
 											<Popover>
 												<PopoverTrigger>
-													<MoreOptions className='w-1 h-1'/>
+													<MoreOptions className='!w-1 !h-1'/>
 												</PopoverTrigger>
 												<PopoverContent className='shadow-none' popoverTarget=''>
 													<p className='text-slate-700 font-medium'>{item.brand} - {item.item} - {item.variant}</p>
@@ -102,13 +87,18 @@ const InvoiceTable = ({ orderItems, isEditing }: { orderItems: InvoiceProps['ord
 															/>
 														</div>
 													</div>
-													<Separator className='mt-4' />
 													<div className="mt-4 w-full flex gap-2">
-														<Button className='w-1/2 bg-rose-100 hover:bg-rose-200 text-red'>
-															Void Item
+														<Button className='w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700'>
+															Cancel
 														</Button>
 														<Button className='w-1/2 bg-teal-100 hover:bg-teal-200 text-green'>
 															Update
+														</Button>
+													</div>
+													<Separator className='mt-4' />
+													<div className="mt-4 w-full">
+														<Button className='w-full bg-rose-100 hover:bg-rose-200 text-red'>
+															Void Item
 														</Button>
 													</div>
 												</PopoverContent>

@@ -17,29 +17,12 @@ import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import RecordEditor from "../../_components/record-editor";
 import InvoiceTable from "./invoice-table";
+import { InvoiceProps } from "../page";
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
-
-type InvoiceProps = {
-  invoiceId: number;
-  date: string;
-  customer: string;
-  grandTotal: number;
-  discountValue: string;
-  orderItems: {
-    variant: string;
-    item: string;
-    brand: string;
-    quantity: number;
-    unit: string;
-    unitPrice: number;
-    discountValue: string;
-    subtotal: number;
-  }[];
-};
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoiceId,
@@ -47,13 +30,11 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   customer,
   grandTotal,
   discountValue,
-  orderItems,
+  orderItem,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
-
-  //   console.log(orderItems);
 
   const handleEdit = () => {
     setIsEditing((prev) => !prev);
@@ -63,10 +44,8 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   const handleKeyDown = (event: React.KeyboardEvent) => {
     console.log("Key pressed:", event.key); // Log the key pressed
     if (event.key === "Escape") {
-      console.log("Escape key pressed");
       if (isEditing) {
-        console.log("Editing is enabled, showing warning");
-        setShowWarning(true); // Ensure state is updated
+        setShowWarning(true);
         event.preventDefault();
       }
     }
@@ -141,7 +120,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
           </div>
         </div>
 
-        <InvoiceTable orderItems={orderItems} isEditing={isEditing} />
+        <InvoiceTable orderItem={orderItem} isEditing={isEditing} />
 
         <Separator orientation="horizontal" className="h-[2px]" />
 

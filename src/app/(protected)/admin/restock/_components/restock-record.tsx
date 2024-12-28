@@ -1,37 +1,18 @@
-import { ArrowRight, Calendar, Truck } from 'lucide-react'
+import { Calendar, Truck } from 'lucide-react'
 import React from 'react'
-import { Button } from '~/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Separator } from '~/components/ui/separator'
 import MoreOptions from '../../_components/more-options'
+import { RestockProps } from '../page'
 import RestockItem from './restock-item'
 import ViewFullRestock from './view-full-restock'
-
-interface RestockProps {
-	restockId: number;
-	date: string;
-	supplier: string;
-	addedStock: number;
-	restockItems: {
-		variant: string;
-		item: string;
-		brand: string;
-		quantity: number;
-		mainUnit: string;
-		unitConversion: {
-			from: string;
-			count: number;
-			to: string;
-		}[];
-	}[];
-}
 
 const RestockRecord: React.FC<RestockProps> = ({
 	restockId,
 	date,
 	supplier,
 	addedStock,
-	restockItems,
+	restockItem,
 }) => {
 	return (
 		<div className='bg-slate-100 p-10 rounded-lg text-slate-700 flex flex-col gap-8'>
@@ -87,27 +68,22 @@ const RestockRecord: React.FC<RestockProps> = ({
 
 			<div className='flex flex-col gap-3'>
 
-				{restockItems.slice(0, 2).map((item, index) => {
+				{restockItem.slice(0, 2).map((item, index) => {
 					return (
 						<RestockItem
 							key={index}
-							variant={item.variant}
-							item={item.item}
-							brand={item.brand}
-							quantity={item.quantity}
-							mainUnit={item.mainUnit}
-							unitConversion={item.unitConversion}
+							restockItem={item}
 						/>
 					)
 				})}
 
 				<div className='bg-white/70 px-6 py-3 rounded-lg flex items-center justify-between text-slate-400'>
-					{restockItems.length > 2 ? (
-						<p>{restockItems.length - 2} more item{restockItems.length - 2 > 1 ? "s" : ""}...</p>
-					) : restockItems.length <= 2 && (
+					{restockItem.length > 2 ? (
+						<p>{restockItem.length - 2} more item{restockItem.length - 2 > 1 ? "s" : ""}...</p>
+					) : restockItem.length <= 2 && (
 						<p>No more items...</p>
 					)}
-					<ViewFullRestock restockId={restockId} date={date} supplier={supplier} addedStock={addedStock} />
+					<ViewFullRestock restockId={restockId} date={date} supplier={supplier} addedStock={addedStock} restockItem={restockItem} />
 				</div>
 			</div>
 

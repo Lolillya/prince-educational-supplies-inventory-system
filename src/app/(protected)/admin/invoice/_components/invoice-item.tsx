@@ -23,7 +23,8 @@ const InvoiceItem: React.FC<orderItemProps> = ({
 		unitPrice,
 		discountValue,
 		subtotal,
-	} = orderItem
+	} = orderItem;
+	
 	return (
 		<div className='bg-white/70 p-6 rounded-lg'>
 			<div className='flex justify-center items-center'>

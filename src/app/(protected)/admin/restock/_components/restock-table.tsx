@@ -1,15 +1,17 @@
+import { ScrollArea } from '~/components/ui/scroll-area';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
+import { RestockProps } from '../page';
 import { Button } from '~/components/ui/button';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
-import { ScrollArea } from '~/components/ui/scroll-area';
 import { Separator } from '~/components/ui/separator';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 import MoreOptions from '../../_components/more-options';
-import { InvoiceProps } from '../page';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card';
+import UnitLine from './unit-line';
 
-const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['orderItem']; isEditing: boolean }) => {
+const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['restockItem']; isEditing: boolean }) => {
 	return (
 		<div>
 			<Table className="w-full table-fixed">
@@ -18,15 +20,14 @@ const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['order
 						<TableHead className="w-48 rounded-l-xl">Item</TableHead>
 						<TableHead>Quantity</TableHead>
 						<TableHead>Unit</TableHead>
-						<TableHead>Price</TableHead>
-						<TableHead>Discount</TableHead>
+						<TableHead>Conversions</TableHead>
 						{isEditing ? (
 							<>
-								<TableHead>Subtotal</TableHead>
+								<TableHead>Price</TableHead>
 								<TableHead className="rounded-r-xl w-20"></TableHead>
 							</>
 						) : (
-							<TableHead className="rounded-r-xl">Subtotal</TableHead>
+							<TableHead className="rounded-r-xl">Price</TableHead>
 						)}
 					</TableRow>
 				</TableHeader>
@@ -34,7 +35,7 @@ const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['order
 			<ScrollArea className="h-40" type="always">
 				<Table className="w-full table-fixed">
 					<TableBody>
-						{orderItem.map((item, index) => (
+						{restockItem.map((item, index) => (
 							<TableRow key={index} className="border-none text-slate-700">
 								<TableCell className="rounded-l-xl w-48">
 									<TooltipProvider>
@@ -49,16 +50,26 @@ const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['order
 									</TooltipProvider>
 								</TableCell>
 								<TableCell>{item.quantity}</TableCell>
-								<TableCell>{item.unit}</TableCell>
-								<TableCell>{item.unitPrice}</TableCell>
-								<TableCell>{item.discountValue}</TableCell>
+								<TableCell>{item.mainUnit}</TableCell>
+								<TableCell className="truncate">
+									<HoverCard>
+										<HoverCardTrigger className="hover:underline hover:cursor-default">
+											{item.unitConversion.length} Conversions
+										</HoverCardTrigger>
+										<HoverCardContent className="shadow-none flex flex-col gap-3">
+											{item.unitConversion.map((unit, index) => (
+												<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to} />
+											))}
+										</HoverCardContent>
+									</HoverCard>
+								</TableCell>
 								{isEditing ? (
 									<>
-										<TableCell>{item.subtotal}</TableCell>
+										<TableCell>000.00</TableCell>
 										<TableCell className="rounded-r-xl w-20">
 											<Popover>
 												<PopoverTrigger>
-													<MoreOptions className='!w-1 !h-1'/>
+													<MoreOptions className='!w-1 !h-1' />
 												</PopoverTrigger>
 												<PopoverContent className='shadow-none' popoverTarget=''>
 													<p className='text-slate-700 font-medium'>{item.brand} - {item.item} - {item.variant}</p>
@@ -74,14 +85,7 @@ const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['order
 															<Label className="text-slate-400">Price</Label>
 															<Input
 																className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-																defaultValue={item.unitPrice}
-															/>
-														</div>
-														<div>
-															<Label className="text-slate-400">Discount</Label>
-															<Input
-																className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-																defaultValue={item.discountValue}
+																defaultValue={'000'}
 															/>
 														</div>
 													</div>
@@ -104,7 +108,7 @@ const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['order
 										</TableCell>
 									</>
 								) : (
-									<TableCell className="rounded-r-xl">{item.subtotal}</TableCell>
+									<TableCell className="rounded-r-xl">000</TableCell>
 								)}
 							</TableRow>
 						))}
@@ -115,4 +119,4 @@ const InvoiceTable = ({ orderItem, isEditing }: { orderItem: InvoiceProps['order
 	);
 };
 
-export default InvoiceTable;
+export default RestockTable;

@@ -7,6 +7,9 @@ import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Separator } from '~/components/ui/separator';
 import RecordEditor from '../../_components/record-editor';
+import { RestockProps } from '../page';
+import { Textarea } from '~/components/ui/textarea';
+import RestockTable from './restock-table';
 
 
 const poppins = Poppins({
@@ -14,18 +17,12 @@ const poppins = Poppins({
 	weight: ["400", "700"],
 });
 
-type RestockProps = {
-	restockId: number;
-	date: string;
-	supplier: string;
-	addedStock: number;
-}
-
 const ViewFullRestock: React.FC<RestockProps> = ({
 	restockId,
 	date,
 	supplier,
 	addedStock,
+	restockItem,
 }) => {
 
 	const [isEditing, setIsEditing] = useState(false);
@@ -38,12 +35,10 @@ const ViewFullRestock: React.FC<RestockProps> = ({
 	};
 
 	const handleKeyDown = (event: React.KeyboardEvent) => {
-		console.log('Key pressed:', event.key); // Log the key pressed
+		console.log('Key pressed:', event.key);
 		if (event.key === 'Escape') {
-			console.log('Escape key pressed');
 			if (isEditing) {
-				console.log('Editing is enabled, showing warning');
-				setShowWarning(true); // Ensure state is updated
+				setShowWarning(true);
 				event.preventDefault();
 			}
 		}
@@ -64,41 +59,69 @@ const ViewFullRestock: React.FC<RestockProps> = ({
 					<ArrowUpRight strokeWidth={2.5} className='w-4 h-4' />
 				</div>
 			</DialogTrigger>
-			<DialogContent className="[&>button]:hidden !w-full !max-w-3xl" onKeyDown={handleKeyDown}>
-				<DialogHeader className={`text-xl ${poppins.className} font-normal h-full`}>
+			<DialogContent
+				className="[&>button]:hidden !w-full !max-w-3xl"
+				onKeyDown={handleKeyDown}
+			>
+				<DialogHeader
+					className={`text-xl ${poppins.className} font-normal h-full`}
+				>
 					<div className='flex items-center justify-between'>
 						<div className='flex flex-col justify-between h-full gap-2'>
-							<DialogTitle className='font-normal text-xl text-slate-700'>#{restockId}</DialogTitle>
+							<DialogTitle className='font-normal text-xl text-slate-700'>
+								#{restockId}
+							</DialogTitle>
 							<div className='flex items-center gap-3 text-slate-400'>
 								<Calendar className='w-4 h-4' />
-								<DialogDescription className='text-sm tracking-wide'>{date}</DialogDescription>
+								<DialogDescription className='text-sm tracking-wide'>
+									{date}
+								</DialogDescription>
 							</div>
 						</div>
 						<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
 					</div>
 				</DialogHeader>
+
 				<Separator orientation="horizontal" className="h-[2px]" />
+
 				<div className='flex gap-3'>
 					<div className='flex flex-col gap-2 group w-1/2'>
 						<Label className='text-slate-400'>Supplier</Label>
 						<div className='flex items-center focus-within:outline focus-within:outline-2 focus-within:outline-slate-200 rounded-lg'>
-							<Input className='shadow-none bg-slate-100 text-slate-700' disabled={!isEditing} value={supplier}/>
+							<Input 
+								className='shadow-none bg-slate-100 text-slate-700' 
+								disabled={!isEditing} 
+								defaultValue={supplier}
+							/>
 						</div>
 					</div>
 					<div className='flex flex-col gap-2 group w-1/2'>
 						<Label className='text-slate-400'>Recorded by</Label>
 						<div className='flex items-center focus-within:outline focus-within:outline-2 focus-within:outline-slate-200 rounded-lg'>
-							<Input className='shadow-none bg-slate-100 text-slate-700' disabled={!isEditing} />
+							<Input 
+								className='shadow-none bg-slate-100 text-slate-700' 
+								disabled={!isEditing}
+								defaultValue={supplier}
+							/>
 						</div>
 					</div>
 				</div>
-				<div className="">
-					~ A table should exist here ~
-				</div>
+		
+				<RestockTable restockItem={restockItem} isEditing={isEditing} />
+
 				<Separator orientation="horizontal" className="h-[2px]" />
+
+				<Textarea
+					className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"
+					placeholder="Your record notes..."
+					disabled={!isEditing}
+				/>
+
 				<div className='flex items-center justify-between'>
 					<div className='flex flex-col justify-between h-full gap-1'>
-						<p className='font-normal text-base text-slate-700'>{addedStock}</p>
+						<p className='font-normal text-base text-slate-700'>
+							{addedStock}
+						</p>
 						<div className='flex items-center gap-3 text-slate-400'>
 							<p className='text-sm tracking-wide'>Added Stock</p>
 						</div>

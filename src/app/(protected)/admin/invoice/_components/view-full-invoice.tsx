@@ -124,9 +124,9 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
 
         <Separator orientation="horizontal" className="h-[2px]" />
 
-        <Textarea 
-          className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200" 
-          placeholder="Your record notes..." 
+        <Textarea
+          className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"
+          placeholder="Your record notes..."
           disabled={!isEditing}
         />
 

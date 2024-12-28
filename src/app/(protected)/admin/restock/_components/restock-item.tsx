@@ -5,28 +5,27 @@ import { Separator } from '~/components/ui/separator';
 import MoreOptions from '../../_components/more-options';
 import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card';
 import UnitLine from './unit-line';
+import { RestockProps } from '../page';
 
-interface RestockItemsProps {
-	variant: string;
-	item: string;
-	brand: string;
-	quantity: number;
-	mainUnit: string;
-	unitConversion: {
-		from: string;
-		count: number;
-		to: string;
-	}[];
+type restockItem = RestockProps["restockItem"][0];
+
+type restockItemProps = {
+	restockItem: restockItem;
 }
 
-const RestockItem: React.FC<RestockItemsProps> = ({
-	variant,
-	item,
-	brand,
-	quantity,
-	mainUnit,
-	unitConversion,
+const RestockItem: React.FC<restockItemProps> = ({
+	restockItem
 }) => {
+
+	const {
+		variant,
+		item,
+		brand,
+		quantity,
+		mainUnit,
+		unitConversion,
+	} = restockItem;
+
 	return (
 		<div className='bg-white/70 p-6 rounded-lg'>
 			<div className='flex justify-center items-center'>

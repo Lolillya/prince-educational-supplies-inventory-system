@@ -75,7 +75,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           </div>
           <div>
             <DropdownMenu>
-              <DropdownMenuTrigger>
+              <DropdownMenuTrigger >
                 <MoreOptions />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
@@ -84,6 +84,9 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   Export
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  Pin
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">

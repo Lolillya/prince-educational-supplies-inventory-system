@@ -24,13 +24,15 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
-import { Batch } from "@prisma/client";
+import { Batch, BatchVariant } from "@prisma/client";
 
 type InventoryItem = {
   inventory_id: number;
   variant: {
     name: string | null;
-    Batch: Batch[];
+    BatchVariant: {
+      Batch: Batch;
+    };
     item: {
       name: string;
       brand: {
@@ -53,6 +55,8 @@ const NewInvoice = () => {
     isLoading,
     isError,
   } = api.inventory.listInventory.useQuery();
+
+  console.log(inventoryItems);
 
   const handleSelectItem = (item: InventoryItem) => {
     if (
@@ -167,7 +171,7 @@ const NewInvoice = () => {
                       </div>
 
                       <Label className="text-xs text-textGray">
-                        {item.variant.Batch.length} Batche/s
+                        {item.variant.BatchVariant.length} Batche/s
                       </Label>
                     </div>
                   </li>
@@ -182,7 +186,7 @@ const NewInvoice = () => {
         {/* <InvoiceCard /> */}
 
         {selectedItems.map((item, index) =>
-          item.variant.Batch.map((batch, batchIndex) => (
+          item.variant.BatchVariant.Batch.map((batch, batchIndex) => (
             <InvoiceCard
               key={`${item.inventory_id}-${batchIndex}`}
               batchNumber={batchIndex + 1}

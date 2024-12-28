@@ -13,7 +13,7 @@ const MasterList = () => {
     data: initialInventory,
     isLoading,
     error,
-  } = api.lists.listInventory.useQuery();
+  } = api.inventory.listInventory.useQuery();
   const [inventory, setInventory] = useState([]);
 
   useEffect(() => {

@@ -5,11 +5,12 @@ import { Button } from "~/components/ui/button";
 import { useRouter } from "next/navigation";
 import StockCard from "../_components/stock-card";
 import {
-  Dialog,
   DialogContent,
+  DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
+import { Dialog } from "~/components/ui/dialog-transparent";
 import { Input } from "~/components/ui/input";
 import {
   Table,
@@ -48,7 +49,13 @@ const InvoiceAddStock = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
-  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({}); // Stock values as strings
+  const [stock, setStock] = useState<{ [key: number]: string }>({}); // Stock values as strings
+  const [price, setPrice] = useState<{ [key: number]: string }>({});
+  const [unit, setUnit] = useState<{ [key: number]: string }>({});
+  const [stockUnits, setStockUnits] = useState<{ [key: number]: string }>({});
+  const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog open state
+  const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
+  const [dialogType, setDialogType] = useState("");
 
   const {
     data: inventoryItems,
@@ -93,7 +100,7 @@ const InvoiceAddStock = () => {
       )
     ) {
       setSelectedItems([...selectedItems, item]);
-      setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
+      setStock((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
     }
     setSearchTerm(""); // Clear the search term to hide the dropdown
   };
@@ -111,7 +118,7 @@ const InvoiceAddStock = () => {
   };
 
   const handleStockChange = (inventoryId: number, newStock: string) => {
-    setStockTotals((prev) => ({
+    setStock((prev) => ({
       ...prev,
       [inventoryId]: newStock, // Update stock for the specific item
     }));

@@ -1,17 +1,16 @@
-import React, {useEffect, useState} from "react";
-import {Separator} from "~/components/ui/separator";
+import React, { useState, useEffect } from "react";
+import { Separator } from "~/components/ui/separator";
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from "~/components/ui/accordion";
-import {Label} from "~/components/ui/label";
-import {ArrowRight, Plus, X} from "lucide-react";
-import {Input} from "~/components/ui/input";
-
+import { Label } from "~/components/ui/label";
+import { ArrowRight, Plus, X } from "lucide-react";
+import { Input } from "~/components/ui/input";
+import { api } from "~/trpc/react";
 import Link from "next/link";
-import {ComboBoxSearchable} from "~/components/ui/combobox";
 
 // Define TypeScript types
 type Item = {
@@ -29,65 +28,270 @@ type Item = {
 type InventoryCardProps = {
     item: Item;
     onRemove: () => void;
+    stockValue: string;
+    onStockChange: (newStock: number) => void;
 };
 
-const InventoryCard = ({batch, units, item, onRemove}: InventoryCardProps) => {
-    const [stockUnits, setStockUnits] = useState<StockUnitData[]>(batch.supplierUnits || [],);
+const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange }: InventoryCardProps) => {
+    const supplierUnits = batch?.supplierUnits || [];
+
+    const [stockUnits, setStockUnits] = useState<StockUnitData[]>(supplierUnits);
+    const [detailedStockUnits, setDetailedStockUnits] = useState<StockUnitData[]>(() =>
+        supplierUnits.map((unit) => ({
+            stock: unit.quantity_per_unit,
+            price: Number(unit.price).toFixed(2),
+            unit: unit.unit?.name,
+            conversionQty: unit.ConversionRate?.[0]?.conversion_rate || "",
+            conversionUnit: unit.ConversionRate?.[0]?.toUnit?.name || "",
+        }))
+    );
     const [stock, setStock] = useState("");
     const [price, setPrice] = useState("");
     const [unit, setUnit] = useState("");
-
-    const [detailedStockUnits, setDetailedStockUnits] = useState<StockUnitData[]>(
-        [],
-    ); // State for detailed stock units
+    const [unitOptions, setUnitOptions] = useState<string[]>([]);
+    const [searchTerm, setSearchTerm] = useState("");
+    const [filteredUnits, setFilteredUnits] = useState<string[]>([]);
+    const [dropdownVisible, setDropdownVisible] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
     useEffect(() => {
-        // Fetch detailed stock units from the batch here
         if (batch && batch.supplierUnits) {
             const details = batch.supplierUnits.map((unit) => ({
                 stock: unit.quantity_per_unit,
-                price: Number(unit.price).toFixed(2), // Ensure the price is formatted to two decimal places
+                price: Number(unit.price).toFixed(2),
                 unit: unit.unit?.name,
-                conversionQty: unit.ConversionRate?.[0]?.conversion_rate || "", // Fetch the first conversion rate if available
-                conversionUnit: unit.ConversionRate?.[0]?.toUnit.name || "", // Fetch the first conversion unit if available
+                conversionQty: unit.ConversionRate?.[0]?.conversion_rate || "",
+                conversionUnit: unit.ConversionRate?.[0]?.toUnit.name || "",
             }));
             setDetailedStockUnits(details);
         }
     }, [batch]);
 
+    useEffect(() => {
+        if (detailedStockUnits.length > 0) {
+            setStock(detailedStockUnits[0].stock);
+            setPrice(detailedStockUnits[0].price);
+            setUnit(detailedStockUnits[0].unit);
+        }
+    }, [detailedStockUnits]);
+
+    useEffect(() => {
+        if (detailedStockUnits.length === 0) {
+            addStockUnit();
+        }
+    }, []);
+
+
+    useEffect(() => {
+        if (units) {
+            // Extract unit names from the units array
+            setUnitOptions(units.map((unit) => unit.name));
+        }
+    }, [units]);
+
+
+    useEffect(() => {
+        // Filter units based on the search term
+        if (searchTerm) {
+            setFilteredUnits(
+                unitOptions.filter((unitName) =>
+                    unitName.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            );
+            setDropdownVisible(true);
+        } else {
+            setFilteredUnits([]);
+            setDropdownVisible(false);
+        }
+    }, [searchTerm, unitOptions]);
+
+    const handleSelectUnit = (unitName: string) => {
+        setUnit(unitName);
+        setSearchTerm("");
+        setDropdownVisible(false);
+        setHighlightedIndex(-1);
+
+        updateStockUnit(0, "unit", unitName);
+    };
+
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+
+        if (value === "") {
+            setUnit("");
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "ArrowDown") {
+            setHighlightedIndex((prevIndex) =>
+                prevIndex < filteredUnits.length - 1 ? prevIndex + 1 : prevIndex
+            );
+        } else if (e.key === "ArrowUp") {
+            setHighlightedIndex((prevIndex) =>
+                prevIndex > 0 ? prevIndex - 1 : prevIndex
+            );
+        } else if (e.key === "Enter" && highlightedIndex >= 0) {
+            handleSelectUnit(filteredUnits[highlightedIndex]);
+        }
+    };
 
     const addStockUnit = () => {
-        const newUnit: StockUnitData = {
-            stock: "",
-            price: "",
-            unit: "",
-            conversionQty: "",
-            conversionUnit: "",
-        };
-        setDetailedStockUnits([...detailedStockUnits, newUnit]);
+        if (detailedStockUnits.length > 0) {
+            // Get the last stock unit for calculations
+            const lastUnit = detailedStockUnits[detailedStockUnits.length - 1];
+            const conversionQty = parseFloat(lastUnit.conversionQty || "0");
+            const currentStock = parseFloat(lastUnit.stock || "0");
+            const currentPrice = parseFloat(lastUnit.price || "0");
+
+            if (
+                conversionQty > 0 &&
+                !isNaN(conversionQty) &&
+                currentStock > 0 &&
+                !isNaN(currentStock) &&
+                currentPrice > 0 &&
+                !isNaN(currentPrice)
+            ) {
+                // Calculate stock and price for the next unit
+                const newUnit: StockUnitData = {
+                    stock: (currentStock * conversionQty).toString(),
+                    price: (currentPrice / conversionQty).toFixed(2),
+                    unit: "", // New unit is empty initially
+                    conversionQty: "",
+                    conversionUnit: "",
+                };
+                setDetailedStockUnits([...detailedStockUnits, newUnit]);
+            } else {
+                // Add a blank unit if calculations cannot be performed
+                const blankUnit: StockUnitData = {
+                    stock: "",
+                    price: "",
+                    unit: "",
+                    conversionQty: "",
+                    conversionUnit: "",
+                };
+                setDetailedStockUnits([...detailedStockUnits, blankUnit]);
+            }
+        } else {
+            // For the first unit, inherit the top-level stock and price
+            const initialUnit: StockUnitData = {
+                stock,
+                price,
+                unit,
+                conversionQty: "",
+                conversionUnit: "",
+            };
+            setDetailedStockUnits([initialUnit]);
+        }
     };
 
     const removeStockUnit = (index: number) => {
-        setDetailedStockUnits(detailedStockUnits.filter((_, i) => i !== index));
+        // Remove the selected row
+        const updatedUnits = detailedStockUnits.filter((_, i) => i !== index);
+
+        // Recalculate stock and price for rows after the removed one
+        for (let i = index; i < updatedUnits.length; i++) {
+            if (i === 0) {
+                // First row inherits the top-level stock and price
+                updatedUnits[i].stock = stock;
+                updatedUnits[i].price = price;
+            } else {
+                // Recalculate based on the previous row
+                const prevUnit = updatedUnits[i - 1];
+                const conversionQty = parseFloat(prevUnit.conversionQty || "0");
+                const prevStock = parseFloat(prevUnit.stock || "0");
+                const prevPrice = parseFloat(prevUnit.price || "0");
+
+                if (
+                    prevStock > 0 &&
+                    !isNaN(prevStock) &&
+                    conversionQty > 0 &&
+                    !isNaN(conversionQty) &&
+                    prevPrice > 0 &&
+                    !isNaN(prevPrice)
+                ) {
+                    updatedUnits[i].stock = (prevStock * conversionQty).toString();
+                    updatedUnits[i].price = (prevPrice / conversionQty).toFixed(2);
+                } else {
+                    // Reset if calculations can't be performed
+                    updatedUnits[i].stock = "";
+                    updatedUnits[i].price = "";
+                }
+            }
+        }
+
+        // Update the state with recalculated rows
+        setDetailedStockUnits(updatedUnits);
     };
+
 
     const updateStockUnit = (
         index: number,
         field: keyof StockUnitData,
-        value: string,
+        value: string
     ) => {
+        // Update the specific field of the current unit
         const updatedUnits = detailedStockUnits.map((unit, i) =>
-            i === index ? {...unit, [field]: value} : unit,
+            i === index ? { ...unit, [field]: value } : unit
         );
-        setDetailedStockUnits(updatedUnits);
-    };
 
-    // Transform unit data for ComboBox
-    const transformToUnitOptions = (units) => {
-        return units.map((unit) => ({
-            value: unit.unit_id,
-            label: unit.name,
-        }));
+        // Check if the reset condition is triggered (conversionQty, conversionUnit, stock, or price is cleared)
+        const isResetRequired =
+            (field === "conversionQty" && (!value || value.trim() === "")) ||
+            (field === "conversionUnit" && (!value || value.trim() === "")) ||
+            (field === "stock" && (!value || value.trim() === "")) ||
+            (field === "price" && (!value || value.trim() === ""));
+
+        // If reset is required, clear all rows below the current row
+        if (isResetRequired) {
+            for (let i = index + 1; i < updatedUnits.length; i++) {
+                updatedUnits[i].stock = "";
+                updatedUnits[i].price = "";
+            }
+            setDetailedStockUnits(updatedUnits);
+            return; // Exit early since no further calculations are needed
+        }
+
+        // Apply cascading logic for stock and price, starting with the next row
+        for (let i = 0; i < updatedUnits.length - 1; i++) {
+            const currentUnit = updatedUnits[i]; // Current row
+            const nextUnit = updatedUnits[i + 1]; // Next row
+
+            // Parse relevant fields
+            const conversionQty =
+                i === index && field === "conversionQty"
+                    ? parseFloat(value || "")
+                    : parseFloat(currentUnit.conversionQty || "");
+
+            const currentStock = parseFloat(currentUnit.stock || "");
+            const currentPrice = parseFloat(currentUnit.price || "");
+
+            // **NEW CHECK**: Skip calculations if "conversionUnit" or "stock" is empty
+            if (!currentUnit.conversionUnit || currentUnit.conversionUnit.trim() === "") {
+                nextUnit.stock = "";
+                nextUnit.price = "";
+                continue;
+            }
+
+            if (!currentStock || isNaN(currentStock) || !currentPrice || isNaN(currentPrice)) {
+                nextUnit.stock = "";
+                nextUnit.price = "";
+                continue;
+            }
+
+            // Perform calculations for the NEXT row
+            if (conversionQty && conversionQty > 0 && !isNaN(conversionQty)) {
+                nextUnit.stock = (currentStock * conversionQty).toString();
+                nextUnit.price = (currentPrice / conversionQty).toFixed(2);
+            } else {
+                nextUnit.stock = "";
+                nextUnit.price = "";
+            }
+        }
+
+        setDetailedStockUnits(updatedUnits);
     };
 
     return (
@@ -111,48 +315,79 @@ const InventoryCard = ({batch, units, item, onRemove}: InventoryCardProps) => {
                 <Accordion type="single" collapsible>
                     <AccordionItem value="item-1">
                         <AccordionTrigger className="hover:no-underline">
-                            <div className="grid grid-cols-1 gap-4 pr-4 hover:cursor-default">
+                            <div
+                                className="grid grid-cols-1 gap-4 pr-4 hover:cursor-default"
+                                onClick={(e) => e.stopPropagation()}
+                            >
                                 {stockUnits.length > 0 ? (
                                     stockUnits.map((supplierUnit, index) => (
                                         <div key={index} className="flex items-start gap-4">
-                                            <div className="flex flex-col items-start">
+                                            <div className="flex flex-col items-start gap-1">
                                                 <Label className="text-left">Stock</Label>
-                                                <input
+                                                <Input
                                                     placeholder="000"
-                                                    value={supplierUnit.quantity_per_unit || "N/A"}
-                                                    onChange={(e) =>
-                                                        updateStockUnit(index, "stock", e.target.value)
-                                                    }
-                                                    className="w-full rounded-lg px-2 py-2 border border-gray-300"
+                                                    defaultValue={Number(supplierUnit.quantity_per_unit).toFixed(2)}
+                                                    //value={stock}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (/^\d*$/.test(value)) { // Allow only numeric input
+                                                            setStock(value); // Notify parent of changes
+                                                            updateStockUnit(0, "stock", value); // Propagate changes
+                                                        }
+                                                    }}
                                                 />
                                             </div>
-                                            <div className="flex flex-col items-start">
+                                            <div className="flex flex-col items-start gap-1">
                                                 <Label className="text-left">Price</Label>
-                                                <input
+                                                <Input
                                                     placeholder="0000.00"
-                                                    value={Number(supplierUnit.price).toFixed(2) || "N/A"}
-                                                    onChange={(e) =>
-                                                        updateStockUnit(index, "price", e.target.value)
-                                                    }
-                                                    className="w-full rounded-lg px-2 py-2 border border-gray-300"
+                                                    defaultValue={Number(supplierUnit.price).toFixed(2)}
+                                                    //value={price}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (/^\d*\.?\d*$/.test(value)) { // Allow digits and optional decimal
+                                                            setPrice(value);
+                                                            updateStockUnit(0, "price", value); // Propagate changes
+                                                        }
+                                                    }}
                                                 />
+
                                             </div>
-                                            <div className="flex flex-col items-start">
+                                            <div className="relative flex flex-col items-start gap-1">
                                                 <Label className="text-left">Unit</Label>
-                                                <ComboBoxSearchable
-                                                    initialData={transformToUnitOptions(units || [])}
-                                                    placeholder="Unit"
-                                                    onSelect={(selected) =>
-                                                        updateStockUnit(index, "unit", selected.label)
-                                                    }
-                                                    required
-                                                    defaultValue={
-                                                        transformToUnitOptions(units || []).find(
-                                                            (unit) => unit.label === supplierUnit.unit?.name
-                                                        ) || null
-                                                    }
-                                                    className="w-full rounded-lg border border-gray-300 bg-emerald-100 text-black"
+                                                <Input
+                                                    placeholder="Search Unit"
+                                                    //defaultValue={supplierUnit.unit?.name}
+                                                    value={"" || searchTerm || unit || supplierUnit.unit?.name}
+                                                    onChange={(e) => {
+                                                        const value = e.target.value;
+                                                        if (/^[a-zA-Z ]*$/.test(value)) { // Allow letters and spaces only
+                                                            handleSearchChange(e);
+                                                        }
+                                                    }}
+                                                    className="bg-emerald-100 text-black placeholder-slate-500"
+                                                    onFocus={() => setDropdownVisible(true)} // Show dropdown on focus
+                                                    onBlur={() => setDropdownVisible(false)} // Hide dropdown on blur
+                                                    onKeyDown={handleKeyDown} // Handle arrow keys and Enter
                                                 />
+                                                {dropdownVisible && filteredUnits.length > 0 && (
+                                                    <div
+                                                        className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
+                                                        style={{maxHeight: "200px", overflowY: "auto"}}
+                                                    >
+                                                        {filteredUnits.map((unitName, index) => (
+                                                            <div
+                                                                key={index}
+                                                                className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
+                                                                    highlightedIndex === index ? "bg-emerald-200" : ""
+                                                                }`}
+                                                                onMouseDown={() => handleSelectUnit(unitName)}
+                                                            >
+                                                                {unitName}
+                                                            </div>
+                                                        ))}
+                                                    </div>
+                                                )}
                                             </div>
                                         </div>
                                     ))
@@ -162,37 +397,59 @@ const InventoryCard = ({batch, units, item, onRemove}: InventoryCardProps) => {
                             </div>
                         </AccordionTrigger>
                         <AccordionContent>
-                            <Separator orientation="horizontal" />
+                            <Separator orientation="horizontal"/>
                             <div className="mt-2 grid grid-cols-5 gap-3 pr-4">
                                 <div>Stock</div>
                                 <div>Price</div>
-                                <div>Unit</div>
+                                <div>Unit (Single)</div>
                                 <div className="col-span-2">Conversion</div>
                             </div>
-                            {detailedStockUnits.length > 0 ? (
-                                detailedStockUnits.map((unitData, index) => (
-                                    <StockUnit
-                                        key={index}
-                                        unitData={unitData}
-                                        onRemove={() => removeStockUnit(index)}
-                                        onUpdate={(field, value) =>
-                                            updateStockUnit(index, field, value)
-                                        }
-                                        units={units} // Pass units to the detailed stock unit for unit selection
-                                        transformToUnitOptions={transformToUnitOptions} // Pass transform function to detailed stock unit
-                                    />
-                                ))
-                            ) : (
-                                <p>No detailed stock units available</p>
-                            )}
-                            <AddStockUnit onAdd={addStockUnit} />
+                            {detailedStockUnits.map((unitData, index) => (
+                                <StockUnit
+                                    key={index}
+                                    unitData={unitData}
+                                    unitOptions={unitOptions}
+                                    inheritedUnit={index === 0 ? unit : undefined} // Pass top "Unit" value to the first StockUnit
+                                    inheritedStock={index === 0 ? stock : undefined} // Pass stock from the parent for the first layer
+                                    inheritedPrice={index === 0 ? price : undefined} // Pass price from the parent for the first layer
+                                    previousUnits={
+                                        index > 0 ? detailedStockUnits[index - 1].conversionUnit : undefined
+                                    }
+                                    onRemove={() => removeStockUnit(index)}
+                                    onUpdate={(field, value) => updateStockUnit(index, field, value)}
+                                />
+                            ))}
+                            <AddStockUnit onAdd={addStockUnit}/>
                         </AccordionContent>
                     </AccordionItem>
                 </Accordion>
-
             </div>
+            <div>
+                <button
+                    className="mt-4 bg-red text-white px-4 py-2 rounded"
+                    onClick={() => {
+                        console.log("AccordionItem Data:");
+                        console.log({
+                            stockValue: stockValue,
+                            price: price,
+                            unit: unit,
+                        });
+                        console.log("StockUnits Data:");
+                        // Ensure units are assigned correctly
+                        stockUnits.forEach((unit, index) => {
+                            if (!unit.unit) {
+                                unit.unit = index > 0 ? stockUnits[index - 1].conversionUnit : unit.unit;
+                            }
+                            console.log(`StockUnit ${index + 1}: `, unit);
+                        });
+                    }}
+                >
+                    Log Accordion and StockUnits
+                </button>
         </div>
-    );
+</div>
+)
+    ;
 };
 
 type StockUnitData = {
@@ -205,113 +462,170 @@ type StockUnitData = {
 
 const StockUnit = ({
                        unitData,
+                       unitOptions,
+                       previousUnits,
                        onRemove,
                        onUpdate,
-                       units,
-                       transformToUnitOptions,
                    }: {
     unitData: StockUnitData;
+    unitOptions: string[];
+    previousUnits?: string;
     onRemove: () => void;
     onUpdate: (field: keyof StockUnitData, value: string) => void;
 }) => {
+    const [filteredUnits, setFilteredUnits] = useState<string[]>([]);
+    const [dropdownVisible, setDropdownVisible] = useState(false);
+    const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
+    const [searchTerm, setSearchTerm] = useState("");
+
+    useEffect(() => {
+        if (searchTerm) {
+            setFilteredUnits(
+                unitOptions.filter((unitName) =>
+                    unitName.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            );
+            setDropdownVisible(true);
+        } else {
+            setFilteredUnits([]);
+            setDropdownVisible(false);
+        }
+    }, [searchTerm, unitOptions]);
+
+    const handleSelectUnit = (selectedUnit: string) => {
+        onUpdate("conversionUnit", selectedUnit);
+        setSearchTerm("");
+        setDropdownVisible(false);
+        setHighlightedIndex(-1);
+    };
+
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setSearchTerm(value);
+        if (value === "") {
+            onUpdate("conversionUnit", "");
+        }
+    };
+
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "ArrowDown") {
+            setHighlightedIndex((prevIndex) =>
+                prevIndex < filteredUnits.length - 1 ? prevIndex + 1 : prevIndex
+            );
+        } else if (e.key === "ArrowUp") {
+            setHighlightedIndex((prevIndex) =>
+                prevIndex > 0 ? prevIndex - 1 : prevIndex
+            );
+        } else if (e.key === "Enter" && highlightedIndex >= 0) {
+            handleSelectUnit(filteredUnits[highlightedIndex]);
+        }
+    };
+
     return (
         <div className="mt-2 flex items-center">
-            <div className="grid grid-cols-5 gap-3 pr-4 hover:cursor-default">
+            <div className="grid grid-cols-5 gap-3 pr-4">
                 <div className="flex flex-col items-start gap-1">
                     <Input
                         placeholder="000"
-                        value={unitData.stock}
+                        value={unitData.stock} // Use the value from `unitData`
                         onChange={(e) => onUpdate("stock", e.target.value)}
+                        disabled
                     />
                 </div>
                 <div className="flex flex-col items-start gap-1">
                     <Input
                         placeholder="0000.00"
-                        value={unitData.price}
+                        value={unitData.price} // Use the value from `unitData`
                         onChange={(e) => onUpdate("price", e.target.value)}
+                        disabled
                     />
                 </div>
                 <div className="flex flex-col items-start gap-1">
-                    <div className="flex items-center gap-2">
-                        {/*<Input*/}
-                        {/*    placeholder="Unit"*/}
-                        {/*    value={unitData.unit}*/}
-                        {/*    onChange={(e) => onUpdate("unit", e.target.value)}*/}
-                        {/*/>*/}
-                        <ComboBoxSearchable
-                            initialData={transformToUnitOptions(units || [])} // Use the passed units
-                            placeholder="Unit"
-                            onSelect={(selected) => onUpdate("unit", selected.label)}
-                            required
-                            defaultValue={
-                                transformToUnitOptions(units || []).find(
-                                    (unit) => unit.label === unitData.unit,
-                                ) || null
-                            }
-                        />
-                        <ArrowRight className="h-5 w-5"/>
-                    </div>
+                    <Input
+                        placeholder="Unit"
+                        value={unitData.unit || previousUnits} // Show `unitData.unit` or previous units
+                        disabled
+                        onChange={(e) => onUpdate("unit", e.target.value)}
+                    />
                 </div>
-                <div className="col-span-2 flex flex-col items-start gap-1">
+                <div className="col-span-2 flex flex-col items-start gap-1 relative">
                     <div className="flex">
                         <Input
                             placeholder="Qty."
                             className="rounded-r-none"
                             value={unitData.conversionQty}
-                            onChange={(e) => onUpdate("conversionQty", e.target.value)}
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                // Allow only numbers and a single optional decimal point
+                                if (/^\d*\.?\d*$/.test(value)) {
+                                    onUpdate("conversionQty", value);
+                                }
+                            }}
                         />
-                        <ComboBoxSearchable
-                            initialData={transformToUnitOptions(units || [])} // Use the passed units for conversion unit
-                            placeholder="Conversion Unit"
-                            onSelect={(selected) =>
-                                onUpdate("conversionUnit", selected.label)
-                            }
-                            required
-                            defaultValue={
-                                transformToUnitOptions(units || []).find(
-                                    (unit) => unit.label === unitData.conversionUnit,
-                                ) || null
-                            }
+                        <Input
+                            placeholder="Units"
                             className="rounded-l-none"
+                            value={searchTerm || unitData.conversionUnit} // Show searchTerm or conversionUnit
+                            onChange={(e) => {
+                                const value = e.target.value;
+                                if (/^[a-zA-Z]*$/.test(value)) {
+                                    handleSearchChange(e);
+                                }
+                            }}
+                            onFocus={() => setDropdownVisible(true)}
+                            onBlur={() => setDropdownVisible(false)}
+                            onKeyDown={handleKeyDown}
                         />
-                        {/*<Input*/}
-                        {/*    placeholder="Units"*/}
-                        {/*    className="rounded-l-none"*/}
-                        {/*    value={unitData.conversionUnit}*/}
-                        {/*    onChange={(e) => onUpdate("conversionUnit", e.target.value)}*/}
-                        {/*/>*/}
                     </div>
+                    {dropdownVisible && filteredUnits.length > 0 && (
+                        <div
+                            className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
+                            style={{ maxHeight: "200px", overflowY: "auto" }}
+                        >
+                            {filteredUnits.map((unitName, index) => (
+                                <div
+                                    key={index}
+                                    className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
+                                        highlightedIndex === index ? "bg-emerald-200" : ""
+                                    }`}
+                                    onMouseDown={() => handleSelectUnit(unitName)}
+                                >
+                                    {unitName}
+                                </div>
+                            ))}
+                        </div>
+                    )}
                 </div>
             </div>
-            <X className="h-5 w-5 hover:cursor-pointer" onClick={onRemove}/>
+            <X className="h-5 w-5 hover:cursor-pointer" onClick={onRemove} />
         </div>
     );
 };
 
-const AddStockUnit = ({onAdd}: { onAdd: () => void }) => {
+const AddStockUnit = ({ onAdd }: { onAdd: () => void }) => {
     return (
         <div className="mt-2 flex items-center">
             <div className="grid grid-cols-5 gap-3 pr-4 hover:cursor-default">
                 <div className="flex flex-col items-start gap-1">
-                    <Input placeholder="Stock" disabled/>
+                    <Input placeholder="Stock" disabled />
                 </div>
                 <div className="flex flex-col items-start gap-1">
-                    <Input placeholder="Price" disabled/>
+                    <Input placeholder="Price" disabled />
                 </div>
                 <div className="flex flex-col items-start gap-1">
                     <div className="flex items-center gap-2">
-                        <Input placeholder="Unit" disabled/>
-                        <ArrowRight className="text-gray-400 h-5 w-5"/>
+                        <Input placeholder="Unit" disabled />
+                        <ArrowRight className="text-gray-400 h-5 w-5" />
                     </div>
                 </div>
                 <div className="col-span-2 flex flex-col items-start gap-1">
                     <div className="flex items-center">
-                        <Input placeholder="to" className="rounded-r-none" disabled/>
-                        <Input placeholder="Unit" className="rounded-l-none" disabled/>
+                        <Input placeholder="to" className="rounded-r-none" disabled />
+                        <Input placeholder="Units" className="rounded-l-none" disabled />
                     </div>
                 </div>
             </div>
-            <Plus className="h-5 w-5 hover:cursor-pointer" onClick={onAdd}/>
+            <Plus className="h-5 w-5 hover:cursor-pointer" onClick={onAdd} />
         </div>
     );
 };

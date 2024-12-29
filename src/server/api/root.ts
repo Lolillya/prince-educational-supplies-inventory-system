@@ -19,10 +19,7 @@ export const appRouter = createTRPCRouter({
   suppliers: supplierRouter,
   employees: employeeRouter,
   inventory: inventoryRouter,
-  inventoryData: inventoryDataRouter,
   restock: restockRouter,
-  invoice: invoiceRouter,
-  lists: listsRouter,
 });
 
 // export type definition of API

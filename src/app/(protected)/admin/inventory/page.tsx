@@ -17,17 +17,16 @@ import { Separator } from "~/components/ui/separator";
 import BatchAccordion from "./_components/batch-accordion";
 import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
-import { Batch } from "@prisma/client";
+import { Batch, BatchVariant } from "@prisma/client";
 import { LoadingSpinner } from "~/components/loading";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { DialogTitle } from "@radix-ui/react-dialog";
 import { Input } from "~/components/ui/input";
 
 interface InventoryItemInfoProps {
-  inventoryItems: InventoryItem[]; // Ensure this is always defined as an array
+  inventoryItems: InventoryItem[];
 }
 
-// InventoryItem and related interfaces
 interface Unit {
   unit_id: number;
   name: string;
@@ -59,7 +58,7 @@ interface Variant {
   item: Item;
   name?: string; // Optional field for the variant name
   description?: string; // Optional description
-  Batch: Batch[]; // Assuming Batch is defined elsewhere
+  BatchVariant: BatchVariant[];
 }
 
 interface InventoryItem {
@@ -79,6 +78,8 @@ const InventoryPage = () => {
     isError,
   } = api.inventory.listInventory.useQuery();
 
+  console.log(inventoryItems);
+
   if (isLoading)
     return (
       <section className="flex h-screen w-full items-center justify-center">
@@ -93,10 +94,14 @@ const InventoryPage = () => {
     );
 
   const handleNewInventory = () => {
-    router.push("/admin/inventory/newItem"); // Redirect to create new inventory
+    router.push("/admin/inventory/newItem");
   };
   const handleEditItem = (id: number) => {
-    router.push(`/admin/inventory/edit-item/${id}`); // Redirect to create new item
+    router.push(`/admin/inventory/edit-item/${id}`);
+  };
+
+  const handleEditBatch = (id: number) => {
+    router.push(`/admin/inventory/edit-batch/${id}`);
   };
 
   return (
@@ -134,6 +139,7 @@ const InventoryPage = () => {
                       className="hover:cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log("Item data:", item);
                         handleEditItem(item.variant.variant_id);
                       }}
                     >
@@ -181,7 +187,7 @@ const InventoryPage = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span>{selectedItem?.variant.Batch.length} Batches</span>
+              <span>{selectedItem?.variant.BatchVariant.length} Batches</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant={"link"} className="text-green">
@@ -210,22 +216,20 @@ const InventoryPage = () => {
 
             {/* Scrollable batches section */}
             {/* <ScrollArea className={"scrollbar-hidden"}> */}
-            <ScrollArea className={"scrollbar-hidden"}>
+            {/* <ScrollArea className={"scrollbar-hidden"}>
               <div className="mt-5 flex flex-col gap-5 rounded-lg">
-                {selectedItem?.variant.Batch &&
-                selectedItem.variant.Batch.length > 0 ? (
-                  selectedItem.variant.Batch.map((batch) => (
+                {selectedItem?.variant.BatchVariant.Batch &&
+                selectedItem.variant.BatchVariant.length > 0 ? (
+                  selectedItem.variant.BatchVariant.Batch.map((batch) => (
                     <BatchAccordion key={batch.batch_id} batch={batch} />
                   ))
                 ) : (
-                  <div className="py-10 text-center">
-                    <p className="text-gray-500 text-lg font-semibold">
-                      No batches available
-                    </p>
-                  </div>
+                    <div className="py-10 text-center">
+                      <p className="text-gray-500 text-lg font-semibold">No batches available</p>
+                    </div>
                 )}
               </div>
-            </ScrollArea>
+            </ScrollArea> */}
             {/* </ScrollArea> */}
           </div>
         </div>

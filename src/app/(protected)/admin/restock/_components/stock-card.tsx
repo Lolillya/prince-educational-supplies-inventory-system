@@ -29,9 +29,13 @@ type StockCardProps = {
   onRemove: () => void;
   stockValue: string; // Controlled stock value from parent
   onStockChange: (newStock: number) => void; // Callback for stock changes
+  onPriceChange: (newPrice: number) => void; // Callback for stock changes
+  onUnitChange: (newUnit: string) => void; // Callback for unit changes
+  onStockUnitsChange,
+
 };
 
-const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps) => {
+const StockCard = ({ item, onRemove, stockValue, onStockChange, onPriceChange, onUnitChange, onConversionUnitChange, onConversionRateChange, onStockUnitsChange }: StockCardProps) => {
   const [stockUnits, setStockUnits] = useState<StockUnitData[]>([]);
   const [stock, setStock] = useState("");
   const [price, setPrice] = useState("");
@@ -51,6 +55,12 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
   } else if (isError) {
     content = <p>Error loading units</p>;
   }
+
+  // Whenever stockUnits change, notify the parent
+  useEffect(() => {
+    onStockUnitsChange(stockUnits);
+  }, [stockUnits, onStockUnitsChange]);  // Make sure onStockUnitsChange is called when stockUnits change
+
 
   useEffect(() => {
     if (stockUnits.length > 0) {
@@ -94,6 +104,7 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
     setSearchTerm(""); // Clear the search term once a unit is selected
     setDropdownVisible(false); // Hide the dropdown
     setHighlightedIndex(-1); // Reset the highlighted index to default
+    onUnitChange(unitName);
 
     updateStockUnit(0, "unit", unitName); // Update all child units (if necessary)
   };
@@ -102,11 +113,13 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setSearchTerm(value);
+    onUnitChange(value);  // Notify parent of the new search term
 
     if (value === "") {
       setUnit(""); // Reset the unit if search term is cleared
     }
   };
+
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
@@ -288,9 +301,9 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
             {item?.variant.item.name} - {item?.variant.item.brand.name} -{" "}
             {item?.variant.name || "N/A"}
           </p>
-          <X className="hover:cursor-pointer" onClick={onRemove} />
+          <X className="hover:cursor-pointer" onClick={onRemove}/>
         </div>
-        <Separator orientation="horizontal" />
+        <Separator orientation="horizontal"/>
         <div className="mt-2">
           <Accordion type="single" collapsible>
             <AccordionItem value="item-1">
@@ -321,12 +334,11 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
                         onChange={(e) => {
                           const value = e.target.value;
                           if (/^\d*\.?\d*$/.test(value)) { // Allow digits and optional decimal
-                            setPrice(value);
+                            onPriceChange(value);
                             updateStockUnit(0, "price", value); // Propagate changes
                           }
                         }}
                     />
-
                   </div>
                   <div className="relative flex flex-col items-start gap-1">
                     <Label className="text-left">Unit</Label>
@@ -336,20 +348,22 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
                         onChange={(e) => {
                           const value = e.target.value;
                           if (/^[a-zA-Z ]*$/.test(value)) { // Allow letters and spaces only
+                            onUnitChange(value);
+                            updateStockUnit(0, "unit", value); // Propagate changes
                             handleSearchChange(e);
                           }
                         }}
-                        className="bg-emerald-100 text-black placeholder-slate-500"
+                        className="bg-emerald-100 text-black placeholder-slate-500 w-64"
+                        // className="bg-emerald-100 text-black placeholder-slate-500 w-full sm:w-3/4 md:w-1/2"
                         onFocus={() => setDropdownVisible(true)} // Show dropdown on focus
                         onBlur={() => setDropdownVisible(false)} // Hide dropdown on blur
                         onKeyDown={handleKeyDown} // Handle arrow keys and Enter
                     />
 
-
                     {dropdownVisible && filteredUnits.length > 0 && (
                         <div
                             className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                            style={{ maxHeight: "200px", overflowY: "auto" }}
+                            style={{maxHeight: "200px", overflowY: "auto"}}
                         >
                           {filteredUnits.map((unitName, index) => (
                               <div
@@ -357,7 +371,7 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
                                   className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
                                       highlightedIndex === index ? "bg-emerald-200" : ""
                                   }`}
-                                  onClick={() => handleSelectUnit(unitName)} // Select unit when clicked
+                                  onMouseDown={() => handleSelectUnit(unitName)}
                               >
                                 {unitName}
                               </div>
@@ -368,7 +382,7 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
                 </div>
               </AccordionTrigger>
               <AccordionContent>
-                <Separator orientation="horizontal" />
+                <Separator orientation="horizontal"/>
                 <div className="mt-2 grid grid-cols-5 gap-3 pr-4">
                   <div>Stock</div>
                   <div>Price</div>
@@ -390,7 +404,7 @@ const StockCard = ({ item, onRemove, stockValue, onStockChange }: StockCardProps
                         onUpdate={(field, value) => updateStockUnit(index, field, value)}
                     />
                 ))}
-                <AddStockUnit onAdd={addStockUnit} />
+                <AddStockUnit onAdd={addStockUnit}/>
               </AccordionContent>
             </AccordionItem>
           </Accordion>

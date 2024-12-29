@@ -18,9 +18,24 @@ import {
 import { Label } from "~/components/ui/label";
 import Link from "next/link";
 import { Input } from "~/components/ui/input";
+import { Batch } from "@prisma/client";
 
-const InvoiceCard = () => {
-  const [quantity, setQuantity] = useState("");
+interface InvoiceCardProps {
+  batchNumber: number;
+  itemName: string;
+  brandName: string;
+  variant: string | null;
+  batch: Batch;
+}
+
+const InvoiceCard: React.FC<InvoiceCardProps> = ({
+  batchNumber,
+  itemName,
+  brandName,
+  variant,
+  batch,
+}) => {
+  const [quantity, setQuantity] = useState<string>(batch.quantity.toString());
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState("");
   const [supplier, setSupplier] = useState("");
@@ -30,14 +45,16 @@ const InvoiceCard = () => {
   return (
     <div className="border-gray-200 rounded-xl border p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <p>Item - Brand - Variant</p>
+        <Label>
+          {itemName} - {brandName} - {variant}
+        </Label>
         <X className="hover:cursor-pointer" />
       </div>
       <Separator orientation="horizontal" />
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
           <AccordionTrigger className="hover:no-underline">
-            Batch 1
+            Batch {batchNumber}
           </AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4">

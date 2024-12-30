@@ -74,7 +74,9 @@ const RestockPage = () => {
       <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
         <div className="flex justify-between items-center">
           <div className="flex gap-3 items-center">
-            <SearchBar/>
+            <SearchBar value={""} onChange={function (e: React.ChangeEvent<HTMLInputElement>): void {
+            throw new Error("Function not implemented.");
+          } }/>
             <Filter/>
           </div>
           <Button
@@ -85,7 +87,7 @@ const RestockPage = () => {
         </div>
 
         <div className="mt-5 flex flex-col gap-4">
-          {restockData?.map((restock: RestockProps) => (
+          {/* {restockData?.map((restock: RestockProps) => (
               <RestockRecord
                   key={restock.restockId}
                   restockId={restock.restockId}
@@ -95,7 +97,7 @@ const RestockPage = () => {
                   restockItems={restock.restockItems}
                   onViewAll={handleViewAll}
               />
-          ))}
+          ))} */}
         </div>
       </section>
   );

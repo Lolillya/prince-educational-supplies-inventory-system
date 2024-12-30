@@ -186,7 +186,7 @@ const NewInvoice = () => {
         {/* <InvoiceCard /> */}
 
         {selectedItems.map((item, index) =>
-          item.variant.BatchVariant.Batch.map((batch, batchIndex) => (
+          item.variant.BatchVariant.map((batch, batchIndex) => (
             <InvoiceCard
               key={`${item.inventory_id}-${batchIndex}`}
               batchNumber={batchIndex + 1}

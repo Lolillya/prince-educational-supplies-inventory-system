@@ -17,7 +17,7 @@ import { Separator } from "~/components/ui/separator";
 import BatchAccordion from "./_components/batch-accordion";
 import { Pencil } from "lucide-react";
 import { Badge } from "~/components/ui/badge";
-import { Batch, BatchVariant } from "@prisma/client";
+import { Batch } from "@prisma/client";
 import { LoadingSpinner } from "~/components/loading";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { DialogTitle } from "@radix-ui/react-dialog";
@@ -56,8 +56,9 @@ interface Variant {
   item_id: number;
   unit: Unit;
   item: Item;
-  name?: string; // Optional field for the variant name
-  description?: string; // Optional description
+  name?: string;
+  description?: string;
+  Batch: Batch[];
   BatchVariant: BatchVariant[];
 }
 
@@ -77,8 +78,6 @@ const InventoryPage = () => {
     isLoading,
     isError,
   } = api.inventory.listInventory.useQuery();
-
-  console.log(inventoryItems);
 
   if (isLoading)
     return (
@@ -103,6 +102,7 @@ const InventoryPage = () => {
   const handleEditBatch = (id: number) => {
     router.push(`/admin/inventory/edit-batch/${id}`);
   };
+
 
   return (
     <section
@@ -187,7 +187,8 @@ const InventoryPage = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span>{selectedItem?.variant.BatchVariant.length} Batches</span>
+              {/*<span>{selectedItem?.variant.Batch.length} Batches</span>*/}
+              <span>{selectedItem?.variant.BatchVariant?.length || 0} Batches</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant={"link"} className="text-green">
@@ -202,12 +203,24 @@ const InventoryPage = () => {
                   <div className="flex flex-col gap-1">
                     <Label className="text-textGray">Password</Label>
                     <Input
-                      placeholder="Enter Password"
-                      className="p-6 placeholder:text-textGray"
+                        placeholder="Enter Password"
+                        className="p-6 placeholder:text-textGray"
                     />
                   </div>
                   <div className="flex justify-center gap-3">
-                    <Button size={"lg"}>Continue</Button>
+                    <Button
+                        size={"lg"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (selectedItem) {
+                            handleEditBatch(selectedItem.variant.variant_id);
+                          } else {
+                            console.error("No item selected to continue.");
+                          }
+                        }}
+                    >
+                      Continue
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -216,20 +229,24 @@ const InventoryPage = () => {
 
             {/* Scrollable batches section */}
             {/* <ScrollArea className={"scrollbar-hidden"}> */}
-            {/* <ScrollArea className={"scrollbar-hidden"}>
+            <ScrollArea className={"scrollbar-hidden"}>
               <div className="mt-5 flex flex-col gap-5 rounded-lg">
-                {selectedItem?.variant.BatchVariant.Batch &&
-                selectedItem.variant.BatchVariant.length > 0 ? (
-                  selectedItem.variant.BatchVariant.Batch.map((batch) => (
-                    <BatchAccordion key={batch.batch_id} batch={batch} />
-                  ))
+                {selectedItem?.variant.BatchVariant && selectedItem?.variant.BatchVariant?.length > 0 ? (
+                    selectedItem.variant.BatchVariant.filter(batchVariant => batchVariant.variant_id === selectedItem.variant.variant_id).map((batchVariant) => (
+                        <BatchAccordion
+                            key={batchVariant.batch.batch_id}
+                            batch={batchVariant.batch}
+                            selectedVariantId={selectedItem.variant.variant_id}
+                        />
+                    ))
                 ) : (
                     <div className="py-10 text-center">
                       <p className="text-gray-500 text-lg font-semibold">No batches available</p>
                     </div>
                 )}
               </div>
-            </ScrollArea> */}
+            </ScrollArea>
+
             {/* </ScrollArea> */}
           </div>
         </div>

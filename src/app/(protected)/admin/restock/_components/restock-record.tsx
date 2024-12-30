@@ -30,6 +30,18 @@ interface RestockProps {
       to: string;
     }[];
   }[];
+  onViewAll: (item: {
+    variant: string;
+    item: string;
+    brand: string;
+    quantity: number;
+    mainUnit: string;
+    unitConversion: {
+      from: string;
+      count: number;
+      to: string;
+    }[];
+  }) => void;
 }
 
 const RestockRecord: React.FC<RestockProps> = ({
@@ -38,6 +50,7 @@ const RestockRecord: React.FC<RestockProps> = ({
   supplier,
   addedStock,
   restockItems,
+    onViewAll,
 }) => {
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-10 text-slate-700">
@@ -109,32 +122,33 @@ const RestockRecord: React.FC<RestockProps> = ({
       <div className="flex flex-col gap-3">
         {restockItems.slice(0, 2).map((item, index) => {
           return (
-            <RestockItem
-              key={index}
-              variant={item.variant}
-              item={item.item}
-              brand={item.brand}
-              quantity={item.quantity}
-              mainUnit={item.mainUnit}
-              unitConversion={item.unitConversion}
-            />
+              <RestockItem
+                  key={index}
+                  variant={item.variant}
+                  item={item.item}
+                  brand={item.brand}
+                  quantity={item.quantity}
+                  mainUnit={item.mainUnit}
+                  unitConversion={item.unitConversion}
+              />
           );
         })}
 
         <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">
           {restockItems.length > 2 ? (
-            <p>
-              {restockItems.length - 2} more item
-              {restockItems.length - 2 > 1 ? "s" : ""}...
-            </p>
+              <p>
+                {restockItems.length - 2} more item
+                {restockItems.length - 2 > 1 ? "s" : ""}...
+              </p>
           ) : (
-            restockItems.length <= 2 && <p>No more items...</p>
+              restockItems.length <= 2 && <p>No more items...</p>
           )}
           <ViewFullRestock
-            restockId={restockId}
-            date={date}
-            supplier={supplier}
-            addedStock={addedStock}
+              restockId={restockId}
+              date={date}
+              supplier={supplier}
+              addedStock={addedStock}
+              restockItems={restockItems}
           />
         </div>
       </div>

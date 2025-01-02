@@ -46,7 +46,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [discountType, setDiscountType] = useState("%");
 
   return (
-    <div className="border-gray-200 rounded-xl border p-4 shadow-sm">
+    <div className="border-gray-200 h-fit rounded-xl border p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
         <Label>
           {itemName} - {brandName} - {variant}

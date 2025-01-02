@@ -109,26 +109,40 @@ const NewInvoice = () => {
   };
 
   useEffect(() => {
-    calculateGrandTotal();
-  }, [selectedItems]);
-
-  useEffect(() => {
     if (searchTerm && inventoryItems) {
-      const results = inventoryItems.filter(
-        (item: InventoryItem2) =>
+      const result = inventoryItems.filter(
+        (item) =>
           item.variant.item.name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
-          item.variant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          item.variant.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
           item.variant.item.brand.name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()),
       );
-      setFilteredItems(results);
-    } else {
-      setFilteredItems([]);
-    }
-  }, [searchTerm, inventoryItems]);
+      setFilteredItems(result);
+    } else setFilteredItems([]);
+
+    calculateGrandTotal();
+  }, [selectedItems, searchTerm, inventoryItems]);
+
+  // useEffect(() => {
+  //   if (searchTerm && inventoryItems) {
+  //     const results = inventoryItems.filter(
+  //       (item: InventoryItem2) =>
+  //         item.variant.item.name
+  //           .toLowerCase()
+  //           .includes(searchTerm.toLowerCase()) ||
+  //         item.variant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+  //         item.variant.item.brand.name
+  //           .toLowerCase()
+  //           .includes(searchTerm.toLowerCase()),
+  //     );
+  //     setFilteredItems(results);
+  //   } else {
+  //     setFilteredItems([]);
+  //   }
+  // }, [searchTerm, inventoryItems]);
 
   if (isLoading) {
     return (
@@ -293,8 +307,17 @@ const NewInvoice = () => {
                   {selectedItems.map((item, selectedIndex) =>
                     Object.entries(item.variant.BatchVariant).map(
                       ([_, variant], index) => (
-                        <TableRow>
-                          <TableCell>
+                        <TableRow key={index}>
+                          <TableCell
+                            key={
+                              item.variant.item.name +
+                              item.variant.item.brand.name +
+                              item.variant.name +
+                              index.toString() +
+                              selectedIndex.toString() +
+                              item.variant.variant_id.toString()
+                            }
+                          >
                             {item.variant.item.name} -{" "}
                             {item.variant.item.brand.name} - {item.variant.name}
                           </TableCell>

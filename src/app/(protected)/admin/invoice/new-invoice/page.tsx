@@ -24,7 +24,8 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
-import { Batch, BatchVariant } from "@prisma/client";
+import { Batch, BatchVariant, Brand, Item, SupplierUnit } from "@prisma/client";
+import { object } from "zod";
 
 type InventoryItem = {
   inventory_id: number;
@@ -32,6 +33,7 @@ type InventoryItem = {
     name: string | null;
     BatchVariant: {
       Batch: Batch;
+      SupplierUnit: SupplierUnit;
     };
     item: {
       name: string;
@@ -42,21 +44,56 @@ type InventoryItem = {
   };
 };
 
+type InventoryItem2 = {
+  inventory_id: number;
+  last_updated: Date;
+  quantity: number;
+  variant: {
+    BatchVariant: {
+      SupplierUnit: SupplierUnit;
+      batch: Batch;
+    };
+    created_at: Date;
+    discount_id: number | null;
+    item: Item;
+    item_id: number;
+    name: string;
+    updated_at: Date;
+    variant_id: number;
+  };
+};
+
 const NewInvoice = () => {
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
-  const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
-  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
+  const [filteredItems, setFilteredItems] = useState<InventoryItem2[]>([]);
+  const [selectedItems, setSelectedItems] = useState<InventoryItem2[]>([]);
+  const [grandTotal, setGrandTotal] = useState<number>(0);
 
+  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
   const {
     data: inventoryItems,
     isLoading,
     isError,
-  } = api.inventory.listInventory.useQuery();
+  } = api.invoice.getItems.useQuery();
 
-  console.log(inventoryItems);
+  const calculateGrandTotal = () => {
+    const total = selectedItems.reduce((acc, item) => {
+      return (
+        acc +
+        Object.entries(item.variant.BatchVariant).reduce(
+          (batchAcc, [_, variant]) => {
+            const quantity = variant.SupplierUnit[0].quantity_per_unit;
+            const unitPrice = variant.SupplierUnit[0].price;
+            return batchAcc + quantity * unitPrice;
+          },
+          0,
+        )
+      );
+    }, 0);
+    setGrandTotal(total);
+  };
 
   const handleSelectItem = (item: InventoryItem) => {
     if (
@@ -68,12 +105,17 @@ const NewInvoice = () => {
       setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
     }
     setSearchTerm(""); // Clear the search term to hide the dropdown
+    console.log(selectedItems);
   };
+
+  useEffect(() => {
+    calculateGrandTotal();
+  }, [selectedItems]);
 
   useEffect(() => {
     if (searchTerm && inventoryItems) {
       const results = inventoryItems.filter(
-        (item: InventoryItem) =>
+        (item: InventoryItem2) =>
           item.variant.item.name
             .toLowerCase()
             .includes(searchTerm.toLowerCase()) ||
@@ -183,19 +225,20 @@ const NewInvoice = () => {
       </div>
 
       <div className="relative mt-4 grid h-full w-full auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
-        {/* <InvoiceCard /> */}
-
-        {selectedItems.map((item, index) =>
-          item.variant.BatchVariant.map((batch, batchIndex) => (
-            <InvoiceCard
-              key={`${item.inventory_id}-${batchIndex}`}
-              batchNumber={batchIndex + 1}
-              itemName={item.variant.item.name}
-              brandName={item.variant.item.brand.name}
-              variant={item.variant.name}
-              batch={batch}
-            />
-          )),
+        {selectedItems.map((item, selectedIndex) =>
+          Object.entries(item.variant.BatchVariant).map(
+            ([_, variant], index) => (
+              <InvoiceCard
+                key={index}
+                batchNumber={index + 1}
+                itemName={item.variant.item.name}
+                brandName={item.variant.item.brand.name}
+                variant={item.variant.name}
+                quantity={variant.SupplierUnit[0].quantity_per_unit}
+                unitPrice={variant.SupplierUnit[0].price}
+              />
+            ),
+          ),
         )}
 
         {/* CONDITIONAL RENDERING */}
@@ -208,7 +251,7 @@ const NewInvoice = () => {
       </div>
 
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
-        <span>TOTAL: -----</span>
+        <span>TOTAL: P{grandTotal}</span>
         <Dialog>
           <DialogTrigger asChild>
             <Button
@@ -247,19 +290,35 @@ const NewInvoice = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  <TableRow>
-                    <TableCell>Item - Brand - Variant</TableCell>
-                    <TableCell>200</TableCell>
-                    <TableCell>Boxes</TableCell>
-                    <TableCell>P 0000.00</TableCell>
-                    <TableCell>0%</TableCell>
-                    <TableCell>10000</TableCell>
-                  </TableRow>
+                  {selectedItems.map((item, selectedIndex) =>
+                    Object.entries(item.variant.BatchVariant).map(
+                      ([_, variant], index) => (
+                        <TableRow>
+                          <TableCell>
+                            {item.variant.item.name} -{" "}
+                            {item.variant.item.brand.name} - {item.variant.name}
+                          </TableCell>
+                          <TableCell>
+                            {variant.SupplierUnit[0].quantity_per_unit}
+                          </TableCell>
+                          <TableCell>Boxes</TableCell>
+                          <TableCell>
+                            P {variant.SupplierUnit[0].price}
+                          </TableCell>
+                          <TableCell>0%</TableCell>
+                          <TableCell>
+                            {variant.SupplierUnit[0].quantity_per_unit *
+                              variant.SupplierUnit[0].price}
+                          </TableCell>
+                        </TableRow>
+                      ),
+                    ),
+                  )}
                 </TableBody>
               </Table>
               <div className="bottom-0 flex w-full justify-end">
                 <div className="flex items-center gap-3">
-                  <span>TOTAL: 000000</span>
+                  <span>TOTAL: P{grandTotal}</span>
                   <Button className="bg-green px-7 font-bold" size={"lg"}>
                     Save
                   </Button>

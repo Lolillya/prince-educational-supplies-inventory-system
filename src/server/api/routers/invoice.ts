@@ -13,5 +13,26 @@ const invoiceSchema = z.object({
 // TODO: INVOICE BACKEND CREATE FUNCTION
 
 export const invoiceRouter = createTRPCRouter({
-  createInvoice: publicProcedure.input,
+  getItems: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.inventory.findMany({
+      include: {
+        variant: {
+          include: {
+            item: {
+              include: {
+                brand: true,
+                category: true,
+              },
+            },
+            BatchVariant: {
+              include: {
+                SupplierUnit: true,
+                batch: true,
+              },
+            },
+          },
+        },
+      },
+    });
+  }),
 });

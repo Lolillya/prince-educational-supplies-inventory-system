@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -18,14 +18,15 @@ import {
 import { Label } from "~/components/ui/label";
 import Link from "next/link";
 import { Input } from "~/components/ui/input";
-import { Batch } from "@prisma/client";
 
 interface InvoiceCardProps {
   batchNumber: number;
   itemName: string;
   brandName: string;
   variant: string | null;
-  batch: Batch;
+  quantity: number;
+  unitPrice: number;
+  // handleGrandTotal: (value: number) => void;
 }
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
@@ -33,11 +34,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   itemName,
   brandName,
   variant,
-  batch,
+  quantity,
+  unitPrice,
 }) => {
-  const [quantity, setQuantity] = useState<string>(batch.quantity.toString());
+  const [unitQuantity, setUnitQuantity] = useState<string>(quantity.toString());
   const [unit, setUnit] = useState("");
-  const [price, setPrice] = useState("");
+  const [price, setPrice] = useState(unitPrice.toString());
+  const [totalPrice, setTotalPrice] = useState(unitPrice * quantity);
   const [supplier, setSupplier] = useState("");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
@@ -64,8 +67,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <Input
                     className="rounded-r-none border shadow-none"
                     placeholder="000"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
+                    value={unitQuantity}
+                    onChange={(e) => setUnitQuantity(e.target.value)}
                   />
                   <Select
                     value={unit}
@@ -145,7 +148,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
           <Link href={"#"}>auto restock</Link>
         </span>
       </p>
-      <p className="mt-4">Total: 0000.00</p>
+      <p className="mt-4">Total: P{totalPrice}</p>
     </div>
   );
 };

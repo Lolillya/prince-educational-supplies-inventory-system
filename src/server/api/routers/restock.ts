@@ -285,7 +285,7 @@ export const restockRouter = createTRPCRouter({
             const formattedRestocks = restocks.map((batch) => ({
                 restockId: batch.batch_id,
                 date: batch.created_at.toISOString().split("T")[0], // Format date to YYYY-MM-DD
-                customer: batch.batchVariants[0]?.SupplierUnit[0]?.supplier?.Personal_Details
+                supplier: batch.batchVariants[0]?.SupplierUnit[0]?.supplier?.Personal_Details
                     ? `${batch.batchVariants[0]?.SupplierUnit[0]?.supplier.Personal_Details.first_name} ${batch.batchVariants[0]?.SupplierUnit[0]?.supplier.Personal_Details.last_name}`
                     : "Unknown", // Get supplier's name from personal details
                 addedStock: batch.quantity,

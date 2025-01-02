@@ -34,6 +34,7 @@ import {
   HoverCardContent,
   HoverCardTrigger,
 } from "~/components/ui/hover-card";
+import ViewFullRestock from "~/app/(protected)/admin/restock/_components/view-full-restock";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -51,7 +52,7 @@ const RestockPage = () => {
   } = api.restock.getRestockData.useQuery();
 
   const handleViewAll = (batch: RestockProps) => {
-    console.log("View all restock batch:", batch); // Full batch data
+    console.log("Selected Batch:", batch);
     setSelectedBatch(batch);
     setIsOpen(true);
   };
@@ -59,7 +60,7 @@ const RestockPage = () => {
   interface RestockProps {
     restockId: number;
     date: string;
-    customer: string;
+    supplier: string;
     addedStock: number;
     restockItems: {
       variant: string;
@@ -81,7 +82,6 @@ const RestockPage = () => {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          {/* ADD SEARCH FUNCTION */}
           <SearchBar />
           <Filter />
         </div>
@@ -99,118 +99,12 @@ const RestockPage = () => {
             key={restock.restockId}
             restockId={restock.restockId}
             date={restock.date}
-            customer={restock.customer}
+            supplier={restock.supplier}
             addedStock={restock.addedStock}
             restockItems={restock.restockItems}
             onViewAll={handleViewAll}
           />
         ))}
-      </div>
-
-      <div className="flex flex-col gap-3">
-        <div className="flex items-center justify-between p-5">
-          <div className="flex w-full items-center justify-between">
-            <Dialog open={isOpen} onOpenChange={setIsOpen}>
-              <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">
-                <DialogTitle>
-                  Batch {selectedBatch?.restockId} - {selectedBatch?.date}
-                </DialogTitle>
-                <div className="flex w-full flex-col gap-3">
-                  <div className="text-gray-400 flex flex-col gap-1">
-                    <Label>Supplier</Label>
-                    <Input
-                      placeholder="Supplier Name"
-                      defaultValue={selectedBatch?.customer}
-                    />
-                  </div>
-
-                  <div className="w text-gray-400 flex flex-col gap-1">
-                    <Label>Recorded by</Label>
-                    <Input placeholder="Employee Name" />
-                  </div>
-                </div>
-
-                <div className="flex h-full w-full flex-col justify-between overflow-y-scroll">
-                  <Table>
-                    <TableHeader>
-                      <TableRow>
-                        <TableHead>Item</TableHead>
-                        <TableHead>Quantity</TableHead>
-                        <TableHead>Unit</TableHead>
-                      </TableRow>
-                    </TableHeader>
-                    <TableBody>
-                      {selectedBatch?.restockItems &&
-                      selectedBatch.restockItems.length > 0 ? (
-                        selectedBatch.restockItems.map((item, index) => (
-                          <TableRow key={index}>
-                            <TableCell>
-                              {item.item} - {item.brand} - {item.variant}
-                            </TableCell>
-                            <TableCell>{item.quantity}</TableCell>
-                            <TableCell>
-                              <div className="flex items-center gap-2">
-                                <HoverCard>
-                                  <HoverCardTrigger className="text-sm text-textGray hover:underline">
-                                    {item.mainUnit} {item.unitConversion.length}{" "}
-                                    Conversions
-                                  </HoverCardTrigger>
-                                  <HoverCardContent className="flex flex-col gap-3 shadow-none">
-                                    {item.unitConversion &&
-                                    item.unitConversion.length > 0 ? (
-                                      item.unitConversion.map(
-                                        (conversion, index) => (
-                                          <div key={index}>
-                                            {" "}
-                                            {/*className="text-xs text-slate-600"*/}
-                                            {conversion.from} →{" "}
-                                            {conversion.count} {conversion.to}
-                                          </div>
-                                        ),
-                                      )
-                                    ) : (
-                                      <div className="text-xs text-slate-400">
-                                        No conversions available
-                                      </div>
-                                    )}
-                                  </HoverCardContent>
-                                </HoverCard>
-                              </div>
-                            </TableCell>
-                          </TableRow>
-                        ))
-                      ) : (
-                        <TableRow>
-                          <TableCell colSpan={3}>No items available</TableCell>
-                        </TableRow>
-                      )}
-                    </TableBody>
-                  </Table>
-                  <div className="bottom-0 flex w-full justify-end">
-                    <div className="flex w-full items-center justify-between gap-3">
-                      <span className="font-bold">
-                        TOTAL: {selectedBatch?.addedStock}
-                      </span>
-                      <div className="flex items-center gap-3">
-                        <Button
-                          size={"lg"}
-                          className="font-bold"
-                          onClick={() => setIsOpen(false)} // Close the dialog
-                        >
-                          Close
-                        </Button>
-
-                        <Button className="bg-green px-7 font-bold" size={"lg"}>
-                          Save
-                        </Button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </DialogContent>
-            </Dialog>
-          </div>
-        </div>
       </div>
     </section>
   );

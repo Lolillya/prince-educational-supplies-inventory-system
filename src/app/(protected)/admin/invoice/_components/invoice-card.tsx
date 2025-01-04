@@ -41,7 +41,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [unit, setUnit] = useState("");
   const [price, setPrice] = useState(unitPrice.toString());
   const [totalPrice, setTotalPrice] = useState(unitPrice * quantity);
-  const [supplier, setSupplier] = useState("");
+  const [supplier, setSupplier] = useState("Supplier");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
 
@@ -94,6 +94,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     placeholder="0000.00"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
+                    disabled={supplier === "Supplier"}
                   />
                   <Select
                     value={supplier}
@@ -103,7 +104,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       <SelectValue placeholder="Supplier" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Supplier A">Supplier</SelectItem>
+                      <SelectItem value="Supplier">Supplier</SelectItem>
                       <SelectItem value="Manual">Manual</SelectItem>
                     </SelectContent>
                   </Select>

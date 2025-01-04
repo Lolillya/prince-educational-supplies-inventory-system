@@ -24,8 +24,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
-import { Batch, BatchVariant, Brand, Item, SupplierUnit } from "@prisma/client";
-import { object } from "zod";
+import { Batch, Item, SupplierUnit } from "@prisma/client";
 
 type InventoryItem = {
   inventory_id: number;
@@ -93,6 +92,14 @@ const NewInvoice = () => {
       );
     }, 0);
     setGrandTotal(total);
+  };
+
+  const handleSaveInvoice = () => {
+    selectedItems.map((item) =>
+      Object.entries(item.variant.BatchVariant).map((batch) =>
+        console.log(batch),
+      ),
+    );
   };
 
   const handleSelectItem = (item: InventoryItem) => {
@@ -238,7 +245,7 @@ const NewInvoice = () => {
         </div>
       </div>
 
-      <div className="relative mt-4 grid h-full w-full auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
+      <div className="relative mt-4 grid h-fit w-full auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
         {selectedItems.map((item, selectedIndex) =>
           Object.entries(item.variant.BatchVariant).map(
             ([_, variant], index) => (
@@ -325,7 +332,7 @@ const NewInvoice = () => {
                             {variant.SupplierUnit[0].quantity_per_unit}
                           </TableCell>
                           <TableCell>Boxes</TableCell>
-                          <TableCell>
+                          <TableCell className="text-right">
                             P {variant.SupplierUnit[0].price}
                           </TableCell>
                           <TableCell>0%</TableCell>
@@ -342,7 +349,11 @@ const NewInvoice = () => {
               <div className="bottom-0 flex w-full justify-end">
                 <div className="flex items-center gap-3">
                   <span>TOTAL: P{grandTotal}</span>
-                  <Button className="bg-green px-7 font-bold" size={"lg"}>
+                  <Button
+                    className="bg-green px-7 font-bold"
+                    size={"lg"}
+                    onClick={handleSaveInvoice}
+                  >
                     Save
                   </Button>
                 </div>

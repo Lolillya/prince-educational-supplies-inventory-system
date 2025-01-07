@@ -24,9 +24,8 @@ interface InvoiceCardProps {
   itemName: string;
   brandName: string;
   variant: string | null;
-  quantity: number;
-  unitPrice: number;
-  // handleGrandTotal: (value: number) => void;
+  quantity: number | undefined;
+  unitPrice: number | undefined;
 }
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
@@ -37,10 +36,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   quantity,
   unitPrice,
 }) => {
-  const [unitQuantity, setUnitQuantity] = useState<string>(quantity.toString());
+  const [unitQuantity, setUnitQuantity] = useState<string | undefined>(
+    quantity?.toString(),
+  );
   const [unit, setUnit] = useState("");
-  const [price, setPrice] = useState(unitPrice.toString());
-  const [totalPrice, setTotalPrice] = useState(unitPrice * quantity);
+  const [price, setPrice] = useState(unitPrice?.toString());
+  const [totalPrice, setTotalPrice] = useState<number>(
+    (unitPrice || 0) * (quantity || 0),
+  );
   const [supplier, setSupplier] = useState("Supplier");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");

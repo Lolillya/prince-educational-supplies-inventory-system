@@ -1,6 +1,5 @@
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { db } from "~/server/db";
 
 const invoiceSchema = z.object({
   invoice_number: z.string(),
@@ -18,19 +17,35 @@ const invoiceSchema = z.object({
 export const invoiceRouter = createTRPCRouter({
   getItems: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.inventory.findMany({
-      include: {
+      select: {
+        inventory_id: true,
         variant: {
-          include: {
+          select: {
+            name: true,
             item: {
-              include: {
-                brand: true,
-                category: true,
+              select: {
+                name: true,
+                brand: {
+                  select: {
+                    name: true,
+                  },
+                },
               },
             },
             BatchVariant: {
-              include: {
-                SupplierUnit: true,
-                batch: true,
+              select: {
+                batch_variant_id: true,
+                batch: {
+                  select: {
+                    quantity: true,
+                  },
+                },
+                SupplierUnit: {
+                  select: {
+                    price: true,
+                    total_quantity: true,
+                  },
+                },
               },
             },
           },
@@ -68,7 +83,6 @@ export const invoiceRouter = createTRPCRouter({
         line_items,
       } = input;
 
-      // Calculate the total amount from line items if not provided
       const calculatedTotalAmount = line_items.reduce(
         (sum, item) => sum + item.unit_price * item.quantity,
         0,

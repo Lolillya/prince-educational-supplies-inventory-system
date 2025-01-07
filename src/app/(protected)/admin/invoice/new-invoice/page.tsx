@@ -24,16 +24,21 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
-import { Batch, Item, SupplierUnit } from "@prisma/client";
 
 type InventoryItem = {
   inventory_id: number;
   variant: {
     name: string | null;
-    BatchVariant: {
-      Batch: Batch;
-      SupplierUnit: SupplierUnit;
-    };
+    BatchVariant: Array<{
+      batch_variant_id: number;
+      batch: {
+        quantity: number;
+      };
+      SupplierUnit: Array<{
+        price: number;
+        total_quantity: number;
+      }>;
+    }>;
     item: {
       name: string;
       brand: {
@@ -43,31 +48,27 @@ type InventoryItem = {
   };
 };
 
-type InventoryItem2 = {
-  inventory_id: number;
-  last_updated: Date;
-  quantity: number;
-  variant: {
-    BatchVariant: {
-      SupplierUnit: SupplierUnit;
-      batch: Batch;
-    };
-    created_at: Date;
-    discount_id: number | null;
-    item: Item;
-    item_id: number;
-    name: string;
-    updated_at: Date;
-    variant_id: number;
-  };
+const testData = {
+  invoice_number: "INV_0001",
+  customer_id: "",
+  total_amount: "",
+  discount: "",
+  status: "",
+  payment_term_id: "",
+  line_items: {
+    variant_id: "",
+    quantity: "",
+    unit_price: "",
+    total_price: "",
+  },
 };
 
 const NewInvoice = () => {
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredItems, setFilteredItems] = useState<InventoryItem2[]>([]);
-  const [selectedItems, setSelectedItems] = useState<InventoryItem2[]>([]);
+  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
+  const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [grandTotal, setGrandTotal] = useState<number>(0);
 
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
@@ -83,14 +84,15 @@ const NewInvoice = () => {
         acc +
         Object.entries(item.variant.BatchVariant).reduce(
           (batchAcc, [_, variant]) => {
-            const quantity = variant.SupplierUnit[0].quantity_per_unit;
-            const unitPrice = variant.SupplierUnit[0].price;
+            const quantity = variant.SupplierUnit[0]?.total_quantity || 0;
+            const unitPrice = variant.SupplierUnit[0]?.price || 0;
             return batchAcc + quantity * unitPrice;
           },
           0,
         )
       );
     }, 0);
+    console.log(grandTotal);
     setGrandTotal(total);
   };
 
@@ -109,10 +111,9 @@ const NewInvoice = () => {
       )
     ) {
       setSelectedItems([...selectedItems, item]);
-      setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
+      setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" }));
     }
-    setSearchTerm(""); // Clear the search term to hide the dropdown
-    console.log(selectedItems);
+    setSearchTerm("");
   };
 
   useEffect(() => {
@@ -132,24 +133,6 @@ const NewInvoice = () => {
 
     calculateGrandTotal();
   }, [selectedItems, searchTerm, inventoryItems]);
-
-  // useEffect(() => {
-  //   if (searchTerm && inventoryItems) {
-  //     const results = inventoryItems.filter(
-  //       (item: InventoryItem2) =>
-  //         item.variant.item.name
-  //           .toLowerCase()
-  //           .includes(searchTerm.toLowerCase()) ||
-  //         item.variant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //         item.variant.item.brand.name
-  //           .toLowerCase()
-  //           .includes(searchTerm.toLowerCase()),
-  //     );
-  //     setFilteredItems(results);
-  //   } else {
-  //     setFilteredItems([]);
-  //   }
-  // }, [searchTerm, inventoryItems]);
 
   if (isLoading) {
     return (
@@ -255,14 +238,12 @@ const NewInvoice = () => {
                 itemName={item.variant.item.name}
                 brandName={item.variant.item.brand.name}
                 variant={item.variant.name}
-                quantity={variant.SupplierUnit[0].quantity_per_unit}
-                unitPrice={variant.SupplierUnit[0].price}
+                quantity={variant.SupplierUnit[0]?.total_quantity || 0}
+                unitPrice={variant.SupplierUnit[0]?.price || 0}
               />
             ),
           ),
         )}
-
-        {/* CONDITIONAL RENDERING */}
 
         {selectedItems.length === 0 && (
           <Label className="absolute w-full self-center text-center">
@@ -315,30 +296,21 @@ const NewInvoice = () => {
                     Object.entries(item.variant.BatchVariant).map(
                       ([_, variant], index) => (
                         <TableRow key={index}>
-                          <TableCell
-                            key={
-                              item.variant.item.name +
-                              item.variant.item.brand.name +
-                              item.variant.name +
-                              index.toString() +
-                              selectedIndex.toString() +
-                              item.variant.variant_id.toString()
-                            }
-                          >
+                          <TableCell>
                             {item.variant.item.name} -{" "}
                             {item.variant.item.brand.name} - {item.variant.name}
                           </TableCell>
                           <TableCell>
-                            {variant.SupplierUnit[0].quantity_per_unit}
+                            {/* {variant.SupplierUnit[0].quantity_per_unit} */}
                           </TableCell>
                           <TableCell>Boxes</TableCell>
                           <TableCell className="text-right">
-                            P {variant.SupplierUnit[0].price}
+                            {/* P {variant.SupplierUnit[0].price} */}
                           </TableCell>
                           <TableCell>0%</TableCell>
                           <TableCell>
-                            {variant.SupplierUnit[0].quantity_per_unit *
-                              variant.SupplierUnit[0].price}
+                            {/* {variant.SupplierUnit[0].quantity_per_unit *
+                              variant.SupplierUnit[0].price} */}
                           </TableCell>
                         </TableRow>
                       ),

@@ -36,7 +36,12 @@ type InventoryItem = {
       };
       SupplierUnit: Array<{
         price: number;
-        total_quantity: number;
+        quantity_per_unit: number;
+        unit_id: number;
+        unit: {
+          name: string;
+          unit_id: number;
+        };
       }>;
     }>;
     item: {
@@ -67,16 +72,23 @@ const NewInvoice = () => {
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
+  const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
+
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
+
   const [grandTotal, setGrandTotal] = useState<number>(0);
+  const [batchCount, setBatchCount] = useState<number>(0);
 
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
+
   const {
     data: inventoryItems,
     isLoading,
     isError,
   } = api.invoice.getItems.useQuery();
+
+  const { data: supplierList } = api.suppliers.list.useQuery();
 
   const calculateGrandTotal = () => {
     const total = selectedItems.reduce((acc, item) => {
@@ -84,7 +96,7 @@ const NewInvoice = () => {
         acc +
         Object.entries(item.variant.BatchVariant).reduce(
           (batchAcc, [_, variant]) => {
-            const quantity = variant.SupplierUnit[0]?.total_quantity || 0;
+            const quantity = variant.SupplierUnit[0]?.quantity_per_unit || 0;
             const unitPrice = variant.SupplierUnit[0]?.price || 0;
             return batchAcc + quantity * unitPrice;
           },
@@ -92,7 +104,7 @@ const NewInvoice = () => {
         )
       );
     }, 0);
-    console.log(grandTotal);
+
     setGrandTotal(total);
   };
 
@@ -131,8 +143,16 @@ const NewInvoice = () => {
       setFilteredItems(result);
     } else setFilteredItems([]);
 
+    if (supplierSearchTerm) {
+      const result = supplierList?.filter((supplier) =>
+        supplier.Personal_Details.company
+          ?.toLowerCase()
+          .includes(supplierSearchTerm),
+      );
+    }
+
     calculateGrandTotal();
-  }, [selectedItems, searchTerm, inventoryItems]);
+  }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 
   if (isLoading) {
     return (
@@ -229,19 +249,21 @@ const NewInvoice = () => {
       </div>
 
       <div className="relative mt-4 grid h-fit w-full auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
-        {selectedItems.map((item, selectedIndex) =>
+        {selectedItems.map((item) =>
           Object.entries(item.variant.BatchVariant).map(
-            ([_, variant], index) => (
-              <InvoiceCard
-                key={index}
-                batchNumber={index + 1}
-                itemName={item.variant.item.name}
-                brandName={item.variant.item.brand.name}
-                variant={item.variant.name}
-                quantity={variant.SupplierUnit[0]?.total_quantity || 0}
-                unitPrice={variant.SupplierUnit[0]?.price || 0}
-              />
-            ),
+            ([_, variant], index) => {
+              const supplierUnits = variant.SupplierUnit || [];
+              return (
+                <InvoiceCard
+                  key={index}
+                  batchNumber={index + 1}
+                  itemName={item.variant.item.name}
+                  brandName={item.variant.item.brand.name}
+                  variant={item.variant.name}
+                  supplierUnit={supplierUnits}
+                />
+              );
+            },
           ),
         )}
 
@@ -273,6 +295,8 @@ const NewInvoice = () => {
                   <Input
                     placeholder="Business Name"
                     className="w-[90%] rounded-r-none"
+                    value={supplierSearchTerm}
+                    onChange={(e) => setSupplierSearchTerm(e.target.value)}
                   />
                   <Input placeholder="30" className="w-[10%] rounded-l-none" />
                 </div>
@@ -301,16 +325,16 @@ const NewInvoice = () => {
                             {item.variant.item.brand.name} - {item.variant.name}
                           </TableCell>
                           <TableCell>
-                            {/* {variant.SupplierUnit[0].quantity_per_unit} */}
+                            {variant.SupplierUnit[0]?.quantity_per_unit}
                           </TableCell>
                           <TableCell>Boxes</TableCell>
                           <TableCell className="text-right">
-                            {/* P {variant.SupplierUnit[0].price} */}
+                            P {variant.SupplierUnit[0]?.price}
                           </TableCell>
                           <TableCell>0%</TableCell>
                           <TableCell>
-                            {/* {variant.SupplierUnit[0].quantity_per_unit *
-                              variant.SupplierUnit[0].price} */}
+                            {(variant.SupplierUnit[0]?.quantity_per_unit || 0) *
+                              (variant.SupplierUnit[0]?.price || 0)}
                           </TableCell>
                         </TableRow>
                       ),

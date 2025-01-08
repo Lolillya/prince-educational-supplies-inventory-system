@@ -16,7 +16,6 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Label } from "~/components/ui/label";
-import Link from "next/link";
 import { Input } from "~/components/ui/input";
 
 interface InvoiceCardProps {
@@ -24,8 +23,15 @@ interface InvoiceCardProps {
   itemName: string;
   brandName: string;
   variant: string | null;
-  quantity: number | undefined;
-  unitPrice: number | undefined;
+  supplierUnit: Array<{
+    price: number;
+    quantity_per_unit: number;
+    unit_id: number;
+    unit: {
+      name: string;
+      unit_id: number;
+    };
+  }>;
 }
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
@@ -33,20 +39,30 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   itemName,
   brandName,
   variant,
-  quantity,
-  unitPrice,
+  supplierUnit,
 }) => {
-  const [unitQuantity, setUnitQuantity] = useState<string | undefined>(
-    quantity?.toString(),
+  const [unitQuantity, setUnitQuantity] = useState<number | undefined>(
+    supplierUnit[0]?.quantity_per_unit,
   );
-  const [unit, setUnit] = useState("");
-  const [price, setPrice] = useState(unitPrice?.toString());
-  const [totalPrice, setTotalPrice] = useState<number>(
-    (unitPrice || 0) * (quantity || 0),
+  const [price, setPrice] = useState<number | undefined>(
+    supplierUnit[0]?.price,
   );
+
+  const [selectedUnit, setSelectedUnit] = useState(supplierUnit[0]);
+
+  const [totalPrice, setTotalPrice] = useState<number | undefined>(
+    (unitQuantity || 0) * (price || 0),
+  );
+
   const [supplier, setSupplier] = useState("Supplier");
+
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
+
+  useEffect(() => {
+    setPrice(selectedUnit?.price);
+    setUnitQuantity(selectedUnit?.quantity_per_unit);
+  }, [selectedUnit]);
 
   return (
     <div className="border-gray-200 h-fit rounded-xl border p-4 shadow-sm">
@@ -69,21 +85,33 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <div className="flex">
                   <Input
                     className="rounded-r-none border shadow-none"
-                    placeholder="000"
                     value={unitQuantity}
                     onChange={(e) => setUnitQuantity(e.target.value)}
                   />
                   <Select
-                    value={unit}
-                    onValueChange={(value) => setUnit(value)}
+                    value={selectedUnit?.unit.name}
+                    onValueChange={(value) => {
+                      const unit = supplierUnit.find(
+                        (u) => u.unit.name === value,
+                      );
+                      if (unit) setSelectedUnit(unit);
+                    }}
+                    defaultValue={supplierUnit[0]?.unit?.name || ""}
                   >
                     <SelectTrigger className="rounded-l-none">
-                      <SelectValue placeholder="Box" />
+                      <SelectValue
+                        defaultValue={supplierUnit[0]?.unit?.name || ""}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Box">Box</SelectItem>
-                      <SelectItem value="Case">Case</SelectItem>
-                      <SelectItem value="Piece">Piece</SelectItem>
+                      {supplierUnit.map((unit) => (
+                        <SelectItem
+                          value={unit.unit.name}
+                          key={unit.unit.unit_id}
+                        >
+                          {unit.unit.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -94,7 +122,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <div className="flex">
                   <Input
                     className="rounded-r-none border shadow-none"
-                    placeholder="0000.00"
                     value={price}
                     onChange={(e) => setPrice(e.target.value)}
                     disabled={supplier === "Supplier"}
@@ -141,7 +168,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <p className="text-gray-400 mt-4 text-sm">
+      {/* <p className="text-gray-400 mt-4 text-sm">
         Insufficient stock from Batch 1!
         <br />
         <span className="text-orange-400">
@@ -151,7 +178,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <span className="text-orange-400">
           <Link href={"#"}>auto restock</Link>
         </span>
-      </p>
+      </p> */}
       <p className="mt-4">Total: P{totalPrice}</p>
     </div>
   );

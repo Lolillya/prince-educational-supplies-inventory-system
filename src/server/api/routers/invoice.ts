@@ -61,6 +61,22 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
+  getSuppliers: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.user_Role.findMany({
+      where: {
+        role_Id: 4,
+      },
+      select: {
+        Personal_Details: {
+          select: {
+            company: true,
+            personal_details_id: true,
+          },
+        },
+      },
+    });
+  }),
+
   createInvoice: publicProcedure
     .input(
       z.object({

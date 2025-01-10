@@ -59,10 +59,45 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
 
+  const handleCalculateTotal = (value: number) => {
+    setUnitQuantity(value);
+    setTotalPrice((unitQuantity || 0) * (price || 0));
+  };
+
+  useEffect(() => {
+    // Calculate the discounted total price
+    const basePrice = (unitQuantity || 0) * (price || 0);
+    let finalPrice = basePrice;
+
+    if (discountType === "%") {
+      finalPrice = basePrice - (basePrice * parseFloat(discount || "0")) / 100;
+    } else if (discountType === "Fixed") {
+      finalPrice = basePrice - parseFloat(discount || "0");
+    }
+
+    setTotalPrice(finalPrice > 0 ? finalPrice : 0); // Prevent negative totals
+  }, [unitQuantity, price, discount, discountType]);
+
   useEffect(() => {
     setPrice(selectedUnit?.price);
     setUnitQuantity(selectedUnit?.quantity_per_unit);
+
+    setTotalPrice((unitQuantity || 0) * (price || 0));
   }, [selectedUnit]);
+
+  useEffect(() => {
+    setTotalPrice((unitQuantity || 0) * (price || 0));
+  }, [price, unitQuantity]);
+
+  const handleQuantityChange = (value: string) => {
+    const parsedValue = parseInt(value, 10);
+    setUnitQuantity(!isNaN(parsedValue) ? parsedValue : 0);
+  };
+
+  const handlePriceChange = (value: string) => {
+    const parsedValue = parseFloat(value);
+    setPrice(!isNaN(parsedValue) ? parsedValue : 0);
+  };
 
   return (
     <div className="border-gray-200 h-fit rounded-xl border p-4 shadow-sm">
@@ -86,7 +121,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <Input
                     className="rounded-r-none border shadow-none"
                     value={unitQuantity}
-                    onChange={(e) => setUnitQuantity(e.target.value)}
+                    onChange={(e) => setUnitQuantity(parseInt(e.target.value))}
                   />
                   <Select
                     value={selectedUnit?.unit.name}
@@ -123,7 +158,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <Input
                     className="rounded-r-none border shadow-none"
                     value={price}
-                    onChange={(e) => setPrice(e.target.value)}
+                    onChange={(e) => setPrice(parseInt(e.target.value))}
                     disabled={supplier === "Supplier"}
                   />
                   <Select

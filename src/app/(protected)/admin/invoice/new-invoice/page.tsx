@@ -53,6 +53,13 @@ type InventoryItem = {
   };
 };
 
+type SupplierProps = {
+  Personal_Details: {
+    company: string;
+    personal_details_id: number;
+  };
+};
+
 const testData = {
   invoice_number: "INV_0001",
   customer_id: "",
@@ -73,6 +80,8 @@ const NewInvoice = () => {
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierProps[]>([]);
+  const [filteredSupplier, setFilteredSupplier] = useState<SupplierProps[]>([]);
 
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
@@ -88,7 +97,7 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
-  const { data: supplierList } = api.suppliers.list.useQuery();
+  const { data: supplierList } = api.invoice.getSuppliers.useQuery();
 
   const calculateGrandTotal = () => {
     const total = selectedItems.reduce((acc, item) => {
@@ -110,10 +119,38 @@ const NewInvoice = () => {
 
   const handleSaveInvoice = () => {
     selectedItems.map((item) =>
-      Object.entries(item.variant.BatchVariant).map((batch) =>
-        console.log(batch),
+      Object.entries(item.variant.BatchVariant).map(
+        (batch) => console.log(batch),
+
+        /* 
+
+
+TODO:
+
+LOOP EACH ARRAY
+DECONSTRUCT ARRAY
+ASSIGN INPUT VALUES TO BACKEND SCHEMA
+PUSH FINAL DATA TO DB
+
+
+
+
+
+
+
+
+
+
+
+
+
+*/
       ),
     );
+  };
+
+  const handleSelectedSupplier = (supplier: SupplierProps) => {
+    setSupplierSearchTerm(supplier.Personal_Details.company);
   };
 
   const handleSelectItem = (item: InventoryItem) => {
@@ -149,7 +186,8 @@ const NewInvoice = () => {
           ?.toLowerCase()
           .includes(supplierSearchTerm),
       );
-    }
+      setFilteredSupplier(result);
+    } else setFilteredSupplier([]);
 
     calculateGrandTotal();
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
@@ -255,7 +293,7 @@ const NewInvoice = () => {
               const supplierUnits = variant.SupplierUnit || [];
               return (
                 <InvoiceCard
-                  key={index}
+                  key={variant.batch_variant_id}
                   batchNumber={index + 1}
                   itemName={item.variant.item.name}
                   brandName={item.variant.item.brand.name}
@@ -291,13 +329,28 @@ const NewInvoice = () => {
             <div className="flex w-full flex-col gap-3">
               <div className="text-gray-400 flex flex-col gap-1">
                 <Label>Customer & Term</Label>
-                <div className="flex w-full items-center">
+                <div className="relative flex w-full items-center">
                   <Input
                     placeholder="Business Name"
                     className="w-[90%] rounded-r-none"
                     value={supplierSearchTerm}
                     onChange={(e) => setSupplierSearchTerm(e.target.value)}
                   />
+                  {supplierSearchTerm && filteredSupplier.length > 0 && (
+                    <div className="absolute top-full z-10 mt-2 w-full rounded-lg bg-white p-3 shadow-md">
+                      <ul className="max-h-64 overflow-auto">
+                        {filteredSupplier.map((supplier) => (
+                          <li
+                            key={supplier.Personal_Details.personal_details_id}
+                            className="p-2 hover:cursor-pointer hover:bg-gray"
+                            onClick={() => handleSelectedSupplier(supplier)}
+                          >
+                            {supplier.Personal_Details.company}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                   <Input placeholder="30" className="w-[10%] rounded-l-none" />
                 </div>
               </div>
@@ -316,10 +369,10 @@ const NewInvoice = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedItems.map((item, selectedIndex) =>
+                  {selectedItems.map((item) =>
                     Object.entries(item.variant.BatchVariant).map(
-                      ([_, variant], index) => (
-                        <TableRow key={index}>
+                      ([_, variant]) => (
+                        <TableRow key={variant.batch_variant_id}>
                           <TableCell>
                             {item.variant.item.name} -{" "}
                             {item.variant.item.brand.name} - {item.variant.name}

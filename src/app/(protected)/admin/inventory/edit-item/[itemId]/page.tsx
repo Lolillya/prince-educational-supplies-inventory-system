@@ -9,7 +9,7 @@ import {
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
 import { Label } from "~/components/ui/label";
-import { ArrowLeft, Plus, X } from "lucide-react";
+import {ArrowLeft, ArrowRight, Plus, X} from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Textarea } from "~/components/ui/textarea";
 import { Input } from "~/components/ui/input";
@@ -78,42 +78,48 @@ const EditItem = () => {
   const [selectedVariants, setSelectedVariants] = useState([]);
 
   const {data: data} = api.inventory.listAllData.useQuery();
+
+
   const { data: itemData } = api.inventory.getInventoryItem.useQuery(
       { id: Number(itemId) },
       {
         onSuccess: (data) => {
           console.log("Fetched Item Data:", data);
 
-          if (data?.variant) {
-            const variantData = data.variant;
+          if (data && Array.isArray(data) && data.length > 0) {
+            // Iterate over the variants array
+            data.forEach((variantData) => {
+              console.log("Variant ID:", variantData?.variant_id || "No variant ID");
+              console.log("Variant Name:", variantData?.name || "No variant name");
+              console.log("Low Stock:", variantData?.StockLevel?.low_stock || "No low stock");
+              console.log("Very Low Stock:", variantData?.StockLevel?.very_low_stock || "No very low stock");
 
-            console.log("Variant ID:", variantData?.variant_id || "No variant ID");
-            console.log("Variant Name:", variantData?.name || "No variant name");
-            console.log("Low Stock:", variantData?.StockLevel?.low_stock || "No low stock");
-            console.log("Very Low Stock:", variantData?.StockLevel?.very_low_stock || "No very low stock");
+              const item = variantData?.item;
+              console.log("Item ID:", item?.item_id || "No item ID");
+              console.log("Item Name:", item?.name || "No item name");
+              console.log("Brand ID:", item?.brand?.brand_id || "No brand ID");
+              console.log("Brand Name:", item?.brand?.name || "No brand name");
+              console.log("Category ID:", item?.category?.category_id || "No category ID");
+              console.log("Category Name:", item?.category?.name || "No category name");
+              console.log("Item Description:", item?.description || "No description");
 
-            const itemData = variantData?.item;
-            console.log("Item ID:", itemData?.item_id || "No item ID");
-            console.log("Item Name:", itemData?.name || "No item name");
-            console.log("Brand ID:", itemData?.brand?.brand_id || "No brand ID");
-            console.log("Brand Name:", itemData?.brand?.name || "No brand name");
-            console.log("Category ID:", itemData?.category?.category_id || "No category ID");
-            console.log("Category Name:", itemData?.category?.name || "No category name");
-            console.log("Item Description:", itemData?.description || "No description");
+              // Set state for item and variants
+              setItem(item?.name || "Unknown Item");
+              setBrand(item?.brand?.name || "Unknown Brand");
+              setCategory(item?.category?.name || "Unknown Category");
+              setItemDescription(item?.description || "No Description");
 
-            setItem(itemData?.name || "Unknown Item");
-            setBrand(itemData?.brand?.name || "Unknown Brand");
-            setCategory(itemData?.category?.name || "Unknown Category");
-            setItemDescription(itemData?.description || "No Description");
-
-            setCards([
-              {
-                id: variantData.variant_id,
-                variant: variantData?.name || "Unknown Variant",
-                lowStock: variantData?.StockLevel?.low_stock || 0,
-                veryLowStock: variantData?.StockLevel?.very_low_stock || 0,
-              },
-            ]);
+              // Update the cards with variant details
+              setCards((prevCards) => [
+                ...prevCards,
+                {
+                  id: variantData.variant_id,
+                  variant: variantData?.name || "Unknown Variant",
+                  lowStock: variantData?.StockLevel?.low_stock || 0,
+                  veryLowStock: variantData?.StockLevel?.very_low_stock || 0,
+                },
+              ]);
+            });
           } else {
             console.log("No variants found for this item.");
           }
@@ -125,48 +131,52 @@ const EditItem = () => {
   );
 
   useEffect(() => {
-    if (itemData) {
-      const variant = itemData.variant;
-      if (variant) {
-        setItem(variant.item?.name || "");
-        setBrand(variant.item?.brand?.name || "");
-        setCategory(variant.item?.category?.name || "");
-        setItemDescription(variant.item?.description || "");
-      }
+    if (itemData && Array.isArray(itemData) && itemData.length > 0) {
+      // Assuming you want to set the first variant's item details
+      const firstVariant = itemData[0].item;
+
+      setItem(firstVariant?.name || "Unknown Item");
+      setBrand(firstVariant?.brand?.name || "Unknown Brand");
+      setCategory(firstVariant?.category?.name || "Unknown Category");
+      setItemDescription(firstVariant?.description || "No Description");
+
+      // Update the cards with variant details
+      setCards(
+          itemData.map((variantData) => ({
+            id: variantData.variant_id,
+            variant: variantData?.name || "Unknown Variant",
+            lowStock: variantData?.StockLevel?.low_stock || 0,
+            veryLowStock: variantData?.StockLevel?.very_low_stock || 0,
+          }))
+      );
+    } else {
+      console.log("No variants found for this item.");
     }
   }, [itemData]);
 
 
   useEffect(() => {
-    if (itemData && itemData.variant) {
-      console.log("Item Data:", itemData);
-      const variantData = itemData.variant;
-      console.log("Variant ID:", variantData?.variant_id || "No variant ID");
-      console.log("Variant Name:", variantData?.name || "No variant name");
-      console.log("Low Stock:", variantData?.StockLevel?.low_stock || "No low stock");
-      console.log("Very Low Stock:", variantData?.StockLevel?.very_low_stock || "No very low stock");
+    if (itemData && Array.isArray(itemData)) {
+      itemData.forEach((variantData) => {
+        console.log("Variant ID:", variantData?.variant_id || "No variant ID");
+        console.log("Variant Name:", variantData?.name || "No variant name");
+        console.log("Low Stock:", variantData?.StockLevel?.low_stock || "No low stock");
+        console.log("Very Low Stock:", variantData?.StockLevel?.very_low_stock || "No very low stock");
 
-      const item = variantData?.item;
-      console.log("Item ID:", item?.item_id || "No item ID");
-      console.log("Item Name:", item?.name || "No item name");
-      console.log("Brand ID:", item?.brand?.brand_id || "No brand ID");
-      console.log("Brand Name:", item?.brand?.name || "No brand name");
-      console.log("Category ID:", item?.category?.category_id || "No category ID");
-      console.log("Category Name:", item?.category?.name || "No category name");
-      console.log("Item Description:", item?.description || "No description");
+        const item = variantData?.item;
+        console.log("Item ID:", item?.item_id || "No item ID");
+        console.log("Item Name:", item?.name || "No item name");
+        console.log("Brand ID:", item?.brand?.brand_id || "No brand ID");
+        console.log("Brand Name:", item?.brand?.name || "No brand name");
+        console.log("Category ID:", item?.category?.category_id || "No category ID");
+        console.log("Category Name:", item?.category?.name || "No category name");
+        console.log("Item Description:", item?.description || "No description");
 
-      setItem(item?.name || "Unknown Item");
-      setBrand(item?.brand?.name || "Unknown Brand");
-      setCategory(item?.category?.name || "Unknown Category");
-      setItemDescription(item?.description || "No Description");
-      setCards([
-        {
-          id: variantData.variant_id,
-          variant: variantData?.name || "Unknown Variant",
-          lowStock: variantData?.StockLevel?.low_stock || 0,
-          veryLowStock: variantData?.StockLevel?.very_low_stock || 0,
-        },
-      ]);
+        setItem(item?.name || "Unknown Item");
+        setBrand(item?.brand?.name || "Unknown Brand");
+        setCategory(item?.category?.name || "Unknown Category");
+        setItemDescription(item?.description || "No Description");
+      });
     } else {
       console.log("No variants found for this item.");
     }
@@ -176,13 +186,19 @@ const EditItem = () => {
 
 
 
+
+
+
   const { mutateAsync: createItem, Loading, Error } = api.inventory.createItem.useMutation();
+// Use mutations outside the handleSave function to avoid invalid hook calls.
   const { mutateAsync: createBrandMutation } = api.inventory.createBrand.useMutation();
   const { mutateAsync: createCategoryMutation } = api.inventory.createCategory.useMutation();
   const { mutateAsync: createItemMutation } = api.inventory.createItem.useMutation();
   const { mutateAsync: createVariantMutation } = api.inventory.createVariant.useMutation();
   const { mutateAsync: createStockLevelMutation } = api.inventory.createStockLevel.useMutation();
   const { mutateAsync: createInventoryMutation } = api.inventory.createInventory.useMutation();
+
+
   const { mutateAsync: updateItemMutation } = api.inventory.updateItem.useMutation();
   // const { mutateAsync: editItemMutation, isLoading: isEditing } = api.inventory.editItem.useMutation();
   // const [cards, setCards] = useState([{ id: Date.now() }]);
@@ -375,36 +391,66 @@ const EditItem = () => {
     setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
   };
 
-  const handleDeleteCard = (id) => {
-    setCards(cards.filter(card => card.id !== id));
+  const { mutateAsync: deleteItemMutation } = api.inventory.deleteItem.useMutation();
+
+  // const handleDeleteCard = (id) => {
+  //   setCards(cards.filter(card => card.id !== id));
+  // };
+
+  const { mutateAsync: deleteVariantMutation } = api.inventory.deleteVariant.useMutation();
+
+  const handleDeleteCard = async (variantId) => {
+    try {
+      // Call the delete mutation
+      const response = await deleteVariantMutation({ variantId });
+
+      console.log("Variant and all related records deleted successfully:", response);
+
+      // Show success message
+      setDialogMessage("Variant and all related records deleted successfully.");
+      setIsDialogCancelOpen(false);
+
+      // Update the UI by removing the deleted variant from the state
+      setCards(cards.filter(card => card.id !== variantId));
+    } catch (error) {
+      console.error("Error deleting variant:", error);
+
+      // Show error message
+      setDialogMessage("Failed to delete variant. Please try again.");
+    }
   };
 
-  const clear = () => {
+
+  const handleDelete = () => {
     setIsDialogCancelOpen(true);
   };
 
-  const handleConfirmClear = () => {
-    setItem("");
-    setBrand("");
-    setCategory("");
-    setVariant("");
-    setItemDescription("");
-    setItemSearch("");
-    setBrandSearch("");
-    setCategorySearch("");
-    setDropdownVisible({
-      item: false,
-      brand: false,
-      category: false,
-      variant: false,
-    });
-    setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+  const handleConfirmDelete = async () => {
+    try {
+      // Call the delete mutation with the correct inventoryId
+      const response = await deleteItemMutation({ inventoryId: itemIdAsNumber });
+
+      console.log("Item and all related records deleted successfully:", response);
+
+      // Show success message
+      setDialogMessage("Item and all related records deleted successfully.");
+      setIsDialogCancelOpen(false);
+
+      // Redirect or update UI as needed
+      router.push("/inventory"); // Redirect to inventory list or another page
+    } catch (error) {
+      console.error("Error deleting item:", error);
+
+      // Show error message
+      setDialogMessage("Failed to delete item. Please try again.");
+    }
+  };
+
+
+  const handleCancelDelete = () => {
     setIsDialogCancelOpen(false);
   };
 
-  const handleCancelClear = () => {
-    setIsDialogCancelOpen(false);
-  };
 
   const handleSave = async () => {
     const updatedItem = itemSearch || item;
@@ -434,12 +480,38 @@ const EditItem = () => {
     }
   };
 
-  // let content = null;
-  // if (isLoading) {
-  //   content = <p>Loading...</p>;
-  // } else if (isError) {
-  //   content = <p>Error loading units</p>;
-  // }
+
+  // it return different variant_id value error creating new variant on edit-item
+  // const handleSave = async () => {
+  //   const updatedItem = itemSearch || item;
+  //   const updatedBrand = brandSearch || brand;
+  //   const updatedCategory = categorySearch || category;
+  //
+  //   // Construct the payload for mutation
+  //   const payload = {
+  //     inventoryId: itemIdAsNumber,
+  //     name: updatedItem,
+  //     brand: updatedBrand,
+  //     category: updatedCategory,
+  //     description: itemDescription,
+  //     variants: cards.map((card) => ({
+  //       id: card.id || undefined, // Ensure id is omitted or undefined for new variants
+  //       name: card.variant,
+  //       lowStock: card.lowStock,
+  //       veryLowStock: card.veryLowStock,
+  //     })),
+  //   };
+  //
+  //   console.log("Payload being sent to mutation:", payload); // Log the payload before sending
+  //
+  //   try {
+  //     const response = await editItemMutation(payload);
+  //     console.log("Item updated successfully:", response);
+  //   } catch (error) {
+  //     console.error("Error updating item:", error);
+  //   }
+  // };
+
   if (isLoading) {
     return (
         <section className="flex h-screen w-full items-center justify-center">
@@ -702,21 +774,32 @@ const EditItem = () => {
                       />
                     </div>
                     <div className="flex items-center">
+
                       <div className="relative ml-auto flex w-full items-center">
-                        {index === cards.length - 1 ? (
-                            <Plus
-                                size={15}
-                                className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
-                                onClick={handleAddCard}
-                            />
-                        ) : (
-                            <X
-                                size={15}
-                                className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
-                                onClick={() => handleDeleteCard(card.id)}
-                            />
-                        )}
+                        <X
+                            size={15}
+                            className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
+                            onClick={() => handleDeleteCard(card.id)}
+                        />
                       </div>
+
+                      {/*temporary disable adding new variant card*/}
+                      {/*<div className="relative ml-auto flex w-full items-center">*/}
+                      {/*  {index === cards.length - 1 ? (*/}
+                      {/*      <Plus*/}
+                      {/*          size={15}*/}
+                      {/*          className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"*/}
+                      {/*          onClick={handleAddCard}*/}
+                      {/*      />*/}
+                      {/*  ) :*/}
+                      {/*      (*/}
+                      {/*      <X*/}
+                      {/*          size={15}*/}
+                      {/*          className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"*/}
+                      {/*          onClick={() => handleDeleteCard(card.id)}*/}
+                      {/*      />*/}
+                      {/*  )}*/}
+                      {/*</div>*/}
                     </div>
                   </CardContent>
                 </Card>
@@ -725,30 +808,30 @@ const EditItem = () => {
                 className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
               <Button
                   className="border-2 border-gray-300 bg-gray p-7 text-lg font-bold text-gray-700 hover:bg-red"
-                  onClick={clear}
+                  onClick={handleDelete}
               >
-                Clear
+                Delete
               </Button>
 
               {/* Confirmation dialog triggered by the "Clear" button */}
               <Dialog open={isDialogCancelOpen} onOpenChange={(open) => setIsDialogCancelOpen(open)}>
                 <DialogContent className="w-full max-w-lg p-10 flex flex-col gap-6 bg-white rounded-lg shadow-lg">
-                  <DialogTitle className="text-center text-xl font-semibold">Clear All Fields</DialogTitle>
+                  <DialogTitle className="text-center text-xl font-semibold">Delete All Records</DialogTitle>
                   <DialogHeader className="text-center text-lg">
-                    Are you sure you want to clear all the fields? This action cannot be undone.
+                    Are you sure you want to delete all the records? This action cannot be undone.
                   </DialogHeader>
 
                   <div className="flex justify-center gap-4">
                     <Button
                         className="border-2 border-gray-300 bg-gray-300 p-4 text-lg font-bold text-black hover:bg-textGray"
-                        onClick={handleCancelClear}
+                        onClick={handleCancelDelete}
                     >
                       Cancel
                     </Button>
 
                     <Button
                         className="border-2 border-red-500 bg-red-500 p-4 text-lg font-bold text-black hover:bg-red"
-                        onClick={handleConfirmClear}
+                        onClick={handleConfirmDelete}
                     >
                       Confirm
                     </Button>
@@ -767,6 +850,34 @@ const EditItem = () => {
           </div>
         </div>
       </section>
+  );
+};
+
+const AddVariant = ({ onAdd }: { onAdd: () => void }) => {
+  return (
+      <div className="mt-2 flex items-center">
+        <div className="grid grid-cols-5 gap-3 pr-4 hover:cursor-default">
+          <div className="flex flex-col items-start gap-1">
+            <Input placeholder="Stock" disabled />
+          </div>
+          <div className="flex flex-col items-start gap-1">
+            <Input placeholder="Price" disabled />
+          </div>
+          <div className="flex flex-col items-start gap-1">
+            <div className="flex items-center gap-2">
+              <Input placeholder="Unit" disabled />
+              <ArrowRight className="text-gray-400 h-5 w-5" />
+            </div>
+          </div>
+          <div className="col-span-2 flex flex-col items-start gap-1">
+            <div className="flex items-center">
+              <Input placeholder="to" className="rounded-r-none" disabled />
+              <Input placeholder="Units" className="rounded-l-none" disabled />
+            </div>
+          </div>
+        </div>
+        <Plus className="h-5 w-5 hover:cursor-pointer" onClick={onAdd} />
+      </div>
   );
 };
 

@@ -60,34 +60,18 @@ type SupplierProps = {
   };
 };
 
-const testData = {
-  invoice_number: "INV_0001",
-  customer_id: "",
-  total_amount: "",
-  discount: "",
-  status: "",
-  payment_term_id: "",
-  line_items: {
-    variant_id: "",
-    quantity: "",
-    unit_price: "",
-    total_price: "",
-  },
-};
-
 const NewInvoice = () => {
   const router = useRouter();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
-  const [selectedSupplier, setSelectedSupplier] = useState<SupplierProps[]>([]);
+  const [selectedSupplier, setSelectedSupplier] = useState<SupplierProps>();
   const [filteredSupplier, setFilteredSupplier] = useState<SupplierProps[]>([]);
 
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
 
   const [grandTotal, setGrandTotal] = useState<number>(0);
-  const [batchCount, setBatchCount] = useState<number>(0);
 
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
 
@@ -98,6 +82,9 @@ const NewInvoice = () => {
   } = api.invoice.getItems.useQuery();
 
   const { data: supplierList } = api.invoice.getSuppliers.useQuery();
+
+  const { mutateAsync: createInvoice } =
+    api.invoice.createInvoice.useMutation();
 
   const calculateGrandTotal = () => {
     const total = selectedItems.reduce((acc, item) => {
@@ -118,39 +105,35 @@ const NewInvoice = () => {
   };
 
   const handleSaveInvoice = () => {
+    if (!selectedItems) {
+      alert("Select an item to save invoice!");
+      return;
+    }
+
     selectedItems.map((item) =>
-      Object.entries(item.variant.BatchVariant).map(
-        (batch) => console.log(batch),
-
-        /* 
-
-
-TODO:
-
-LOOP EACH ARRAY
-DECONSTRUCT ARRAY
-ASSIGN INPUT VALUES TO BACKEND SCHEMA
-PUSH FINAL DATA TO DB
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/
-      ),
+      Object.entries(item.variant.BatchVariant).map(([_, variant]) => {
+        const data = {
+          invoice_number: "INV_00001",
+          customer_id: selectedSupplier?.Personal_Details.personal_details_id,
+          total_amount: grandTotal,
+          discount: 0,
+          status: "PENDING",
+          payment_term_id: 1,
+          line_items: {
+            variant_id: variant.batch_variant_id,
+            quantity: variant.SupplierUnit[0]?.quantity_per_unit,
+            unit_price: variant.SupplierUnit[0]?.price,
+          },
+        };
+        console.log(data);
+        createInvoice(data);
+      }),
     );
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {
     setSupplierSearchTerm(supplier.Personal_Details.company);
+    setSelectedSupplier(supplier);
   };
 
   const handleSelectItem = (item: InventoryItem) => {

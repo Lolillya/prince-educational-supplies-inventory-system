@@ -115,7 +115,7 @@ const NewInvoice = () => {
 
     const invoiceData = {
       invoice: {
-        invoice_number: "INV_00003",
+        invoice_number: "INV_00004",
         customer_id: selectedSupplier?.Personal_Details.personal_details_id,
         total_amount: grandTotal,
         discount: 0,

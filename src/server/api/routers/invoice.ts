@@ -93,27 +93,6 @@ export const invoiceRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { invoice, lineItems } = input;
 
-      // Validate `variant_id`
-      const variantIds = lineItems.map((item) => item.variant_id);
-      const existingVariants = await ctx.db.variant.findMany({
-        where: { variant_id: { in: variantIds } },
-        select: { variant_id: true },
-      });
-
-      const existingVariantIds = existingVariants.map((v) => v.variant_id);
-
-      const invalidLineItems = lineItems.filter(
-        (item) => !existingVariantIds.includes(item.variant_id),
-      );
-
-      if (invalidLineItems.length > 0) {
-        throw new Error(
-          `Invalid variant_id(s): ${invalidLineItems
-            .map((item) => item.variant_id)
-            .join(", ")}`,
-        );
-      }
-
       const result = await ctx.db.$transaction(async (prisma) => {
         const createdInvoice = await prisma.invoice.create({
           data: {

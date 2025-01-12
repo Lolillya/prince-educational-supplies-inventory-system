@@ -29,6 +29,7 @@ type InventoryItem = {
   inventory_id: number;
   variant: {
     name: string | null;
+    variant_id: number;
     BatchVariant: Array<{
       batch_variant_id: number;
       batch: {
@@ -81,10 +82,12 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
+  // console.log(selectedItems);
+
   const { data: supplierList } = api.invoice.getSuppliers.useQuery();
 
   const { mutateAsync: createInvoice } =
-    api.invoice.createInvoice.useMutation();
+    api.invoice.createInvoiceWithLineItems.useMutation();
 
   const calculateGrandTotal = () => {
     const total = selectedItems.reduce((acc, item) => {
@@ -110,25 +113,30 @@ const NewInvoice = () => {
       return;
     }
 
-    selectedItems.map((item) =>
-      Object.entries(item.variant.BatchVariant).map(([_, variant]) => {
-        const data = {
-          invoice_number: "INV_00001",
-          customer_id: selectedSupplier?.Personal_Details.personal_details_id,
-          total_amount: grandTotal,
-          discount: 0,
-          status: "PENDING",
-          payment_term_id: 1,
-          line_items: {
-            variant_id: variant.batch_variant_id,
-            quantity: variant.SupplierUnit[0]?.quantity_per_unit,
-            unit_price: variant.SupplierUnit[0]?.price,
-          },
-        };
-        console.log(data);
-        createInvoice(data);
-      }),
-    );
+    const invoiceData = {
+      invoice: {
+        invoice_number: "INV_00003",
+        customer_id: selectedSupplier?.Personal_Details.personal_details_id,
+        total_amount: grandTotal,
+        discount: 0,
+        status: "PENDING",
+        payment_term_id: 1,
+      },
+      lineItems: selectedItems.flatMap((item) =>
+        Object.entries(item.variant.BatchVariant).map(([_, variant]) => ({
+          variant_id: item.variant.variant_id,
+          quantity: variant.SupplierUnit[0]?.quantity_per_unit || 0,
+          unit_price: variant.SupplierUnit[0]?.price || 0,
+          total_price:
+            (variant.SupplierUnit[0]?.quantity_per_unit || 0) *
+            (variant.SupplierUnit[0]?.price || 0),
+        })),
+      ),
+    };
+
+    // console.log(invoiceData.lineItems);
+    // invoiceData.lineItems.map((item) => console.log(item));
+    createInvoice(invoiceData);
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {

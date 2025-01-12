@@ -82,7 +82,7 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
-  // console.log(selectedItems);
+  console.log(stockTotals);
 
   const { data: supplierList } = api.invoice.getSuppliers.useQuery();
 
@@ -137,6 +137,25 @@ const NewInvoice = () => {
     // console.log(invoiceData.lineItems);
     // invoiceData.lineItems.map((item) => console.log(item));
     createInvoice(invoiceData);
+  };
+
+  const handleRemoveBatch = (batchNumber: number) => {
+    // console.log(`${batchNumber} removed`);
+    const updatedItems = selectedItems
+      .map((item) => ({
+        ...item,
+        variant: {
+          ...item.variant,
+          BatchVariant: Object.fromEntries(
+            Object.entries(item.variant.BatchVariant).filter(
+              ([_, variant], index) => index + 1 !== batchNumber, // Filter out the matching batchNumber
+            ),
+          ),
+        },
+      }))
+      .filter((item) => Object.keys(item.variant.BatchVariant).length > 0);
+
+    setSelectedItems(updatedItems);
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {
@@ -290,6 +309,7 @@ const NewInvoice = () => {
                   brandName={item.variant.item.brand.name}
                   variant={item.variant.name}
                   supplierUnit={supplierUnits}
+                  onRemove={handleRemoveBatch}
                 />
               );
             },

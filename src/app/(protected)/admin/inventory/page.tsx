@@ -227,18 +227,40 @@ const InventoryPage = () => {
             </div>
             <Separator orientation="horizontal" className="bg-textGray" />
 
+            {/*old script*/}
             {/* Scrollable batches section */}
             {/* <ScrollArea className={"scrollbar-hidden"}> */}
+            {/*<ScrollArea className={"scrollbar-hidden"}>*/}
+            {/*  <div className="mt-5 flex flex-col gap-5 rounded-lg">*/}
+            {/*    {selectedItem?.variant.BatchVariant && selectedItem?.variant.BatchVariant?.length > 0 ? (*/}
+            {/*        selectedItem.variant.BatchVariant.filter(batchVariant => batchVariant.variant_id === selectedItem.variant.variant_id).map((batchVariant) => (*/}
+            {/*            <BatchAccordion*/}
+            {/*                key={batchVariant.batch.batch_id}*/}
+            {/*                batch={batchVariant.batch}*/}
+            {/*                selectedVariantId={selectedItem.variant.variant_id}*/}
+            {/*            />*/}
+            {/*        ))*/}
+            {/*    ) : (*/}
+            {/*        <div className="py-10 text-center">*/}
+            {/*          <p className="text-gray-500 text-lg font-semibold">No batches available</p>*/}
+            {/*        </div>*/}
+            {/*    )}*/}
+            {/*  </div>*/}
+            {/*</ScrollArea>*/}
             <ScrollArea className={"scrollbar-hidden"}>
               <div className="mt-5 flex flex-col gap-5 rounded-lg">
-                {selectedItem?.variant.BatchVariant && selectedItem?.variant.BatchVariant?.length > 0 ? (
-                    selectedItem.variant.BatchVariant.filter(batchVariant => batchVariant.variant_id === selectedItem.variant.variant_id).map((batchVariant) => (
-                        <BatchAccordion
-                            key={batchVariant.batch.batch_id}
-                            batch={batchVariant.batch}
-                            selectedVariantId={selectedItem.variant.variant_id}
-                        />
-                    ))
+                {selectedItem?.variant.BatchVariant && selectedItem?.variant.BatchVariant.length > 0 ? (
+                    selectedItem.variant.BatchVariant.map((batchVariant, index) => {
+                      const batch = batchVariant.batch;
+                      return (
+                          <BatchAccordion
+                              key={batch.batch_id}
+                              batch={batch}
+                              selectedVariantId={selectedItem.variant.variant_id}
+                              batchNumber={index + 1}
+                          />
+                      );
+                    })
                 ) : (
                     <div className="py-10 text-center">
                       <p className="text-gray-500 text-lg font-semibold">No batches available</p>
@@ -246,8 +268,6 @@ const InventoryPage = () => {
                 )}
               </div>
             </ScrollArea>
-
-            {/* </ScrollArea> */}
           </div>
         </div>
       </div>

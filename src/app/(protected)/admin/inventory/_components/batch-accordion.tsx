@@ -15,7 +15,7 @@ import {
 } from "~/components/ui/table";
 import Link from "next/link";
 
-const BatchAccordion = ({ batch, selectedVariantId }) => {
+const BatchAccordion = ({ batch, selectedVariantId, batchNumber }) => {
   console.log(batch);
   const batchVariants = batch?.batchVariants || [];
 
@@ -23,8 +23,8 @@ const BatchAccordion = ({ batch, selectedVariantId }) => {
       <div className="flex w-full flex-col gap-3 rounded-xl">
         {/* Display Batch ID */}
         <div className="flex flex-grow justify-between rounded-lg bg-white">
-          <div className="flex w-10 items-center justify-center rounded-l-lg rounded-r-none bg-rose-200">
-            <span className="text-2xl text-red">{batch?.batch_id}</span>
+          <div className="flex w-10 items-center justify-center rounded-l-lg rounded-r-none bg-emerald-200">
+            <span className="text-2xl text-green">{batchNumber}</span> {/* Display the batch number */}
           </div>
           <Accordion type="single" collapsible className="w-full">
             <AccordionItem value={`batch-${batch?.batch_id}`}>

@@ -27,6 +27,14 @@ import SupplierDropdown from "../_components/Supplier-Dropdown";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "../_components/Hover-Card"
 
 // Define the data structure for inventory items
+
+type StockUnit = {
+  unit: string;
+  conversionQty: number | string; // This should be either a number or a string, as it might come as a string
+  conversionUnit: string;
+  stock: string | number; // Stock could be a string or number, depending on input format
+};
+
 type InventoryItem = {
   inventory_id: number;
   variant: {
@@ -38,7 +46,9 @@ type InventoryItem = {
       };
     };
   };
+  stockUnits?: StockUnit[]; // Optional, as not all items may have stock units
 };
+
 
 const InvoiceAddStock = () => {
   const router = useRouter();
@@ -105,17 +115,24 @@ const InvoiceAddStock = () => {
     }));
   };
 
-  // Function to calculate the total stock for each item, including the conversion quantities
   const totalStock = (inventoryId: number) => {
     const stockValue = Number(stock[inventoryId] || 0);
     const itemStockUnits = stockUnits[inventoryId] || [];
-    const totalConversions = itemStockUnits.reduce((sum, unit) => sum + (Number(unit.conversionQty) || 0), 0);
+
+    const totalConversions = itemStockUnits
+        .slice(1)
+        .reduce((sum, unit) => {
+          const conversionQty = Number(unit.stock) || 0;
+          return sum + conversionQty;
+        }, 0);
     return stockValue + totalConversions;
   };
+
 
   const overAllTotalStock = selectedItems.reduce((sum, item) => {
     return sum + totalStock(item.inventory_id);
   }, 0);
+
 
   const getConversionData = (inventoryId: number) => {
     const itemStockUnits = stockUnits[inventoryId] || [];
@@ -161,6 +178,7 @@ const InvoiceAddStock = () => {
 
   const logData = () => {
     selectedItems.forEach((item) => {
+      console.log(`Inventory ID: ${item.inventory_id}`);  // Log inventory ID
       console.log(`StockUnit for item ${item.variant.item.name}:`);
       console.log(`Stock Value: ${stock[item.inventory_id] || ''}`);
       console.log(`Price: ${price[item.inventory_id] || 'undefined'}`);
@@ -194,6 +212,7 @@ const InvoiceAddStock = () => {
         inventory_id: item.inventory_id,
         variant_id: item.variant_id,
         totalStock: totalStock(item.inventory_id),
+        stockValue: Number(stock[item.inventory_id]) || 0, // Ensure it's a number here
         stockUnits: stockUnits[item.inventory_id]?.map((stockUnit) => ({
           stock: Number(stockUnit.stock), // Ensure numeric values
           price: Number(stockUnit.price),
@@ -225,6 +244,54 @@ const InvoiceAddStock = () => {
       setIsDialogOpen(true);
     }
   };
+  //
+  // const handleSave = async (selectedItems, supplierId) => {
+  //   if (!supplierId) {
+  //     setDialogMessage("Supplier ID is missing. Please select a supplier.");
+  //     setDialogType("error");
+  //     setIsDialogOpen(true);
+  //     return;
+  //   }
+  //
+  //   try {
+  //     const payload = selectedItems.map((item) => ({
+  //       inventory_id: item.inventory_id,
+  //       variant_id: item.variant_id,
+  //       totalStock: totalStock(item.inventory_id),
+  //       stockValue: Number(stock[item.inventory_id]) || 0, // Ensure it's a number here
+  //       stockUnits: stockUnits[item.inventory_id]?.map((stockUnit) => ({
+  //         stock: Number(stockUnit.stock),
+  //         price: Number(stockUnit.price),
+  //         unit: stockUnit.unit,
+  //         conversionQty: Number(stockUnit.conversionQty),
+  //         conversionUnit: stockUnit.conversionUnit,
+  //       })) || [],
+  //     }));
+  //
+  //
+  //     console.log("Payload before mutation:", payload);
+  //
+  //     // Perform mutation (save data)
+  //     await saveRestock({ selectedItems: payload, supplierId });
+  //
+  //     // Show success dialog
+  //     setDialogMessage("Restock data saved successfully!");
+  //     setDialogType("success");
+  //     setIsDialogOpen(true);
+  //
+  //     // Redirect to /admin/restock after success
+  //     setTimeout(() => {
+  //       router.push("/admin/restock");
+  //     }, 2000); // Delay redirect to let the user see the success message
+  //
+  //   } catch (error) {
+  //     console.error("Error saving restock data:", error);
+  //     setDialogMessage("Failed to save restock data.");
+  //     setDialogType("error");
+  //     setIsDialogOpen(true);
+  //   }
+  // };
+
 
 
 

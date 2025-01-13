@@ -41,9 +41,19 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) 
         }
     };
 
-    const handleSelectSupplier = (supplierCompany) => {
-        setSelectedSupplier(supplierCompany);
-        setSearchTerm(supplierCompany); // Display selected supplier
+    // const handleSelectSupplier = (supplierCompany) => {
+    //     setSelectedSupplier(supplierCompany);
+    //     setSearchTerm(supplierCompany); // Display selected supplier
+    //     setDropdownVisible(false); // Immediately hide the dropdown
+    //     setHighlightedIndex(-1); // Reset index
+    // };
+    const handleSelectSupplier = (supplier) => {
+        // Set both the supplier id and company name
+        setSelectedSupplier({
+            id: supplier.id, // Set supplier ID
+            name: supplier.company, // Set company name
+        });
+        setSearchTerm(supplier.company); // Display selected supplier name
         setDropdownVisible(false); // Immediately hide the dropdown
         setHighlightedIndex(-1); // Reset index
     };
@@ -100,11 +110,12 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) 
                 >
                     {filteredSuppliers.map((supplier, index) => (
                         <div
-                            key={supplier.company}
+                            key={supplier.id}
+                            // key={supplier.company}
                             className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
                                 highlightedIndex === index ? "bg-emerald-200" : ""
                             }`}
-                            onMouseDown={() => handleSelectSupplier(supplier.company)} // Prevent blur on click
+                            onMouseDown={() => handleSelectSupplier(supplier)} // Prevent blur on click
                         >
                             {supplier.company}
                         </div>

@@ -83,14 +83,14 @@ const SOA = () => {
             <span className="text-textGray">Remaining Balance</span>
           </div>
 
-          <div className="flex gap-3">
-            <Card className="flex items-center justify-center p-4 transition duration-300 hover:scale-105 hover:cursor-pointer hover:bg-gray">
+          <div className="flex items-center gap-3">
+            <Card className="flex items-center justify-center p-2 transition duration-300 hover:scale-105 hover:cursor-pointer hover:bg-gray">
               <FileDown color="#00B69B" />
             </Card>
 
             <Dialog>
               <DialogTrigger asChild>
-                <Button variant={"default"} className="font-bold">
+                <Button className="bg-green font-bold hover:bg-green/80">
                   + New Payment
                 </Button>
               </DialogTrigger>

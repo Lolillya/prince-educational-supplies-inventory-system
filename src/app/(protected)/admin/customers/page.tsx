@@ -115,7 +115,10 @@ const CustomersPage = () => {
               <ListFilter />
             </div>
           </div>
-          <Button onClick={handleNewCustomer} className="p-5 font-bold">
+          <Button
+            onClick={handleNewCustomer}
+            className="bg-green p-5 font-bold hover:bg-green/80"
+          >
             + New Customer
           </Button>
         </div>

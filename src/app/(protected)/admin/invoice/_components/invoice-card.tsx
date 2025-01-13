@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -16,28 +16,104 @@ import {
   SelectValue,
 } from "~/components/ui/select";
 import { Label } from "~/components/ui/label";
-import Link from "next/link";
 import { Input } from "~/components/ui/input";
 
-const InvoiceCard = () => {
-  const [quantity, setQuantity] = useState("");
-  const [unit, setUnit] = useState("");
-  const [price, setPrice] = useState("");
-  const [supplier, setSupplier] = useState("");
+interface InvoiceCardProps {
+  batchNumber: number;
+  itemName: string;
+  brandName: string;
+  variant: string | null;
+  supplierUnit: Array<{
+    price: number;
+    quantity_per_unit: number;
+    unit_id: number;
+    unit: {
+      name: string;
+      unit_id: number;
+    };
+  }>;
+  onRemove: (batchNumber: number) => void;
+}
+
+const InvoiceCard: React.FC<InvoiceCardProps> = ({
+  batchNumber,
+  itemName,
+  brandName,
+  variant,
+  supplierUnit,
+  onRemove,
+}) => {
+  const [unitQuantity, setUnitQuantity] = useState<number | undefined>(
+    supplierUnit[0]?.quantity_per_unit,
+  );
+  const [price, setPrice] = useState<number | undefined>(
+    supplierUnit[0]?.price,
+  );
+
+  const [selectedUnit, setSelectedUnit] = useState(supplierUnit[0]);
+
+  const [totalPrice, setTotalPrice] = useState<number | undefined>(
+    (unitQuantity || 0) * (price || 0),
+  );
+
+  const [supplier, setSupplier] = useState("Supplier");
+
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
 
+  const handleRemoveBatch = () => {
+    // console.log(`Removed`);
+    onRemove(batchNumber);
+  };
+
+  useEffect(() => {
+    // Calculate the discounted total price
+    const basePrice = (unitQuantity || 0) * (price || 0);
+    let finalPrice = basePrice;
+
+    if (discountType === "%") {
+      finalPrice = basePrice - (basePrice * parseFloat(discount || "0")) / 100;
+    } else if (discountType === "Fixed") {
+      finalPrice = basePrice - parseFloat(discount || "0");
+    }
+
+    setTotalPrice(finalPrice > 0 ? finalPrice : 0); // Prevent negative totals
+  }, [unitQuantity, price, discount, discountType]);
+
+  useEffect(() => {
+    setPrice(selectedUnit?.price);
+    setUnitQuantity(selectedUnit?.quantity_per_unit);
+
+    setTotalPrice((unitQuantity || 0) * (price || 0));
+  }, [selectedUnit]);
+
+  useEffect(() => {
+    setTotalPrice((unitQuantity || 0) * (price || 0));
+  }, [price, unitQuantity]);
+
+  const handleQuantityChange = (value: string) => {
+    const parsedValue = parseInt(value, 10);
+    setUnitQuantity(!isNaN(parsedValue) ? parsedValue : 0);
+  };
+
+  const handlePriceChange = (value: string) => {
+    const parsedValue = parseFloat(value);
+    setPrice(!isNaN(parsedValue) ? parsedValue : 0);
+  };
+
   return (
-    <div className="border-gray-200 rounded-xl border p-4 shadow-sm">
+    <div className="border-gray-200 h-fit rounded-xl border p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
-        <p>Item - Brand - Variant</p>
-        <X className="hover:cursor-pointer" />
+        <Label>
+          {itemName} - {brandName} - {variant}
+        </Label>
+        <X className="hover:cursor-pointer" onClick={handleRemoveBatch} />
       </div>
       <Separator orientation="horizontal" />
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
           <AccordionTrigger className="hover:no-underline">
-            Batch 1
+            Batch {batchNumber}
           </AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4">
@@ -46,21 +122,33 @@ const InvoiceCard = () => {
                 <div className="flex">
                   <Input
                     className="rounded-r-none border shadow-none"
-                    placeholder="000"
-                    value={quantity}
-                    onChange={(e) => setQuantity(e.target.value)}
+                    value={unitQuantity}
+                    onChange={(e) => setUnitQuantity(parseInt(e.target.value))}
                   />
                   <Select
-                    value={unit}
-                    onValueChange={(value) => setUnit(value)}
+                    value={selectedUnit?.unit.name}
+                    onValueChange={(value) => {
+                      const unit = supplierUnit.find(
+                        (u) => u.unit.name === value,
+                      );
+                      if (unit) setSelectedUnit(unit);
+                    }}
+                    defaultValue={supplierUnit[0]?.unit?.name || ""}
                   >
                     <SelectTrigger className="rounded-l-none">
-                      <SelectValue placeholder="Box" />
+                      <SelectValue
+                        defaultValue={supplierUnit[0]?.unit?.name || ""}
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Box">Box</SelectItem>
-                      <SelectItem value="Case">Case</SelectItem>
-                      <SelectItem value="Piece">Piece</SelectItem>
+                      {supplierUnit.map((unit) => (
+                        <SelectItem
+                          value={unit.unit.name}
+                          key={unit.unit.unit_id}
+                        >
+                          {unit.unit.name}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -71,9 +159,9 @@ const InvoiceCard = () => {
                 <div className="flex">
                   <Input
                     className="rounded-r-none border shadow-none"
-                    placeholder="0000.00"
                     value={price}
-                    onChange={(e) => setPrice(e.target.value)}
+                    onChange={(e) => setPrice(parseInt(e.target.value))}
+                    disabled={supplier === "Supplier"}
                   />
                   <Select
                     value={supplier}
@@ -83,7 +171,7 @@ const InvoiceCard = () => {
                       <SelectValue placeholder="Supplier" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="Supplier A">Supplier</SelectItem>
+                      <SelectItem value="Supplier">Supplier</SelectItem>
                       <SelectItem value="Manual">Manual</SelectItem>
                     </SelectContent>
                   </Select>
@@ -117,7 +205,7 @@ const InvoiceCard = () => {
           </AccordionContent>
         </AccordionItem>
       </Accordion>
-      <p className="text-gray-400 mt-4 text-sm">
+      {/* <p className="text-gray-400 mt-4 text-sm">
         Insufficient stock from Batch 1!
         <br />
         <span className="text-orange-400">
@@ -127,8 +215,8 @@ const InvoiceCard = () => {
         <span className="text-orange-400">
           <Link href={"#"}>auto restock</Link>
         </span>
-      </p>
-      <p className="mt-4">Total: 0000.00</p>
+      </p> */}
+      <p className="mt-4">Total: P{totalPrice}</p>
     </div>
   );
 };

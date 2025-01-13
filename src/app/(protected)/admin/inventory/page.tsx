@@ -24,10 +24,9 @@ import { DialogTitle } from "@radix-ui/react-dialog";
 import { Input } from "~/components/ui/input";
 
 interface InventoryItemInfoProps {
-  inventoryItems: InventoryItem[]; // Ensure this is always defined as an array
+  inventoryItems: InventoryItem[];
 }
 
-// InventoryItem and related interfaces
 interface Unit {
   unit_id: number;
   name: string;
@@ -57,9 +56,10 @@ interface Variant {
   item_id: number;
   unit: Unit;
   item: Item;
-  name?: string; // Optional field for the variant name
-  description?: string; // Optional description
-  Batch: Batch[]; // Assuming Batch is defined elsewhere
+  name?: string;
+  description?: string;
+  Batch: Batch[];
+  BatchVariant: BatchVariant[];
 }
 
 interface InventoryItem {
@@ -93,11 +93,16 @@ const InventoryPage = () => {
     );
 
   const handleNewInventory = () => {
-    router.push("/admin/inventory/newItem"); // Redirect to create new inventory
+    router.push("/admin/inventory/newItem");
   };
   const handleEditItem = (id: number) => {
-    router.push(`/admin/inventory/edit-item/${id}`); // Redirect to create new item
+    router.push(`/admin/inventory/edit-item/${id}`);
   };
+
+  const handleEditBatch = (id: number) => {
+    router.push(`/admin/inventory/edit-batch/${id}`);
+  };
+
 
   return (
     <section
@@ -134,6 +139,7 @@ const InventoryPage = () => {
                       className="hover:cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation();
+                        console.log("Item data:", item);
                         handleEditItem(item.variant.variant_id);
                       }}
                     >
@@ -181,7 +187,8 @@ const InventoryPage = () => {
             </div>
 
             <div className="flex items-center justify-between">
-              <span>{selectedItem?.variant.Batch.length} Batches</span>
+              {/*<span>{selectedItem?.variant.Batch.length} Batches</span>*/}
+              <span>{selectedItem?.variant.BatchVariant?.length || 0} Batches</span>
               <Dialog>
                 <DialogTrigger asChild>
                   <Button variant={"link"} className="text-green">
@@ -196,12 +203,24 @@ const InventoryPage = () => {
                   <div className="flex flex-col gap-1">
                     <Label className="text-textGray">Password</Label>
                     <Input
-                      placeholder="Enter Password"
-                      className="p-6 placeholder:text-textGray"
+                        placeholder="Enter Password"
+                        className="p-6 placeholder:text-textGray"
                     />
                   </div>
                   <div className="flex justify-center gap-3">
-                    <Button size={"lg"}>Continue</Button>
+                    <Button
+                        size={"lg"}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (selectedItem) {
+                            handleEditBatch(selectedItem.variant.variant_id);
+                          } else {
+                            console.error("No item selected to continue.");
+                          }
+                        }}
+                    >
+                      Continue
+                    </Button>
                   </div>
                 </DialogContent>
               </Dialog>
@@ -212,20 +231,22 @@ const InventoryPage = () => {
             {/* <ScrollArea className={"scrollbar-hidden"}> */}
             <ScrollArea className={"scrollbar-hidden"}>
               <div className="mt-5 flex flex-col gap-5 rounded-lg">
-                {selectedItem?.variant.Batch &&
-                selectedItem.variant.Batch.length > 0 ? (
-                  selectedItem.variant.Batch.map((batch) => (
-                    <BatchAccordion key={batch.batch_id} batch={batch} />
-                  ))
+                {selectedItem?.variant.BatchVariant && selectedItem?.variant.BatchVariant?.length > 0 ? (
+                    selectedItem.variant.BatchVariant.filter(batchVariant => batchVariant.variant_id === selectedItem.variant.variant_id).map((batchVariant) => (
+                        <BatchAccordion
+                            key={batchVariant.batch.batch_id}
+                            batch={batchVariant.batch}
+                            selectedVariantId={selectedItem.variant.variant_id}
+                        />
+                    ))
                 ) : (
-                  <div className="py-10 text-center">
-                    <p className="text-gray-500 text-lg font-semibold">
-                      No batches available
-                    </p>
-                  </div>
+                    <div className="py-10 text-center">
+                      <p className="text-gray-500 text-lg font-semibold">No batches available</p>
+                    </div>
                 )}
               </div>
             </ScrollArea>
+
             {/* </ScrollArea> */}
           </div>
         </div>

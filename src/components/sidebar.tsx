@@ -11,7 +11,7 @@ import {
   Package2,
   Settings,
   Truck,
-  Users2
+  Users2,
 } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { Poppins } from "next/font/google";
@@ -84,11 +84,11 @@ const Sidebar = () => {
         redirect: "/admin/employees",
         icon: <IdCard width={24} height={24} />,
       },
-      history: {
-        text: "History",
-        redirect: "/admin/history",
-        icon: <History width={24} height={24} />,
-      },
+      // history: {
+      //   text: "History",
+      //   redirect: "/admin/history",
+      //   icon: <History width={24} height={24} />,
+      // },
     },
     controls: {
       settings: {
@@ -123,41 +123,40 @@ const Sidebar = () => {
   };
 
   return (
-    <div className={`bg-slate-100 py-10 px-5 transition-all duration-300 ${poppins.className} flex h-screen w-1/6 flex-col justify-between`}>
+    <div
+      className={`bg-slate-100 px-5 py-10 transition-all duration-300 ${poppins.className} flex h-screen w-1/6 flex-col justify-between`}
+    >
       <section>
         <div className="flex items-center justify-center">
           <div className="flex w-full items-center justify-start gap-4 pl-2 hover:cursor-pointer">
             <Image
               src={Company_Logo}
               alt="Company Logo"
-              className="min-w-[30px] w-8 h-8"
+              className="h-8 w-8 min-w-[30px]"
             />
-            <Label className="text-slate-700 w-fit overflow-hidden text-3xl font-extrabold transition-all duration-300">
+            <Label className="w-fit overflow-hidden text-3xl font-extrabold text-slate-700 transition-all duration-300">
               Prince
             </Label>
           </div>
         </div>
 
-        <ScrollArea className="" >
+        <ScrollArea className="">
           <>
             <div className="mt-6 flex flex-col gap-2">
               {Object.entries(sidebarContent.main).map(([key, value]) => (
                 <div
                   key={key}
                   onClick={() => router.push(value.redirect)}
-                  className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white transition-colors duration-300 text-slate-600 
-                ${pathname.startsWith(value.redirect) ? "bg-white text-slate-800" : ""}`}
+                  className={`flex items-center justify-start rounded-lg p-3 text-slate-600 transition-colors duration-300 hover:cursor-pointer hover:bg-white ${pathname.startsWith(value.redirect) ? "bg-white text-slate-800" : ""}`}
                 >
                   {value.icon}
-                  <span className="pl-5 text-lg">
-                    {value.text}
-                  </span>
+                  <span className="pl-5 text-lg">{value.text}</span>
                 </div>
               ))}
             </div>
 
             <div className="mt-6 flex flex-col gap-2">
-              <Label className="text-slate-500 pl-3 text-base mb-1">
+              <Label className="mb-1 pl-3 text-base text-slate-500">
                 Records
               </Label>
 
@@ -165,13 +164,10 @@ const Sidebar = () => {
                 <div
                   key={key}
                   onClick={() => router.push(value.redirect)}
-                  className={`flex items-center justify-start rounded-lg p-3 hover:cursor-pointer hover:bg-white transition-colors duration-300 text-slate-600 
-                ${pathname.startsWith(value.redirect) ? "bg-white text-slate-800" : ""}`}
+                  className={`flex items-center justify-start rounded-lg p-3 text-slate-600 transition-colors duration-300 hover:cursor-pointer hover:bg-white ${pathname.startsWith(value.redirect) ? "bg-white text-slate-800" : ""}`}
                 >
                   {value.icon}
-                  <span className="pl-5 text-lg">
-                    {value.text}
-                  </span>
+                  <span className="pl-5 text-lg">{value.text}</span>
                 </div>
               ))}
             </div>
@@ -179,22 +175,28 @@ const Sidebar = () => {
         </ScrollArea>
       </section>
 
-      <section className="flex flex-col gap-3 ">
+      <section className="flex flex-col gap-3">
         {/* Controls Section */}
         <Popover>
           <PopoverTrigger>
             <div className="flex items-center gap-4 rounded-full bg-white p-3">
               <Avatar>
-                <AvatarFallback className="bg-pink-200 text-slate-700">{session.data?.user.firstName.charAt(0)}{session.data?.user.lastName.charAt(0)}</AvatarFallback>
+                <AvatarFallback className="bg-pink-200 text-slate-700">
+                  {session.data?.user.firstName.charAt(0)}
+                  {session.data?.user.lastName.charAt(0)}
+                </AvatarFallback>
               </Avatar>
               <div className="flex flex-col items-start">
-                <p className="text-base font-bold text-slate-700">{session.data?.user.firstName} {session.data?.user.lastName}</p>
-                <p className="text-sm font-extralight text-slate-500">{session.data?.user.role}</p>
+                <p className="text-base font-bold text-slate-700">
+                  {session.data?.user.firstName} {session.data?.user.lastName}
+                </p>
+                <p className="text-sm font-extralight text-slate-500">
+                  {session.data?.user.role}
+                </p>
               </div>
             </div>
           </PopoverTrigger>
-          <PopoverContent className="flex flex-col gap-1 p-2 shadow-none my-3 ml-3">
-
+          <PopoverContent className="my-3 ml-3 flex flex-col gap-1 p-2 shadow-none">
             {Object.entries(sidebarContent.controls).map(([key, value]) => (
               <div
                 key={key}
@@ -203,25 +205,27 @@ const Sidebar = () => {
                     ? handleLogoutClick
                     : () => router.push(value.redirect)
                 }
-                className="flex items-center gap-4 rounded-lg py-2 px-4 transition-colors duration-300 hover:cursor-pointer text-slate-700 hover:bg-slate-100 "
+                className="flex items-center gap-4 rounded-lg px-4 py-2 text-slate-700 transition-colors duration-300 hover:cursor-pointer hover:bg-slate-100"
               >
                 {value.icon}
-                <span className="text-base">
-                  {value.text}
-                </span>
+                <span className="text-base">{value.text}</span>
               </div>
             ))}
 
             {/* Logout Confirmation Dialog */}
             <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
               <DialogContent className="[&>button]:hidden">
-                <DialogTitle className="text-slate-700 items-center">Confirm Logout</DialogTitle>
-                <p className="text-slate-700">Are you sure you want to log out?</p>
+                <DialogTitle className="items-center text-slate-700">
+                  Confirm Logout
+                </DialogTitle>
+                <p className="text-slate-700">
+                  Are you sure you want to log out?
+                </p>
                 <DialogFooter>
                   <Button
                     onClick={cancelLogout}
                     className="text-slate-700 hover:bg-slate-300"
-                    variant={'secondary'}
+                    variant={"secondary"}
                   >
                     Cancel
                   </Button>
@@ -234,10 +238,8 @@ const Sidebar = () => {
                 </DialogFooter>
               </DialogContent>
             </Dialog>
-
           </PopoverContent>
         </Popover>
-
       </section>
     </div>
   );

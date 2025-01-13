@@ -16,7 +16,7 @@ import {
 import Link from "next/link";
 
 const BatchAccordion = ({ batch, selectedVariantId, batchNumber }) => {
-  console.log(batch);
+  // console.log(batch);
   const batchVariants = batch?.batchVariants || [];
 
   return (

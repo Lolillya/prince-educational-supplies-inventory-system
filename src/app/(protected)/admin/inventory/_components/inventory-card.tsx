@@ -34,6 +34,9 @@ type InventoryCardProps = {
 
 const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange }: InventoryCardProps) => {
     const supplierUnits = batch?.supplierUnits || [];
+    // const supplierUnits = batch?.batch?.batchVariants?.[0].supplierUnits || [];
+    const supplierUnits = batch?.batch?.batchVariants?.[0]?.supplierUnits || [];
+
 
     const [stockUnits, setStockUnits] = useState<StockUnitData[]>(supplierUnits);
     const [detailedStockUnits, setDetailedStockUnits] = useState<StockUnitData[]>(() =>
@@ -304,6 +307,11 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
 
                 {batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}
                 {batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}
+                {/*{batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}*/}
+                {/*{batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}*/}
+
+                {batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}
+                {batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}
 
             </Link>
           </span>
@@ -446,10 +454,10 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
                 >
                     Log Accordion and StockUnits
                 </button>
+            </div>
         </div>
-</div>
-)
-    ;
+    )
+        ;
 };
 
 type StockUnitData = {
@@ -631,3 +639,4 @@ const AddStockUnit = ({ onAdd }: { onAdd: () => void }) => {
 };
 
 export default InventoryCard;
+

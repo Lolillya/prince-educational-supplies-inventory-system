@@ -29,24 +29,30 @@ import SearchBar from "../_components/search-bar";
 import RestockRecord from "./_components/restock-record";
 import { api } from "~/trpc/react";
 import UnitLine from "~/app/(protected)/admin/restock/_components/unit-line";
-import {HoverCard, HoverCardContent, HoverCardTrigger} from "~/components/ui/hover-card";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "~/components/ui/hover-card";
 import ViewFullRestock from "~/app/(protected)/admin/restock/_components/view-full-restock";
-
 
 const poppins = Poppins({
   subsets: ["latin"],
   weight: ["400", "700"],
 });
 
-
 const RestockPage = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<RestockProps | null>(null); // Change type to RestockProps to handle full batch
-  const { data: restockData, isLoading, error } = api.restock.getRestockData.useQuery();
+  const {
+    data: restockData,
+    isLoading,
+    error,
+  } = api.restock.getRestockData.useQuery();
 
   const handleViewAll = (batch: RestockProps) => {
-    console.log('Selected Batch:', batch);
+    console.log("Selected Batch:", batch);
     setSelectedBatch(batch);
     setIsOpen(true);
   };
@@ -71,35 +77,36 @@ const RestockPage = () => {
   }
 
   return (
-      <section className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll py-10 px-20`}>
-        <div className="flex justify-between items-center">
-          <div className="flex gap-3 items-center">
-            <SearchBar value={""} onChange={function (e: React.ChangeEvent<HTMLInputElement>): void {
-            throw new Error("Function not implemented.");
-          } }/>
-            <Filter/>
-          </div>
-          <Button
-              onClick={() => router.push("restock/add-stock")}
-              className="bg-green hover:bg-green/80">
-            <Plus strokeWidth={3}/> Add Stock
-          </Button>
+    <section
+      className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll px-20 py-10`}
+    >
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <SearchBar />
+          <Filter />
         </div>
+        <Button
+          onClick={() => router.push("restock/add-stock")}
+          className="bg-green hover:bg-green/80"
+        >
+          <Plus strokeWidth={3} /> Add Stock
+        </Button>
+      </div>
 
-        <div className="mt-5 flex flex-col gap-4">
-          {/* {restockData?.map((restock: RestockProps) => (
-              <RestockRecord
-                  key={restock.restockId}
-                  restockId={restock.restockId}
-                  date={restock.date}
-                  supplier={restock.supplier}
-                  addedStock={restock.addedStock}
-                  restockItems={restock.restockItems}
-                  onViewAll={handleViewAll}
-              />
-          ))} */}
-        </div>
-      </section>
+      <div className="mt-5 flex flex-col gap-4">
+        {restockData?.map((restock: RestockProps) => (
+          <RestockRecord
+            key={restock.restockId}
+            restockId={restock.restockId}
+            date={restock.date}
+            supplier={restock.supplier}
+            addedStock={restock.addedStock}
+            restockItems={restock.restockItems}
+            onViewAll={handleViewAll}
+          />
+        ))}
+      </div>
+    </section>
   );
 };
 

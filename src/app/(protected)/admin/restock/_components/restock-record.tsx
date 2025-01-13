@@ -12,37 +12,7 @@ import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
 import RestockItem from "./restock-item";
 import ViewFullRestock from "./view-full-restock";
-
-interface RestockProps {
-  restockId: number;
-  date: string;
-  supplier: string;
-  addedStock: number;
-  restockItems: {
-    variant: string;
-    item: string;
-    brand: string;
-    quantity: number;
-    mainUnit: string;
-    unitConversion: {
-      from: string;
-      count: number;
-      to: string;
-    }[];
-  }[];
-  onViewAll: (item: {
-    variant: string;
-    item: string;
-    brand: string;
-    quantity: number;
-    mainUnit: string;
-    unitConversion: {
-      from: string;
-      count: number;
-      to: string;
-    }[];
-  }) => void;
-}
+import { RestockProps } from "../page";
 
 const RestockRecord: React.FC<RestockProps> = ({
   restockId,
@@ -50,7 +20,6 @@ const RestockRecord: React.FC<RestockProps> = ({
   supplier,
   addedStock,
   restockItems,
-    onViewAll,
 }) => {
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-10 text-slate-700">

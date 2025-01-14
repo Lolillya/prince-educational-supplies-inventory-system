@@ -94,12 +94,214 @@ export const restockRouter = createTRPCRouter({
         }
     }),
 
+    // saveRestock: publicProcedure
+    //     .input(
+    //         z.object({
+    //             selectedItems: z.array(
+    //                 z.object({
+    //                     variant_id: z.number(),
+    //                     totalStock: z.number(),
+    //                     stockUnits: z.array(
+    //                         z.object({
+    //                             stock: z.number(),
+    //                             price: z.number(),
+    //                             unit: z.string(),
+    //                             conversionQty: z.number(),
+    //                             conversionUnit: z.string(),
+    //                         })
+    //                     ),
+    //                 })
+    //             ),
+    //             supplierId: z.string(),
+    //         })
+    //     )
+    //     .mutation(async ({ input }) => {
+    //         const { selectedItems, supplierId } = input;
+    //
+    //         // Create a batch for the overall total stock quantity
+    //         const batch = await db.batch.create({
+    //             data: {
+    //                 quantity: selectedItems.reduce((acc, item) => acc + item.totalStock, 0), // Total stock quantity across all variants
+    //             },
+    //         });
+    //
+    //         // Loop through each selected item (variant)
+    //         for (const item of selectedItems) {
+    //             // Create a BatchVariant entry for each variant and link it to the batch
+    //             const batchVariant = await db.batchVariant.create({
+    //                 data: {
+    //                     batch_id: batch.batch_id,
+    //                     variant_id: item.variant_id,
+    //                     quantity: item.totalStock, // Store total stock per variant
+    //                 },
+    //             });
+    //
+    //             // Loop through stock units to save SupplierUnits
+    //             for (const stockUnit of item.stockUnits) {
+    //                 // Find the unit based on the unit name
+    //                 const unit = await db.unit.findUnique({
+    //                     where: { name: stockUnit.unit },
+    //                 });
+    //
+    //                 if (!unit) {
+    //                     throw new Error(`Unit ${stockUnit.unit} not found.`);
+    //                 }
+    //
+    //                 // Create the SupplierUnit and associate it with the BatchVariant
+    //                 const supplierUnit = await db.supplierUnit.create({
+    //                     data: {
+    //                         batch_variant_id: batchVariant.batch_variant_id, // Associate with BatchVariant
+    //                         supplier_id: supplierId,
+    //                         unit_id: unit.unit_id,
+    //                         price: stockUnit.price,
+    //                         quantity_per_unit: stockUnit.stock,
+    //                         total_quantity: item.totalStock,
+    //                     },
+    //                 });
+    //
+    //                 // If there's a conversion unit and quantity, create a ConversionRate
+    //                 if (stockUnit.conversionUnit && stockUnit.conversionQty) {
+    //                     const toUnit = await db.unit.findUnique({
+    //                         where: { name: stockUnit.conversionUnit },
+    //                     });
+    //
+    //                     if (!toUnit) {
+    //                         throw new Error(`Conversion unit ${stockUnit.conversionUnit} not found.`);
+    //                     }
+    //
+    //                     await db.conversionRate.create({
+    //                         data: {
+    //                             supplier_unit_id: supplierUnit.supplier_unit_id,
+    //                             from_unit_id: unit.unit_id,
+    //                             to_unit_id: toUnit.unit_id,
+    //                             conversion_rate: stockUnit.conversionQty,
+    //                         },
+    //                     });
+    //                 }
+    //             }
+    //         }
+    //
+    //         return { message: "Restock data saved successfully!" };
+    //     }),
+
+    // saveRestock: publicProcedure
+    //     .input(
+    //         z.object({
+    //             selectedItems: z.array(
+    //                 z.object({
+    //                     inventory_id: z.number(), // Inventory ID for the item
+    //                     variant_id: z.number(),
+    //                     stockValue: z.number(), // Stock value (the value to be saved to inventory)
+    //                     stockUnits: z.array(
+    //                         z.object({
+    //                             stock: z.number(),
+    //                             price: z.number(),
+    //                             unit: z.string(),
+    //                             conversionQty: z.number(),
+    //                             conversionUnit: z.string(),
+    //                         })
+    //                     ),
+    //                 })
+    //             ),
+    //             supplierId: z.string(),
+    //         })
+    //     )
+    //     .mutation(async ({ input }) => {
+    //         const { selectedItems, supplierId } = input;
+    //
+    //         // Create a batch for the overall total stock quantity
+    //         const batch = await db.batch.create({
+    //             data: {
+    //                 quantity: selectedItems.reduce((acc, item) => acc + item.stockValue, 0), // Total stock value
+    //             },
+    //         });
+    //
+    //         for (const item of selectedItems) {
+    //             const batchVariant = await db.batchVariant.create({
+    //                 data: {
+    //                     batch_id: batch.batch_id,
+    //                     variant_id: item.variant_id,
+    //                     quantity: item.stockValue, // Use stockValue here instead of totalStock
+    //                 },
+    //             });
+    //
+    //             // Loop through stock units to save SupplierUnits
+    //             for (const stockUnit of item.stockUnits) {
+    //                 const unit = await db.unit.findUnique({
+    //                     where: { name: stockUnit.unit },
+    //                 });
+    //
+    //                 if (!unit) {
+    //                     throw new Error(`Unit ${stockUnit.unit} not found.`);
+    //                 }
+    //
+    //                 const supplierUnit = await db.supplierUnit.create({
+    //                     data: {
+    //                         batch_variant_id: batchVariant.batch_variant_id,
+    //                         supplier_id: supplierId,
+    //                         unit_id: unit.unit_id,
+    //                         price: stockUnit.price,
+    //                         quantity_per_unit: stockUnit.stock,
+    //                         total_quantity: item.stockValue, // Use stockValue instead of totalStock
+    //                     },
+    //                 });
+    //
+    //                 if (stockUnit.conversionUnit && stockUnit.conversionQty) {
+    //                     const toUnit = await db.unit.findUnique({
+    //                         where: { name: stockUnit.conversionUnit },
+    //                     });
+    //
+    //                     if (!toUnit) {
+    //                         throw new Error(`Conversion unit ${stockUnit.conversionUnit} not found.`);
+    //                     }
+    //
+    //                     await db.conversionRate.create({
+    //                         data: {
+    //                             supplier_unit_id: supplierUnit.supplier_unit_id,
+    //                             from_unit_id: unit.unit_id,
+    //                             to_unit_id: toUnit.unit_id,
+    //                             conversion_rate: stockUnit.conversionQty,
+    //                         },
+    //                     });
+    //                 }
+    //             }
+    //
+    //             // Update the inventory stock with stockValue (not totalStock)
+    //             const inventory = await db.inventory.findUnique({
+    //                 where: { inventory_id: item.inventory_id },
+    //             });
+    //
+    //             if (inventory) {
+    //                 // Update inventory stock value to match stockValue
+    //                 await db.inventory.update({
+    //                     where: {
+    //                         inventory_id: inventory.inventory_id,
+    //                     },
+    //                     data: {
+    //                         quantity: item.stockValue, // Set quantity as the stock value
+    //                     },
+    //                 });
+    //             } else {
+    //                 // If inventory doesn't exist, create a new record with stockValue
+    //                 await db.inventory.create({
+    //                     data: {
+    //                         variant_id: item.variant_id,
+    //                         quantity: item.stockValue, // Set initial stock value as the stockValue
+    //                     },
+    //                 });
+    //             }
+    //         }
+    //
+    //         return { message: "Restock data saved successfully!" };
+    //     }),
+
     saveRestock: publicProcedure
         .input(
             z.object({
                 selectedItems: z.array(
                     z.object({
                         variant_id: z.number(),
+                        stockValue: z.number(), // Stock value (the value to be added to inventory)
                         totalStock: z.number(),
                         stockUnits: z.array(
                             z.object({
@@ -110,6 +312,7 @@ export const restockRouter = createTRPCRouter({
                                 conversionUnit: z.string(),
                             })
                         ),
+                        inventory_id: z.number(), // Ensure that inventory_id is passed in the input
                     })
                 ),
                 supplierId: z.string(),
@@ -118,7 +321,7 @@ export const restockRouter = createTRPCRouter({
         .mutation(async ({ input }) => {
             const { selectedItems, supplierId } = input;
 
-            // Create a batch for the overall total stock quantity
+            // Create a batch for the overall total stock quantity (using totalStock for batch creation)
             const batch = await db.batch.create({
                 data: {
                     quantity: selectedItems.reduce((acc, item) => acc + item.totalStock, 0), // Total stock quantity across all variants
@@ -132,7 +335,7 @@ export const restockRouter = createTRPCRouter({
                     data: {
                         batch_id: batch.batch_id,
                         variant_id: item.variant_id,
-                        quantity: item.totalStock, // Store total stock per variant
+                        quantity: item.totalStock, // Store total stock per variant in batchVariant
                     },
                 });
 
@@ -155,7 +358,7 @@ export const restockRouter = createTRPCRouter({
                             unit_id: unit.unit_id,
                             price: stockUnit.price,
                             quantity_per_unit: stockUnit.stock,
-                            total_quantity: item.totalStock,
+                            total_quantity: item.totalStock, // Store total stock per variant for the supplier unit
                         },
                     });
 
@@ -179,10 +382,37 @@ export const restockRouter = createTRPCRouter({
                         });
                     }
                 }
+
+                // Update the inventory stock by adding stockValue to the current quantity
+                const inventory = await db.inventory.findUnique({
+                    where: { inventory_id: item.inventory_id },
+                });
+
+                if (inventory) {
+                    // Add the stockValue to the current inventory quantity
+                    await db.inventory.update({
+                        where: {
+                            inventory_id: inventory.inventory_id,
+                        },
+                        data: {
+                            quantity: inventory.quantity + item.stockValue, // Increment current quantity by stockValue
+                        },
+                    });
+                } else {
+                    // If inventory doesn't exist, create a new record with stockValue
+                    await db.inventory.create({
+                        data: {
+                            variant_id: item.variant_id,
+                            quantity: item.stockValue, // Set initial stock value as the stockValue
+                        },
+                    });
+                }
             }
 
             return { message: "Restock data saved successfully!" };
         }),
+
+
 
     // getRestockData: publicProcedure.query(async () => {
     //     try {

@@ -2,28 +2,29 @@ import { Banknote, Box, SquarePercent } from 'lucide-react'
 import { Separator } from '~/components/ui/separator'
 import MoreOptions from '../../_components/more-options'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
+import { InvoiceProps } from '../page';
 
-interface OrderItemsProps {
-	variant: string;
-	item: string;
-	brand: string;
-	quantity: number;
-	unit: string;
-	unitPrice: number;
-	discountValue: string;
-	subtotal: number;
+type orderItem = InvoiceProps["orderItem"][0];
+
+type orderItemProps = {
+	orderItem: orderItem;
 }
 
-const InvoiceItem: React.FC<OrderItemsProps> = ({
-	variant,
-	item,
-	brand,
-	quantity,
-	unit,
-	unitPrice,
-	discountValue,
-	subtotal,
+const InvoiceItem: React.FC<orderItemProps> = ({
+	orderItem
 }) => {
+
+	const {
+		item,
+		variant,
+		brand,
+		quantity,
+		unit,
+		unitPrice,
+		discountValue,
+		subtotal,
+	} = orderItem;
+	
 	return (
 		<div className='bg-white/70 p-6 rounded-lg'>
 			<div className='flex justify-center items-center'>

@@ -9,7 +9,7 @@ import {
 
 import { Label } from "~/components/ui/label";
 import { Button } from "~/components/ui/button";
-import InvoiceCard from "../_components/invoice-card";
+import InvoiceCard from "../_components/invoice-card-copy";
 import { ArrowLeft, Search } from "lucide-react";
 import { Input } from "~/components/ui/input";
 import {
@@ -139,23 +139,10 @@ const NewInvoice = () => {
     createInvoice(invoiceData);
   };
 
-  const handleRemoveBatch = (batchNumber: number) => {
-    // console.log(`${batchNumber} removed`);
-    const updatedItems = selectedItems
-      .map((item) => ({
-        ...item,
-        variant: {
-          ...item.variant,
-          BatchVariant: Object.fromEntries(
-            Object.entries(item.variant.BatchVariant).filter(
-              ([_, variant], index) => index + 1 !== batchNumber, // Filter out the matching batchNumber
-            ),
-          ),
-        },
-      }))
-      .filter((item) => Object.keys(item.variant.BatchVariant).length > 0);
-
-    setSelectedItems(updatedItems);
+  const handleRemoveBatch = (idToRemove: number) => {
+    setSelectedItems((prevItems) =>
+      prevItems.filter((item) => item.inventory_id !== idToRemove),
+    );
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {
@@ -297,24 +284,19 @@ const NewInvoice = () => {
       </div>
 
       <div className="relative mt-4 grid h-fit w-full auto-rows-auto grid-cols-3 gap-3 overflow-y-auto">
-        {selectedItems.map((item) =>
-          Object.entries(item.variant.BatchVariant).map(
-            ([_, variant], index) => {
-              const supplierUnits = variant.SupplierUnit || [];
-              return (
-                <InvoiceCard
-                  key={variant.batch_variant_id}
-                  batchNumber={index + 1}
-                  itemName={item.variant.item.name}
-                  brandName={item.variant.item.brand.name}
-                  variant={item.variant.name}
-                  supplierUnit={supplierUnits}
-                  onRemove={handleRemoveBatch}
-                />
-              );
-            },
-          ),
-        )}
+        {selectedItems.map((item, index) => {
+          return (
+            <InvoiceCard
+              key={index}
+              id={item.inventory_id}
+              itemName={item.variant.item.name}
+              brandName={item.variant.item.brand.name}
+              variant={item.variant.name}
+              BatchVariant={item.variant.BatchVariant}
+              onRemove={handleRemoveBatch}
+            />
+          );
+        })}
 
         {selectedItems.length === 0 && (
           <Label className="absolute w-full self-center text-center">

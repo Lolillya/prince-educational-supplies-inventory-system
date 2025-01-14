@@ -24,7 +24,7 @@
 //
 //   const handleRemoveItem = (inventoryId) => {
 //     setInventory((prevInventory) =>
-//       prevInventory.filter((item) => item.inventory_id !== inventoryId),
+//       prevInventory.filter((item) => item.inventory_i  fd !== inventoryId),
 //     );
 //   };
 //

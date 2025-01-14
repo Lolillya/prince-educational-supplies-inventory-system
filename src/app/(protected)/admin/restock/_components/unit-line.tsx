@@ -13,7 +13,10 @@ const UnitLine: React.FC<UnitConversion> = ({
 	to,
 }) => {
 	return (
-		<p className='text-sm text-slate-500 flex items-center gap-2'>{from} <ArrowRight  className='w-3 h-3' strokeWidth={1.5}/> {count} {to}</p>
+		<div className='flex justify-between items-center w-full'>
+			<p className='text-sm text-slate-500 flex items-center gap-2'>{from} <ArrowRight  className='w-3 h-3' strokeWidth={1.5}/> {count} {to}</p>
+			<p className='text-sm text-slate-500'>500.00</p>
+		</div>
 	)
 }
 

@@ -33,7 +33,7 @@ type InventoryCardProps = {
 };
 
 const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange }: InventoryCardProps) => {
-    const supplierUnits = batch?.supplierUnits || [];
+    // const supplierUnits = batch?.supplierUnits || [];
     // const supplierUnits = batch?.batch?.batchVariants?.[0].supplierUnits || [];
     const supplierUnits = batch?.batch?.batchVariants?.[0]?.supplierUnits || [];
 

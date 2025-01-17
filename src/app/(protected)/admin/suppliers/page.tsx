@@ -43,15 +43,21 @@ interface Supplier {
 
 const SuppliersPage = () => {
   const router = useRouter();
+
+  {/** selecting suppliers */}
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
     null,
   );
+
+  {/** filter based on search results */}
   const [searchTerm, setSearchTerm] = useState<string>("");
 
+  {/** going to different page */}
   const handleNewSupplier = () => {
     router.push("/admin/suppliers/new-supplier");
   };
 
+  {/** edit supplier */}
   const handleEditSupplier = (id: string) => {
     router.push(`/admin/suppliers/edit-supplier/${id}`);
   };
@@ -71,6 +77,7 @@ const SuppliersPage = () => {
     );
   });
 
+  // I think this is needed for fetching data based on what is clicked
   useEffect(() => {
     const handleRouteChange = () => {
       refetch(); // Refetch data whenever route changes

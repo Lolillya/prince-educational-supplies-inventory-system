@@ -1,22 +1,75 @@
 "use client"
 
-import { FileSearch, MousePointerClick, Plus } from 'lucide-react'
+import { Plus } from 'lucide-react'
 import { useRouter } from "next/navigation"
+import { useState } from 'react'
 import { Button } from '~/components/ui/button'
+import { ScrollArea } from '~/components/ui/scroll-area'
+import { api } from "~/trpc/react"
 import Filter from '../../_components/filter'
+import NoRecordsMessage from '../../_components/no-records-message'
+import RecordItem from '../../_components/record-item'
 import SearchBar from '../../_components/search-bar'
+import SelectItemMessage from '../../_components/select-item-message'
+import SelectedRecord from '../../_components/selected-record'
+
+interface Supplier {
+	id: string;
+	Personal_Details_Id: string;
+	role_Id: number;
+	Personal_Details: PersonalDetails;
+}
+
+interface PersonalDetails {
+	personal_details_id: string;
+	first_name: string | null;
+	last_name: string | null;
+	contact: string | null;
+	email: string | null;
+	company: string | null;
+	notes: string | null;
+	location_id: number | null;
+	location: Location | null;
+}
+
+interface Location {
+	location_id: number;
+	address_line?: string | null;
+	city?: string | null;
+	region?: string | null;
+	country?: string | null;
+	postal_code?: string | null;
+}
 
 const Suppliers = () => {
 	const router = useRouter();
+	const [searchTerm, setSearchTerm] = useState<string>("");
+	const [selectedRecord, setSelectedRecord] = useState<Supplier | null>(null);
+
+	const { data } = api.suppliers.list.useQuery();
+
+	const filteredSuppliers = data?.filter(
+		(supplier) => {
+			const company = supplier.Personal_Details.company?.toLowerCase() ?? "";
+			const contact = supplier.Personal_Details.contact?.toLowerCase() ?? "";
+			const email = supplier.Personal_Details.email?.toLowerCase() ?? "";
+
+			return (
+				company.includes(searchTerm.toLowerCase()) ??
+				contact.includes(searchTerm.toLowerCase()) ??
+				email.includes(searchTerm.toLowerCase())
+			);
+		}
+	);
 
 	return (
 		<section className='px-20 py-10 text-base min-h-screen flex flex-col'>
-
 			<div className="flex justify-between items-center">
 				<div className="flex gap-3 items-center">
-					<SearchBar value={''} onChange={function (e: React.ChangeEvent<HTMLInputElement>): void {
-						throw new Error('Function not implemented.')
-					} } />
+					<SearchBar
+						value={searchTerm}
+						onChange={(e) => setSearchTerm(e.target.value)}
+					/>
 					<Filter />
 				</div>
 				<Button
@@ -25,47 +78,65 @@ const Suppliers = () => {
 					<Plus strokeWidth={3} /> New Supplier
 				</Button>
 			</div>
-
 			<div className="mt-8 flex gap-3 flex-grow">
 				<div className="flex flex-col gap-3 w-3/5 flex-grow">
-					<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3">
-						<p className="text-slate-500">Records</p>
+					<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3 flex items-center gap-2">
+						<p className="text-slate-500">Suppliers</p>
+						<p className='text-slate-400 pl-4 text-base'>{filteredSuppliers?.length} records</p>
 					</div>
-					<div className="flex-grow p-6 rounded-lg flex items-center justify-center text-center">
-
-						{/** if there are no  */}
-						<div className='flex flex-col gap-8 items-center '>
-							<FileSearch className="w-20 h-20 text-slate-500" strokeWidth={1.5} />
-							<p className="text-slate-500">
-								We can't find anything for now...
-								<br />
-								<span className='text-green hover:underline hover:cursor-pointer'>
-									Add a new supplier
-								</span>
-							</p>
-						</div>
-
+					<div className="flex flex-grow rounded-lg h-full overflow-hidden">
+						{(filteredSuppliers?.length ?? 0) > 0 ? (
+							<ScrollArea className="w-full h-full">
+								<div className="flex flex-col items-center w-full h-40">
+									{filteredSuppliers?.map((supplier) => (
+										<RecordItem
+											key={supplier.Personal_Details_Id}
+											name={supplier.Personal_Details.company}
+											id={supplier.Personal_Details_Id}
+											onClick={() => setSelectedRecord(supplier)}
+										/>
+									))}
+								</div>
+							</ScrollArea>
+						) : (
+							<NoRecordsMessage records={'suppliers'} link={'/admin/suppliers/new-supplier'} item={'supplier'} />
+						)}
 					</div>
 				</div>
 				<div className="flex flex-col gap-3 w-2/5 flex-grow">
 					<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3">
 						<p className="text-slate-500">Details</p>
 					</div>
-					<div className="bg-slate-100 flex-grow p-6 rounded-lg flex items-center justify-center text-center">
-
-						{/** if no item is selected */}
-						<div className='flex flex-col gap-8 items-center '>
-							<MousePointerClick className="w-20 h-20 text-slate-500" strokeWidth={1.5} />
-							<p className="text-slate-500">
-								Search and select an item<br />to view its details.
-							</p>
-						</div>
-
+					<div className="bg-slate-100 flex flex-grow rounded-lg">
+						{selectedRecord ? (
+							<ScrollArea className="w-full h-full">
+								<div className="flex flex-col w-full h-40">
+									<SelectedRecord 
+										id={selectedRecord.Personal_Details_Id} 
+										company={selectedRecord.Personal_Details.company} 
+										representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
+										contact={selectedRecord.Personal_Details.contact}
+										email={selectedRecord.Personal_Details.email}
+										location={
+											[
+												selectedRecord.Personal_Details.location?.address_line,
+												selectedRecord.Personal_Details.location?.city,
+												selectedRecord.Personal_Details.location?.region,
+												selectedRecord.Personal_Details.location?.country,
+												selectedRecord.Personal_Details.location?.postal_code,
+											]
+												.filter((line) => line)
+												.join("\n")
+										}
+										notes={selectedRecord.Personal_Details.notes}/>
+								</div>
+							</ScrollArea>
+						) : (
+							<SelectItemMessage />
+						)}
 					</div>
 				</div>
 			</div>
-
-
 		</section>
 	)
 }

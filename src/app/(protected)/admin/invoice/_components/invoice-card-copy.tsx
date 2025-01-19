@@ -32,7 +32,7 @@ import {
   TableRow,
 } from "~/components/ui/table";
 
-interface InvoiceCardProps {
+type InvoiceCardProps = {
   id: number;
   itemName: string;
   brandName: string;
@@ -55,7 +55,39 @@ interface InvoiceCardProps {
   }>;
 
   onRemove: (batchNumber: number) => void;
-}
+};
+
+type BatchVariantType = {
+  BatchVariant: Array<{
+    batch_variant_id: number;
+    batch: {
+      quantity: number;
+    };
+    SupplierUnit: Array<{
+      price: number;
+      quantity_per_unit: number;
+      unit_id: number;
+      unit: {
+        name: string;
+        unit_id: number;
+      };
+    }>;
+  }>;
+};
+
+type SupplierUnitType = [
+  {
+    SupplierUnit: Array<{
+      price: number;
+      quantity_per_unit: number;
+      unit_id: number;
+      unit: {
+        name: string;
+        unit_id: number;
+      };
+    }>;
+  },
+];
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
   id,
@@ -65,28 +97,40 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   BatchVariant,
   onRemove,
 }) => {
-  //   const [unitQuantity, setUnitQuantity] = useState<number | undefined>(
-  //   supplierUnit[0]?.quantity_per_unit,
-  // );
-  // const [price, setPrice] = useState<number | undefined>(
-  //   supplierUnit[0]?.price,
-  //   );
-
-  // const [selectedUnit, setSelectedUnit] = useState(supplierUnit[0]);
-
-  // const [totalPrice, setTotalPrice] = useState<number | undefined>(
-  //   (unitQuantity || 0) * (price || 0),
-  // );
-
+  const [unitQuantity, setUnitQuantity] = useState<number>(0);
+  const [price, setPrice] = useState<number>(0);
+  const [totalPrice, setTotalPrice] = useState<number>(0);
   const [supplier, setSupplier] = useState("Supplier");
-
+  const [selectedUnit, setSelectedUnit] = useState("");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
-  const [grandTotal, setGrandTotal] = useState<number | undefined>(0);
-
+  const [grandTotal, setGrandTotal] = useState<number>(0);
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
   );
+  const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
+  const [selectedBatches, setSelectedBatches] =
+    useState<SupplierUnitType | null>(null);
+  console.log(`price: ${price}`);
+  console.log(`quantity: ${unitQuantity}`);
+
+  const handleSelectBatch = (index: number, supplierUnits: any[]) => {
+    setCheckedState((prev) => ({
+      ...prev,
+      [index]: !prev[index], // Toggle the checked state for the current index
+    }));
+
+    // Perform actions based on the new state
+    setSelectedBatches((prev) => {
+      if (prev?.some((batch) => batch.index === index)) {
+        // Remove the item if it already exists
+        return prev.filter((batch) => batch.index !== index);
+      } else {
+        // Add the item if it doesn't exist
+        return [...(prev || []), { supplierUnits }];
+      }
+    });
+  };
 
   // useEffect(() => {
   //   // Calculate the discounted total price
@@ -129,6 +173,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   //   setIsBatchWindowShown(!isBatchWindowShown);
   //   console.log(isBatchWindowShown);
   // };
+
+  const calculateTotal = () => {
+    setTotalPrice(unitQuantity * price);
+  };
+
+  useEffect(() => {
+    calculateTotal();
+  }, [unitQuantity, price]);
 
   return (
     <div className="border-gray-200 h-fit rounded-xl border bg-gray p-4 shadow-sm">
@@ -174,8 +226,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           <Input
                             type="checkbox"
                             className="h-4 w-fit"
+                            checked={!!checkedState[index]}
                             onClick={() =>
                               setGrandTotal(variant.SupplierUnit[0]?.price)
+                            }
+                            onChange={() =>
+                              handleSelectBatch(index, variant.SupplierUnit)
                             }
                           />
                           <Label className="">Batch {index + 1}</Label>
@@ -238,29 +294,74 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
       <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
-          <AccordionTrigger className="hover:no-underline">
-            Batch {id + 1}
-          </AccordionTrigger>
+          <AccordionTrigger className="flex justify-center hover:no-underline"></AccordionTrigger>
           <AccordionContent>
             <div className="flex flex-col gap-4">
               <div className="flex flex-col gap-2">
-                <Label className="text-left">Quantity & Stock</Label>
+                <Label className="text-left">Quantity & Unit</Label>
                 <div className="flex">
                   <Input
                     className="rounded-r-none border shadow-none"
-                    value={0}
+                    placeholder="Enter Quantity"
+                    value={unitQuantity}
+                    onChange={(e) => setUnitQuantity(Number(e.target.value))}
                   />
+                  <Select onValueChange={setSelectedUnit}>
+                    <SelectTrigger className="rounded-l-none">
+                      <SelectValue placeholder="Select Unit" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {selectedBatches?.map((batch) =>
+                        Object.entries(batch).map((test) =>
+                          test[1].map((ywa, index) => (
+                            <SelectItem value={ywa.unit.name} key={index}>
+                              {ywa.unit.name}
+                            </SelectItem>
+                          )),
+                        ),
+                      )}
+                    </SelectContent>
+                  </Select>
                 </div>
               </div>
 
               <div className="flex flex-col gap-2">
                 <Label className="text-left">Pricing</Label>
                 <div className="flex">
-                  <Input
-                    className="rounded-r-none border shadow-none"
-                    value={0}
-                    disabled={supplier === "Supplier"}
-                  />
+                  {supplier === "Supplier" ? (
+                    <Select
+                      onValueChange={(value) => setPrice(Number(value))}
+                      value={price.toString()}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select Pricing" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {selectedBatches?.map((batch, batchIndex) =>
+                          Object.entries(batch).map(([key, value]) =>
+                            value.map((ywa, ywaIndex) =>
+                              ywa.unit.name === selectedUnit ? (
+                                <SelectItem
+                                  value={ywa.price.toString()}
+                                  key={`${batchIndex}-${key}-${ywaIndex}`}
+                                >
+                                  {ywa.price}
+                                </SelectItem>
+                              ) : null,
+                            ),
+                          ),
+                        )}
+                      </SelectContent>
+                    </Select>
+                  ) : (
+                    <Input
+                      className="rounded-r-none border shadow-none"
+                      placeholder="Select Pricing"
+                      value={price}
+                      onChange={(e) => setPrice(Number(e.target.value))}
+                    />
+                  )}
+
                   <Select
                     value={supplier}
                     onValueChange={(value) => setSupplier(value)}
@@ -304,6 +405,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         </AccordionItem>
       </Accordion>
 
+      <div className="flex items-center gap-3 py-3">
+        <Label className="font-bold">Total </Label>
+        <Input className="shadow-none" disabled value={totalPrice} />
+      </div>
       {/* <p className="text-gray-400 mt-4 text-sm">
         Insufficient stock from Batch 1!
         <br />

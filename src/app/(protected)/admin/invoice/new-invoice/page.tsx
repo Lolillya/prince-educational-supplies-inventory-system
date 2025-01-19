@@ -186,7 +186,7 @@ const NewInvoice = () => {
       setFilteredSupplier(result);
     } else setFilteredSupplier([]);
 
-    calculateGrandTotal();
+    // calculateGrandTotal();
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 
   if (isLoading) {

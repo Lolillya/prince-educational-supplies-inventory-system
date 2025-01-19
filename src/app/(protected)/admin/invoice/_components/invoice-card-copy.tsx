@@ -82,6 +82,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
+  const [grandTotal, setGrandTotal] = useState<number | undefined>(0);
 
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
@@ -170,7 +171,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     <AccordionTrigger>
                       <div className="flex w-full">
                         <div className="flex w-full items-center gap-3">
-                          <Input type="checkbox" className="h-4 w-fit" />
+                          <Input
+                            type="checkbox"
+                            className="h-4 w-fit"
+                            onClick={() =>
+                              setGrandTotal(variant.SupplierUnit[0]?.price)
+                            }
+                          />
                           <Label className="">Batch {index + 1}</Label>
                         </div>
                       </div>
@@ -190,10 +197,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           {variant.SupplierUnit.map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
-                              <TableCell>20 Cases</TableCell>
-                              <TableCell>200</TableCell>
+                              <TableCell># {unit.unit.name}</TableCell>
+                              <TableCell>{unit.quantity_per_unit}</TableCell>
                               <TableCell className="text-right">
-                                P 600.00
+                                P {unit.price}
                               </TableCell>
                               <TableCell>
                                 <Button variant="link">Out to office</Button>
@@ -229,7 +236,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         </PopoverContent>
       </Popover>
 
-      {/* <Accordion type="single" collapsible>
+      <Accordion type="single" collapsible>
         <AccordionItem value="item-1">
           <AccordionTrigger className="hover:no-underline">
             Batch {id + 1}
@@ -274,7 +281,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <div className="flex">
                   <Input
                     className="rounded-r-none border shadow-none"
-                    placeholder="00"
+                    placeholder="0"
                     value={discount}
                     onChange={(e) => setDiscount(e.target.value)}
                   />
@@ -295,7 +302,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
             </div>
           </AccordionContent>
         </AccordionItem>
-      </Accordion> */}
+      </Accordion>
 
       {/* <p className="text-gray-400 mt-4 text-sm">
         Insufficient stock from Batch 1!

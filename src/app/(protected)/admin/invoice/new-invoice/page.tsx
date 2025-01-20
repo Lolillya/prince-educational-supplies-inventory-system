@@ -133,9 +133,6 @@ const NewInvoice = () => {
         })),
       ),
     };
-
-    // console.log(invoiceData.lineItems);
-    // invoiceData.lineItems.map((item) => console.log(item));
     createInvoice(invoiceData);
   };
 
@@ -185,8 +182,6 @@ const NewInvoice = () => {
       );
       setFilteredSupplier(result);
     } else setFilteredSupplier([]);
-
-    calculateGrandTotal();
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 
   if (isLoading) {

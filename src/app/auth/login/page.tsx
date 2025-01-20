@@ -121,11 +121,7 @@ const LoginPage = () => {
         {success && <p className="mb-4 text-center text-red">{success}</p>}
 
         {/* Submit Button */}
-        <Button
-          type="submit"
-          disabled={isPending}
-          className="w-full bg-primary"
-        >
+        <Button type="submit" disabled={isPending} className="w-full">
           {isPending ? "Logging in..." : "Sign in"}
         </Button>
       </form>

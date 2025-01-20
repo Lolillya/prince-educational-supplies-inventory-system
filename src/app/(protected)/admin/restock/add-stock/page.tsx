@@ -62,6 +62,7 @@ const InvoiceAddStock = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog open state
   const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
   const [dialogType, setDialogType] = useState("");
+  const [accordionStates, setAccordionStates] = useState<{ [key: number]: boolean }>({});
 
   const { data: inventoryItems, isLoading, isError } =
       api.inventory.listInventory.useQuery();
@@ -117,15 +118,7 @@ const InvoiceAddStock = () => {
 
   const totalStock = (inventoryId: number) => {
     const stockValue = Number(stock[inventoryId] || 0);
-    const itemStockUnits = stockUnits[inventoryId] || [];
-
-    const totalConversions = itemStockUnits
-        .slice(1)
-        .reduce((sum, unit) => {
-          const conversionQty = Number(unit.stock) || 0;
-          return sum + conversionQty;
-        }, 0);
-    return stockValue + totalConversions;
+    return stockValue;
   };
 
 
@@ -136,27 +129,32 @@ const InvoiceAddStock = () => {
 
   const getConversionData = (inventoryId: number) => {
     const itemStockUnits = stockUnits[inventoryId] || [];
-
-    return itemStockUnits.map((unit, index) => {
-      const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
-      const currentUnit = previousUnit ? previousUnit.conversionUnit : unit.unit;
-      return (
-          <div key={index} className="flex gap-2 items-center">
-            <p>{currentUnit}</p>
-            <ArrowRight className="w-4 h-4"/>
-            <p>
-              <span>{unit.conversionQty || "N/A"}</span> {unit.conversionUnit || "N/A"}
-            </p>
-          </div>
-      );
-    });
+    return itemStockUnits
+        .filter((unit) => unit.conversionQty?.trim() && unit.conversionUnit?.trim())
+        .map((unit, index) => {
+          const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
+          const currentUnit = previousUnit ? previousUnit.conversionUnit : unit.unit;
+          return (
+              <div key={index} className="flex gap-2 items-center">
+                <p>{currentUnit}</p>
+                <ArrowRight className="w-4 h-4" />
+                <p>
+                  <span>{unit.conversionQty}</span> {unit.conversionUnit}
+                </p>
+              </div>
+          );
+        });
   };
 
   // Modified: Get number of conversions dynamically
   const getConversionCount = (inventoryId: number) => {
     const itemStockUnits = stockUnits[inventoryId] || [];
-    return itemStockUnits.length;
+    // Only count rows where both conversionQty and conversionUnit are filled
+    return itemStockUnits.filter(
+        (unit) => unit.conversionQty?.trim() && unit.conversionUnit?.trim()
+    ).length;
   };
+
   const handlePriceChange = (inventoryId: number, newPrice: string) => {
     setPrice((prev) => ({ ...prev, [inventoryId]: newPrice }));
   };
@@ -311,6 +309,31 @@ const InvoiceAddStock = () => {
     );
   }
 
+  const isFormValid = () => {
+    const hasIncompleteParentFields = selectedItems.some(
+        (item) =>
+            !stock[item.inventory_id] || !price[item.inventory_id] || !unit[item.inventory_id]
+    );
+
+    // Check for incomplete or inconsistent child fields
+    const hasIncompleteChildFields = selectedItems.some((item) => {
+      const itemStockUnits = stockUnits[item.inventory_id] || [];
+      const isExpanded = accordionStates[item.inventory_id]; // Check expansion state
+
+      return (
+          isExpanded && // Only validate child rows if accordion is expanded
+          itemStockUnits.some(
+              (unit) =>
+                  // Invalid if either field is empty while the other is filled
+                  (unit.conversionQty?.trim() && !unit.conversionUnit?.trim()) ||
+                  (!unit.conversionQty?.trim() && unit.conversionUnit?.trim())
+          )
+      );
+    });
+
+    // Form is valid if no parent or child fields are incomplete
+    return !hasIncompleteParentFields && !hasIncompleteChildFields;
+  };
 
   return (
       <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
@@ -417,11 +440,17 @@ const InvoiceAddStock = () => {
                   key={item.inventory_id}
                   item={item}
                   onRemove={() => handleRemoveItem(item.inventory_id)}
-                  stockValue={stock[item.inventory_id] || ""} // Pass stock value to StockCard
+                  stockValue={stock[item.inventory_id] || ""}
                   onStockChange={(newStock) => handleStockChange(item.inventory_id, newStock)}
                   onPriceChange={(newPrice) => handlePriceChange(item.inventory_id, newPrice)}
                   onUnitChange={(newUnit) => handleUnitChange(item.inventory_id, newUnit)}
                   onStockUnitsChange={(newStockUnits) => handleStockUnitsChange(item.inventory_id, newStockUnits)}
+                  onAccordionToggle={(isExpanded) =>
+                      setAccordionStates((prev) => ({
+                        ...prev,
+                        [item.inventory_id]: isExpanded,
+                      }))
+                  } // Pass state toggle callback
               />
           ))}
         </div>
@@ -440,9 +469,14 @@ const InvoiceAddStock = () => {
               <DialogTrigger asChild>
                 <Button
                     size={"lg"}
-                    className="bg-green py-8 text-sm font-bold text-white"
+                    className={`py-8 text-sm font-bold text-white bg-green ${
+                        isFormValid() && selectedItems.length > 0
+                            ? ""
+                            : "opacity-50 cursor-not-allowed"
+                    }`}
+                    disabled={!isFormValid() || selectedItems.length === 0} // Disable if form is invalid or no items are selected
                 >
-                  Confirm Resock
+                  Confirm Restock
                 </Button>
               </DialogTrigger>
               <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">

@@ -44,6 +44,7 @@ const StockCard = ({
   onConversionUnitChange,
   onConversionRateChange,
   onStockUnitsChange,
+  onAccordionToggle,
 }: StockCardProps) => {
   const [stockUnits, setStockUnits] = useState<StockUnitData[]>([]);
   const [stock, setStock] = useState("");
@@ -54,6 +55,7 @@ const StockCard = ({
   const [filteredUnits, setFilteredUnits] = useState<string[]>([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1); // Index of the highlighted unit in the dropdown
+  const [isAccordionExpanded, setIsAccordionExpanded] = useState(false);
 
   // Use TRPC to fetch units from the backend
   const { data: units, isLoading, isError } = api.restock.getUnits.useQuery();
@@ -79,10 +81,10 @@ const StockCard = ({
   }, [stockUnits]);
 
   useEffect(() => {
-    if (stockUnits.length === 0) {
+    if (stockUnits.length === 0 && (stock || price || unit)) {
       addStockUnit();
     }
-  }, []);
+  }, [stock, price, unit]);
 
   useEffect(() => {
     if (units) {
@@ -105,6 +107,7 @@ const StockCard = ({
       setDropdownVisible(false);
     }
   }, [searchTerm, unitOptions]);
+
 
   const handleSelectUnit = (unitName: string) => {
     setUnit(unitName); // Set the unit at the top level
@@ -229,21 +232,21 @@ const StockCard = ({
   };
 
   const updateStockUnit = (
-    index: number,
-    field: keyof StockUnitData,
-    value: string,
+      index: number,
+      field: keyof StockUnitData,
+      value: string,
   ) => {
     // Update the specific field of the current unit
     const updatedUnits = stockUnits.map((unit, i) =>
-      i === index ? { ...unit, [field]: value } : unit,
+        i === index ? { ...unit, [field]: value } : unit,
     );
 
     // Check if the reset condition is triggered (conversionQty, conversionUnit, stock, or price is cleared)
     const isResetRequired =
-      (field === "conversionQty" && (!value || value.trim() === "")) ||
-      (field === "conversionUnit" && (!value || value.trim() === "")) ||
-      (field === "stock" && (!value || value.trim() === "")) ||
-      (field === "price" && (!value || value.trim() === ""));
+        (field === "conversionQty" && (!value || value.trim() === "")) ||
+        (field === "conversionUnit" && (!value || value.trim() === "")) ||
+        (field === "stock" && (!value || value.trim() === "")) ||
+        (field === "price" && (!value || value.trim() === ""));
 
     // If reset is required, clear all rows below the current row
     if (isResetRequired) {
@@ -255,6 +258,24 @@ const StockCard = ({
       return; // Exit early since no further calculations are needed
     }
 
+    // Check if the current row is complete and is the last row
+    const isCurrentRowComplete =
+        updatedUnits[index]?.conversionQty &&
+        updatedUnits[index]?.conversionUnit;
+
+    const isLastRow = index === updatedUnits.length - 1;
+
+    if (isCurrentRowComplete && isLastRow) {
+      // Add a new blank row if the current row is complete
+      updatedUnits.push({
+        stock: "",
+        price: "",
+        unit: "",
+        conversionQty: "",
+        conversionUnit: "",
+      });
+    }
+
     // Apply cascading logic for stock and price, starting with the next row
     for (let i = 0; i < updatedUnits.length - 1; i++) {
       const currentUnit = updatedUnits[i]; // Current row
@@ -262,17 +283,17 @@ const StockCard = ({
 
       // Parse relevant fields
       const conversionQty =
-        i === index && field === "conversionQty"
-          ? parseFloat(value || "")
-          : parseFloat(currentUnit.conversionQty || "");
+          i === index && field === "conversionQty"
+              ? parseFloat(value || "")
+              : parseFloat(currentUnit.conversionQty || "");
 
       const currentStock = parseFloat(currentUnit.stock || "");
       const currentPrice = parseFloat(currentUnit.price || "");
 
-      // **NEW CHECK**: Skip calculations if "conversionUnit" or "stock" is empty
+      // Skip calculations if "conversionUnit" or "stock" is empty
       if (
-        !currentUnit.conversionUnit ||
-        currentUnit.conversionUnit.trim() === ""
+          !currentUnit.conversionUnit ||
+          currentUnit.conversionUnit.trim() === ""
       ) {
         nextUnit.stock = "";
         nextUnit.price = "";
@@ -280,10 +301,10 @@ const StockCard = ({
       }
 
       if (
-        !currentStock ||
-        isNaN(currentStock) ||
-        !currentPrice ||
-        isNaN(currentPrice)
+          !currentStock ||
+          isNaN(currentStock) ||
+          !currentPrice ||
+          isNaN(currentPrice)
       ) {
         nextUnit.stock = "";
         nextUnit.price = "";
@@ -303,6 +324,15 @@ const StockCard = ({
     setStockUnits(updatedUnits);
   };
 
+
+  const handleAccordionToggle = () => {
+    setIsAccordionExpanded((prev) => {
+      const newState = !prev;
+      onAccordionToggle(newState); // Notify parent
+      return newState;
+    });
+  };
+
   return (
     <div className="border-gray-200 h-auto w-full rounded-xl border px-4 pt-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
@@ -316,7 +346,10 @@ const StockCard = ({
       <div className="mt-2">
         <Accordion type="single" collapsible>
           <AccordionItem value="item-1">
-            <AccordionTrigger className="hover:no-underline">
+            <AccordionTrigger
+                className="hover:no-underline"
+                onClick={handleAccordionToggle}
+            >
               <div
                 className="grid grid-cols-5 gap-3 pr-4 hover:cursor-default"
                 onClick={(e) => e.stopPropagation()}
@@ -325,7 +358,7 @@ const StockCard = ({
                   <Label className="text-left">Stock</Label>
                   <Input
                     placeholder="000"
-                    value={stockValue} // Controlled value from parent
+                    value={stockValue} // Controlled value from parent ALSO, formerly stockValue
                     onChange={(e) => {
                       const value = e.target.value;
                       if (/^\d*$/.test(value)) {

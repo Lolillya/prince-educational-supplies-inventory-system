@@ -31,7 +31,7 @@ const InvoiceItem: React.FC<orderItemProps> = ({
 
 				<div className='w-1/2 flex flex-col gap-4'>
 					<p>
-						{brand} - {item} - {variant}
+						{item} - {brand} - {variant}
 					</p>
 					<div className='text-slate-400 flex gap-5 items-center'>
 						<div className='flex items-center gap-3 text-slate-400'>

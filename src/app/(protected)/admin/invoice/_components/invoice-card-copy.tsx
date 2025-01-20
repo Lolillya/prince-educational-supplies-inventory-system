@@ -55,6 +55,7 @@ type InvoiceCardProps = {
   }>;
 
   onRemove: (batchNumber: number) => void;
+  calculateGrandTotal: (total: number) => void;
 };
 
 type BatchVariantType = {
@@ -96,6 +97,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   variant,
   BatchVariant,
   onRemove,
+  calculateGrandTotal,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
@@ -104,29 +106,23 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [selectedUnit, setSelectedUnit] = useState("");
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
-  const [grandTotal, setGrandTotal] = useState<number>(0);
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
   );
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
   const [selectedBatches, setSelectedBatches] =
     useState<SupplierUnitType | null>(null);
-  console.log(`price: ${price}`);
-  console.log(`quantity: ${unitQuantity}`);
 
   const handleSelectBatch = (index: number, supplierUnits: any[]) => {
     setCheckedState((prev) => ({
       ...prev,
-      [index]: !prev[index], // Toggle the checked state for the current index
+      [index]: !prev[index],
     }));
 
-    // Perform actions based on the new state
     setSelectedBatches((prev) => {
       if (prev?.some((batch) => batch.index === index)) {
-        // Remove the item if it already exists
         return prev.filter((batch) => batch.index !== index);
       } else {
-        // Add the item if it doesn't exist
         return [...(prev || []), { supplierUnits }];
       }
     });
@@ -182,6 +178,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     calculateTotal();
   }, [unitQuantity, price]);
 
+  useEffect(() => {
+    calculateGrandTotal(totalPrice);
+  }, [totalPrice]);
+
   return (
     <div className="border-gray-200 h-fit rounded-xl border bg-gray p-4 shadow-sm">
       <div className="mb-4 flex items-center justify-between">
@@ -227,9 +227,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             type="checkbox"
                             className="h-4 w-fit"
                             checked={!!checkedState[index]}
-                            onClick={() =>
-                              setGrandTotal(variant.SupplierUnit[0]?.price)
-                            }
                             onChange={() =>
                               handleSelectBatch(index, variant.SupplierUnit)
                             }

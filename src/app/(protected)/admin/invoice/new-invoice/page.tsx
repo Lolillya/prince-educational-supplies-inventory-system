@@ -89,22 +89,16 @@ const NewInvoice = () => {
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
-  const calculateGrandTotal = () => {
-    const total = selectedItems.reduce((acc, item) => {
-      return (
-        acc +
-        Object.entries(item.variant.BatchVariant).reduce(
-          (batchAcc, [_, variant]) => {
-            const quantity = variant.SupplierUnit[0]?.quantity_per_unit || 0;
-            const unitPrice = variant.SupplierUnit[0]?.price || 0;
-            return batchAcc + quantity * unitPrice;
-          },
-          0,
-        )
-      );
-    }, 0);
+  const calculateGrandTotal = (total: number) => {
+    console.log("parent clicked");
+    setGrandTotal(total + grandTotal);
 
-    setGrandTotal(total);
+    // TODO:
+    // - pass totalPrice from child to parent
+    // - calculate grand total
+    //
+    // - update remove card function
+    // - calculate grand total after card remove
   };
 
   const handleSaveInvoice = () => {
@@ -289,6 +283,7 @@ const NewInvoice = () => {
               variant={item.variant.name}
               BatchVariant={item.variant.BatchVariant}
               onRemove={handleRemoveBatch}
+              calculateGrandTotal={calculateGrandTotal}
             />
           );
         })}

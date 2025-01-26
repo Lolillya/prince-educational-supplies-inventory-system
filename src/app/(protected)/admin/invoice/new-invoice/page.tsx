@@ -72,7 +72,19 @@ const NewInvoice = () => {
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [activeCards, setActiveCards] = useState<
-    Record<string, { totalPrice: number }>
+    Record<
+      string,
+      {
+        totalPrice: number;
+        unitPrice: number;
+        quantity: number;
+        discount: number;
+        selectedUnit: string;
+        itemName: string;
+        brandName: string;
+        variant: string;
+      }
+    >
   >({});
 
   const [grandTotal, setGrandTotal] = useState<number>(0);
@@ -90,10 +102,29 @@ const NewInvoice = () => {
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
-  const updateCardDetails = (id: number, totalPrice: number) => {
+  const updateCardDetails = (
+    id: number,
+    totalPrice: number,
+    unitPrice: number,
+    quantity: number,
+    discount: number,
+    selectedUnit: string,
+    itemName: string,
+    brandName: string,
+    variant: string,
+  ) => {
     setActiveCards((prev) => ({
       ...prev,
-      [id]: { totalPrice },
+      [id]: {
+        totalPrice,
+        unitPrice,
+        quantity,
+        discount,
+        selectedUnit,
+        itemName,
+        brandName,
+        variant,
+      },
     }));
   };
 
@@ -162,6 +193,8 @@ const NewInvoice = () => {
 
   useEffect(() => {
     calculateGrandTotal();
+
+    console.log(activeCards);
   }, [activeCards]);
 
   useEffect(() => {
@@ -363,30 +396,34 @@ const NewInvoice = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedItems.map((item) =>
-                    Object.entries(item.variant.BatchVariant).map(
-                      ([_, variant]) => (
-                        <TableRow key={variant.batch_variant_id}>
-                          <TableCell>
-                            {item.variant.item.name} -{" "}
-                            {item.variant.item.brand.name} - {item.variant.name}
-                          </TableCell>
-                          <TableCell>
-                            {variant.SupplierUnit[0]?.quantity_per_unit}
-                          </TableCell>
-                          <TableCell>Boxes</TableCell>
-                          <TableCell className="text-right">
-                            P {variant.SupplierUnit[0]?.price}
-                          </TableCell>
-                          <TableCell>0%</TableCell>
-                          <TableCell>
-                            {(variant.SupplierUnit[0]?.quantity_per_unit || 0) *
-                              (variant.SupplierUnit[0]?.price || 0)}
-                          </TableCell>
-                        </TableRow>
-                      ),
-                    ),
-                  )}
+                  {/* {selectedItems.map((item) => (
+                    <TableRow key={item.inventory_id}>
+                      <TableCell>
+                        {item.variant.item.name} -{" "}
+                        {item.variant.item.brand.name} - {item.variant.name}
+                      </TableCell>
+                      <TableCell>change this</TableCell>
+                      <TableCell>change this</TableCell>
+                      <TableCell className="text-right">
+                        P change this
+                      </TableCell>
+                      <TableCell>change this</TableCell>
+                      <TableCell>change this</TableCell>
+                    </TableRow>
+                  ))} */}
+                  {Object.entries(activeCards).map((item) => (
+                    <TableRow key={item[0]}>
+                      <TableCell>
+                        {item[1].itemName} - {item[1].brandName} -{" "}
+                        {item[1].variant}{" "}
+                      </TableCell>
+                      <TableCell>{item[1].quantity}</TableCell>
+                      <TableCell>{item[1].selectedUnit}</TableCell>
+                      <TableCell>{item[1].unitPrice}</TableCell>
+                      <TableCell>{item[1].discount}</TableCell>
+                      <TableCell>{item[1].totalPrice}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
               <div className="bottom-0 flex w-full justify-end">

@@ -55,25 +55,17 @@ type InvoiceCardProps = {
   }>;
 
   onRemove: (batchNumber: number) => void;
-  updateCardDetails: (id: number, totalPrice: number) => void;
-};
-
-type BatchVariantType = {
-  BatchVariant: Array<{
-    batch_variant_id: number;
-    batch: {
-      quantity: number;
-    };
-    SupplierUnit: Array<{
-      price: number;
-      quantity_per_unit: number;
-      unit_id: number;
-      unit: {
-        name: string;
-        unit_id: number;
-      };
-    }>;
-  }>;
+  updateCardDetails: (
+    id: number,
+    totalPrice: number,
+    price: number,
+    quantity: number,
+    discount: number,
+    selectedUnit: string,
+    itemName: string,
+    brandName: string,
+    variant: string,
+  ) => void;
 };
 
 type SupplierUnitType = [
@@ -142,8 +134,27 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   }, [unitQuantity, price, discount]);
 
   useEffect(() => {
-    updateCardDetails(id, totalPrice);
-  }, [totalPrice]);
+    updateCardDetails(
+      id,
+      totalPrice,
+      price,
+      unitQuantity,
+      Number(discount),
+      selectedUnit,
+      itemName,
+      brandName,
+      variant!,
+    );
+  }, [
+    totalPrice,
+    price,
+    unitQuantity,
+    discount,
+    selectedUnit,
+    itemName,
+    brandName,
+    variant,
+  ]);
 
   return (
     <div className="border-gray-200 h-fit rounded-xl border bg-gray p-4 shadow-sm">

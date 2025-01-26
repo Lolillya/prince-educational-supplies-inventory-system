@@ -42,7 +42,7 @@ const RestockItem: React.FC<RestockItemsProps> = ({
       <div className="flex items-center justify-center">
         <div className="flex w-1/2 flex-col gap-4">
           <p>
-            {brand} - {item} - {variant}
+            {item} - {brand} - {variant}
           </p>
           <div className="flex items-center gap-5 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">

@@ -55,7 +55,7 @@ type InvoiceCardProps = {
   }>;
 
   onRemove: (batchNumber: number) => void;
-  calculateGrandTotal: (total: number) => void;
+  updateCardDetails: (id: number, totalPrice: number) => void;
 };
 
 type BatchVariantType = {
@@ -97,7 +97,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   variant,
   BatchVariant,
   onRemove,
-  calculateGrandTotal,
+  updateCardDetails,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState<number>(0);
@@ -128,58 +128,21 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     });
   };
 
-  // useEffect(() => {
-  //   // Calculate the discounted total price
-  //   const basePrice = (unitQuantity || 0) * (price || 0);
-  //   let finalPrice = basePrice;
-
-  //   if (discountType === "%") {
-  //     finalPrice = basePrice - (basePrice * parseFloat(discount || "0")) / 100;
-  //   } else if (discountType === "Fixed") {
-  //     finalPrice = basePrice - parseFloat(discount || "0");
-  //   }
-
-  //   setTotalPrice(finalPrice > 0 ? finalPrice : 0); // Prevent negative totals
-  // }, [unitQuantity, price, discount, discountType]);
-
-  // useEffect(() => {
-  //   setPrice(selectedUnit?.price);
-  //   setUnitQuantity(selectedUnit?.quantity_per_unit);
-
-  //   setTotalPrice((unitQuantity || 0) * (price || 0));
-  // }, [selectedUnit]);
-
-  // useEffect(() => {
-  //   setTotalPrice((unitQuantity || 0) * (price || 0));
-  // }, [price, unitQuantity]);
-
-  // const handleQuantityChange = (value: string) => {
-  //   const parsedValue = parseInt(value, 10);
-  //   setUnitQuantity(!isNaN(parsedValue) ? parsedValue : 0);
-  // };
-
-  // const handlePriceChange = (value: string) => {
-  //   const parsedValue = parseFloat(value);
-  //   setPrice(!isNaN(parsedValue) ? parsedValue : 0);
-  // };
-
-  // const handleShowBatch = (e: React.MouseEvent) => {
-  //   e.stopPropagation();
-  //   console.log("Clicked");
-  //   setIsBatchWindowShown(!isBatchWindowShown);
-  //   console.log(isBatchWindowShown);
-  // };
-
   const calculateTotal = () => {
-    setTotalPrice(unitQuantity * price);
+    const total =
+      discountType === "%"
+        ? unitQuantity * price * (1 - Number(discount) / 100)
+        : unitQuantity * price - Number(discount);
+
+    setTotalPrice(total);
   };
 
   useEffect(() => {
     calculateTotal();
-  }, [unitQuantity, price]);
+  }, [unitQuantity, price, discount]);
 
   useEffect(() => {
-    calculateGrandTotal(totalPrice);
+    updateCardDetails(id, totalPrice);
   }, [totalPrice]);
 
   return (

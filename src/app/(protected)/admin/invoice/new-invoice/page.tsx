@@ -71,6 +71,9 @@ const NewInvoice = () => {
 
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
+  const [activeCards, setActiveCards] = useState<
+    Record<string, { totalPrice: number }>
+  >({});
 
   const [grandTotal, setGrandTotal] = useState<number>(0);
 
@@ -82,23 +85,23 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
-  console.log(stockTotals);
-
   const { data: supplierList } = api.invoice.getSuppliers.useQuery();
 
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
-  const calculateGrandTotal = (total: number) => {
-    console.log("parent clicked");
-    setGrandTotal(total + grandTotal);
+  const updateCardDetails = (id: number, totalPrice: number) => {
+    setActiveCards((prev) => ({
+      ...prev,
+      [id]: { totalPrice },
+    }));
+  };
 
-    // TODO:
-    // - pass totalPrice from child to parent
-    // - calculate grand total
-    //
-    // - update remove card function
-    // - calculate grand total after card remove
+  const calculateGrandTotal = () => {
+    setGrandTotal(0);
+    Object.entries(activeCards).map((card) => {
+      setGrandTotal((prevState) => (prevState += card[1].totalPrice));
+    });
   };
 
   const handleSaveInvoice = () => {
@@ -152,6 +155,10 @@ const NewInvoice = () => {
     }
     setSearchTerm("");
   };
+
+  useEffect(() => {
+    calculateGrandTotal();
+  }, [activeCards]);
 
   useEffect(() => {
     if (searchTerm && inventoryItems) {
@@ -283,7 +290,7 @@ const NewInvoice = () => {
               variant={item.variant.name}
               BatchVariant={item.variant.BatchVariant}
               onRemove={handleRemoveBatch}
-              calculateGrandTotal={calculateGrandTotal}
+              updateCardDetails={updateCardDetails}
             />
           );
         })}

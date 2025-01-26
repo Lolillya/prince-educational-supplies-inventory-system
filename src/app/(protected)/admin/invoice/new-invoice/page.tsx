@@ -79,6 +79,7 @@ const NewInvoice = () => {
         unitPrice: number;
         quantity: number;
         discount: number;
+        discountType: string;
         selectedUnit: string;
         itemName: string;
         brandName: string;
@@ -109,6 +110,7 @@ const NewInvoice = () => {
     unitPrice: number,
     quantity: number,
     discount: number,
+    discountType: string,
     selectedUnit: string,
     itemName: string,
     brandName: string,
@@ -122,6 +124,7 @@ const NewInvoice = () => {
         unitPrice,
         quantity,
         discount,
+        discountType,
         selectedUnit,
         itemName,
         brandName,
@@ -426,7 +429,10 @@ const NewInvoice = () => {
                       <TableCell>{item[1].quantity}</TableCell>
                       <TableCell>{item[1].selectedUnit}</TableCell>
                       <TableCell>{item[1].unitPrice}</TableCell>
-                      <TableCell>{item[1].discount}</TableCell>
+                      <TableCell>
+                        {item[1].discount}{" "}
+                        {item[1].discountType === "%" ? "%" : ""}
+                      </TableCell>
                       <TableCell>{item[1].totalPrice}</TableCell>
                     </TableRow>
                   ))}

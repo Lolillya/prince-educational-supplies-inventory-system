@@ -133,10 +133,14 @@ const NewInvoice = () => {
     createInvoice(invoiceData);
   };
 
-  const handleRemoveBatch = (idToRemove: number) => {
-    setSelectedItems((prevItems) =>
-      prevItems.filter((item) => item.inventory_id !== idToRemove),
-    );
+  const handleRemoveBatch = (id: number) => {
+    setSelectedItems((prev) => prev.filter((item) => item.inventory_id !== id));
+
+    setActiveCards((prev) => {
+      const updatedCards = { ...prev };
+      delete updatedCards[id];
+      return updatedCards;
+    });
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {

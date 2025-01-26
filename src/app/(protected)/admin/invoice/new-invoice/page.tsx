@@ -147,29 +147,27 @@ const NewInvoice = () => {
       return;
     }
 
-    Object.entries(activeCards).map((item) => {
-      const invoiceId = `INV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
-      const invoiceData = {
-        invoice: {
-          invoice_number: invoiceId,
-          customer_id: selectedSupplier?.Personal_Details.personal_details_id,
-          total_amount: grandTotal,
-          discount: item[1].discount,
-          status: "PENDING",
-          payment_term_id: 1,
-        },
-        lineItems: {
-          variant_id: item[1].variant_id,
-          quantity: item[1].quantity,
-          unit_price: item[1].unitPrice,
-          total_price: item[1].totalPrice,
-        },
-      };
-      // createInvoice(invoiceData);
-      console.log(invoiceData);
-    });
-
-    // console.log(invoiceData);
+    // Object.entries(activeCards).map((item) => {
+    const invoiceId = `INV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    const invoiceData = {
+      invoice: {
+        invoice_number: invoiceId,
+        customer_id: selectedSupplier?.Personal_Details.personal_details_id,
+        total_amount: grandTotal,
+        discount: 0,
+        status: "PENDING",
+        payment_term_id: 1,
+      },
+      lineItems: Object.entries(activeCards).map((item) => ({
+        variant_id: item[1].variant_id,
+        quantity: item[1].quantity,
+        unit_price: item[1].unitPrice,
+        total_price: item[1].totalPrice,
+      })),
+    };
+    createInvoice(invoiceData);
+    console.log(invoiceData);
+    // });
   };
 
   const handleRemoveBatch = (id: number) => {

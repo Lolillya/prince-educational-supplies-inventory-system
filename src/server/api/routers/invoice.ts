@@ -121,6 +121,9 @@ export const invoiceRouter = createTRPCRouter({
           ),
         );
 
+        console.log(createdInvoice);
+        console.log(createdLineItems);
+
         return { createdInvoice, createdLineItems };
       });
 

@@ -83,6 +83,7 @@ const NewInvoice = () => {
         itemName: string;
         brandName: string;
         variant: string;
+        variant_id: number;
       }
     >
   >({});
@@ -112,6 +113,7 @@ const NewInvoice = () => {
     itemName: string,
     brandName: string,
     variant: string,
+    variant_id: number,
   ) => {
     setActiveCards((prev) => ({
       ...prev,
@@ -124,6 +126,7 @@ const NewInvoice = () => {
         itemName,
         brandName,
         variant,
+        variant_id,
       },
     }));
   };
@@ -136,32 +139,34 @@ const NewInvoice = () => {
   };
 
   const handleSaveInvoice = () => {
-    if (!selectedItems) {
+    if (!selectedItems || !activeCards) {
       alert("Select an item to save invoice!");
       return;
     }
 
-    const invoiceData = {
-      invoice: {
-        invoice_number: "INV_00004",
-        customer_id: selectedSupplier?.Personal_Details.personal_details_id,
-        total_amount: grandTotal,
-        discount: 0,
-        status: "PENDING",
-        payment_term_id: 1,
-      },
-      lineItems: selectedItems.flatMap((item) =>
-        Object.entries(item.variant.BatchVariant).map(([_, variant]) => ({
-          variant_id: item.variant.variant_id,
-          quantity: variant.SupplierUnit[0]?.quantity_per_unit || 0,
-          unit_price: variant.SupplierUnit[0]?.price || 0,
-          total_price:
-            (variant.SupplierUnit[0]?.quantity_per_unit || 0) *
-            (variant.SupplierUnit[0]?.price || 0),
-        })),
-      ),
-    };
-    createInvoice(invoiceData);
+    Object.entries(activeCards).map((item) => {
+      const invoiceId = `INV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+      const invoiceData = {
+        invoice: {
+          invoice_number: invoiceId,
+          customer_id: selectedSupplier?.Personal_Details.personal_details_id,
+          total_amount: grandTotal,
+          discount: item[1].discount,
+          status: "PENDING",
+          payment_term_id: 1,
+        },
+        lineItems: {
+          variant_id: item[1].variant_id,
+          quantity: item[1].quantity,
+          unit_price: item[1].unitPrice,
+          total_price: item[1].totalPrice,
+        },
+      };
+      // createInvoice(invoiceData);
+      console.log(invoiceData);
+    });
+
+    // console.log(invoiceData);
   };
 
   const handleRemoveBatch = (id: number) => {
@@ -325,6 +330,7 @@ const NewInvoice = () => {
               itemName={item.variant.item.name}
               brandName={item.variant.item.brand.name}
               variant={item.variant.name}
+              variant_id={item.variant.variant_id}
               BatchVariant={item.variant.BatchVariant}
               onRemove={handleRemoveBatch}
               updateCardDetails={updateCardDetails}

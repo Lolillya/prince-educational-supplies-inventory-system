@@ -37,6 +37,7 @@ type InvoiceCardProps = {
   itemName: string;
   brandName: string;
   variant: string | null;
+  variant_id: number;
 
   BatchVariant: Array<{
     batch_variant_id: number;
@@ -65,6 +66,7 @@ type InvoiceCardProps = {
     itemName: string,
     brandName: string,
     variant: string,
+    variant_id: number,
   ) => void;
 };
 
@@ -87,6 +89,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   itemName,
   brandName,
   variant,
+  variant_id,
   BatchVariant,
   onRemove,
   updateCardDetails,
@@ -144,6 +147,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       itemName,
       brandName,
       variant!,
+      variant_id,
     );
   }, [
     totalPrice,
@@ -154,6 +158,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     itemName,
     brandName,
     variant,
+    variant_id,
   ]);
 
   return (

@@ -67,6 +67,50 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
+  getInvoice: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.invoice.findMany({
+      select: {
+        invoice_number: true,
+        created_at: true,
+        total_amount: true,
+        discount: true,
+
+        customer: {
+          include: {
+            Personal_Details: {
+              select: {
+                first_name: true,
+                last_name: true,
+              },
+            },
+          },
+        },
+        line_items: {
+          select: {
+            quantity: true,
+            unit_price: true,
+            total_price: true,
+            variant: {
+              select: {
+                name: true,
+                item: {
+                  select: {
+                    name: true,
+                    brand: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }),
+
   getSuppliers: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.user_Role.findMany({
       where: {

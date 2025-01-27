@@ -71,6 +71,23 @@ const NewInvoice = () => {
 
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
+  const [activeCards, setActiveCards] = useState<
+    Record<
+      string,
+      {
+        totalPrice: number;
+        unitPrice: number;
+        quantity: number;
+        discount: number;
+        discountType: string;
+        selectedUnit: string;
+        itemName: string;
+        brandName: string;
+        variant: string;
+        variant_id: number;
+      }
+    >
+  >({});
 
   const [grandTotal, setGrandTotal] = useState<number>(0);
 
@@ -82,67 +99,85 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
-  console.log(stockTotals);
-
   const { data: supplierList } = api.invoice.getSuppliers.useQuery();
 
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
-  const calculateGrandTotal = () => {
-    const total = selectedItems.reduce((acc, item) => {
-      return (
-        acc +
-        Object.entries(item.variant.BatchVariant).reduce(
-          (batchAcc, [_, variant]) => {
-            const quantity = variant.SupplierUnit[0]?.quantity_per_unit || 0;
-            const unitPrice = variant.SupplierUnit[0]?.price || 0;
-            return batchAcc + quantity * unitPrice;
-          },
-          0,
-        )
-      );
-    }, 0);
+  const updateCardDetails = (
+    id: number,
+    totalPrice: number,
+    unitPrice: number,
+    quantity: number,
+    discount: number,
+    discountType: string,
+    selectedUnit: string,
+    itemName: string,
+    brandName: string,
+    variant: string,
+    variant_id: number,
+  ) => {
+    setActiveCards((prev) => ({
+      ...prev,
+      [id]: {
+        totalPrice,
+        unitPrice,
+        quantity,
+        discount,
+        discountType,
+        selectedUnit,
+        itemName,
+        brandName,
+        variant,
+        variant_id,
+      },
+    }));
+  };
 
-    setGrandTotal(total);
+  const calculateGrandTotal = () => {
+    setGrandTotal(0);
+    Object.entries(activeCards).map((card) => {
+      setGrandTotal((prevState) => (prevState += card[1].totalPrice));
+    });
   };
 
   const handleSaveInvoice = () => {
-    if (!selectedItems) {
+    if (!selectedItems || !activeCards) {
       alert("Select an item to save invoice!");
       return;
     }
 
+    // Object.entries(activeCards).map((item) => {
+    const invoiceId = `INV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
     const invoiceData = {
       invoice: {
-        invoice_number: "INV_00004",
+        invoice_number: invoiceId,
         customer_id: selectedSupplier?.Personal_Details.personal_details_id,
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",
         payment_term_id: 1,
       },
-      lineItems: selectedItems.flatMap((item) =>
-        Object.entries(item.variant.BatchVariant).map(([_, variant]) => ({
-          variant_id: item.variant.variant_id,
-          quantity: variant.SupplierUnit[0]?.quantity_per_unit || 0,
-          unit_price: variant.SupplierUnit[0]?.price || 0,
-          total_price:
-            (variant.SupplierUnit[0]?.quantity_per_unit || 0) *
-            (variant.SupplierUnit[0]?.price || 0),
-        })),
-      ),
+      lineItems: Object.entries(activeCards).map((item) => ({
+        variant_id: item[1].variant_id,
+        quantity: item[1].quantity,
+        unit_price: item[1].unitPrice,
+        total_price: item[1].totalPrice,
+      })),
     };
-
-    // console.log(invoiceData.lineItems);
-    // invoiceData.lineItems.map((item) => console.log(item));
     createInvoice(invoiceData);
+    console.log(invoiceData);
+    // });
   };
 
-  const handleRemoveBatch = (idToRemove: number) => {
-    setSelectedItems((prevItems) =>
-      prevItems.filter((item) => item.inventory_id !== idToRemove),
-    );
+  const handleRemoveBatch = (id: number) => {
+    setSelectedItems((prev) => prev.filter((item) => item.inventory_id !== id));
+
+    setActiveCards((prev) => {
+      const updatedCards = { ...prev };
+      delete updatedCards[id];
+      return updatedCards;
+    });
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {
@@ -161,6 +196,12 @@ const NewInvoice = () => {
     }
     setSearchTerm("");
   };
+
+  useEffect(() => {
+    calculateGrandTotal();
+
+    console.log(activeCards);
+  }, [activeCards]);
 
   useEffect(() => {
     if (searchTerm && inventoryItems) {
@@ -185,8 +226,6 @@ const NewInvoice = () => {
       );
       setFilteredSupplier(result);
     } else setFilteredSupplier([]);
-
-    calculateGrandTotal();
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 
   if (isLoading) {
@@ -292,8 +331,10 @@ const NewInvoice = () => {
               itemName={item.variant.item.name}
               brandName={item.variant.item.brand.name}
               variant={item.variant.name}
+              variant_id={item.variant.variant_id}
               BatchVariant={item.variant.BatchVariant}
               onRemove={handleRemoveBatch}
+              updateCardDetails={updateCardDetails}
             />
           );
         })}
@@ -362,30 +403,37 @@ const NewInvoice = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {selectedItems.map((item) =>
-                    Object.entries(item.variant.BatchVariant).map(
-                      ([_, variant]) => (
-                        <TableRow key={variant.batch_variant_id}>
-                          <TableCell>
-                            {item.variant.item.name} -{" "}
-                            {item.variant.item.brand.name} - {item.variant.name}
-                          </TableCell>
-                          <TableCell>
-                            {variant.SupplierUnit[0]?.quantity_per_unit}
-                          </TableCell>
-                          <TableCell>Boxes</TableCell>
-                          <TableCell className="text-right">
-                            P {variant.SupplierUnit[0]?.price}
-                          </TableCell>
-                          <TableCell>0%</TableCell>
-                          <TableCell>
-                            {(variant.SupplierUnit[0]?.quantity_per_unit || 0) *
-                              (variant.SupplierUnit[0]?.price || 0)}
-                          </TableCell>
-                        </TableRow>
-                      ),
-                    ),
-                  )}
+                  {/* {selectedItems.map((item) => (
+                    <TableRow key={item.inventory_id}>
+                      <TableCell>
+                        {item.variant.item.name} -{" "}
+                        {item.variant.item.brand.name} - {item.variant.name}
+                      </TableCell>
+                      <TableCell>change this</TableCell>
+                      <TableCell>change this</TableCell>
+                      <TableCell className="text-right">
+                        P change this
+                      </TableCell>
+                      <TableCell>change this</TableCell>
+                      <TableCell>change this</TableCell>
+                    </TableRow>
+                  ))} */}
+                  {Object.entries(activeCards).map((item) => (
+                    <TableRow key={item[0]}>
+                      <TableCell>
+                        {item[1].itemName} - {item[1].brandName} -{" "}
+                        {item[1].variant}{" "}
+                      </TableCell>
+                      <TableCell>{item[1].quantity}</TableCell>
+                      <TableCell>{item[1].selectedUnit}</TableCell>
+                      <TableCell>{item[1].unitPrice}</TableCell>
+                      <TableCell>
+                        {item[1].discount}{" "}
+                        {item[1].discountType === "%" ? "%" : ""}
+                      </TableCell>
+                      <TableCell>{item[1].totalPrice}</TableCell>
+                    </TableRow>
+                  ))}
                 </TableBody>
               </Table>
               <div className="bottom-0 flex w-full justify-end">

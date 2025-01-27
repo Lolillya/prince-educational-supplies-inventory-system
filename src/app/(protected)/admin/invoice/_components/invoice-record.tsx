@@ -18,7 +18,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   date,
   customer,
   grandTotal,
-  orderItem,
+  line_items,
   discountValue,
 }) => {
   return (
@@ -29,7 +29,13 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           <div className="flex items-center gap-6 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
               <Calendar className="h-4 w-4" />
-              <p className="text-sm">{date}</p>
+              <p className="text-sm">
+                {date.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
             </div>
             <Separator
               orientation="vertical"
@@ -58,7 +64,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           </div>
           <div>
             <DropdownMenu>
-              <DropdownMenuTrigger >
+              <DropdownMenuTrigger>
                 <MoreOptions />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
@@ -92,23 +98,18 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
       </div>
 
       <div className="flex flex-col gap-3">
-        {orderItem.slice(0, 2).map((item, index) => {
-          return (
-            <InvoiceItem
-              key={index}
-              orderItem={item}
-            />
-          );
+        {line_items.slice(0, 2).map((item, index) => {
+          return <InvoiceItem key={index} orderItem={item} />;
         })}
 
         <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">
-          {orderItem.length > 2 ? (
+          {line_items.length > 2 ? (
             <p>
-              {orderItem.length - 2} more item
-              {orderItem.length - 2 > 1 ? "s" : ""}...
+              {line_items.length - 2} more item
+              {line_items.length - 2 > 1 ? "s" : ""}...
             </p>
           ) : (
-            orderItem.length <= 2 && <p>No more items...</p>
+            line_items.length <= 2 && <p>No more items...</p>
           )}
           <ViewFullInvoice
             invoiceId={invoiceId}
@@ -116,7 +117,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             customer={customer}
             grandTotal={grandTotal}
             discountValue={discountValue}
-            orderItem={orderItem}
+            line_items={line_items}
           />
         </div>
       </div>

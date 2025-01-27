@@ -10,8 +10,9 @@ import Filter from '../../_components/filter'
 import NoRecordsMessage from '../../_components/no-records-message'
 import RecordItem from '../../_components/record-item'
 import SearchBar from '../../_components/search-bar'
-import SelectItemMessage from '../../_components/select-item-message'
+import SelectRecordMessage from '../../_components/select-record-message'
 import SelectedRecord from '../../_components/selected-record'
+import RecordHeader from '../../_components/record-header'
 
 interface Supplier {
 	id: string;
@@ -46,9 +47,10 @@ const Suppliers = () => {
 	const [searchTerm, setSearchTerm] = useState<string>("");
 	const [selectedRecord, setSelectedRecord] = useState<Supplier | null>(null);
 
-	const { data } = api.suppliers.list.useQuery();
+	const { data: supplierData } = api.suppliers.list.useQuery();
+	const { data: restockData } = api.restock.getRestockData.useQuery();
 
-	const filteredSuppliers = data?.filter(
+	const filteredSuppliers = supplierData?.filter(
 		(supplier) => {
 			const company = supplier.Personal_Details.company?.toLowerCase() ?? "";
 			const contact = supplier.Personal_Details.contact?.toLowerCase() ?? "";
@@ -61,6 +63,10 @@ const Suppliers = () => {
 			);
 		}
 	);
+
+	const supplierRestockData = selectedRecord
+		? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
+		: [];
 
 	return (
 		<section className='px-20 py-10 text-base min-h-screen flex flex-col'>
@@ -80,10 +86,7 @@ const Suppliers = () => {
 			</div>
 			<div className="mt-8 flex gap-3 flex-grow">
 				<div className="flex flex-col gap-3 w-3/5 flex-grow">
-					<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3 flex items-center gap-2">
-						<p className="text-slate-500">Suppliers</p>
-						<p className='text-slate-400 pl-4 text-base'>{filteredSuppliers?.length} records</p>
-					</div>
+					<RecordHeader record="Suppliers" number={filteredSuppliers?.length ?? 0} />
 					<div className="flex flex-grow rounded-lg h-full overflow-hidden">
 						{(filteredSuppliers?.length ?? 0) > 0 ? (
 							<ScrollArea className="w-full h-full">
@@ -128,11 +131,16 @@ const Suppliers = () => {
 												.filter((line) => line)
 												.join("\n")
 										}
-										notes={selectedRecord.Personal_Details.notes}/>
+										notes={selectedRecord.Personal_Details.notes}
+
+										// TODO: reflect restock data based on selected supplier
+										restockData={supplierRestockData}
+
+									/>
 								</div>
 							</ScrollArea>
 						) : (
-							<SelectItemMessage />
+							<SelectRecordMessage />
 						)}
 					</div>
 				</div>

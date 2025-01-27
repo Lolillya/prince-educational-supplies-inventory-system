@@ -4,6 +4,14 @@ import Link from 'next/link'
 import { Separator } from '~/components/ui/separator'
 import { Tooltip, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 
+interface SupplierRestockProps {
+	restockId: number;
+	date: string;
+	employee: string;
+	addedStock: number;
+	restockData?: any;
+}
+
 const SupplierRestock = () => {
 	return (
 		<div className='p-5 bg-white/60 rounded-lg text-slate-400'>
@@ -20,6 +28,7 @@ const SupplierRestock = () => {
 			</div>
 			<div className='mt-2'>
 				<div className="flex flex-col gap-1">
+					{/* //TODO: map restock data based on selected supplier */}
 					<SupplierRestockCard />
 					<Separator orientation="horizontal" className="h-[1px]" />
 					<SupplierRestockCard />
@@ -40,6 +49,7 @@ const SupplierRestock = () => {
 }
 
 const SupplierRestockCard = () => {
+	// TODO: reflect restock data based on selected supplier
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
 			<p className='text-slate-600'>#1234567</p>
@@ -64,7 +74,7 @@ const SupplierRestockCard = () => {
 								<Calendar className="h-4 w-4" />
 							</TooltipTrigger>
 							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-								Recorded 2025-01-13
+								Recorded on 2025-01-13
 							</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>

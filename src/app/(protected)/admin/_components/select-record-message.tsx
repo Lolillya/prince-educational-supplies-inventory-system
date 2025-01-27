@@ -1,7 +1,7 @@
 import { MousePointerClick } from 'lucide-react'
 import React from 'react'
 
-const SelectItemMessage = () => {
+const SelectRecordMessage = () => {
 	return (
 		<div className='flex items-center justify-center text-center w-full'>
 			<div className='flex flex-col gap-8 items-center '>
@@ -14,4 +14,4 @@ const SelectItemMessage = () => {
 	)
 }
 
-export default SelectItemMessage
+export default SelectRecordMessage

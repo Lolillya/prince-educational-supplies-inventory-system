@@ -15,6 +15,7 @@ type SelectedRecordProps = {
 	email?: string | undefined | null;
 	location?: string | undefined | null;
 	notes?: string | undefined | null;
+	restockData?: any;
 }
 
 const SelectedRecord = ({
@@ -25,6 +26,7 @@ const SelectedRecord = ({
 	email,
 	location,
 	notes,
+	restockData,
 } : SelectedRecordProps) => {
 	return (
 		<div className='flex flex-col w-full p-5'>
@@ -60,6 +62,8 @@ const SelectedRecord = ({
 			<Separator className='h-[1px] bg-slate-300 mt-5' />
 
 			<div className='mt-5'>
+
+				{/* //TODO: reflect restock data based on selected supplier */}
 				<SupplierRestock />
 			</div>
 

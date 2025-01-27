@@ -57,11 +57,11 @@ const RestockPage = () => {
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <SearchBar 
-          value={""}
-          onChange={function (e: React.ChangeEvent<HTMLInputElement>): void {
-            throw new Error("Function not implemented.");
-          } } />
+          <SearchBar
+            value={""}
+            onChange={function (e: React.ChangeEvent<HTMLInputElement>): void {
+              throw new Error("Function not implemented.");
+            }} />
           <Filter />
         </div>
         <Button

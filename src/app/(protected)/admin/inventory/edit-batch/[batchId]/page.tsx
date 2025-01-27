@@ -89,15 +89,15 @@ const EditBatch = () => {
     const [itemData, setItemData] = useState<InventoryItem | null>(null);
     const [units, setUnits] = useState<Unit[]>([]);
 
-    const batchIdAsNumber = Number(batchId);
+    const inventoryIdAsNumber = Number(batchId);
 
     const {
         data: itemDataResponse,
         isLoading: itemLoading,
         isError: itemError,
     } = api.inventory.getInventoryItem.useQuery(
-        { id: batchIdAsNumber },
-        { enabled: !isNaN(batchIdAsNumber) },
+        { id: inventoryIdAsNumber },
+        { enabled: !isNaN(inventoryIdAsNumber) },
     );
 
     const {
@@ -106,120 +106,221 @@ const EditBatch = () => {
         isError: allError,
     } = api.inventory.listAllData.useQuery();
 
-    // // Effect to set item data
-    // useEffect(() => {
-    //     if (itemDataResponse) {
-    //         setItemData(itemDataResponse);
-    //     }
-    // }, [itemDataResponse]);
 
     useEffect(() => {
-        if (itemDataResponse) {
-            setItemData(itemDataResponse);
+        if (itemDataResponse && inventoryIdAsNumber) {
+            // console.log("itemDataResponse:", itemDataResponse); // Log the full response
 
-            // Find the specific variant that matches the `batchId`
-            const matchingVariant = itemDataResponse.find((variant) =>
-                variant.BatchVariant.some((batch) => batch.batch_id === batchIdAsNumber)
-            );
+            // Step 1: Find the inventory item by inventory_id to get the correct variant_id
+            const matchedInventory = itemDataResponse.find((variant) => {
+                // console.log("Checking variant:", variant); // Log each variant
+                // console.log("Variant ID:", variant.variant_id);
 
-            setItemData(matchingVariant || null);
+                // Check if this variant is associated with the correct inventory_id (inventoryIdAsNumber)
+                if (variant.variant_id === inventoryIdAsNumber) {
+                    // console.log("Found matching variant:", variant);
+                    return true; // Return this variant if it matches the inventory_id
+                }
+                return false; // No match
+            });
+
+            // Step 2: If we found the correct variant, check the BatchVariant to validate the link
+            if (matchedInventory) {
+                // console.log("Matched Inventory Variant:", matchedInventory);
+
+                // Now, check if this variant_id exists in the BatchVariant table
+                const matchedBatchVariant = matchedInventory.BatchVariant.find((batchVariant) => {
+                    // console.log("Checking batch variant:", batchVariant);
+                    // console.log("Batch ID in BatchVariant:", batchVariant.batch_id);
+
+                    // If we find the matching batch_id, return the variant
+                    if (batchVariant.variant_id === matchedInventory.variant_id) {
+                        // console.log("Found matching batch variant for variant_id:", batchVariant);
+                        return true;
+                    }
+                    return false;
+                });
+
+                // Step 3: Handle the result
+                if (matchedBatchVariant) {
+                    // console.log("Matched BatchVariant for Variant:", matchedInventory);
+                    setItemData(matchedInventory); // Set the matching variant in the state
+                } else {
+                    // console.log("No matching batch variant found.");
+                    setItemData(null); // Handle case when no batch variant is found
+                }
+            } else {
+                // console.log("No matching variant found for the given inventory_id.");
+                setItemData(null); // Handle case when no matching variant is found
+            }
         }
-    }, [itemDataResponse, batchIdAsNumber]);
+    }, [itemDataResponse, inventoryIdAsNumber]); // Dependency on inventoryIdAsNumber to trigger effect when it changes
+
+
+
+    // useEffect(() => {
+    //     console.log("itemDataResponse:", itemDataResponse); // Log full response
+    //
+    //     // Check if BatchVariant links are correctly mapped
+    //     itemDataResponse?.forEach((variant) => {
+    //         console.log("Variant ID:", variant.variant_id);
+    //         console.log("Checking BatchVariant for variant_id:", variant.variant_id);
+    //
+    //         variant.BatchVariant.forEach((batchVariant) => {
+    //             console.log("Batch Variant ID:", batchVariant.batch_variant_id);
+    //             console.log("Batch ID in BatchVariant:", batchVariant.batch_id);
+    //
+    //             // Log the link to SupplierUnit and other relevant data
+    //             if (batchVariant.supplierUnits?.length) {
+    //                 batchVariant.supplierUnits.forEach((supplierUnit) => {
+    //                     console.log("Supplier Unit ID:", supplierUnit.supplier_unit_id);
+    //                     console.log("Unit Name:", supplierUnit.unit.name);
+    //                     console.log("Price:", supplierUnit.price);
+    //                 });
+    //             }
+    //         });
+    //     });
+    // }, [itemDataResponse]);
+
 
 
     useEffect(() => {
         if (allData) {
+            // console.log("All Data:", allData); // Log all the fetched data
             setUnits(allData.units);
         }
     }, [allData]);
 
+
     const handleSaveChanges = () => {
         if (!itemData) {
-            console.log("No inventory data available.");
+            console.error("No inventory data available.");
             return;
         }
 
-        const batchIdAsNumber = Number(batchId);  // Convert batchId from URL to number
-        if (isNaN(batchIdAsNumber)) {
-            console.log("Invalid Batch ID. Cannot determine Inventory ID.");
-            return;
-        }
+        console.log("===== Debugging Inventory Data =====");
+        console.log("Inventory ID:", inventoryIdAsNumber);
+        console.log("Full Item Data:", itemData);
 
-        console.log("===== Inventory Details =====");
-        console.log(`Inventory ID: ${batchIdAsNumber || "N/A"}`);
-        console.log(`Variant ID: ${itemData.variant_id || "N/A"}`);
-        console.log(`Item Name: ${itemData.item?.name || "N/A"}`);
-        console.log(`Variant Name: ${itemData.name || "N/A"}`);
-        console.log(`Brand Name: ${itemData.item?.brand?.name || "N/A"}`);
-        console.log("-----------------------------\n");
+        if (itemData.BatchVariant && itemData.BatchVariant.length > 0) {
+            itemData.BatchVariant.forEach((batchVariant, index) => {
+                console.log(`\n--- Batch Variant ${index + 1} ---`);
+                console.log("Batch Variant ID:", batchVariant.batch_variant_id);
+                console.log("Batch ID:", batchVariant.batch_id);
 
-        console.log("Full itemData structure:", itemData); // Log the full itemData
-        const batchVariants = itemData?.BatchVariant || [];
-        console.log("BatchVariants:", batchVariants); // Log the batchVariants array
+                // Extract supplier units, handling nested structure if necessary
+                const supplierUnits = batchVariant?.batch?.batchVariants?.flatMap(
+                    (b) => b.SupplierUnit
+                );
 
-        if (batchVariants.length > 0) {
-            batchVariants.forEach((batchVariant, batchIndex) => {
-                console.log(`===== Batch Variant ${batchIndex + 1} =====`);
-                console.log(`Batch Variant ID: ${batchVariant.batch_variant_id || "N/A"}`);
-                console.log(`Batch ID: ${batchVariant.batch_id || "N/A"}`);
-                console.log(`Quantity: ${batchVariant.quantity || "N/A"}`);
+                console.log("Supplier Units:", supplierUnits);
 
-                // Access the 'batch' property inside 'batchVariant'
-                const batch = batchVariant?.batch || {};
-                console.log("Batch:", batch);
-
-                // Now access 'batchVariants' within the 'batch' object
-                const batchVariantsArray = batch?.batchVariants || [];
-                console.log("BatchVariants in batch:", batchVariantsArray);
-
-                // Check if 'batchVariantsArray' contains the data and proceed with 'SupplierUnit'
-                if (batchVariantsArray.length > 0) {
-                    batchVariantsArray.forEach((batchVariantItem, batchVariantIndex) => {
-                        console.log(`--- Batch Variant Item ${batchVariantIndex + 1} ---`);
-                        const supplierUnits = batchVariantItem?.SupplierUnit || [];
-                        console.log("SupplierUnits in this batchVariant:", supplierUnits);
-
-                        if (supplierUnits.length > 0) {
-                            supplierUnits.forEach((supplierUnit, supplierIndex) => {
-                                console.log(`\n--- Supplier Unit ${supplierIndex + 1} ---`);
-                                console.log(`Supplier Unit ID: ${supplierUnit.supplier_unit_id || "N/A"}`);
-                                console.log(`Price: ${supplierUnit.price || "N/A"}`);
-                                console.log(`Quantity per Unit: ${supplierUnit.quantity_per_unit || "N/A"}`);
-
-                                const unit = supplierUnit.unit || {};
-                                console.log(`Unit: ${unit.name || "N/A"}`);
-
-                                // Log Conversion Rates if they exist
-                                const conversions = supplierUnit.ConversionRate || [];
-                                if (conversions.length > 0) {
-                                    conversions.forEach((conversion, conversionIndex) => {
-                                        console.log(`\nConversion ${conversionIndex + 1}`);
-                                        console.log(`Conversion Rate: ${conversion.conversion_rate || "N/A"}`);
-                                        console.log(`From Unit: ${conversion.fromUnit?.name || "N/A"}`);
-                                        console.log(`To Unit: ${conversion.toUnit?.name || "N/A"}`);
-                                    });
-                                } else {
-                                    console.log("No conversion rates available.");
-                                }
-
-                                // Supplier Information
-                                const supplierName = `${supplierUnit.supplier?.Personal_Details?.first_name || "Unknown"} ${supplierUnit.supplier?.Personal_Details?.last_name || ""}`;
-                                console.log(`Supplier: ${supplierName.trim()}`);
-                            });
-                        } else {
-                            console.log("No supplier units available for this batch variant.");
-                        }
+                if (supplierUnits && supplierUnits.length > 0) {
+                    supplierUnits.forEach((supplierUnit, idx) => {
+                        console.log(`\n--- Supplier Unit ${idx + 1} ---`);
+                        console.log("Supplier Unit ID:", supplierUnit.supplier_unit_id);
+                        console.log("Quantity per Unit:", supplierUnit.quantity_per_unit);
+                        console.log("Price:", supplierUnit.price);
+                        console.log("Unit Name:", supplierUnit.unit?.name || "N/A");
                     });
                 } else {
-                    console.log("No batch variants available in the batch.");
+                    console.log("No supplier units available for this batch variant.");
                 }
-
-                console.log("---------------------------\n");
             });
         } else {
-            console.log("No batch variants available to log.");
+            console.log("No batch variants available.");
         }
     };
+
+
+
+    // const handleSaveChanges = () => {
+    //     if (!itemData) {
+    //         console.log("No inventory data available.");
+    //         return;
+    //     }
+    //
+    //     const batchIdAsNumber = Number(batchId);  // Convert batchId from URL to number
+    //     if (isNaN(batchIdAsNumber)) {
+    //         console.log("Invalid Batch ID. Cannot determine Inventory ID.");
+    //         return;
+    //     }
+    //
+    //     console.log("===== Inventory Details =====");
+    //     console.log(`Inventory ID: ${batchIdAsNumber || "N/A"}`);
+    //     console.log(`Variant ID: ${itemData.variant_id || "N/A"}`);
+    //     console.log(`Item Name: ${itemData.item?.name || "N/A"}`);
+    //     console.log(`Variant Name: ${itemData.name || "N/A"}`);
+    //     console.log(`Brand Name: ${itemData.item?.brand?.name || "N/A"}`);
+    //     console.log("-----------------------------\n");
+    //
+    //     console.log("Full itemData structure:", itemData); // Log the full itemData
+    //     const batchVariants = itemData?.BatchVariant || [];
+    //     console.log("BatchVariants:", batchVariants); // Log the batchVariants array
+    //
+    //     if (batchVariants.length > 0) {
+    //         batchVariants.forEach((batchVariant, batchIndex) => {
+    //             console.log(`===== Batch Variant ${batchIndex + 1} =====`);
+    //             console.log(`Batch Variant ID: ${batchVariant.batch_variant_id || "N/A"}`);
+    //             console.log(`Batch ID: ${batchVariant.batch_id || "N/A"}`);
+    //             console.log(`Quantity: ${batchVariant.quantity || "N/A"}`);
+    //
+    //             // Access the 'batch' property inside 'batchVariant'
+    //             const batch = batchVariant?.batch || {};
+    //             console.log("Batch:", batch);
+    //
+    //             // Now access 'batchVariants' within the 'batch' object
+    //             const batchVariantsArray = batch?.batchVariants || [];
+    //             console.log("BatchVariants in batch:", batchVariantsArray);
+    //
+    //             // Check if 'batchVariantsArray' contains the data and proceed with 'SupplierUnit'
+    //             if (batchVariantsArray.length > 0) {
+    //                 batchVariantsArray.forEach((batchVariantItem, batchVariantIndex) => {
+    //                     console.log(`--- Batch Variant Item ${batchVariantIndex + 1} ---`);
+    //                     const supplierUnits = batchVariantItem?.SupplierUnit || [];
+    //                     console.log("SupplierUnits in this batchVariant:", supplierUnits);
+    //
+    //                     if (supplierUnits.length > 0) {
+    //                         supplierUnits.forEach((supplierUnit, supplierIndex) => {
+    //                             console.log(`\n--- Supplier Unit ${supplierIndex + 1} ---`);
+    //                             console.log(`Supplier Unit ID: ${supplierUnit.supplier_unit_id || "N/A"}`);
+    //                             console.log(`Price: ${supplierUnit.price || "N/A"}`);
+    //                             console.log(`Quantity per Unit: ${supplierUnit.quantity_per_unit || "N/A"}`);
+    //
+    //                             const unit = supplierUnit.unit || {};
+    //                             console.log(`Unit: ${unit.name || "N/A"}`);
+    //
+    //                             // Log Conversion Rates if they exist
+    //                             const conversions = supplierUnit.ConversionRate || [];
+    //                             if (conversions.length > 0) {
+    //                                 conversions.forEach((conversion, conversionIndex) => {
+    //                                     console.log(`\nConversion ${conversionIndex + 1}`);
+    //                                     console.log(`Conversion Rate: ${conversion.conversion_rate || "N/A"}`);
+    //                                     console.log(`From Unit: ${conversion.fromUnit?.name || "N/A"}`);
+    //                                     console.log(`To Unit: ${conversion.toUnit?.name || "N/A"}`);
+    //                                 });
+    //                             } else {
+    //                                 console.log("No conversion rates available.");
+    //                             }
+    //
+    //                             // Supplier Information
+    //                             const supplierName = `${supplierUnit.supplier?.Personal_Details?.first_name || "Unknown"} ${supplierUnit.supplier?.Personal_Details?.last_name || ""}`;
+    //                             console.log(`Supplier: ${supplierName.trim()}`);
+    //                         });
+    //                     } else {
+    //                         console.log("No supplier units available for this batch variant.");
+    //                     }
+    //                 });
+    //             } else {
+    //                 console.log("No batch variants available in the batch.");
+    //             }
+    //
+    //             console.log("---------------------------\n");
+    //         });
+    //     } else {
+    //         console.log("No batch variants available to log.");
+    //     }
+    // };
 
 
     // const handleSaveChanges = () => {
@@ -324,6 +425,37 @@ const EditBatch = () => {
                     </div>
                 )}
             </div>
+
+            {/*<div className="grid grid-cols-2 gap-4">*/}
+            {/*    {itemData?.BatchVariant && itemData.BatchVariant.length > 0 ? (*/}
+            {/*        itemData.BatchVariant.map((batchVariant) => {*/}
+            {/*            // Extract supplierUnits directly from the batchVariant*/}
+            {/*            const supplierUnits = batchVariant?.batch?.batchVariants?.flatMap(*/}
+            {/*                (b) => b.SupplierUnit*/}
+            {/*            );*/}
+
+            {/*            console.log("Batch Variant: ", batchVariant);*/}
+            {/*            console.log("Supplier Units in Batch Variant: ", supplierUnits);*/}
+
+            {/*            return (*/}
+            {/*                <InventoryCard*/}
+            {/*                    key={batchVariant.batch_variant_id}*/}
+            {/*                    batch={batchVariant} // Pass batchVariant to InventoryCard*/}
+            {/*                    supplierUnits={supplierUnits || []} // Pass extracted supplier units*/}
+            {/*                    units={units} // Existing prop*/}
+            {/*                    item={itemData} // Existing prop*/}
+            {/*                />*/}
+            {/*            );*/}
+            {/*        })*/}
+            {/*    ) : (*/}
+            {/*        <div className="py-10 text-center">*/}
+            {/*            <p className="text-gray-500 text-lg font-semibold">*/}
+            {/*                No batch variants available*/}
+            {/*            </p>*/}
+            {/*        </div>*/}
+            {/*    )}*/}
+            {/*</div>*/}
+
 
             <div
                 className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">

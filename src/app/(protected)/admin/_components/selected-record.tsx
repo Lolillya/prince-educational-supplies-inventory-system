@@ -6,6 +6,7 @@ import Edit from './edit'
 import RecordInfo from './record-info'
 import RecordNotes from './record-notes'
 import SupplierRestock from '../suppliers/_components/supplier-restock'
+import EditRecord from './edit-record'
 
 type SelectedRecordProps = {
 	id: string;
@@ -46,7 +47,7 @@ const SelectedRecord = ({
 						</p>
 					</div>
 				</div>
-				<Edit />
+				<EditRecord />
 			</div>
 
 			<Separator className='h-[1px] bg-slate-300 mt-5' />

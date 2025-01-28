@@ -10,14 +10,15 @@ type RecordItemProps = {
 	id: string;
 	name: string | null;
 	onClick: () => void;
+	isSelected: boolean;
 }
 
-const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick }) => {
+const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected }) => {
 	return (
 		<>
 			<div
 				onClick={onClick}
-				className='w-full py-5 px-7 flex-grow-0 h-auto transition-all duration-300 hover:bg-slate-100 hover:cursor-pointer rounded-lg mt-1'>
+				className={`w-full py-5 px-7 flex-grow-0 h-auto transition-all duration-300 hover:bg-slate-50 hover:cursor-pointer rounded-lg mt-1 ${isSelected ? 'bg-slate-100 hover:!bg-slate-100' : ''}`}>
 				<div className='flex items-center justify-between'>
 					<div className='flex gap-6 items-center'>
 						<Avatar className='h-12 w-12 !rounded-lg'>

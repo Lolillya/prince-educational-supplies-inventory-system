@@ -18,6 +18,7 @@ import { Textarea } from "~/components/ui/textarea";
 import RecordEditor from "../../_components/record-editor";
 import InvoiceTable from "./invoice-table";
 import { InvoiceProps } from "../page";
+import RecordExpand from "../../_components/record-expand";
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoiceId,
@@ -50,8 +51,15 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
     <Dialog
       open={isDialogOpen}
       onOpenChange={(open) => {
-        if (!isEditing) {
-          setIsDialogOpen(open);
+        if (!open) {
+          if (isEditing) {
+            setShowWarning(true);
+            return;
+          }
+        }
+        setIsDialogOpen(open);
+        if (!open) {
+          setShowWarning(false);
         }
       }}
     >
@@ -82,7 +90,10 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
                 </DialogDescription>
               </div>
             </div>
-            <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+            <div className="flex items-center gap-3">
+              <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+              <RecordExpand />
+            </div>
           </div>
         </DialogHeader>
 

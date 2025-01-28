@@ -91,6 +91,7 @@ model Unit {
   conversionRatesFrom ConversionRate[] @relation("FromUnit")
   conversionRatesTo   ConversionRate[] @relation("ToUnit")
   SupplierUnit        SupplierUnit[]
+  Line_Item           Line_Item[]
 }
 
 model Item {
@@ -242,12 +243,15 @@ model Line_Item {
   line_item_id Int      @id @default(autoincrement())
   invoice_id   Int
   variant_id   Int
+  unit_id      Int
   quantity     Int
   unit_price   Float
   total_price  Float
   created_at   DateTime @default(now())
-  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id])
-  variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+
+  invoice Invoice @relation(fields: [invoice_id], references: [invoice_id])
+  variant Variant @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+  unit    Unit    @relation(fields: [unit_id], references: [unit_id]) // Relationship with Unit model
 }
 
 model Payment_Term {

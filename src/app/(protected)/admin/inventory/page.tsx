@@ -154,6 +154,7 @@ const InventoryPage = () => {
                           console.log("Inventory Quantity:", item.quantity);
                           console.log("Low Stock:", low_stock);
                           console.log("Very Low Stock:", very_low_stock);
+                          console.log("Variant ID:", item.variant?.variant_id); // Log variant_id
                         }}
                     >
                       <div className="flex items-center gap-3 relative pl-8">

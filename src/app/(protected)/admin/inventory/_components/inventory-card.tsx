@@ -33,12 +33,19 @@ type InventoryCardProps = {
 };
 
 const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange }: InventoryCardProps) => {
+    const supplierUnits = batch?.supplierUnits || batch?.batch?.batchVariants?.flatMap(b => b.SupplierUnit) || [];
+
+    const mainSupplierUnits = batch?.supplierUnits?.[0] ? [batch.supplierUnits[0]] :
+        batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0] ? [batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]] : [];
+
+    // const supplierUnits = batch?.supplierUnits?.[0]
+    //     ? [batch.supplierUnits[0]]  // Fetch the first supplierUnit
+    //     : batch?.batch?.batchVariants?.flatMap(b => b.SupplierUnit) || [];  // If no first supplierUnit, fetch all from batchVariants
+
     // const supplierUnits = batch?.supplierUnits || [];
-    // const supplierUnits = batch?.batch?.batchVariants?.[0].supplierUnits || [];
-    const supplierUnits = batch?.batch?.batchVariants?.[0]?.supplierUnits || [];
 
 
-    const [stockUnits, setStockUnits] = useState<StockUnitData[]>(supplierUnits);
+    const [stockUnits, setStockUnits] = useState<StockUnitData[]>(mainSupplierUnits);
     const [detailedStockUnits, setDetailedStockUnits] = useState<StockUnitData[]>(() =>
         supplierUnits.map((unit) => ({
             stock: unit.quantity_per_unit,
@@ -48,6 +55,7 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
             conversionUnit: unit.ConversionRate?.[0]?.toUnit?.name || "",
         }))
     );
+
     const [stock, setStock] = useState("");
     const [price, setPrice] = useState("");
     const [unit, setUnit] = useState("");
@@ -225,7 +233,6 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
             }
         }
 
-        // Update the state with recalculated rows
         setDetailedStockUnits(updatedUnits);
     };
 
@@ -305,14 +312,9 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
                     <span className="pl-3">
             <Link href="#" className="text-gray-400 hover:underline">
 
-                {batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}
-                {batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}
-                {/*{batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}*/}
-                {/*{batch?.supplierUnits?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}*/}
-
                 {batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}
                 {batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}
-
+                
             </Link>
           </span>
                 </p>
@@ -432,29 +434,29 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
                     </AccordionItem>
                 </Accordion>
             </div>
-            <div>
-                <button
-                    className="mt-4 bg-red text-white px-4 py-2 rounded"
-                    onClick={() => {
-                        console.log("AccordionItem Data:");
-                        console.log({
-                            stockValue: stockValue,
-                            price: price,
-                            unit: unit,
-                        });
-                        console.log("StockUnits Data:");
-                        // Ensure units are assigned correctly
-                        stockUnits.forEach((unit, index) => {
-                            if (!unit.unit) {
-                                unit.unit = index > 0 ? stockUnits[index - 1].conversionUnit : unit.unit;
-                            }
-                            console.log(`StockUnit ${index + 1}: `, unit);
-                        });
-                    }}
-                >
-                    Log Accordion and StockUnits
-                </button>
-            </div>
+            {/*<div>*/}
+            {/*    <button*/}
+            {/*        className="mt-4 bg-red text-white px-4 py-2 rounded"*/}
+            {/*        onClick={() => {*/}
+            {/*            console.log("AccordionItem Data:");*/}
+            {/*            console.log({*/}
+            {/*                stockValue: stock,*/}
+            {/*                price: price,*/}
+            {/*                unit: unit,*/}
+            {/*            });*/}
+            {/*            console.log("StockUnits Data:");*/}
+            {/*            // Ensure units are assigned correctly*/}
+            {/*            stockUnits.forEach((unit, index) => {*/}
+            {/*                if (!unit.unit) {*/}
+            {/*                    unit.unit = index > 0 ? stockUnits[index - 1].conversionUnit : unit.unit;*/}
+            {/*                }*/}
+            {/*                console.log(`StockUnit ${index + 1}: `, unit);*/}
+            {/*            });*/}
+            {/*        }}*/}
+            {/*    >*/}
+            {/*        Log Accordion and StockUnits*/}
+            {/*    </button>*/}
+            {/*</div>*/}
         </div>
     )
         ;
@@ -537,7 +539,7 @@ const StockUnit = ({
                         placeholder="000"
                         value={unitData.stock} // Use the value from `unitData`
                         onChange={(e) => onUpdate("stock", e.target.value)}
-                        disabled
+                        // disabled
                     />
                 </div>
                 <div className="flex flex-col items-start gap-1">
@@ -545,7 +547,7 @@ const StockUnit = ({
                         placeholder="0000.00"
                         value={unitData.price} // Use the value from `unitData`
                         onChange={(e) => onUpdate("price", e.target.value)}
-                        disabled
+                        // disabled
                     />
                 </div>
                 <div className="flex flex-col items-start gap-1">

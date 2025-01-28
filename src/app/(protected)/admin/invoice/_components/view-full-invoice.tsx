@@ -14,38 +14,10 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
+import { Textarea } from "~/components/ui/textarea";
 import RecordEditor from "../../_components/record-editor";
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from "~/components/ui/table";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["400", "700"],
-});
-
-type InvoiceProps = {
-  invoiceId: number;
-  date: string;
-  customer: string;
-  grandTotal: number;
-  discountValue: string;
-  orderItems: {
-    variant: string;
-    item: string;
-    brand: string;
-    quantity: number;
-    unit: string;
-    unitPrice: number;
-    discountValue: string;
-    subtotal: number;
-  }[];
-};
+import InvoiceTable from "./invoice-table";
+import { InvoiceProps } from "../page";
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoiceId,
@@ -53,13 +25,11 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   customer,
   grandTotal,
   discountValue,
-  orderItems,
+  line_items,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
-
-  //   console.log(orderItems);
 
   const handleEdit = () => {
     setIsEditing((prev) => !prev);
@@ -69,10 +39,8 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   const handleKeyDown = (event: React.KeyboardEvent) => {
     console.log("Key pressed:", event.key); // Log the key pressed
     if (event.key === "Escape") {
-      console.log("Escape key pressed");
       if (isEditing) {
-        console.log("Editing is enabled, showing warning");
-        setShowWarning(true); // Ensure state is updated
+        setShowWarning(true);
         event.preventDefault();
       }
     }
@@ -97,9 +65,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
         className="flex max-h-[80%] !w-full !max-w-3xl flex-col [&>button]:hidden"
         onKeyDown={handleKeyDown}
       >
-        <DialogHeader
-          className={`text-xl ${poppins.className} h-full font-normal`}
-        >
+        <DialogHeader className={`h-full text-xl font-normal`}>
           <div className="flex items-center justify-between">
             <div className="flex h-full flex-col justify-between gap-2">
               <DialogTitle className="text-xl font-normal text-slate-700">
@@ -108,7 +74,11 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               <div className="flex items-center gap-3 text-slate-400">
                 <Calendar className="h-4 w-4" />
                 <DialogDescription className="text-sm tracking-wide">
-                  {date}
+                  {date.toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
                 </DialogDescription>
               </div>
             </div>
@@ -125,8 +95,8 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               <Input
                 className="w-3/4 rounded-r-none bg-slate-100 text-slate-700 shadow-none"
                 disabled={!isEditing}
-                value={customer}
-              />
+                defaultValue={customer}
+              ></Input>
               <Separator orientation="vertical" className="w-[3px]" />
               <Input
                 className="w-1/4 rounded-l-none bg-slate-100 text-slate-700 shadow-none"
@@ -140,42 +110,21 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               <Input
                 className="bg-slate-100 text-slate-700 shadow-none"
                 disabled={!isEditing}
+                defaultValue={customer}
               />
             </div>
           </div>
         </div>
 
-        <Table className="w-full table-fixed border-collapse">
-          <TableHeader className="sticky top-0">
-            <TableRow>
-              <TableHead>Item</TableHead>
-              <TableHead>Variant</TableHead>
-              <TableHead>Brand</TableHead>
-              <TableHead>Quantity</TableHead>
-              <TableHead>Unit</TableHead>
-              <TableHead>Unit Price</TableHead>
-              <TableHead>Discount</TableHead>
-              <TableHead>Subtotal</TableHead>
-            </TableRow>
-          </TableHeader>
-
-          <TableBody className="w-full overflow-y-auto">
-            {orderItems.map((item, index) => (
-              <TableRow key={index} className="w-full">
-                <TableCell>{item.item}</TableCell>
-                <TableCell>{item.variant}</TableCell>
-                <TableCell>{item.brand}</TableCell>
-                <TableCell>{item.quantity}</TableCell>
-                <TableCell>{item.unit}</TableCell>
-                <TableCell>{item.unitPrice}</TableCell>
-                <TableCell>{item.discountValue}</TableCell>
-                <TableCell>{item.subtotal}</TableCell>
-              </TableRow>
-            ))}
-          </TableBody>
-        </Table>
+        <InvoiceTable orderItem={line_items} isEditing={isEditing} />
 
         <Separator orientation="horizontal" className="h-[2px]" />
+
+        <Textarea
+          className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline focus:outline-2 focus:outline-slate-200"
+          placeholder="Your record notes..."
+          disabled={!isEditing}
+        />
 
         <div className="flex items-center justify-between">
           <div className="flex h-full flex-col justify-between gap-1">

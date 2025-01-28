@@ -27,6 +27,14 @@ import SupplierDropdown from "../_components/Supplier-Dropdown";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "../_components/Hover-Card"
 
 // Define the data structure for inventory items
+
+type StockUnit = {
+  unit: string;
+  conversionQty: number | string; // This should be either a number or a string, as it might come as a string
+  conversionUnit: string;
+  stock: string | number; // Stock could be a string or number, depending on input format
+};
+
 type InventoryItem = {
   inventory_id: number;
   variant: {
@@ -38,7 +46,9 @@ type InventoryItem = {
       };
     };
   };
+  stockUnits?: StockUnit[]; // Optional, as not all items may have stock units
 };
+
 
 const InvoiceAddStock = () => {
   const router = useRouter();
@@ -52,6 +62,7 @@ const InvoiceAddStock = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog open state
   const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
   const [dialogType, setDialogType] = useState("");
+  const [accordionStates, setAccordionStates] = useState<{ [key: number]: boolean }>({});
 
   const { data: inventoryItems, isLoading, isError } =
       api.inventory.listInventory.useQuery();
@@ -105,41 +116,45 @@ const InvoiceAddStock = () => {
     }));
   };
 
-  // Function to calculate the total stock for each item, including the conversion quantities
   const totalStock = (inventoryId: number) => {
     const stockValue = Number(stock[inventoryId] || 0);
-    const itemStockUnits = stockUnits[inventoryId] || [];
-    const totalConversions = itemStockUnits.reduce((sum, unit) => sum + (Number(unit.conversionQty) || 0), 0);
-    return stockValue + totalConversions;
+    return stockValue;
   };
+
 
   const overAllTotalStock = selectedItems.reduce((sum, item) => {
     return sum + totalStock(item.inventory_id);
   }, 0);
 
+
   const getConversionData = (inventoryId: number) => {
     const itemStockUnits = stockUnits[inventoryId] || [];
-
-    return itemStockUnits.map((unit, index) => {
-      const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
-      const currentUnit = previousUnit ? previousUnit.conversionUnit : unit.unit;
-      return (
-          <div key={index} className="flex gap-2 items-center">
-            <p>{currentUnit}</p>
-            <ArrowRight className="w-4 h-4"/>
-            <p>
-              <span>{unit.conversionQty || "N/A"}</span> {unit.conversionUnit || "N/A"}
-            </p>
-          </div>
-      );
-    });
+    return itemStockUnits
+        .filter((unit) => unit.conversionQty?.trim() && unit.conversionUnit?.trim())
+        .map((unit, index) => {
+          const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
+          const currentUnit = previousUnit ? previousUnit.conversionUnit : unit.unit;
+          return (
+              <div key={index} className="flex gap-2 items-center">
+                <p>{currentUnit}</p>
+                <ArrowRight className="w-4 h-4" />
+                <p>
+                  <span>{unit.conversionQty}</span> {unit.conversionUnit}
+                </p>
+              </div>
+          );
+        });
   };
 
   // Modified: Get number of conversions dynamically
   const getConversionCount = (inventoryId: number) => {
     const itemStockUnits = stockUnits[inventoryId] || [];
-    return itemStockUnits.length;
+    // Only count rows where both conversionQty and conversionUnit are filled
+    return itemStockUnits.filter(
+        (unit) => unit.conversionQty?.trim() && unit.conversionUnit?.trim()
+    ).length;
   };
+
   const handlePriceChange = (inventoryId: number, newPrice: string) => {
     setPrice((prev) => ({ ...prev, [inventoryId]: newPrice }));
   };
@@ -161,6 +176,7 @@ const InvoiceAddStock = () => {
 
   const logData = () => {
     selectedItems.forEach((item) => {
+      console.log(`Inventory ID: ${item.inventory_id}`);  // Log inventory ID
       console.log(`StockUnit for item ${item.variant.item.name}:`);
       console.log(`Stock Value: ${stock[item.inventory_id] || ''}`);
       console.log(`Price: ${price[item.inventory_id] || 'undefined'}`);
@@ -194,6 +210,7 @@ const InvoiceAddStock = () => {
         inventory_id: item.inventory_id,
         variant_id: item.variant_id,
         totalStock: totalStock(item.inventory_id),
+        stockValue: Number(stock[item.inventory_id]) || 0, // Ensure it's a number here
         stockUnits: stockUnits[item.inventory_id]?.map((stockUnit) => ({
           stock: Number(stockUnit.stock), // Ensure numeric values
           price: Number(stockUnit.price),
@@ -225,6 +242,54 @@ const InvoiceAddStock = () => {
       setIsDialogOpen(true);
     }
   };
+  //
+  // const handleSave = async (selectedItems, supplierId) => {
+  //   if (!supplierId) {
+  //     setDialogMessage("Supplier ID is missing. Please select a supplier.");
+  //     setDialogType("error");
+  //     setIsDialogOpen(true);
+  //     return;
+  //   }
+  //
+  //   try {
+  //     const payload = selectedItems.map((item) => ({
+  //       inventory_id: item.inventory_id,
+  //       variant_id: item.variant_id,
+  //       totalStock: totalStock(item.inventory_id),
+  //       stockValue: Number(stock[item.inventory_id]) || 0, // Ensure it's a number here
+  //       stockUnits: stockUnits[item.inventory_id]?.map((stockUnit) => ({
+  //         stock: Number(stockUnit.stock),
+  //         price: Number(stockUnit.price),
+  //         unit: stockUnit.unit,
+  //         conversionQty: Number(stockUnit.conversionQty),
+  //         conversionUnit: stockUnit.conversionUnit,
+  //       })) || [],
+  //     }));
+  //
+  //
+  //     console.log("Payload before mutation:", payload);
+  //
+  //     // Perform mutation (save data)
+  //     await saveRestock({ selectedItems: payload, supplierId });
+  //
+  //     // Show success dialog
+  //     setDialogMessage("Restock data saved successfully!");
+  //     setDialogType("success");
+  //     setIsDialogOpen(true);
+  //
+  //     // Redirect to /admin/restock after success
+  //     setTimeout(() => {
+  //       router.push("/admin/restock");
+  //     }, 2000); // Delay redirect to let the user see the success message
+  //
+  //   } catch (error) {
+  //     console.error("Error saving restock data:", error);
+  //     setDialogMessage("Failed to save restock data.");
+  //     setDialogType("error");
+  //     setIsDialogOpen(true);
+  //   }
+  // };
+
 
 
 
@@ -244,6 +309,31 @@ const InvoiceAddStock = () => {
     );
   }
 
+  const isFormValid = () => {
+    const hasIncompleteParentFields = selectedItems.some(
+        (item) =>
+            !stock[item.inventory_id] || !price[item.inventory_id] || !unit[item.inventory_id]
+    );
+
+    // Check for incomplete or inconsistent child fields
+    const hasIncompleteChildFields = selectedItems.some((item) => {
+      const itemStockUnits = stockUnits[item.inventory_id] || [];
+      const isExpanded = accordionStates[item.inventory_id]; // Check expansion state
+
+      return (
+          isExpanded && // Only validate child rows if accordion is expanded
+          itemStockUnits.some(
+              (unit) =>
+                  // Invalid if either field is empty while the other is filled
+                  (unit.conversionQty?.trim() && !unit.conversionUnit?.trim()) ||
+                  (!unit.conversionQty?.trim() && unit.conversionUnit?.trim())
+          )
+      );
+    });
+
+    // Form is valid if no parent or child fields are incomplete
+    return !hasIncompleteParentFields && !hasIncompleteChildFields;
+  };
 
   return (
       <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
@@ -350,11 +440,17 @@ const InvoiceAddStock = () => {
                   key={item.inventory_id}
                   item={item}
                   onRemove={() => handleRemoveItem(item.inventory_id)}
-                  stockValue={stock[item.inventory_id] || ""} // Pass stock value to StockCard
+                  stockValue={stock[item.inventory_id] || ""}
                   onStockChange={(newStock) => handleStockChange(item.inventory_id, newStock)}
                   onPriceChange={(newPrice) => handlePriceChange(item.inventory_id, newPrice)}
                   onUnitChange={(newUnit) => handleUnitChange(item.inventory_id, newUnit)}
                   onStockUnitsChange={(newStockUnits) => handleStockUnitsChange(item.inventory_id, newStockUnits)}
+                  onAccordionToggle={(isExpanded) =>
+                      setAccordionStates((prev) => ({
+                        ...prev,
+                        [item.inventory_id]: isExpanded,
+                      }))
+                  } // Pass state toggle callback
               />
           ))}
         </div>
@@ -373,9 +469,14 @@ const InvoiceAddStock = () => {
               <DialogTrigger asChild>
                 <Button
                     size={"lg"}
-                    className="bg-green py-8 text-sm font-bold text-white"
+                    className={`py-8 text-sm font-bold text-white bg-green ${
+                        isFormValid() && selectedItems.length > 0
+                            ? ""
+                            : "opacity-50 cursor-not-allowed"
+                    }`}
+                    disabled={!isFormValid() || selectedItems.length === 0} // Disable if form is invalid or no items are selected
                 >
-                  Confirm Resock
+                  Confirm Restock
                 </Button>
               </DialogTrigger>
               <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">

@@ -4,15 +4,17 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 const invoiceSchema = z.object({
   invoice_number: z.string(),
   customer_id: z.string(),
-  total_amount: z.number().optional(),
-  discount: z.number().optional(),
+  total_amount: z.number(),
+  discount: z.number(),
   status: z.string(),
   payment_term_id: z.number(),
-  // line_items: z.object({
-  //   variant_id: z.number(),
-  //   quantity: z.number(),
-  //   unit_price: z.number(),
-  // }),
+});
+
+const LineItemSchema = z.object({
+  variant_id: z.number(),
+  quantity: z.number(),
+  unit_price: z.number(),
+  total_price: z.number(),
 });
 
 // TODO: INVOICE BACKEND CREATE FUNCTION
@@ -25,6 +27,7 @@ export const invoiceRouter = createTRPCRouter({
         variant: {
           select: {
             name: true,
+            variant_id: true,
             item: {
               select: {
                 name: true,
@@ -64,6 +67,50 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
+  getInvoice: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.invoice.findMany({
+      select: {
+        invoice_number: true,
+        created_at: true,
+        total_amount: true,
+        discount: true,
+
+        customer: {
+          include: {
+            Personal_Details: {
+              select: {
+                first_name: true,
+                last_name: true,
+              },
+            },
+          },
+        },
+        line_items: {
+          select: {
+            quantity: true,
+            unit_price: true,
+            total_price: true,
+            variant: {
+              select: {
+                name: true,
+                item: {
+                  select: {
+                    name: true,
+                    brand: {
+                      select: {
+                        name: true,
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          },
+        },
+      },
+    });
+  }),
+
   getSuppliers: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.user_Role.findMany({
       where: {
@@ -80,24 +127,47 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
-  createInvoice: publicProcedure
-    .input(invoiceSchema)
+  createInvoiceWithLineItems: publicProcedure
+    .input(
+      z.object({
+        invoice: invoiceSchema, // Schema for invoice input
+        lineItems: z.array(LineItemSchema), // Schema for line items
+      }),
+    )
     .mutation(async ({ input, ctx }) => {
-      const createdInvoice = await ctx.db.invoice.create({
-        data: {
-          invoice_number: input.invoice_number,
-          customer_id: input.customer_id,
-          total_amount: input.total_amount,
-          discount: input.discount,
-          status: input.status,
-          payment_term_id: input.payment_term_id,
-          // line_items: {
-          //   variant_id: input.line_items.variant_id,
-          //   quantity: input.line_items.quantity,
-          //   unit_price: input.line_items.unit_price,
-          // }
-        },
+      const { invoice, lineItems } = input;
+
+      const result = await ctx.db.$transaction(async (prisma) => {
+        const createdInvoice = await prisma.invoice.create({
+          data: {
+            invoice_number: invoice.invoice_number,
+            customer_id: invoice.customer_id,
+            total_amount: invoice.total_amount,
+            discount: invoice.discount,
+            status: invoice.status,
+            payment_term_id: invoice.payment_term_id,
+          },
+        });
+
+        const invoiceId = createdInvoice.invoice_id;
+
+        const createdLineItems = await Promise.all(
+          lineItems.map((item) =>
+            prisma.line_Item.create({
+              data: {
+                invoice_id: invoiceId,
+                variant_id: item.variant_id,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.quantity * item.unit_price,
+              },
+            }),
+          ),
+        );
+
+        return { createdInvoice, createdLineItems };
       });
-      return createdInvoice;
+
+      return result;
     }),
 });

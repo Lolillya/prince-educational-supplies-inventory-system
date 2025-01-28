@@ -11,31 +11,14 @@ import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
-
-interface InvoiceProps {
-  invoiceId: number;
-  date: string;
-  customer: string;
-  grandTotal: number;
-  discountValue: string;
-  orderItems: {
-    variant: string;
-    item: string;
-    brand: string;
-    quantity: number;
-    unit: string;
-    unitPrice: number;
-    discountValue: string;
-    subtotal: number;
-  }[];
-}
+import { InvoiceProps } from "../page";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   invoiceId,
   date,
   customer,
   grandTotal,
-  orderItems,
+  line_items,
   discountValue,
 }) => {
   return (
@@ -46,7 +29,13 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           <div className="flex items-center gap-6 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
               <Calendar className="h-4 w-4" />
-              <p className="text-sm">{date}</p>
+              <p className="text-sm">
+                {date.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
             </div>
             <Separator
               orientation="vertical"
@@ -85,6 +74,9 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   Export
                 </DropdownMenuItem>
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  Pin
+                </DropdownMenuItem>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Invoice
@@ -106,30 +98,18 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
       </div>
 
       <div className="flex flex-col gap-3">
-        {orderItems.slice(0, 2).map((item, index) => {
-          return (
-            <InvoiceItem
-              key={index}
-              variant={item.variant}
-              item={item.item}
-              brand={item.brand}
-              quantity={item.quantity}
-              unit={item.unit}
-              unitPrice={item.unitPrice}
-              discountValue={item.discountValue}
-              subtotal={item.subtotal}
-            />
-          );
+        {line_items.slice(0, 2).map((item, index) => {
+          return <InvoiceItem key={index} orderItem={item} />;
         })}
 
         <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">
-          {orderItems.length > 2 ? (
+          {line_items.length > 2 ? (
             <p>
-              {orderItems.length - 2} more item
-              {orderItems.length - 2 > 1 ? "s" : ""}...
+              {line_items.length - 2} more item
+              {line_items.length - 2 > 1 ? "s" : ""}...
             </p>
           ) : (
-            orderItems.length <= 2 && <p>No more items...</p>
+            line_items.length <= 2 && <p>No more items...</p>
           )}
           <ViewFullInvoice
             invoiceId={invoiceId}
@@ -137,7 +117,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             customer={customer}
             grandTotal={grandTotal}
             discountValue={discountValue}
-            orderItems={orderItems}
+            line_items={line_items}
           />
         </div>
       </div>

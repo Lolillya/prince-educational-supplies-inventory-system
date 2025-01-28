@@ -91,6 +91,7 @@ model Unit {
   conversionRatesFrom ConversionRate[] @relation("FromUnit")
   conversionRatesTo   ConversionRate[] @relation("ToUnit")
   SupplierUnit        SupplierUnit[]
+  Line_Item           Line_Item[]
 }
 
 model Item {
@@ -105,7 +106,7 @@ model Item {
   Inventory_Log Inventory_Log[]
   brand         Brand           @relation(fields: [brand_id], references: [brand_id])
   category      Category        @relation(fields: [category_id], references: [category_id])
-  discount      Discount?       @relation(fields: [discount_id], references: [discount_id])
+  discount      Discount?       @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   variants      Variant[]
 }
 
@@ -118,8 +119,8 @@ model Variant {
   updated_at   DateTime       @updatedAt
   inventory    Inventory[]
   LineItem     Line_Item[]
-  discount     Discount?      @relation(fields: [discount_id], references: [discount_id])
-  item         Item           @relation(fields: [item_id], references: [item_id])
+  discount     Discount?      @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
+  item         Item           @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
   StockLevel   StockLevel?
   BatchVariant BatchVariant[]
 }
@@ -138,8 +139,8 @@ model BatchVariant {
   batch_id         Int
   variant_id       Int
   quantity         Int
-  batch            Batch          @relation(fields: [batch_id], references: [batch_id])
-  variant          Variant        @relation(fields: [variant_id], references: [variant_id])
+  batch            Batch          @relation(fields: [batch_id], references: [batch_id], onDelete: Cascade)
+  variant          Variant        @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
   SupplierUnit     SupplierUnit[]
 }
 
@@ -155,8 +156,8 @@ model SupplierUnit {
   created_at        DateTime         @default(now())
   updated_at        DateTime         @updatedAt
   ConversionRate    ConversionRate[]
-  batchVariant      BatchVariant     @relation(fields: [batch_variant_id], references: [batch_variant_id])
-  discount          Discount?        @relation(fields: [discount_id], references: [discount_id])
+  batchVariant      BatchVariant     @relation(fields: [batch_variant_id], references: [batch_variant_id], onDelete: Cascade)
+  discount          Discount?        @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   supplier          User_Role        @relation(fields: [supplier_id], references: [id])
   unit              Unit             @relation(fields: [unit_id], references: [unit_id])
 }
@@ -170,7 +171,7 @@ model ConversionRate {
   created_at       DateTime     @default(now())
   updated_at       DateTime     @updatedAt
   fromUnit         Unit         @relation("FromUnit", fields: [from_unit_id], references: [unit_id])
-  supplierUnit     SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id])
+  supplierUnit     SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id], onDelete: Cascade)
   toUnit           Unit         @relation("ToUnit", fields: [to_unit_id], references: [unit_id])
 }
 
@@ -179,7 +180,7 @@ model Inventory {
   variant_id   Int
   quantity     Int
   last_updated DateTime @default(now())
-  variant      Variant  @relation(fields: [variant_id], references: [variant_id])
+  variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model StockLevel {
@@ -191,7 +192,7 @@ model StockLevel {
   last_notification_sent DateTime?
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
-  variant                Variant   @relation(fields: [variant_id], references: [variant_id])
+  variant                Variant   @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model Discount {
@@ -217,7 +218,7 @@ model Inventory_Log {
   new_data  Json?
   user_id   String
   timestamp DateTime  @default(now())
-  item      Item      @relation(fields: [item_id], references: [item_id])
+  item      Item      @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
   user      User_Role @relation(fields: [user_id], references: [Personal_Details_Id])
 }
 
@@ -242,12 +243,15 @@ model Line_Item {
   line_item_id Int      @id @default(autoincrement())
   invoice_id   Int
   variant_id   Int
+  unit_id      Int
   quantity     Int
   unit_price   Float
   total_price  Float
   created_at   DateTime @default(now())
-  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id])
-  variant      Variant  @relation(fields: [variant_id], references: [variant_id])
+
+  invoice Invoice @relation(fields: [invoice_id], references: [invoice_id])
+  variant Variant @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+  unit    Unit    @relation(fields: [unit_id], references: [unit_id]) // Relationship with Unit model
 }
 
 model Payment_Term {

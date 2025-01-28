@@ -32,6 +32,7 @@ interface InvoiceCardProps {
       unit_id: number;
     };
   }>;
+  onRemove: (batchNumber: number) => void;
 }
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
@@ -40,6 +41,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   brandName,
   variant,
   supplierUnit,
+  onRemove,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number | undefined>(
     supplierUnit[0]?.quantity_per_unit,
@@ -59,9 +61,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
 
-  const handleCalculateTotal = (value: number) => {
-    setUnitQuantity(value);
-    setTotalPrice((unitQuantity || 0) * (price || 0));
+  const handleRemoveBatch = () => {
+    // console.log(`Removed`);
+    onRemove(batchNumber);
   };
 
   useEffect(() => {
@@ -105,7 +107,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <Label>
           {itemName} - {brandName} - {variant}
         </Label>
-        <X className="hover:cursor-pointer" />
+        <X className="hover:cursor-pointer" onClick={handleRemoveBatch} />
       </div>
       <Separator orientation="horizontal" />
       <Accordion type="single" collapsible>

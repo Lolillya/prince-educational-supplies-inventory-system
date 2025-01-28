@@ -49,9 +49,64 @@ const inventorySchema = z.object({
     quantity: z.number().int().min(0, "Quantity must be at least 0"),
 });
 
+// export const inventoryRouter = createTRPCRouter({
+//     listInventory: publicProcedure.query(async () => {
+//         return db.inventory.findMany({
+//             include: {
+//                 variant: {
+//                     include: {
+//                         item: {
+//                             include: {
+//                                 brand: true,
+//                                 category: true,
+//                             },
+//                         },
+//                         BatchVariant: {
+//                             include: {
+//                                 batch: {
+//                                     include: {
+//                                         batchVariants: {
+//                                             include: {
+//                                                 SupplierUnit: {
+//                                                     include: {
+//                                                         supplier: {
+//                                                             include: {
+//                                                                 Personal_Details: true,
+//                                                             },
+//                                                         },
+//                                                         unit: true,
+//                                                         ConversionRate: {
+//                                                             select: {
+//                                                                 conversion_rate: true,
+//                                                                 fromUnit: {
+//                                                                     select: {
+//                                                                         name: true,
+//                                                                     },
+//                                                                 },
+//                                                                 toUnit: {
+//                                                                     select: {
+//                                                                         name: true,
+//                                                                     },
+//                                                                 },
+//                                                             },
+//                                                         },
+//                                                     },
+//                                                 },
+//                                             },
+//                                         },
+//                                     },
+//                                 },
+//                             },
+//                         },
+//                     },
+//                 },
+//             },
+//         });
+//     }),
+
 export const inventoryRouter = createTRPCRouter({
     listInventory: publicProcedure.query(async () => {
-        return db.inventory.findMany({
+        const inventory = await db.inventory.findMany({
             include: {
                 variant: {
                     include: {
@@ -98,11 +153,15 @@ export const inventoryRouter = createTRPCRouter({
                                 },
                             },
                         },
+                        StockLevel: true, // Ensure StockLevel is included in the query
                     },
                 },
             },
         });
+        console.log(inventory);  // Log the result to check if StockLevel is returned
+        return inventory;
     }),
+
 
     getInventoryItem: publicProcedure
         .input(z.object({ id: z.number() }))

@@ -29,7 +29,7 @@ const RecordEditor: React.FC<RecordEditorProps> = ({
 			</div>
 			<TooltipProvider delayDuration={0} skipDelayDuration={0}>
 				<Tooltip>
-					<TooltipTrigger>
+					<TooltipTrigger asChild>
 						<Button asChild onClick={isEditing ? undefined : (handleEdit)} disabled={isEditing}>
 							<div className={`h-9 w-9 p-0
 													${isEditing
@@ -42,7 +42,7 @@ const RecordEditor: React.FC<RecordEditorProps> = ({
 						</Button>
 					</TooltipTrigger>
 					{isEditing && (
-						<TooltipContent className='text-slate-700 p-2 bg-slate-100 rounded-lg my-4 text-sm shadow-none'>
+						<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
 							You are editing this record
 						</TooltipContent>
 					)}

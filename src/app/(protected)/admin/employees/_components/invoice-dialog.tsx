@@ -1,15 +1,20 @@
-import { ArrowUpRight, Calendar, Printer } from 'lucide-react';
-import React, { useState } from 'react'
+import { Calendar, Printer } from 'lucide-react';
+import { Poppins } from 'next/font/google';
+import React, { useState } from 'react';
+import { Button } from '~/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog';
+import { Input } from '~/components/ui/input';
+import { Label } from '~/components/ui/label';
+import { Separator } from '~/components/ui/separator';
+import { Textarea } from '~/components/ui/textarea';
 import RecordEditor from '../../_components/record-editor';
 import RecordExpand from '../../_components/record-expand';
-import { Separator } from '~/components/ui/separator';
-import { Label } from '~/components/ui/label';
-import { Input } from '~/components/ui/input';
-import InvoiceTable from '../../invoice/_components/invoice-table';
-import { Textarea } from '~/components/ui/textarea';
-import { Button } from '~/components/ui/button';
 import EmployeeActivityCard from './employee-activity-card';
+
+const poppins = Poppins({
+	subsets: ["latin"],
+	weight: ["400", "700"],
+});
 
 const InvoiceDialog = () => {
 
@@ -55,7 +60,7 @@ const InvoiceDialog = () => {
 				className="flex max-h-[80%] !w-full !max-w-3xl flex-col [&>button]:hidden"
 				onKeyDown={handleKeyDown}
 			>
-				<DialogHeader className={`h-full text-xl font-normal`}>
+				<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
 					<div className="flex items-center justify-between">
 						<div className="flex h-full flex-col justify-between gap-2">
 							<DialogTitle className="text-xl font-normal text-slate-700">

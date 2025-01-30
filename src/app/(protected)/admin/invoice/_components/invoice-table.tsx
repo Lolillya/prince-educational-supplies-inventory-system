@@ -23,16 +23,34 @@ import {
   TooltipTrigger,
 } from "~/components/ui/tooltip";
 import MoreOptions from "../../_components/more-options";
-import { InvoiceProps } from "../page";
 
-const InvoiceTable = ({
-  orderItem,
-  isEditing,
-}: {
-  orderItem: InvoiceProps["orderItem"];
+type Props = {
+  line_items: {
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    unit: {
+      name: string;
+    };
+    variant: {
+      name: string;
+      item: {
+        name: string;
+        brand: {
+          name: string;
+        };
+      };
+    };
+  }[];
   isEditing: boolean;
+  discountValue: number;
+};
+
+const InvoiceTable: React.FC<Props> = ({
+  line_items,
+  isEditing,
+  discountValue,
 }) => {
-  console.log(orderItem);
   return (
     <div>
       <Table className="w-full table-fixed">
@@ -57,7 +75,7 @@ const InvoiceTable = ({
       <ScrollArea className="h-40" type="always">
         <Table className="w-full table-fixed">
           <TableBody>
-            {orderItem.map((item, index) => (
+            {line_items.map((item, index) => (
               <TableRow key={index} className="border-none text-slate-700">
                 <TableCell className="w-48 rounded-l-xl">
                   <TooltipProvider>
@@ -74,9 +92,9 @@ const InvoiceTable = ({
                   </TooltipProvider>
                 </TableCell>
                 <TableCell>{item.quantity}</TableCell>
-                <TableCell>{item.unit}</TableCell>
+                <TableCell>{item.unit.name}</TableCell>
                 <TableCell>{item.unit_price}</TableCell>
-                <TableCell>{item.discount}</TableCell>
+                <TableCell>{discountValue}</TableCell>
                 {isEditing ? (
                   <>
                     <TableCell>{item.total_price}</TableCell>
@@ -112,7 +130,7 @@ const InvoiceTable = ({
                               <Label className="text-slate-400">Discount</Label>
                               <Input
                                 className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-                                defaultValue={item.discount}
+                                defaultValue={discountValue}
                               />
                             </div>
                           </div>

@@ -80,11 +80,15 @@ const NewInvoice = () => {
         quantity: number;
         discount: number;
         discountType: string;
-        selectedUnit: string;
+        selectedUnit: {
+          unitName: string;
+          unit_id: number;
+        };
         itemName: string;
         brandName: string;
         variant: string;
         variant_id: number;
+        unit_id: number;
       }
     >
   >({});
@@ -111,7 +115,10 @@ const NewInvoice = () => {
     quantity: number,
     discount: number,
     discountType: string,
-    selectedUnit: string,
+    selectedUnit: {
+      unitName: string;
+      unit_id: number;
+    },
     itemName: string,
     brandName: string,
     variant: string,
@@ -156,13 +163,14 @@ const NewInvoice = () => {
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",
-        payment_term_id: 1,
+        payment_term_id: 3,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
         variant_id: item[1].variant_id,
         quantity: item[1].quantity,
         unit_price: item[1].unitPrice,
         total_price: item[1].totalPrice,
+        unit_id: item[1].selectedUnit.unit_id,
       })),
     };
     createInvoice(invoiceData);
@@ -425,7 +433,7 @@ const NewInvoice = () => {
                         {item[1].variant}{" "}
                       </TableCell>
                       <TableCell>{item[1].quantity}</TableCell>
-                      <TableCell>{item[1].selectedUnit}</TableCell>
+                      <TableCell>{item[1].selectedUnit.unitName}</TableCell>
                       <TableCell>{item[1].unitPrice}</TableCell>
                       <TableCell>
                         {item[1].discount}{" "}

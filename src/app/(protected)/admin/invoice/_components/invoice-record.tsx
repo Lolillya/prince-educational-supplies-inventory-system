@@ -98,8 +98,15 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
       </div>
 
       <div className="flex flex-col gap-3">
-        {line_items.slice(0, 2).map((item, index) => {
-          return <InvoiceItem key={index} orderItem={item} />;
+        {line_items.slice(0, 3).map((item, index) => {
+          return (
+            <InvoiceItem
+              key={index}
+              line_items={item}
+              discountValue={discountValue}
+            />
+          );
+          // console.log(item);
         })}
 
         <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">

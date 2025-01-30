@@ -90,8 +90,8 @@ model Unit {
   updated_at          DateTime         @updatedAt
   conversionRatesFrom ConversionRate[] @relation("FromUnit")
   conversionRatesTo   ConversionRate[] @relation("ToUnit")
-  SupplierUnit        SupplierUnit[]
   Line_Item           Line_Item[]
+  SupplierUnit        SupplierUnit[]
 }
 
 model Item {
@@ -117,12 +117,12 @@ model Variant {
   discount_id  Int?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
+  BatchVariant BatchVariant[]
   inventory    Inventory[]
   LineItem     Line_Item[]
+  StockLevel   StockLevel?
   discount     Discount?      @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   item         Item           @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
-  StockLevel   StockLevel?
-  BatchVariant BatchVariant[]
 }
 
 model Batch {
@@ -248,10 +248,9 @@ model Line_Item {
   unit_price   Float
   total_price  Float
   created_at   DateTime @default(now())
-
-  invoice Invoice @relation(fields: [invoice_id], references: [invoice_id])
-  variant Variant @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
-  unit    Unit    @relation(fields: [unit_id], references: [unit_id]) // Relationship with Unit model
+  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id])
+  unit         Unit     @relation(fields: [unit_id], references: [unit_id])
+  variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model Payment_Term {

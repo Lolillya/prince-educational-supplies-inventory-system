@@ -1,5 +1,4 @@
 import { ArrowUpRight, Calendar, Printer } from "lucide-react";
-import { Poppins } from "next/font/google";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -127,7 +126,11 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
           </div>
         </div>
 
-        <InvoiceTable orderItem={line_items} isEditing={isEditing} />
+        <InvoiceTable
+          line_items={line_items}
+          isEditing={isEditing}
+          discountValue={discountValue}
+        />
 
         <Separator orientation="horizontal" className="h-[2px]" />
 

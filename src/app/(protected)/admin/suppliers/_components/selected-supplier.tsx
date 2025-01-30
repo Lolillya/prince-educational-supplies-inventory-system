@@ -2,13 +2,13 @@ import { Mail, MapPin, Phone, User2 } from 'lucide-react'
 import React from 'react'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Separator } from '~/components/ui/separator'
-import Edit from './edit'
-import RecordInfo from './record-info'
-import RecordNotes from './record-notes'
-import SupplierRestock from '../suppliers/_components/supplier-restock'
-import EditRecord from './edit-record'
+import Edit from '../../_components/edit'
+import RecordInfo from '../../_components/record-info'
+import RecordNotes from '../../_components/record-notes'
+import SupplierRestock from './supplier-restock'
+import EditRecord from '../../_components/edit-record'
 
-type SelectedRecordProps = {
+type SelectedSupplierProps = {
 	id: string;
 	company: string | undefined | null;
 	representative?: string | undefined | null;
@@ -19,7 +19,7 @@ type SelectedRecordProps = {
 	restockData?: any;
 }
 
-const SelectedRecord = ({
+const SelectedSupplier = ({
 	id,
 	company,
 	representative,
@@ -28,7 +28,7 @@ const SelectedRecord = ({
 	location,
 	notes,
 	restockData,
-} : SelectedRecordProps) => {
+}: SelectedSupplierProps) => {
 	return (
 		<div className='flex flex-col w-full p-5'>
 			<div className="flex items-center justify-between">
@@ -57,7 +57,7 @@ const SelectedRecord = ({
 				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
 				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
 				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
-				<RecordNotes notes={notes}/>
+				<RecordNotes notes={notes} />
 			</div>
 
 			<Separator className='h-[1px] bg-slate-300 mt-5' />
@@ -72,4 +72,4 @@ const SelectedRecord = ({
 	)
 }
 
-export default SelectedRecord
+export default SelectedSupplier

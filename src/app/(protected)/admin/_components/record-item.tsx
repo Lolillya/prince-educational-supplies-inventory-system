@@ -1,10 +1,10 @@
 
 import React from 'react'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
-import { Separator } from '~/components/ui/separator'
-import MoreOptions from './more-options'
-import Favorite from './favorite'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
+import { Separator } from '~/components/ui/separator'
+import Favorite from './favorite'
+import MoreOptions from './more-options'
 
 type RecordItemProps = {
 	id: string;
@@ -18,7 +18,7 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected }
 		<>
 			<div
 				onClick={onClick}
-				className={`w-full py-5 px-7 flex-grow-0 h-auto transition-all duration-300 hover:bg-slate-50 hover:cursor-pointer rounded-lg mt-1 ${isSelected ? 'bg-slate-100 hover:!bg-slate-100' : ''}`}>
+				className={`w-full py-5 px-7 flex-grow-0 h-auto hover:bg-slate-50 hover:cursor-pointer rounded-lg mt-1 ${isSelected ? 'bg-slate-100 hover:!bg-slate-100' : ''}`}>
 				<div className='flex items-center justify-between'>
 					<div className='flex gap-6 items-center'>
 						<Avatar className='h-12 w-12 !rounded-lg'>
@@ -50,13 +50,13 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected }
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									View Record
+									View Details
+								</DropdownMenuItem>
+								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+									View Activity
 								</DropdownMenuItem>
 								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
 									Edit Record
-								</DropdownMenuItem>
-								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									Open Restock Records
 								</DropdownMenuItem>
 								<DropdownMenuSeparator />
 								<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">

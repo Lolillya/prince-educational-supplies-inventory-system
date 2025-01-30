@@ -6,9 +6,9 @@ import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
 import { Textarea } from '~/components/ui/textarea'
-import Edit from './edit'
-import RecordEditor from './record-editor'
-import RecordExpand from './record-expand'
+import Edit from '../../_components/edit'
+import RecordEditor from '../../_components/record-editor'
+import RecordExpand from '../../_components/record-expand'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -73,11 +73,11 @@ const EditRecord = () => {
 								</Avatar>
 								<div className="flex flex-col gap-2">
 									<DialogTitle className="text-xl font-normal text-slate-700">
-										SupplierCorp
+										John Doe
 									</DialogTitle>
 									<div className="flex items-center gap-3 text-slate-400">
 										<DialogDescription className="text-sm tracking-wide">
-											0000000001
+											username dapat here diba?
 										</DialogDescription>
 									</div>
 								</div>
@@ -92,7 +92,18 @@ const EditRecord = () => {
 					<Separator orientation="horizontal" className="h-[2px]" />
 
 					<div className="flex flex-col gap-2">
-						<Label className="text-slate-400">Representative</Label>
+						<Label className="text-slate-400">Position</Label>
+						<div className="flex gap-3">
+							<Input
+								className="bg-slate-100 text-slate-700 shadow-none"
+								disabled={!isEditing}
+								placeholder="Top"
+							/>
+						</div>
+					</div>
+
+					<div className="flex flex-col gap-2">
+						<Label className="text-slate-400">Employee</Label>
 						<div className="flex gap-3">
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none"

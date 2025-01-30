@@ -138,7 +138,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
             </DialogClose>
             <Button className="bg-green hover:bg-green/80" disabled={isEditing}>
               <Printer />
-              Print Invoice
+              Print Restock
             </Button>
           </div>
         </div>

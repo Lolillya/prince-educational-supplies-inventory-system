@@ -100,7 +100,9 @@ const BatchAccordion = ({ batch, selectedVariantId, batchNumber }) => {
                                         )}
                                       </TableCell>
                                       <TableCell>
-                                        P {price.toFixed(2) || "N/A"}
+                                        {/*P {price.toFixed(2) || "N/A"}*/}
+                                        {/*P {typeof price === "number" ? price.toFixed(2) : "N/A"}*/}
+                                        P {(Number(price) || 0).toFixed(2)}
                                       </TableCell>
                                       <TableCell>{quantityPerUnit}</TableCell>
                                       <TableCell>

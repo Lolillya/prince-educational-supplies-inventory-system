@@ -8,11 +8,11 @@ import { ScrollArea } from '~/components/ui/scroll-area'
 import { api } from "~/trpc/react"
 import Filter from '../_components/filter'
 import NoRecordsMessage from '../_components/no-records-message'
+import RecordHeader from '../_components/record-header'
 import RecordItem from '../_components/record-item'
 import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
-import SelectedRecord from '../_components/selected-record'
-import RecordHeader from '../_components/record-header'
+import SelectedSupplier from './_components/selected-supplier'
 
 interface Supplier {
   id: string;
@@ -115,7 +115,7 @@ const SuppliersPage = () => {
             {selectedRecord ? (
               <ScrollArea className="w-full h-full">
                 <div className="flex flex-col w-full h-40">
-                  <SelectedRecord
+                  <SelectedSupplier
                     id={selectedRecord.Personal_Details_Id}
                     company={selectedRecord.Personal_Details.company}
                     representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}

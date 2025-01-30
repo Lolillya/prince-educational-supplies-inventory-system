@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { SyntheticEvent, useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -63,11 +63,15 @@ type InvoiceCardProps = {
     quantity: number,
     discount: number,
     discountType: string,
-    selectedUnit: string,
+    selectedUnit: {
+      unitName: string;
+      unit_id: number;
+    },
     itemName: string,
     brandName: string,
     variant: string,
     variant_id: number,
+    unit_id: number,
   ) => void;
 };
 
@@ -99,7 +103,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [price, setPrice] = useState<number>(0);
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [supplier, setSupplier] = useState("Supplier");
-  const [selectedUnit, setSelectedUnit] = useState("");
+  const [selectedUnit, setSelectedUnit] = useState({
+    unitName: "",
+    unit_id: 0,
+  });
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
@@ -133,6 +140,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
+  const handleSelectUnit = (unit: string, unit_id: number) => {
+    setSelectedUnit({
+      unitName: unit,
+      unit_id: unit_id,
+    });
+  };
+
   useEffect(() => {
     calculateTotal();
   }, [unitQuantity, price, discount]);
@@ -150,6 +164,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       brandName,
       variant!,
       variant_id,
+      selectedUnit.unit_id,
     );
   }, [
     totalPrice,
@@ -285,7 +300,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     value={unitQuantity}
                     onChange={(e) => setUnitQuantity(Number(e.target.value))}
                   />
-                  <Select onValueChange={setSelectedUnit}>
+                  <Select
+                    onValueChange={(value) => {
+                      const selectedUnit = JSON.parse(value);
+                      handleSelectUnit(selectedUnit.name, selectedUnit.id);
+                    }}
+                  >
                     <SelectTrigger className="rounded-l-none">
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
@@ -293,7 +313,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       {selectedBatches?.map((batch) =>
                         Object.entries(batch).map((test) =>
                           test[1].map((ywa, index) => (
-                            <SelectItem value={ywa.unit.name} key={index}>
+                            <SelectItem
+                              value={JSON.stringify({
+                                name: ywa.unit.name,
+                                id: ywa.unit.unit_id,
+                              })}
+                              key={index}
+                            >
                               {ywa.unit.name}
                             </SelectItem>
                           )),
@@ -319,7 +345,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         {selectedBatches?.map((batch, batchIndex) =>
                           Object.entries(batch).map(([key, value]) =>
                             value.map((ywa, ywaIndex) =>
-                              ywa.unit.name === selectedUnit ? (
+                              ywa.unit.name === selectedUnit.unitName ? (
                                 <SelectItem
                                   value={ywa.price.toString()}
                                   key={`${batchIndex}-${key}-${ywaIndex}`}

@@ -1,4 +1,4 @@
-import { Banknote, Box, SquarePercent } from "lucide-react";
+import { Box } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
 import {
@@ -8,15 +8,30 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { InvoiceProps } from "../page";
 
-type orderItem = InvoiceProps["orderItem"][0];
+type Props = {
+  line_items: {
+    quantity: number;
+    unit_price: number;
+    total_price: number;
+    unit: {
+      name: string;
+    };
+    variant: {
+      name: string;
+      item: {
+        name: string;
+        brand: {
+          name: string;
+        };
+      };
+    };
+  };
 
-type orderItemProps = {
-  orderItem: orderItem;
+  discountValue: number;
 };
 
-const InvoiceItem: React.FC<orderItemProps> = ({ orderItem }) => {
+const InvoiceItem: React.FC<Props> = ({ line_items }: Props, discountValue) => {
   const {
     // item,
     // variant,
@@ -24,23 +39,22 @@ const InvoiceItem: React.FC<orderItemProps> = ({ orderItem }) => {
     quantity,
     unit,
     unit_price,
-    discountValue,
     total_price,
-  } = orderItem;
+  } = line_items;
 
   return (
     <div className="rounded-lg bg-white/70 p-6">
       <div className="flex items-center justify-center">
         <div className="flex w-1/2 flex-col gap-4">
           <p>
-            {orderItem.variant.item.name} - {orderItem.variant.item.brand.name}{" "}
-            - {orderItem.variant.name}
+            {line_items.variant.item.name} -{" "}
+            {line_items.variant.item.brand.name} - {line_items.variant.name}
           </p>
           <div className="flex items-center gap-5 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
               <Box className="h-4 w-4" />
               <p className="text-sm">
-                {quantity} {unit}
+                {quantity} {unit.name}
               </p>
             </div>
             <Separator

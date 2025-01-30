@@ -15,6 +15,7 @@ const LineItemSchema = z.object({
   quantity: z.number(),
   unit_price: z.number(),
   total_price: z.number(),
+  unit_id: z.number(),
 });
 
 // TODO: INVOICE BACKEND CREATE FUNCTION
@@ -90,6 +91,11 @@ export const invoiceRouter = createTRPCRouter({
             quantity: true,
             unit_price: true,
             total_price: true,
+            unit: {
+              select: {
+                name: true,
+              },
+            },
             variant: {
               select: {
                 name: true,
@@ -160,6 +166,7 @@ export const invoiceRouter = createTRPCRouter({
                 quantity: item.quantity,
                 unit_price: item.unit_price,
                 total_price: item.quantity * item.unit_price,
+                unit_id: item.unit_id,
               },
             }),
           ),

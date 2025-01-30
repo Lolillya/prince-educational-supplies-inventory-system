@@ -1,5 +1,4 @@
 import { ArrowUpRight, Calendar, Printer } from "lucide-react";
-import { Poppins } from "next/font/google";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -18,6 +17,7 @@ import { Textarea } from "~/components/ui/textarea";
 import RecordEditor from "../../_components/record-editor";
 import InvoiceTable from "./invoice-table";
 import { InvoiceProps } from "../page";
+import RecordExpand from "../../_components/record-expand";
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoiceId,
@@ -50,8 +50,15 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
     <Dialog
       open={isDialogOpen}
       onOpenChange={(open) => {
-        if (!isEditing) {
-          setIsDialogOpen(open);
+        if (!open) {
+          if (isEditing) {
+            setShowWarning(true);
+            return;
+          }
+        }
+        setIsDialogOpen(open);
+        if (!open) {
+          setShowWarning(false);
         }
       }}
     >
@@ -82,7 +89,10 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
                 </DialogDescription>
               </div>
             </div>
-            <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+            <div className="flex items-center gap-3">
+              <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+              <RecordExpand />
+            </div>
           </div>
         </DialogHeader>
 
@@ -116,7 +126,11 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
           </div>
         </div>
 
-        <InvoiceTable orderItem={line_items} isEditing={isEditing} />
+        <InvoiceTable
+          line_items={line_items}
+          isEditing={isEditing}
+          discountValue={discountValue}
+        />
 
         <Separator orientation="horizontal" className="h-[2px]" />
 

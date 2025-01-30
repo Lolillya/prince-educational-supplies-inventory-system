@@ -14,12 +14,11 @@ import {
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "~/components/ui/table";
-import { HoverCard, HoverCardContent, HoverCardTrigger } from "~/components/ui/hover-card";
+import { Textarea } from "~/components/ui/textarea";
 import RecordEditor from "../../_components/record-editor";
+import RecordExpand from "../../_components/record-expand";
 import { RestockProps } from "../page";
 import RestockTable from "./restock-table";
-import { Textarea } from "~/components/ui/textarea";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -54,7 +53,16 @@ const ViewFullRestock: React.FC<RestockProps> = ({
     <Dialog
       open={isDialogOpen}
       onOpenChange={(open) => {
-        if (!isEditing) setIsDialogOpen(open);
+        if (!open) {
+          if (isEditing) {
+            setShowWarning(true);
+            return;
+          }
+        }
+        setIsDialogOpen(open);
+        if (!open) {
+          setShowWarning(false);
+        }
       }}
     >
       <DialogTrigger>
@@ -80,7 +88,10 @@ const ViewFullRestock: React.FC<RestockProps> = ({
                 </DialogDescription>
               </div>
             </div>
-            <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+            <div className="flex items-center gap-3">
+              <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+              <RecordExpand />
+            </div>
           </div>
         </DialogHeader>
 
@@ -127,7 +138,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
             </DialogClose>
             <Button className="bg-green hover:bg-green/80" disabled={isEditing}>
               <Printer />
-              Print Invoice
+              Print Restock
             </Button>
           </div>
         </div>

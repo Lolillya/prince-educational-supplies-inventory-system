@@ -9,6 +9,7 @@ import { Textarea } from '~/components/ui/textarea'
 import Edit from '../../_components/edit'
 import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
+import EmojiPopover from '../../_components/emoji-picker'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -66,11 +67,7 @@ const EditRecord = () => {
 					<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-5">
-								<Avatar className="h-16 w-16 !rounded-lg">
-									<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-										🎭
-									</AvatarFallback>
-								</Avatar>
+								<EmojiPopover isEditing={isEditing} />
 								<div className="flex flex-col gap-2">
 									<DialogTitle className="text-xl font-normal text-slate-700">
 										John Doe

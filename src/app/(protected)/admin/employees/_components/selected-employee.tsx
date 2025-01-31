@@ -32,7 +32,7 @@ const SelectedEmployee = ({
 				<div className='flex gap-5 items-center'>
 					<Avatar className='h-16 w-16 !rounded-lg'>
 						<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-							🎭
+							👑
 						</AvatarFallback>
 					</Avatar>
 					<div className='flex flex-col gap-2'>

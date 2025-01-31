@@ -1,15 +1,15 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { api } from "~/trpc/react";
-import { useEffect, useState } from "react";
 import { ListFilter, Pencil, Search } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { Input } from "~/components/ui/input";
-import { Card } from "~/components/ui/card";
-import { Label } from "~/components/ui/label";
-import { UsersChart } from "../../customers/_components/users-chart";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { api } from "~/trpc/react";
+import { UsersChart } from "../../customers/_components/users-chart";
 
 interface PersonalDetails {
 	personal_details_id: string;

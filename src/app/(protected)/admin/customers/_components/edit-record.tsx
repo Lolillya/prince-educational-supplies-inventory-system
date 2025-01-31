@@ -88,6 +88,25 @@ const EditRecord = () => {
 
 					<Separator orientation="horizontal" className="h-[2px]" />
 
+					<div className="flex gap-3">
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Company</Label>
+							<Input
+								className="bg-slate-100 text-slate-700 shadow-none"
+								disabled={!isEditing}
+								placeholder="Company"
+							/>
+						</div>
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Term</Label>
+							<Input
+								className="bg-slate-100 text-slate-700 shadow-none"
+								disabled={!isEditing}
+								placeholder="30"
+							/>
+						</div>
+					</div>
+
 					<div className="flex flex-col gap-2">
 						<Label className="text-slate-400">Representative</Label>
 						<div className="flex gap-3">

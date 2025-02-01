@@ -75,19 +75,20 @@ type InvoiceCardProps = {
   ) => void;
 };
 
-type SupplierUnitType = [
-  {
-    SupplierUnit: Array<{
-      price: number;
-      quantity_per_unit: number;
-      unit_id: number;
-      unit: {
-        name: string;
-        unit_id: number;
-      };
-    }>;
-  },
-];
+type SupplierUnit = {
+  price: number;
+  quantity_per_unit: number;
+  unit_id: number;
+  unit: {
+    name: string;
+    unit_id: number;
+  };
+};
+
+type SupplierBatch = {
+  index: number;
+  supplierUnits: SupplierUnit[];
+};
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
   id,
@@ -106,6 +107,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [selectedUnit, setSelectedUnit] = useState({
     unitName: "",
     unit_id: 0,
+    quantity: 0,
   });
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
@@ -113,8 +115,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     undefined,
   );
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
-  const [selectedBatches, setSelectedBatches] =
-    useState<SupplierUnitType | null>(null);
+  const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
 
   const handleSelectBatch = (index: number, supplierUnits: any[]) => {
     setCheckedState((prev) => ({
@@ -123,10 +124,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     }));
 
     setSelectedBatches((prev) => {
-      if (prev?.some((batch) => batch.index === index)) {
+      if (prev.some((batch) => batch.index === index)) {
         return prev.filter((batch) => batch.index !== index);
       } else {
-        return [...(prev || []), { supplierUnits }];
+        return [...prev, { index, supplierUnits }];
       }
     });
   };
@@ -140,10 +141,15 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
-  const handleSelectUnit = (unit: string, unit_id: number) => {
+  const handleSelectUnit = (
+    unit: string,
+    unit_id: number,
+    quantity: number,
+  ) => {
     setSelectedUnit({
       unitName: unit,
       unit_id: unit_id,
+      quantity: quantity,
     });
   };
 
@@ -294,16 +300,27 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
               <div className="flex flex-col gap-2">
                 <Label className="text-left">Quantity & Unit</Label>
                 <div className="flex">
-                  <Input
-                    className="rounded-r-none border shadow-none"
-                    placeholder="Enter Quantity"
-                    value={unitQuantity}
-                    onChange={(e) => setUnitQuantity(Number(e.target.value))}
-                  />
+                  <div className="relative flex w-full flex-col justify-center">
+                    {selectedUnit && (
+                      <Label className="absolute mr-3 self-end text-right text-textGray">
+                        available: {selectedUnit.quantity}
+                      </Label>
+                    )}
+                    <Input
+                      className="rounded-r-none border shadow-none"
+                      placeholder="Enter Quantity"
+                      value={unitQuantity}
+                      onChange={(e) => setUnitQuantity(Number(e.target.value))}
+                    />
+                  </div>
                   <Select
                     onValueChange={(value) => {
                       const selectedUnit = JSON.parse(value);
-                      handleSelectUnit(selectedUnit.name, selectedUnit.id);
+                      handleSelectUnit(
+                        selectedUnit.name,
+                        selectedUnit.id,
+                        selectedUnit.quantity,
+                      );
                     }}
                   >
                     <SelectTrigger className="rounded-l-none">
@@ -311,19 +328,18 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     </SelectTrigger>
                     <SelectContent>
                       {selectedBatches?.map((batch) =>
-                        Object.entries(batch).map((test) =>
-                          test[1].map((ywa, index) => (
-                            <SelectItem
-                              value={JSON.stringify({
-                                name: ywa.unit.name,
-                                id: ywa.unit.unit_id,
-                              })}
-                              key={index}
-                            >
-                              {ywa.unit.name}
-                            </SelectItem>
-                          )),
-                        ),
+                        batch.supplierUnits.map((unit) => (
+                          <SelectItem
+                            key={`${batch.index}-${unit.unit.unit_id}`}
+                            value={JSON.stringify({
+                              name: unit.unit.name,
+                              id: unit.unit.unit_id,
+                              quantity: unit.quantity_per_unit,
+                            })}
+                          >
+                            {unit.unit.name}
+                          </SelectItem>
+                        )),
                       )}
                     </SelectContent>
                   </Select>
@@ -335,6 +351,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <div className="flex">
                   {supplier === "Supplier" ? (
                     <Select
+                      disabled={
+                        !(unitQuantity !== 0 && selectedUnit.unitName !== "")
+                      }
                       onValueChange={(value) => setPrice(Number(value))}
                       value={price.toString()}
                     >
@@ -342,19 +361,20 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         <SelectValue placeholder="Select Pricing" />
                       </SelectTrigger>
                       <SelectContent>
-                        {selectedBatches?.map((batch, batchIndex) =>
-                          Object.entries(batch).map(([key, value]) =>
-                            value.map((ywa, ywaIndex) =>
-                              ywa.unit.name === selectedUnit.unitName ? (
-                                <SelectItem
-                                  value={ywa.price.toString()}
-                                  key={`${batchIndex}-${key}-${ywaIndex}`}
-                                >
-                                  {ywa.price}
-                                </SelectItem>
-                              ) : null,
-                            ),
-                          ),
+                        {selectedBatches?.flatMap((batch, batchIndex) =>
+                          batch.supplierUnits
+                            .filter(
+                              (unit) =>
+                                unit.unit.name === selectedUnit.unitName,
+                            )
+                            .map((ywa, ywaIndex) => (
+                              <SelectItem
+                                key={`${batchIndex}-${ywa.unit.unit_id}-${ywaIndex}`}
+                                value={ywa.price.toString()}
+                              >
+                                {ywa.price}
+                              </SelectItem>
+                            )),
                         )}
                       </SelectContent>
                     </Select>
@@ -363,6 +383,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       className="rounded-r-none border shadow-none"
                       placeholder="Select Pricing"
                       value={price}
+                      disabled={
+                        !(unitQuantity !== 0 && selectedUnit.unitName !== "")
+                      }
                       onChange={(e) => setPrice(Number(e.target.value))}
                     />
                   )}
@@ -370,6 +393,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <Select
                     value={supplier}
                     onValueChange={(value) => setSupplier(value)}
+                    disabled={
+                      !(unitQuantity !== 0 && selectedUnit.unitName !== "")
+                    }
                   >
                     <SelectTrigger className="rounded-l-none">
                       <SelectValue placeholder="Supplier" />

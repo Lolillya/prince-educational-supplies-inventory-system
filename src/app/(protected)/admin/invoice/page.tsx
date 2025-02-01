@@ -45,13 +45,12 @@ const InvoicePage = () => {
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery();
   // TODO: SEARCH FEATURE
 
-  if (isLoading) return <LoadingSpinner />;
-
-  // const filteredInvoices = sampleInvoice.filter(
-  //   (invoice) =>
-  //     invoice.customer.toLowerCase().includes(searchTerm.toLowerCase()) ||
-  //     invoice.invoiceId.toString().includes(searchTerm),
-  // );
+  if (isLoading)
+    return (
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
+    );
 
   return (
     <section

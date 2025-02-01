@@ -43,7 +43,7 @@ type Props = {
     };
   }[];
   isEditing: boolean;
-  discountValue: number;
+  discountValue: number | null;
 };
 
 const InvoiceTable: React.FC<Props> = ({
@@ -130,7 +130,7 @@ const InvoiceTable: React.FC<Props> = ({
                               <Label className="text-slate-400">Discount</Label>
                               <Input
                                 className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-                                defaultValue={discountValue}
+                                defaultValue={discountValue ?? 0}
                               />
                             </div>
                           </div>

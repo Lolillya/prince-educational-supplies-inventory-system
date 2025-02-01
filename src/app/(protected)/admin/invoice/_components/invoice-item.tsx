@@ -28,7 +28,7 @@ type Props = {
     };
   };
 
-  discountValue: number;
+  discountValue: number | null;
 };
 
 const InvoiceItem: React.FC<Props> = ({ line_items }: Props, discountValue) => {

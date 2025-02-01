@@ -56,8 +56,8 @@ type InventoryItem = {
 
 type SupplierProps = {
   Personal_Details: {
-    company: string;
-    personal_details_id: number;
+    company: string | null;
+    personal_details_id: string;
   };
 };
 
@@ -159,11 +159,12 @@ const NewInvoice = () => {
     const invoiceData = {
       invoice: {
         invoice_number: invoiceId,
-        customer_id: selectedSupplier?.Personal_Details.personal_details_id,
+        customer_id:
+          selectedSupplier?.Personal_Details.personal_details_id ?? "",
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",
-        payment_term_id: 3,
+        payment_term_id: 1,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
         variant_id: item[1].variant_id,
@@ -189,7 +190,7 @@ const NewInvoice = () => {
   };
 
   const handleSelectedSupplier = (supplier: SupplierProps) => {
-    setSupplierSearchTerm(supplier.Personal_Details.company);
+    setSupplierSearchTerm(supplier.Personal_Details.company ?? "");
     setSelectedSupplier(supplier);
   };
 
@@ -227,12 +228,13 @@ const NewInvoice = () => {
     } else setFilteredItems([]);
 
     if (supplierSearchTerm) {
-      const result = supplierList?.filter((supplier) =>
-        supplier.Personal_Details.company
-          ?.toLowerCase()
-          .includes(supplierSearchTerm),
-      );
-      setFilteredSupplier(result);
+      const result =
+        supplierList?.filter((supplier) =>
+          supplier.Personal_Details.company
+            ?.toLowerCase()
+            .includes(supplierSearchTerm),
+        ) ?? [];
+      setFilteredSupplier(result ?? []);
     } else setFilteredSupplier([]);
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 

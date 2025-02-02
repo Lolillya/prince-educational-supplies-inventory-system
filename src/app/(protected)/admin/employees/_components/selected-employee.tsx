@@ -41,7 +41,7 @@ const SelectedEmployee = ({
 								{name}
 							</p>
 							{/* //TODO: reflect admin status */}
-							<p className='bg-emerald-200 text-emerald-700 rounded-full px-2 py-[3px] text-xs tracking-wide'>
+							<p className='bg-emerald-200 text-emerald-700 rounded-full px-2 py-[3px] text-sm tracking-wide'>
 								admin
 							</p>
 						</div>

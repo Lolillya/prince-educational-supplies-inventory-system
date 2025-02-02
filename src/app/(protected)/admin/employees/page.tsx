@@ -83,7 +83,7 @@ const EmployeesPage = () => {
         <Button
           onClick={() => router.push("/admin/suppliers/new-supplier")}
           className="bg-green hover:bg-green/80">
-          <Plus strokeWidth={3} /> New Supplier
+          <Plus strokeWidth={3} /> New Employee
         </Button>
       </div>
       <div className="mt-8 flex gap-3 flex-grow">

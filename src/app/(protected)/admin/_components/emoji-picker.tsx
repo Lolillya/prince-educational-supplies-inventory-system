@@ -15,7 +15,7 @@ const EmojiPopover = ({ isEditing } : EmojiPopoverProps) => {
 			<Popover>
 				<PopoverTrigger disabled={!isEditing}>
 					<Avatar className='h-16 w-16 !rounded-lg'>
-						<AvatarFallback className='bg-black text-slate-700 !rounded-lg text-3xl'>
+						<AvatarFallback className='bg-black text-slate-700 !rounded-lg text-3xl hover:text-4xl transition-all duration-300'>
 							{emoji.emoji}
 						</AvatarFallback>
 					</Avatar>

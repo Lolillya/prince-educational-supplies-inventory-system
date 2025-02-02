@@ -22,7 +22,7 @@ const authConfig: NextAuthConfig = {
             const role = await getUserRole(user.personal_details_id);
             console.log(role);
             return {
-              id: user.authentication_id,
+              id: user.personal_details_id,
               username: user.username,
               firstName: user.personal_details.first_name,
               lastName: user.personal_details.last_name,

@@ -178,7 +178,7 @@ const NewInvoice = () => {
       })),
     };
     createInvoice(invoiceData);
-    console.log(invoiceData);
+    console.log(session);
     // });
   };
 

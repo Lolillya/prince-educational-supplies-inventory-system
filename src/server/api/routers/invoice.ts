@@ -4,6 +4,7 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 const invoiceSchema = z.object({
   invoice_number: z.string(),
   customer_id: z.string(),
+  invoice_clerk: z.string(),
   total_amount: z.number(),
   discount: z.number(),
   status: z.string(),
@@ -148,6 +149,7 @@ export const invoiceRouter = createTRPCRouter({
           data: {
             invoice_number: invoice.invoice_number,
             customer_id: invoice.customer_id,
+            invoice_clerk: invoice.invoice_clerk,
             total_amount: invoice.total_amount,
             discount: invoice.discount,
             status: invoice.status,

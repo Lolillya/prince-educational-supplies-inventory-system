@@ -24,6 +24,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
+import { useSession } from "next-auth/react";
 
 type InventoryItem = {
   inventory_id: number;
@@ -63,6 +64,7 @@ type SupplierProps = {
 
 const NewInvoice = () => {
   const router = useRouter();
+  const session = useSession();
 
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
@@ -103,7 +105,7 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
-  const { data: supplierList } = api.invoice.getSuppliers.useQuery();
+  const { data: supplierList } = api.invoice.getCustomers.useQuery();
 
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
@@ -161,6 +163,7 @@ const NewInvoice = () => {
         invoice_number: invoiceId,
         customer_id:
           selectedSupplier?.Personal_Details.personal_details_id ?? "",
+        invoice_clerk: session.data?.user.id,
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",

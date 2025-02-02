@@ -117,10 +117,10 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
-  getSuppliers: publicProcedure.query(async ({ ctx }) => {
+  getCustomers: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.user_Role.findMany({
       where: {
-        role_Id: 4,
+        role_Id: 3,
       },
       select: {
         Personal_Details: {
@@ -165,7 +165,7 @@ export const invoiceRouter = createTRPCRouter({
                 variant_id: item.variant_id,
                 quantity: item.quantity,
                 unit_price: item.unit_price,
-                total_price: item.quantity * item.unit_price,
+                total_price: item.total_price,
                 unit_id: item.unit_id,
               },
             }),

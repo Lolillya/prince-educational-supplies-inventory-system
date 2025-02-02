@@ -415,10 +415,26 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     className="rounded-r-none border shadow-none"
                     placeholder="0"
                     value={discount}
+                    disabled={
+                      !(
+                        unitQuantity !== 0 &&
+                        selectedUnit.unitName !== "" &&
+                        price !== 0 &&
+                        supplier !== ""
+                      )
+                    }
                     onChange={(e) => setDiscount(e.target.value)}
                   />
                   <Select
                     value={discountType}
+                    disabled={
+                      !(
+                        unitQuantity !== 0 &&
+                        selectedUnit.unitName !== "" &&
+                        price !== 0 &&
+                        supplier !== ""
+                      )
+                    }
                     onValueChange={(value) => setDiscountType(value)}
                   >
                     <SelectTrigger className="rounded-l-none">

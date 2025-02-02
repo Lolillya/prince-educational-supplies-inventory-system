@@ -1,18 +1,18 @@
 'use client'
 
-import { Button } from "~/components/ui/button"
-import Filter from "../_components/filter"
-import SearchBar from "../_components/search-bar"
+import { Batch, BatchVariant } from "@prisma/client"
 import { Plus } from "lucide-react"
-import { useState } from "react"
 import { useRouter } from "next/navigation"
-import RecordHeader from "../_components/record-header"
-import SelectRecordMessage from "../_components/select-record-message"
-import NoRecordsMessage from "../_components/no-records-message"
+import { useState } from "react"
+import { Button } from "~/components/ui/button"
 import { ScrollArea } from "~/components/ui/scroll-area"
-import RecordItem from "./_components/record-item"
-import { Batch, BatchVariant } from "@prisma/client";
 import { api } from "~/trpc/react"
+import Filter from "../_components/filter"
+import NoRecordsMessage from "../_components/no-records-message"
+import SearchBar from "../_components/search-bar"
+import SelectRecordMessage from "../_components/select-record-message"
+import RecordHeader from "./_components/record-header"
+import RecordItem from "./_components/record-item"
 import SelectedItem from "./_components/selected-item"
 
 interface InventoryItemInfoProps {

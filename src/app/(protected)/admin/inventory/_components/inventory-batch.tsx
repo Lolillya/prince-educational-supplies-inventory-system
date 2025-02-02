@@ -1,5 +1,5 @@
 import { TooltipContent } from '@radix-ui/react-tooltip'
-import { ArrowUpRight, Box, Calendar, IdCard, Printer } from 'lucide-react'
+import { ArrowBigRightDash, ArrowUpRight, Box, Calendar, Hash, IdCard, Printer, Send } from 'lucide-react'
 import Link from 'next/link'
 import { Button } from '~/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
@@ -13,13 +13,14 @@ import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
 import { useState } from 'react'
 import { Poppins } from 'next/font/google'
+import BatchTable from './inventory-batch-table'
 
 const poppins = Poppins({
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });
 
-interface SupplierRestockProps {
+interface InventoryBatchProps {
 	restockId: number;
 	date: string;
 	employee: string;
@@ -27,8 +28,8 @@ interface SupplierRestockProps {
 	restockData?: any;
 }
 
-const SupplierRestock = () => {
-	
+const InventoryBatch = () => {
+
 	const [isEditing, setIsEditing] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [showWarning, setShowWarning] = useState(false);
@@ -50,7 +51,7 @@ const SupplierRestock = () => {
 			<div className='flex items-center justify-between'>
 				<Link href={''}>
 					<div className='w-fit flex items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500'>
-						Restocks
+						Batches
 						<ArrowUpRight className='w-4 h-4' />
 					</div>
 				</Link>
@@ -77,7 +78,7 @@ const SupplierRestock = () => {
 						}}
 					>
 						<DialogTrigger>
-							<SupplierRestockCard />
+							<InventoryBatchCard />
 						</DialogTrigger>
 						<DialogContent
 							className="!w-full !max-w-3xl [&>button]:hidden"
@@ -87,12 +88,12 @@ const SupplierRestock = () => {
 								<div className="flex items-center justify-between">
 									<div className="flex flex-col gap-2">
 										<DialogTitle className="text-xl font-normal text-slate-700">
-											#12345678 {/** Please pass real data here */}
+											Batch 1 {/** Please pass real data here */}
 										</DialogTitle>
 										<div className="flex items-center gap-3 text-slate-400">
-											<Calendar className="h-4 w-4" />
+											<Hash className="h-4 w-4" />
 											<DialogDescription className="text-sm tracking-wide">
-												2025-01-13 {/** Please pass real data here */}
+												12345678 {/** Please pass real data here */}
 											</DialogDescription>
 										</div>
 									</div>
@@ -105,41 +106,14 @@ const SupplierRestock = () => {
 
 							<Separator orientation="horizontal" className="h-[2px]" />
 
-							<div className="flex gap-3">
-								<div className="flex w-1/2 flex-col gap-2">
-									<Label className="text-slate-400">Supplier</Label>
-									<Input
-										className="bg-slate-100 text-slate-700 shadow-none"
-										disabled={!isEditing}
-										value={'supplier'}
-									/> {/** Please pass real data here */}
-								</div>
-								<div className="flex w-1/2 flex-col gap-2">
-									<Label className="text-slate-400">Recorded by</Label>
-									<Input
-										className="bg-slate-100 text-slate-700 shadow-none"
-										disabled={!isEditing}
-									/>
-								</div>
-							</div>
-
-							{/* <RestockTable restockItem={} isEditing={isEditing} /> * Please pass real data here */}
-							<p>
-								Note: Gi tanggal ko ang RestockTable component for now kay di ko sure kung tama ang pag reference sa db......... but this is how it should look like oke?
-							</p>
+							<BatchTable />
 
 							<Separator orientation="horizontal" className="h-[2px]" />
-
-							<Textarea
-								className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"
-								placeholder="Your record notes..."
-								disabled={!isEditing}
-							/>
 
 							<div className="flex items-center justify-between">
 								<div className="flex flex-col">
 									<p className="text-base font-normal text-slate-700">{300}</p> {/** Please pass real data here */}
-									<p className="text-sm text-slate-400">Added Stock</p>
+									<p className="text-sm text-slate-400">Remaining Stock</p>
 								</div>
 								<div className="flex items-center gap-2">
 									<DialogClose asChild disabled={isEditing}>
@@ -149,7 +123,7 @@ const SupplierRestock = () => {
 									</DialogClose>
 									<Button className="bg-green hover:bg-green/80" disabled={isEditing}>
 										<Printer />
-										Print Restock
+										Print Batch
 									</Button>
 								</div>
 							</div>
@@ -170,42 +144,28 @@ const SupplierRestock = () => {
 	)
 }
 
-const SupplierRestockCard = () => {
+const InventoryBatchCard = () => {
 	// TODO: reflect restock data based on selected supplier
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
-			<p className='text-slate-600 text-left'>#1234567</p>
+			<div className='flex items-baseline gap-4'>
+				<p className='text-slate-600 text-left'>Batch 1</p>
+				<p className='text-emerald-500 text-left text-sm'>Sufficient Stock</p>
+			</div>
 			<div className="flex items-center gap-3 flex-grow overflow-hidden">
 				<TooltipProvider>
 					<Tooltip>
 						<TooltipTrigger asChild>
-							<IdCard className="h-4 w-4" />
+							<Hash className="h-4 w-4" />
 						</TooltipTrigger>
 						<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-							Recorded by Stacey Andrew Moralidad Gonzaga
+							From restock record 12345678
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>
-				<p className="text-sm truncate">Stacey Andrew Moralidad Gonzaga</p>
+				<p className="text-sm truncate">12345678</p>
 			</div>
 			<div className="flex items-center gap-4 text-slate-400">
-				<div className="flex items-center gap-3 text-slate-400">
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Calendar className="h-4 w-4" />
-							</TooltipTrigger>
-							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-								Recorded on 2025-01-13
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-					<p className="text-sm">2025-01-13</p>
-				</div>
-				<Separator
-					orientation="vertical"
-					className="h-6 w-[2px] bg-slate-200"
-				/>
 				<div className="flex items-center gap-3">
 					<TooltipProvider>
 						<Tooltip>
@@ -213,15 +173,22 @@ const SupplierRestockCard = () => {
 								<Box className="h-4 w-4" />
 							</TooltipTrigger>
 							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-								300 total added stock
+								300 remaining stock
 							</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>
 					<p className="text-sm">300 Bundles</p>
+					<Separator
+						orientation="vertical"
+						className="h-6 w-[2px] bg-slate-200"
+					/>
+					<div className="flex items-center gap-3 text-slate-400">
+						<p className="text-sm">2 Conversions</p>
+					</div>
 				</div>
 			</div>
 		</div>
 	)
 }
 
-export default SupplierRestock
+export default InventoryBatch

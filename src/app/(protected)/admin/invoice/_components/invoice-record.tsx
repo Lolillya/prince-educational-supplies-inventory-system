@@ -17,6 +17,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   invoiceId,
   date,
   customer,
+  invoiceClerk,
   grandTotal,
   line_items,
   discountValue,
@@ -122,6 +123,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             invoiceId={invoiceId}
             date={date}
             customer={customer}
+            invoiceClerk={invoiceClerk}
             grandTotal={grandTotal}
             discountValue={discountValue}
             line_items={line_items}

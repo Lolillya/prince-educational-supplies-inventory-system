@@ -16,6 +16,7 @@ export type InvoiceProps = {
   invoiceId: string;
   date: Date;
   customer: string;
+  invoiceClerk: string;
   grandTotal: number;
   discountValue: number | null;
   line_items: {
@@ -43,6 +44,7 @@ const InvoicePage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery();
+  console.log(invoiceData);
   // TODO: SEARCH FEATURE
 
   if (isLoading)
@@ -93,6 +95,11 @@ const InvoicePage = () => {
               invoice.customer.Personal_Details.first_name +
               " " +
               invoice.customer.Personal_Details.last_name
+            }
+            invoiceClerk={
+              invoice.invoiceClerk.Personal_Details.first_name +
+              " " +
+              invoice.invoiceClerk.Personal_Details.last_name
             }
             grandTotal={invoice.total_amount}
             line_items={invoice.line_items}

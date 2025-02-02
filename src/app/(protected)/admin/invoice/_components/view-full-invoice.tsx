@@ -23,6 +23,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoiceId,
   date,
   customer,
+  invoiceClerk,
   grandTotal,
   discountValue,
   line_items,
@@ -120,7 +121,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               <Input
                 className="bg-slate-100 text-slate-700 shadow-none"
                 disabled={!isEditing}
-                defaultValue={customer}
+                defaultValue={invoiceClerk}
               />
             </div>
           </div>

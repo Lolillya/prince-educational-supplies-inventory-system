@@ -76,6 +76,16 @@ export const invoiceRouter = createTRPCRouter({
         created_at: true,
         total_amount: true,
         discount: true,
+        invoiceClerk: {
+          select: {
+            Personal_Details: {
+              select: {
+                first_name: true,
+                last_name: true,
+              },
+            },
+          },
+        },
 
         customer: {
           include: {

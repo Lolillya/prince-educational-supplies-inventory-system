@@ -1,9 +1,8 @@
-import React from 'react'
-import EditRecord from './edit-record';
+import { Box, Boxes, Tag } from 'lucide-react';
 import { Separator } from '~/components/ui/separator';
-import RecordNotes from '../../_components/record-notes';
-import { Box, Boxes, Group, Package, Tag } from 'lucide-react';
 import RecordInfo from '../../_components/record-info';
+import RecordNotes from '../../_components/record-notes';
+import EditRecord from './edit-record';
 import InventoryBatch from './inventory-batch';
 
 type SelectedItemProps = {

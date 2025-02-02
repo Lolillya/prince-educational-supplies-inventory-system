@@ -49,6 +49,8 @@ model User_Role {
   SupplierUnit        SupplierUnit[]
   Personal_Details    Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  customerInvoices    Invoice[]        @relation(name: "CustomerRelation")
+  clerkInvoices       Invoice[]        @relation(name: "InvoiceClerkRelation")
 }
 
 model Authentication {
@@ -226,17 +228,21 @@ model Invoice {
   invoice_id      Int           @id @default(autoincrement())
   invoice_number  String        @unique
   customer_id     String
+  invoice_clerk   String
   created_at      DateTime      @default(now())
   updated_at      DateTime      @updatedAt
   total_amount    Float         @default(0.0)
   discount        Float?
   status          String
   payment_term_id Int
-  customer        User_Role     @relation(fields: [customer_id], references: [Personal_Details_Id])
+  customer        User_Role     @relation(name: "CustomerRelation", fields: [customer_id], references: [Personal_Details_Id])
+  invoiceClerk    User_Role     @relation(name: "InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
   payment_term    Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
   line_items      Line_Item[]
   Payment         Payment[]
   payment_logs    Payment_Log[]
+  User_Role       User_Role?    @relation(fields: [user_RoleId], references: [id])
+  user_RoleId     String?
 }
 
 model Line_Item {

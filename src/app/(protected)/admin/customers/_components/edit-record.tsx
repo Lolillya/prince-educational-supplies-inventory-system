@@ -9,6 +9,7 @@ import { Textarea } from '~/components/ui/textarea'
 import Edit from '../../_components/edit'
 import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
+import EmojiPopover from '../../_components/emoji-picker'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -66,11 +67,7 @@ const EditRecord = () => {
 					<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
 						<div className="flex items-center justify-between">
 							<div className="flex items-center gap-5">
-								<Avatar className="h-16 w-16 !rounded-lg">
-									<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-										🎭
-									</AvatarFallback>
-								</Avatar>
+								<EmojiPopover isEditing={isEditing} />
 								<div className="flex flex-col gap-2">
 									<DialogTitle className="text-xl font-normal text-slate-700">
 										LilyCo
@@ -90,6 +87,25 @@ const EditRecord = () => {
 					</DialogHeader>
 
 					<Separator orientation="horizontal" className="h-[2px]" />
+
+					<div className="flex gap-3">
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Company</Label>
+							<Input
+								className="bg-slate-100 text-slate-700 shadow-none"
+								disabled={!isEditing}
+								placeholder="Company"
+							/>
+						</div>
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Term</Label>
+							<Input
+								className="bg-slate-100 text-slate-700 shadow-none"
+								disabled={!isEditing}
+								placeholder="30"
+							/>
+						</div>
+					</div>
 
 					<div className="flex flex-col gap-2">
 						<Label className="text-slate-400">Representative</Label>

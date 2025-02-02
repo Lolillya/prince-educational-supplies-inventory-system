@@ -48,7 +48,7 @@ const CustomerInvoice = () => {
 			<div className='flex items-center justify-between'>
 				<Link href={''}>
 					<div className='w-fit flex items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500'>
-						Activity
+						Invoices
 						<ArrowUpRight className='w-4 h-4' />
 					</div>
 				</Link>

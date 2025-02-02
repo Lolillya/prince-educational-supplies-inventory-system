@@ -32,7 +32,7 @@ const SelectedEmployee = ({
 				<div className='flex gap-5 items-center'>
 					<Avatar className='h-16 w-16 !rounded-lg'>
 						<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-							🎭
+							👑
 						</AvatarFallback>
 					</Avatar>
 					<div className='flex flex-col gap-2'>
@@ -41,7 +41,7 @@ const SelectedEmployee = ({
 								{name}
 							</p>
 							{/* //TODO: reflect admin status */}
-							<p className='bg-emerald-200 text-emerald-700 rounded-full px-2 py-[3px] text-xs tracking-wide'>
+							<p className='bg-emerald-200 text-emerald-700 rounded-full px-2 py-[3px] text-sm tracking-wide'>
 								admin
 							</p>
 						</div>

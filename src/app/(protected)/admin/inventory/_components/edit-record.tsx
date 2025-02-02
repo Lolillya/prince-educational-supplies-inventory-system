@@ -1,6 +1,6 @@
+import { Hash } from 'lucide-react'
 import { Poppins } from 'next/font/google'
 import React, { useState } from 'react'
-import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
@@ -9,7 +9,6 @@ import { Textarea } from '~/components/ui/textarea'
 import Edit from '../../_components/edit'
 import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
-import EmojiPopover from '../../_components/emoji-picker'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -66,17 +65,15 @@ const EditRecord = () => {
 				>
 					<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
 						<div className="flex items-center justify-between">
-							<div className="flex items-center gap-5">
-								<EmojiPopover isEditing={isEditing} />
-								<div className="flex flex-col gap-2">
-									<DialogTitle className="text-xl font-normal text-slate-700">
-										John Doe
-									</DialogTitle>
-									<div className="flex items-center gap-3 text-slate-400">
-										<DialogDescription className="text-sm tracking-wide">
-											username dapat here diba?
-										</DialogDescription>
-									</div>
+							<div className="flex flex-col gap-2">
+								<DialogTitle className="text-xl font-normal text-slate-700">
+									Variant {/** Please pass real data here */}
+								</DialogTitle>
+								<div className="flex items-center gap-3 text-slate-400">
+									<Hash className="h-4 w-4" />
+									<DialogDescription className="text-sm tracking-wide">
+										00000001 {/** Please pass real data here */}
+									</DialogDescription>
 								</div>
 							</div>
 							<div className="flex items-center gap-3">
@@ -88,98 +85,63 @@ const EditRecord = () => {
 
 					<Separator orientation="horizontal" className="h-[2px]" />
 
-					<div className="flex flex-col gap-2">
-						<Label className="text-slate-400">Position</Label>
-						<div className="flex gap-3">
+					<div className="flex gap-3">
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Variant</Label>
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none"
 								disabled={!isEditing}
-								placeholder="Top"
+								placeholder="Variant"
 							/>
 						</div>
-					</div>
-
-					<div className="flex flex-col gap-2">
-						<Label className="text-slate-400">Employee</Label>
-						<div className="flex gap-3">
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Item</Label>
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none"
 								disabled={!isEditing}
-								placeholder="First name"
-							/>
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								placeholder="Last name"
+								placeholder="Item"
 							/>
 						</div>
 					</div>
 
 					<div className="flex gap-3">
 						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">Contact Number</Label>
+							<Label className="text-slate-400">Brand</Label>
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none"
 								disabled={!isEditing}
-								placeholder="+63"
+								placeholder="Brand"
 							/>
 						</div>
 						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">Email</Label>
+							<Label className="text-slate-400">Category</Label>
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none"
 								disabled={!isEditing}
-								placeholder="example@email.com"
+								placeholder="Category"
 							/>
 						</div>
 					</div>
 
 					<div className="flex flex-col gap-2">
-						<Label className="text-slate-400">Street Address</Label>
+						<Label className="text-slate-400">Stock Level</Label>
 						<div className="flex gap-3">
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								placeholder="Street Address"
-							/>
-						</div>
-					</div>
-
-					<div className="flex gap-3">
-						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">City</Label>
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								placeholder="City"
-							/>
-						</div>
-						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">Region</Label>
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								placeholder="Region"
-							/>
-						</div>
-					</div>
-
-					<div className="flex gap-3">
-						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">Country</Label>
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								placeholder="Country"
-							/>
-						</div>
-						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">Postal Code</Label>
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								placeholder="0000"
-							/>
+							<div className='flex items-center w-1/2'>
+								<div className='h-full w-1 bg-amber-300 rounded-l-lg'/>
+								<Input
+									className="bg-slate-100 text-slate-700 shadow-none rounded-l-none"
+									disabled={!isEditing}
+									placeholder="Low"
+								/>
+							</div>
+							<div className='flex items-center w-1/2'>
+								<div className='h-full w-1 bg-rose-400 rounded-l-lg' />
+								<Input
+									className="bg-slate-100 text-slate-700 shadow-none rounded-l-none"
+									disabled={!isEditing}
+									placeholder="Very Low"
+								/>
+							</div>
 						</div>
 					</div>
 

@@ -20,7 +20,6 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   invoiceClerk,
   grandTotal,
   line_items,
-  discountValue,
 }) => {
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-10 text-slate-700">
@@ -100,13 +99,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
 
       <div className="flex flex-col gap-3">
         {line_items.slice(0, 3).map((item, index) => {
-          return (
-            <InvoiceItem
-              key={index}
-              line_items={item}
-              discountValue={discountValue}
-            />
-          );
+          return <InvoiceItem key={index} line_items={item} />;
           // console.log(item);
         })}
 
@@ -125,7 +118,6 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             customer={customer}
             invoiceClerk={invoiceClerk}
             grandTotal={grandTotal}
-            discountValue={discountValue}
             line_items={line_items}
           />
         </div>

@@ -25,7 +25,6 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   customer,
   invoiceClerk,
   grandTotal,
-  discountValue,
   line_items,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
@@ -127,11 +126,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
           </div>
         </div>
 
-        <InvoiceTable
-          line_items={line_items}
-          isEditing={isEditing}
-          discountValue={discountValue}
-        />
+        <InvoiceTable line_items={line_items} isEditing={isEditing} />
 
         <Separator orientation="horizontal" className="h-[2px]" />
 
@@ -152,7 +147,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
                 orientation="vertical"
                 className="h-4 w-[2px] bg-slate-200"
               />
-              <p className="text-sm tracking-wide">{discountValue} discount</p>
+              <p className="text-sm tracking-wide"> discount</p>
             </div>
           </div>
           <div className="flex items-center gap-2">

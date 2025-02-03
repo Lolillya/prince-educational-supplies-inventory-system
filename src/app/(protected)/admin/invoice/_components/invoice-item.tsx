@@ -13,6 +13,7 @@ type Props = {
   line_items: {
     quantity: number;
     unit_price: number;
+    discount: number;
     total_price: number;
     unit: {
       name: string;
@@ -27,11 +28,9 @@ type Props = {
       };
     };
   };
-
-  discountValue: number | null;
 };
 
-const InvoiceItem: React.FC<Props> = ({ line_items }: Props, discountValue) => {
+const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
   const {
     // item,
     // variant,
@@ -66,7 +65,7 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props, discountValue) => {
               orientation="vertical"
               className="h-4 w-[1px] bg-slate-200"
             />
-            <p className="text-sm">{discountValue} discount</p>
+            <p className="text-sm">{line_items.discount}</p>
           </div>
         </div>
 

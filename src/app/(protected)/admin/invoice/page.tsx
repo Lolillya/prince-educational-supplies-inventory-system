@@ -18,11 +18,12 @@ export type InvoiceProps = {
   customer: string;
   invoiceClerk: string;
   grandTotal: number;
-  discountValue: number | null;
+
   line_items: {
     quantity: number;
     unit_price: number;
     total_price: number;
+    discount: number;
     unit: {
       name: string;
     };
@@ -37,8 +38,6 @@ export type InvoiceProps = {
     };
   }[];
 };
-
-type Invoices = InvoiceProps[];
 
 const InvoicePage = () => {
   const router = useRouter();
@@ -75,17 +74,6 @@ const InvoicePage = () => {
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        {/* {filteredInvoices.map((invoice, index) => (
-          <InvoiceRecord
-            key={index}
-            invoiceId={invoice.invoiceId}
-            date={invoice.date}
-            customer={invoice.customer}
-            grandTotal={invoice.grandTotal}
-            orderItem={invoice.orderItem}
-            discountValue={invoice.discountValue}
-          />
-        ))} */}
         {invoiceData?.map((invoice, index) => (
           <InvoiceRecord
             key={index}
@@ -103,7 +91,6 @@ const InvoicePage = () => {
             }
             grandTotal={invoice.total_amount}
             line_items={invoice.line_items}
-            discountValue={invoice.discount}
           />
         ))}
         {/* {filteredInvoices.length === 0 && (

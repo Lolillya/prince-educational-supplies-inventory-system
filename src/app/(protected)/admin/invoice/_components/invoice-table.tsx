@@ -28,6 +28,7 @@ type Props = {
   line_items: {
     quantity: number;
     unit_price: number;
+    discount: number;
     total_price: number;
     unit: {
       name: string;
@@ -43,14 +44,9 @@ type Props = {
     };
   }[];
   isEditing: boolean;
-  discountValue: number | null;
 };
 
-const InvoiceTable: React.FC<Props> = ({
-  line_items,
-  isEditing,
-  discountValue,
-}) => {
+const InvoiceTable: React.FC<Props> = ({ line_items, isEditing }) => {
   return (
     <div>
       <Table className="w-full table-fixed">
@@ -94,7 +90,7 @@ const InvoiceTable: React.FC<Props> = ({
                 <TableCell>{item.quantity}</TableCell>
                 <TableCell>{item.unit.name}</TableCell>
                 <TableCell>{item.unit_price}</TableCell>
-                <TableCell>{discountValue}</TableCell>
+                <TableCell>{item.discount}</TableCell>
                 {isEditing ? (
                   <>
                     <TableCell>{item.total_price}</TableCell>
@@ -130,7 +126,7 @@ const InvoiceTable: React.FC<Props> = ({
                               <Label className="text-slate-400">Discount</Label>
                               <Input
                                 className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-                                defaultValue={discountValue ?? 0}
+                                defaultValue={0}
                               />
                             </div>
                           </div>

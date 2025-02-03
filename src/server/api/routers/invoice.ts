@@ -102,6 +102,7 @@ export const invoiceRouter = createTRPCRouter({
             quantity: true,
             unit_price: true,
             total_price: true,
+            discount: true,
             unit: {
               select: {
                 name: true,

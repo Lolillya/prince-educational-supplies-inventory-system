@@ -45,12 +45,12 @@ model User_Role {
   role_Id             Int
   History_Log         History_Log[]
   Inventory_Log       Inventory_Log[]
+  customerInvoices    Invoice[]        @relation("CustomerRelation")
+  clerkInvoices       Invoice[]        @relation("InvoiceClerkRelation")
   Invoice             Invoice[]
   SupplierUnit        SupplierUnit[]
   Personal_Details    Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
-  customerInvoices    Invoice[]        @relation(name: "CustomerRelation")
-  clerkInvoices       Invoice[]        @relation(name: "InvoiceClerkRelation")
 }
 
 model Authentication {
@@ -235,14 +235,14 @@ model Invoice {
   discount        Float?
   status          String
   payment_term_id Int
-  customer        User_Role     @relation(name: "CustomerRelation", fields: [customer_id], references: [Personal_Details_Id])
-  invoiceClerk    User_Role     @relation(name: "InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
+  user_RoleId     String?
+  customer        User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id])
+  invoiceClerk    User_Role     @relation("InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
   payment_term    Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
+  User_Role       User_Role?    @relation(fields: [user_RoleId], references: [id])
   line_items      Line_Item[]
   Payment         Payment[]
   payment_logs    Payment_Log[]
-  User_Role       User_Role?    @relation(fields: [user_RoleId], references: [id])
-  user_RoleId     String?
 }
 
 model Line_Item {
@@ -254,6 +254,8 @@ model Line_Item {
   unit_price   Float
   total_price  Float
   created_at   DateTime @default(now())
+  discount     Int      @default(0)
+  sub_total    Float?
   invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id])
   unit         Unit     @relation(fields: [unit_id], references: [unit_id])
   variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)

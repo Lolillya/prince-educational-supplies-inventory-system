@@ -43,7 +43,7 @@ const InvoicePage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery();
-  console.log(invoiceData);
+  console.log("Hello WOrld");
   // TODO: SEARCH FEATURE
 
   if (isLoading)

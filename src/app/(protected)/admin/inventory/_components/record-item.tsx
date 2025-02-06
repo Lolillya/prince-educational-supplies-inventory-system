@@ -4,15 +4,17 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSepara
 import { Separator } from '~/components/ui/separator'
 import Favorite from '../../_components/favorite'
 import MoreOptions from '../../_components/more-options'
+import Delete from '../../_components/delete'
 type RecordItemProps = {
 	id: string;
-	name: string | null;
+	name: string;
 	stockLevel: string;
 	onClick?: () => void;
 	isSelected?: boolean;
+	recordType: string;
 }
 
-const RecordItem: React.FC<RecordItemProps> = ({ id, name, stockLevel, onClick, isSelected }) => {
+const RecordItem: React.FC<RecordItemProps> = ({ id, name, stockLevel, onClick, isSelected, recordType }) => {
 	return (
 		<>
 			<div
@@ -37,34 +39,7 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, stockLevel, onClick, 
 					</div>
 					<div className='flex items-center gap-2'>
 						<Favorite />
-						<DropdownMenu>
-							<DropdownMenuTrigger>
-								<MoreOptions />
-							</DropdownMenuTrigger>
-							<DropdownMenuContent>
-								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									Print
-								</DropdownMenuItem>
-								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									Export
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									View Details
-								</DropdownMenuItem>
-								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									Edit Record
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-									Out to Office
-								</DropdownMenuItem>
-								<DropdownMenuSeparator />
-								<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-									Delete
-								</DropdownMenuItem>
-							</DropdownMenuContent>
-						</DropdownMenu>
+						<Delete recordInfo={name} recordType={recordType}	/>
 					</div>
 				</div>
 			</div>

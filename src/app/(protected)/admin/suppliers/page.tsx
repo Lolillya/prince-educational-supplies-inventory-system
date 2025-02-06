@@ -98,6 +98,7 @@ const SuppliersPage = () => {
                       id={supplier.Personal_Details_Id}
                       onClick={() => setSelectedRecord(supplier)}
                       isSelected={selectedRecord?.Personal_Details_Id === supplier.Personal_Details_Id}
+                      recordType={'Suppliers'}
                     />
                   ))}
                 </div>

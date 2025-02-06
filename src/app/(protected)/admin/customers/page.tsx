@@ -97,8 +97,8 @@ const CustomersPage = () => {
                       name={customer.Personal_Details.company}
                       id={customer.Personal_Details_Id}
                       onClick={() => setSelectedRecord(customer)}
-                      isSelected={selectedRecord?.Personal_Details_Id === customer.Personal_Details_Id}
-                    />
+                      isSelected={selectedRecord?.Personal_Details_Id === customer.Personal_Details_Id} 
+                      recordType={'Customers'}                    />
                   ))}
                 </div>
               </ScrollArea>

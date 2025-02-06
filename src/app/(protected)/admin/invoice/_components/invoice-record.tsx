@@ -22,6 +22,12 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   line_items,
 }) => {
   return (
+    console.log(invoiceId,
+      date,
+      customer,
+      invoiceClerk,
+      grandTotal,
+      line_items),
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-10 text-slate-700">
       <div className="flex items-center justify-center px-6">
         <div className="flex w-1/2 flex-col gap-4">
@@ -98,7 +104,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
       </div>
 
       <div className="flex flex-col gap-3">
-        {line_items.slice(0, 3).map((item, index) => {
+        {line_items.slice(0, 2).map((item, index) => {
           return <InvoiceItem key={index} line_items={item} />;
           // console.log(item);
         })}

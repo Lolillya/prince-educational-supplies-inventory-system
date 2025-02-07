@@ -163,7 +163,7 @@ const NewInvoice = () => {
         // invoice_number: invoiceId,
         customer_id:
           selectedSupplier?.Personal_Details.personal_details_id ?? "",
-        invoice_clerk: session.data?.user.id,
+        invoice_clerk: session.data?.user.id ?? "",
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",

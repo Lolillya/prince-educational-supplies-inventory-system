@@ -2,7 +2,7 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
 const invoiceSchema = z.object({
-  invoice_number: z.string(),
+  // invoice_number: z.number(),
   customer_id: z.string(),
   invoice_clerk: z.string(),
   total_amount: z.number(),
@@ -158,7 +158,7 @@ export const invoiceRouter = createTRPCRouter({
       const result = await ctx.db.$transaction(async (prisma) => {
         const createdInvoice = await prisma.invoice.create({
           data: {
-            invoice_number: invoice.invoice_number,
+            // invoice_number: invoice.invoice_number,
             customer_id: invoice.customer_id,
             invoice_clerk: invoice.invoice_clerk,
             total_amount: invoice.total_amount,

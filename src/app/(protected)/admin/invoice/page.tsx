@@ -13,7 +13,7 @@ import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
 
 export type InvoiceProps = {
-  invoiceId: string;
+  invoiceId: number;
   date: Date;
   customer: string;
   invoiceClerk: string;

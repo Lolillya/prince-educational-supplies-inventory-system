@@ -25,6 +25,7 @@ import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
 import { useSession } from "next-auth/react";
+import { toast } from "~/hooks/use-toast";
 
 type InventoryItem = {
   inventory_id: number;
@@ -156,11 +157,8 @@ const NewInvoice = () => {
       return;
     }
 
-    // Object.entries(activeCards).map((item) => {
-    // const invoiceId = 1000;
     const invoiceData = {
       invoice: {
-        // invoice_number: invoiceId,
         customer_id:
           selectedSupplier?.Personal_Details.personal_details_id ?? "",
         invoice_clerk: session.data?.user.id ?? "",
@@ -179,7 +177,6 @@ const NewInvoice = () => {
     };
     createInvoice(invoiceData);
     console.log(session);
-    // });
   };
 
   const handleRemoveBatch = (id: number) => {
@@ -198,6 +195,14 @@ const NewInvoice = () => {
   };
 
   const handleSelectItem = (item: InventoryItem) => {
+    if (selectedItems.length >= 5) {
+      toast({
+        title: "Error",
+        description: "Cannot add more than 5 items.",
+        variant: "destructive",
+      });
+      return;
+    }
     if (
       !selectedItems.some(
         (selected) => selected.inventory_id === item.inventory_id,
@@ -211,8 +216,6 @@ const NewInvoice = () => {
 
   useEffect(() => {
     calculateGrandTotal();
-
-    console.log(activeCards);
   }, [activeCards]);
 
   useEffect(() => {

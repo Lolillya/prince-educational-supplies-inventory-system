@@ -157,10 +157,10 @@ const NewInvoice = () => {
     }
 
     // Object.entries(activeCards).map((item) => {
-    const invoiceId = `INV_${Date.now()}_${Math.floor(Math.random() * 1000)}`;
+    // const invoiceId = 1000;
     const invoiceData = {
       invoice: {
-        invoice_number: invoiceId,
+        // invoice_number: invoiceId,
         customer_id:
           selectedSupplier?.Personal_Details.personal_details_id ?? "",
         invoice_clerk: session.data?.user.id,

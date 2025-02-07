@@ -33,7 +33,14 @@ const Payment: React.FC<PaymentProps> = ({ className }) => {
 						<Label className="text-slate-400">Amount</Label>
 						<Input
 							className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-							defaultValue={'5000'}
+						/>
+					</div>
+					<div>
+						<Label className="text-slate-400">Remaining Balance</Label>
+						<Input
+							className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
+							defaultValue={'00'}
+							disabled
 						/>
 					</div>
 					<div>

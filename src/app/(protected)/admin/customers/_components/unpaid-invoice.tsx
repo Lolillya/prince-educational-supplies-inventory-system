@@ -15,8 +15,8 @@ const UnpaidInvoice = () => {
 			<div className="flex items-center justify-between">
 				<div className={`flex flex-col gap-1 ${poppins.className} w-full`}>
 					<p className='text-slate-600 text-lg'>#INV00000000</p>
-					<div className="flex items-center gap-3 text-slate-400">
-						<TooltipProvider>
+					<div className="flex items-center gap-2 text-slate-400">
+						<TooltipProvider delayDuration={0} skipDelayDuration={0}>
 							<Tooltip>
 								<TooltipTrigger asChild>
 									<Calendar className="h-4 w-4" />

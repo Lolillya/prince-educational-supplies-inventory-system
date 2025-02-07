@@ -1,4 +1,4 @@
-import { Trash2 } from "lucide-react";
+import { AlertCircle, Trash2 } from "lucide-react";
 import { Poppins } from "next/font/google";
 import React from "react";
 import { Button } from "~/components/ui/button";
@@ -38,22 +38,30 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) =>
 							Delete Record
 						</DialogTitle>
 						<div className="flex items-center gap-3 text-slate-400">
-							<DialogDescription className="text-sm tracking-wide mt-2">
+							<DialogDescription className="text-sm tracking-wide">
 								<p>You're about to delete <span className="font-bold">{recordInfo}</span> from <span className="font-bold">{recordType}</span>.</p>
-								<p className="text-rose-500 pt-1">This action is irreversible!</p>
 							</DialogDescription>
 						</div>
 					</div>
 				</DialogHeader>
 
+				<Separator orientation="horizontal" className="h-[2px]" />
+
 				<div className="flex flex-col gap-2 mt-2">
+					<Label className="text-slate-400">Enter your password to confirm</Label>
 					<div className="flex gap-3">
 						<Input
 							className="bg-slate-100 text-slate-700 shadow-none"
-							placeholder="Enter your password to confirm"
+							placeholder="Password"
 						/>
 					</div>
+					<div className="flex items-center gap-2 mt-1">
+						<AlertCircle className="text-rose-500 w-5 h-5"/>
+						<p className="text-rose-500">This action is irreversible!</p>
+					</div>
 				</div>
+
+				<Separator orientation="horizontal" className="h-[2px]" />
 
 				<div className='flex justify-end gap-3'>
 					<DialogClose asChild>

@@ -78,6 +78,10 @@ const SupplierRestock = () => {
 					>
 						<DialogTrigger>
 							<SupplierRestockCard />
+							<SupplierRestockCard />
+							<SupplierRestockCard />
+							<SupplierRestockCard />
+							<SupplierRestockCard />
 						</DialogTrigger>
 						<DialogContent
 							className="!w-full !max-w-3xl [&>button]:hidden"

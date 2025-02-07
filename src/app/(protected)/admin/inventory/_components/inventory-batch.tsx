@@ -1,5 +1,5 @@
 import { TooltipContent } from '@radix-ui/react-tooltip'
-import { ArrowUpRight, Box, Hash, Printer } from 'lucide-react'
+import { ArrowRight, ArrowUpRight, Box, Hash, Send, X } from 'lucide-react'
 import { Poppins } from 'next/font/google'
 import Link from 'next/link'
 import { useState } from 'react'
@@ -10,6 +10,13 @@ import { Tooltip, TooltipProvider, TooltipTrigger } from '~/components/ui/toolti
 import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
 import BatchTable from './inventory-batch-table'
+import { Label } from '~/components/ui/label'
+import { Input } from '~/components/ui/input'
+import { ScrollArea } from '~/components/ui/scroll-area'
+import MoreOptions from '../../_components/more-options'
+import BatchLineItem from './batch-line-item'
+import AddBatchLine from './add-batch-line'
+import OutToOffice from './out-to-office'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -77,7 +84,7 @@ const InventoryBatch = () => {
 							<InventoryBatchCard />
 						</DialogTrigger>
 						<DialogContent
-							className="!w-full !max-w-3xl [&>button]:hidden"
+							className="!w-full !max-w-4xl [&>button]:hidden"
 							onKeyDown={handleKeyDown}
 						>
 							<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
@@ -95,14 +102,61 @@ const InventoryBatch = () => {
 									</div>
 									<div className="flex items-center gap-3">
 										<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
-										<RecordExpand />
 									</div>
 								</div>
 							</DialogHeader>
 
 							<Separator orientation="horizontal" className="h-[2px]" />
 
-							<BatchTable />
+							<div className="flex flex-col gap-3">
+								<div className="flex gap-3 items-center">
+									<div className="group flex w-4/12 items-center gap-2">
+										<div className="flex flex-col gap-1 w-1/2">
+											<Label className="text-slate-400">Stock</Label>
+											<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+												<Input
+													className="bg-slate-100 text-slate-700 shadow-none"
+													disabled={!isEditing}
+													defaultValue={'Stock'}
+												/>
+											</div>
+										</div>
+										<div className="flex flex-col gap-1 w-1/2">
+											<Label className="text-slate-400">Price</Label>
+											<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+												<Input
+													className="bg-slate-100 text-slate-700 shadow-none"
+													disabled={!isEditing}
+													defaultValue={'Price'}
+												/>
+											</div>
+										</div>
+									</div>
+									<Separator orientation="vertical" className="h-14 w-[1px]" />
+									<div className="group flex w-8/12 flex-col gap-2">
+										<Label className="text-slate-400">Unit</Label>
+										<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+											<Input
+												className="bg-slate-100 text-slate-700 shadow-none"
+												disabled={!isEditing}
+												defaultValue={'Unit'}
+											/> {/** Please pass real data here */}
+										</div>
+									</div>
+								</div>
+								<div className="border-b-[3px] border-dashed border-slate-200" />
+								<ScrollArea className='h-52'>
+									<div className="flex flex-col gap-4">
+										<BatchLineItem isEditing={isEditing} />
+										<BatchLineItem isEditing={isEditing} />
+										<BatchLineItem isEditing={isEditing} />
+										<BatchLineItem isEditing={isEditing} />
+										{isEditing && (
+											<AddBatchLine />
+										)}
+									</div>
+								</ScrollArea>
+							</div>
 
 							<Separator orientation="horizontal" className="h-[2px]" />
 
@@ -117,10 +171,7 @@ const InventoryBatch = () => {
 											Close
 										</Button>
 									</DialogClose>
-									<Button className="bg-green hover:bg-green/80" disabled={isEditing}>
-										<Printer />
-										Print Batch
-									</Button>
+									<OutToOffice isEditing={isEditing} />
 								</div>
 							</div>
 							{showWarning && (
@@ -144,10 +195,7 @@ const InventoryBatchCard = () => {
 	// TODO: reflect restock data based on selected supplier
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
-			<div className='flex items-baseline gap-4'>
-				<p className='text-slate-600 text-left'>Batch 1</p>
-				<p className='text-emerald-500 text-left text-sm'>Sufficient Stock</p>
-			</div>
+			<p className='text-slate-600 text-left'>Batch 1</p>
 			<div className="flex items-center gap-3 flex-grow overflow-hidden">
 				<TooltipProvider>
 					<Tooltip>

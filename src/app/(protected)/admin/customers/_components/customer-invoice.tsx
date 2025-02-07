@@ -75,7 +75,11 @@ const CustomerInvoice = () => {
 						}}
 					>
 						<DialogTrigger>
-							<CustomerRestockCard />
+							<CustomerInvoiecCard />
+							<CustomerInvoiecCard />
+							<CustomerInvoiecCard />
+							<CustomerInvoiecCard />
+							<CustomerInvoiecCard />
 						</DialogTrigger>
 						<DialogContent
 							className="flex max-h-[80%] !w-full !max-w-3xl flex-col [&>button]:hidden"
@@ -191,11 +195,14 @@ const CustomerInvoice = () => {
 	)
 }
 
-const CustomerRestockCard = () => {
+const CustomerInvoiecCard = () => {
 	// TODO: reflect restock data based on selected supplier
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
-			<p className='text-slate-600 text-left'>#1234567</p>
+			<div className='flex items-baseline gap-4'>
+				<p className='text-slate-600 text-left'>#1234567</p>
+				<p className='text-amber-500 text-left text-sm'>Unpaid</p>
+			</div>
 			<div className="flex items-center gap-3 flex-grow overflow-hidden">
 				<TooltipProvider>
 					<Tooltip>

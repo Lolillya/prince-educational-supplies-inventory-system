@@ -17,7 +17,7 @@ const PaymentRecord = () => {
 					<p className='text-slate-600 text-lg'>#INV00000000</p>
 					<div className="flex items-center gap-4 text-slate-400">
 						<div className="flex items-center gap-2 text-slate-400">
-							<TooltipProvider>
+							<TooltipProvider delayDuration={0} skipDelayDuration={0}>
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<Calendar className="h-4 w-4" />
@@ -34,7 +34,7 @@ const PaymentRecord = () => {
 							className="h-5 w-[2px] bg-slate-200"
 						/>
 						<div className="flex items-center gap-2 text-slate-400">
-							<TooltipProvider>
+							<TooltipProvider delayDuration={0} skipDelayDuration={0}>
 								<Tooltip>
 									<TooltipTrigger asChild>
 										<User2 className="h-4 w-4" />

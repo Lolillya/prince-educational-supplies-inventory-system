@@ -31,6 +31,13 @@ interface Customer {
     invoice_number: number;
     created_at: Date;
     total_amount: number;
+    invoiceClerk: {
+      Personal_Details: {
+        first_name: string;
+        last_name: string;
+        company: string;
+      };
+    };
   }[];
 }
 
@@ -50,7 +57,7 @@ const CustomersPage = () => {
 
   const { data: customerData } = api.customers.list.useQuery();
 
-  console.log(selectedRecord?.Personal_Details);
+  console.log(selectedRecord);
 
   const filteredCustomers = customerData?.filter((customer) => {
     const company = customer.Personal_Details.company?.toLowerCase() ?? "";

@@ -41,6 +41,13 @@ interface CustomerInvoiceProps {
     invoice_number: number;
     created_at: Date;
     total_amount: number;
+    invoiceClerk: {
+      Personal_Details: {
+        first_name: string;
+        last_name: string;
+        company: string;
+      };
+    };
   }[];
   first_name: string;
   last_name: string;
@@ -230,11 +237,7 @@ export default function CustomerInvoice({
   );
 }
 
-const CustomerRestockCard = ({
-  invoiceData,
-  first_name,
-  last_name,
-}: CustomerInvoiceProps) => {
+const CustomerRestockCard = ({ invoiceData }: CustomerInvoiceProps) => {
   // TODO: reflect restock data based on selected supplier
 
   return invoiceData.map((invoice, index) => (
@@ -242,7 +245,7 @@ const CustomerRestockCard = ({
       className="flex cursor-pointer flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:bg-slate-200/50"
       key={index}
     >
-      <p className="text-left text-slate-600">{invoice.invoice_number}</p>
+      <p className="text-left text-slate-600">#{invoice.invoice_number}</p>
       <div className="flex flex-grow items-center gap-3 overflow-hidden">
         <TooltipProvider>
           <Tooltip>
@@ -255,7 +258,7 @@ const CustomerRestockCard = ({
           </Tooltip>
         </TooltipProvider>
         <p className="truncate text-sm">
-          {first_name} {last_name}
+          {invoice.invoiceClerk.Personal_Details.company}
         </p>
       </div>
       <div className="flex items-center gap-4 text-slate-400">

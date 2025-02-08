@@ -55,6 +55,17 @@ export const customerRouter = createTRPCRouter({
             invoice_number: true,
             created_at: true,
             total_amount: true,
+            invoiceClerk: {
+              select: {
+                Personal_Details: {
+                  select: {
+                    first_name: true,
+                    last_name: true,
+                    company: true,
+                  },
+                },
+              },
+            },
           },
         }, // Fetch invoices where the user is a customer
       },

@@ -22,6 +22,13 @@ type SelectedCustomerProps = {
     invoice_number: number;
     created_at: Date;
     total_amount: number;
+    invoiceClerk: {
+      Personal_Details: {
+        first_name: string;
+        last_name: string;
+        company: string;
+      };
+    };
   }[];
 };
 

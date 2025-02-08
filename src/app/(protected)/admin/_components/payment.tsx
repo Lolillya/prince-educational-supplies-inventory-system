@@ -36,20 +36,38 @@ const Payment: React.FC<PaymentProps> = ({ className }) => {
 						/>
 					</div>
 					<div>
-						<Label className="text-slate-400">Remaining Balance</Label>
+						<Label className="text-slate-400">Payment Mode</Label>
 						<Input
 							className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-							defaultValue={'00'}
-							disabled
+							placeholder="Mode"
 						/>
 					</div>
 					<div>
-						<Label className="text-slate-400">Change</Label>
+						<Label className="text-slate-400">Reference</Label>
 						<Input
 							className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-							defaultValue={'00'}
-							disabled
+							placeholder="Mode"
 						/>
+					</div>
+					<div>
+						<div className="flex gap-2">
+							<div>
+								<Label className="text-slate-400">Balance</Label>
+								<Input
+									className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
+									defaultValue={'00'}
+									disabled
+								/>
+							</div>
+							<div>
+								<Label className="text-slate-400">Change</Label>
+								<Input
+									className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
+									defaultValue={'00'}
+									disabled
+								/>
+							</div>
+						</div>
 					</div>
 				</div>
 				<div className="mt-4 flex w-full gap-2">

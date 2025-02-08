@@ -93,9 +93,6 @@ const InvoicePage = () => {
             line_items={invoice.line_items}
           />
         ))}
-        {/* {filteredInvoices.length === 0 && (
-          <p className="text-center text-slate-500">No invoices found.</p>
-        )} */}
       </div>
     </section>
   );

@@ -1,75 +1,90 @@
-import { Mail, MapPin, PhilippinePeso, Phone, User2 } from 'lucide-react';
-import { Avatar, AvatarFallback } from '~/components/ui/avatar';
-import { Separator } from '~/components/ui/separator';
-import RecordInfo from '../../_components/record-info';
-import RecordNotes from '../../_components/record-notes';
-import EditRecord from './edit-record';
-import Payables from './payables';
-import CustomerInvoice from './customer-invoice';
+import { Mail, MapPin, PhilippinePeso, Phone, User2 } from "lucide-react";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import { Separator } from "~/components/ui/separator";
+import RecordInfo from "../../_components/record-info";
+import RecordNotes from "../../_components/record-notes";
+import EditRecord from "./edit-record";
+import Payables from "./payables";
+import CustomerInvoice from "./customer-invoice";
+import { useEffect, useState } from "react";
 
 type SelectedCustomerProps = {
-	id: string;
-	company: string | undefined | null;
-	representative?: string | undefined | null;
-	contact?: string | undefined | null;
-	email?: string | undefined | null;
-	location?: string | undefined | null;
-	notes?: string | undefined | null;
-	invoiceData?: any;
-}
+  first_name: string;
+  last_name: string;
+  id: string;
+  company: string;
+  representative: string;
+  contact: string;
+  email: string;
+  location: string;
+  notes: string;
+  invoiceData: {
+    invoice_number: number;
+    created_at: Date;
+    total_amount: number;
+  }[];
+};
 
 const SelectedCustomer = ({
-	id,
-	company,
-	representative,
-	contact,
-	email,
-	location,
-	notes,
-	invoiceData
-} : SelectedCustomerProps) => {
-	return (
-		<div className='flex flex-col w-full p-5'>
-			<div className="flex items-center justify-between">
-				<div className='flex gap-5 items-center'>
-					<Avatar className='h-16 w-16 !rounded-lg'>
-						<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-							👑
-						</AvatarFallback>
-					</Avatar>
-					<div className='flex flex-col gap-2'>
-						<p className='text-slate-700 text-lg'>
-							{company}
-						</p>
-						<p className='text-slate-400 text-sm'>
-							{id}
-						</p>
-					</div>
-				</div>
-				<EditRecord />
-			</div>
+  first_name,
+  last_name,
+  id,
+  company,
+  representative,
+  contact,
+  email,
+  location,
+  notes,
+  invoiceData,
+}: SelectedCustomerProps) => {
+  const [sum, setSum] = useState<number>();
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+  return (
+    <div className="flex w-full flex-col p-5">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-5">
+          <Avatar className="h-16 w-16 !rounded-lg">
+            <AvatarFallback className="!rounded-lg bg-black text-3xl text-slate-700">
+              👑
+            </AvatarFallback>
+          </Avatar>
+          <div className="flex flex-col gap-2">
+            <p className="text-lg text-slate-700">{company}</p>
+            <p className="text-sm text-slate-400">{id}</p>
+          </div>
+        </div>
+        <EditRecord />
+      </div>
 
-			<div className="flex flex-col gap-3 mt-5">
-				<Payables sum={5000}/>
-				<RecordInfo icon={User2} recordType={'Representative'} info={representative} />
-				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
-				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
-				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
-				<RecordNotes notes={notes} />
-			</div>
+      <Separator className="mt-5 h-[1px] bg-slate-300" />
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+      <div className="mt-5 flex flex-col gap-3">
+        {/* <Payables
+          sum={}
+        /> */}
+        <RecordInfo
+          icon={User2}
+          recordType={"Representative"}
+          info={representative}
+        />
+        <RecordInfo icon={Phone} recordType={"Contact"} info={contact} />
+        <RecordInfo icon={Mail} recordType={"Email"} info={email} />
+        <RecordInfo icon={MapPin} recordType={"Location"} info={location} />
+        <RecordNotes notes={notes} />
+      </div>
 
-			<div className='mt-5'>
+      <Separator className="mt-5 h-[1px] bg-slate-300" />
 
-				{/* //TODO: reflect invoice data based on selected customer */}
-				<CustomerInvoice />
-			</div>
+      <div className="mt-5">
+        {/* //TODO: reflect invoice data based on selected customer */}
+        <CustomerInvoice
+          invoiceData={invoiceData}
+          first_name={first_name}
+          last_name={last_name}
+        />
+      </div>
+    </div>
+  );
+};
 
-		</div>
-	)
-}
-
-export default SelectedCustomer
+export default SelectedCustomer;

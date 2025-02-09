@@ -1,36 +1,44 @@
-"use client"
+"use client";
 
-import { Plus } from 'lucide-react'
-import { useRouter } from "next/navigation"
-import { useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { ScrollArea } from '~/components/ui/scroll-area'
-import { api } from "~/trpc/react"
-import Filter from '../_components/filter'
-import NoRecordsMessage from '../_components/no-records-message'
-import RecordHeader from '../_components/record-header'
-import RecordItem from '../_components/record-item'
-import SearchBar from '../_components/search-bar'
-import SelectRecordMessage from '../_components/select-record-message'
-import SelectedCustomer from './_components/selected-customer'
+import { Plus } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import { api } from "~/trpc/react";
+import Filter from "../_components/filter";
+import NoRecordsMessage from "../_components/no-records-message";
+import RecordHeader from "../_components/record-header";
+import RecordItem from "../_components/record-item";
+import SearchBar from "../_components/search-bar";
+import SelectRecordMessage from "../_components/select-record-message";
+import SelectedCustomer from "./_components/selected-customer";
 
 interface Customer {
   id: string;
   Personal_Details_Id: string;
   role_Id: number;
-  Personal_Details: PersonalDetails;
-}
-
-interface PersonalDetails {
-  personal_details_id: string;
-  first_name: string | null;
-  last_name: string | null;
-  contact: string | null;
-  email: string | null;
-  company: string | null;
-  notes: string | null;
-  location_id: number | null;
-  location: Location | null;
+  Personal_Details: {
+    location: Location | null;
+    first_name: string | null;
+    last_name: string | null;
+    company: string | null;
+    contact: string | null;
+    email: string | null;
+    notes: string | null;
+  };
+  customerInvoices: {
+    invoice_number: number;
+    created_at: Date;
+    total_amount: number;
+    invoiceClerk: {
+      Personal_Details: {
+        first_name: string;
+        last_name: string;
+        company: string;
+      };
+    };
+  }[];
 }
 
 interface Location {
@@ -48,30 +56,25 @@ const CustomersPage = () => {
   const [selectedRecord, setSelectedRecord] = useState<Customer | null>(null);
 
   const { data: customerData } = api.customers.list.useQuery();
-  // const { data: invoiceData } = api.invoice.getInvoiceData.useQuery();
 
-  const filteredCustomers = customerData?.filter(
-    (customer) => {
-      const company = customer.Personal_Details.company?.toLowerCase() ?? "";
-      const contact = customer.Personal_Details.contact?.toLowerCase() ?? "";
-      const email = customer.Personal_Details.email?.toLowerCase() ?? "";
+  console.log(selectedRecord);
 
-      return (
-        company.includes(searchTerm.toLowerCase()) ??
-        contact.includes(searchTerm.toLowerCase()) ??
-        email.includes(searchTerm.toLowerCase())
-      );
-    }
-  );
+  const filteredCustomers = customerData?.filter((customer) => {
+    const company = customer.Personal_Details.company?.toLowerCase() ?? "";
+    const contact = customer.Personal_Details.contact?.toLowerCase() ?? "";
+    const email = customer.Personal_Details.email?.toLowerCase() ?? "";
 
-  // const customerRestockData = selectedRecord
-  //   ? restockData?.filter((restock) => restock.customer === selectedRecord.Personal_Details.company)
-  //   : [];
+    return (
+      company.includes(searchTerm.toLowerCase()) ??
+      contact.includes(searchTerm.toLowerCase()) ??
+      email.includes(searchTerm.toLowerCase())
+    );
+  });
 
   return (
-    <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
-      <div className="flex justify-between items-center">
-        <div className="flex gap-3 items-center">
+    <section className="flex min-h-screen flex-col px-20 py-10 text-base">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <SearchBar
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -80,82 +83,73 @@ const CustomersPage = () => {
         </div>
         <Button
           onClick={() => router.push("/admin/customers/new-customer")}
-          className="bg-green hover:bg-green/80">
+          className="bg-green hover:bg-green/80"
+        >
           <Plus strokeWidth={3} /> New Customer
         </Button>
       </div>
-      <div className="mt-8 flex gap-3 flex-grow">
-        <div className="flex flex-col gap-3 w-3/5 flex-grow">
-          <RecordHeader record="Customers" number={filteredCustomers?.length ?? 0} />
-          <div className="flex flex-grow rounded-lg h-full overflow-hidden">
+      <div className="mt-8 flex flex-grow gap-3">
+        <div className="flex w-3/5 flex-grow flex-col gap-3">
+          <RecordHeader
+            record="Customers"
+            number={filteredCustomers?.length ?? 0}
+          />
+          <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredCustomers?.length ?? 0) > 0 ? (
-              <ScrollArea className="w-full h-full">
-                <div className="flex flex-col items-center w-full h-40">
+              <ScrollArea className="h-full w-full">
+                <div className="flex h-40 w-full flex-col items-center">
                   {filteredCustomers?.map((customer) => (
                     <RecordItem
                       key={customer.Personal_Details_Id}
                       name={customer.Personal_Details.company}
                       id={customer.Personal_Details_Id}
                       onClick={() => setSelectedRecord(customer)}
-                      isSelected={selectedRecord?.Personal_Details_Id === customer.Personal_Details_Id} 
-                      recordType={'Customers'}                    />
+                      isSelected={
+                        selectedRecord?.Personal_Details_Id ===
+                        customer.Personal_Details_Id
+                      }
+                    />
                   ))}
                 </div>
               </ScrollArea>
             ) : (
-              <NoRecordsMessage records={'customers'} link={'/admin/customers/new-customer'} item={'customer'} />
+              <NoRecordsMessage
+                records={"customers"}
+                link={"/admin/customers/new-customer"}
+                item={"customer"}
+              />
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-3 w-2/5 flex-grow">
-          <div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3">
+        <div className="flex w-2/5 flex-grow flex-col gap-3">
+          <div className="w-full rounded-lg bg-slate-100 px-6 py-3 text-lg">
             <p className="text-slate-500">Details</p>
           </div>
-          <div className="bg-slate-100 flex flex-grow rounded-lg">
+          <div className="flex flex-grow rounded-lg bg-slate-100">
             {selectedRecord ? (
-              <ScrollArea className="w-full h-full">
-                <div className="flex flex-col w-full h-40">
-                  {/* <SelectedSupplier
-                    id={selectedRecord.Personal_Details_Id}
-                    company={selectedRecord.Personal_Details.company}
-                    representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
-                    contact={selectedRecord.Personal_Details.contact}
-                    email={selectedRecord.Personal_Details.email}
-                    location={
-                      [
-                        selectedRecord.Personal_Details.location?.address_line,
-                        selectedRecord.Personal_Details.location?.city,
-                        selectedRecord.Personal_Details.location?.region,
-                        selectedRecord.Personal_Details.location?.country,
-                        selectedRecord.Personal_Details.location?.postal_code,
-                      ]
-                        .filter((line) => line)
-                        .join("\n")
-                    }
-                    notes={selectedRecord.Personal_Details.notes}
-
-                    // TODO: reflect restock data based on selected supplier
-                    restockData={supplierRestockData}
-
-                  /> */}
+              <ScrollArea className="h-full w-full">
+                <div className="flex h-40 w-full flex-col">
                   <SelectedCustomer
-                    id={selectedRecord.Personal_Details_Id}
-                    company={selectedRecord.Personal_Details.company}
-                    representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
-                    contact={selectedRecord.Personal_Details.contact}
-                    email={selectedRecord.Personal_Details.email}
-                    location={
-                      [
-                        selectedRecord.Personal_Details.location?.address_line,
-                        selectedRecord.Personal_Details.location?.city,
-                        selectedRecord.Personal_Details.location?.region,
-                        selectedRecord.Personal_Details.location?.country,
-                        selectedRecord.Personal_Details.location?.postal_code,
-                      ]
-                        .filter((line) => line)
-                        .join("\n")
+                    first_name={
+                      selectedRecord.Personal_Details.first_name ?? ""
                     }
-                    notes={selectedRecord.Personal_Details.notes}
+                    last_name={selectedRecord.Personal_Details.last_name ?? ""}
+                    id={selectedRecord.Personal_Details_Id}
+                    company={selectedRecord.Personal_Details.company ?? ""}
+                    representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
+                    contact={selectedRecord.Personal_Details.contact ?? ""}
+                    email={selectedRecord.Personal_Details.email ?? ""}
+                    invoiceData={selectedRecord.customerInvoices}
+                    location={[
+                      selectedRecord.Personal_Details.location?.address_line,
+                      selectedRecord.Personal_Details.location?.city,
+                      selectedRecord.Personal_Details.location?.region,
+                      selectedRecord.Personal_Details.location?.country,
+                      selectedRecord.Personal_Details.location?.postal_code,
+                    ]
+                      .filter((line) => line)
+                      .join("\n")}
+                    notes={selectedRecord.Personal_Details.notes ?? ""}
                   />
                 </div>
               </ScrollArea>
@@ -166,7 +160,7 @@ const CustomersPage = () => {
         </div>
       </div>
     </section>
-  )
-}
+  );
+};
 
-export default CustomersPage
+export default CustomersPage;

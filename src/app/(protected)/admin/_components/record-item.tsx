@@ -48,4 +48,4 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected, 
 	)
 }
 
-export default RecordItem
+export default RecordItem;

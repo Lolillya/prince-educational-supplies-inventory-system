@@ -4,9 +4,8 @@ import { Separator } from "~/components/ui/separator";
 import RecordInfo from "../../_components/record-info";
 import RecordNotes from "../../_components/record-notes";
 import EditRecord from "./edit-record";
-import Payables from "./payables";
 import CustomerInvoice from "./customer-invoice";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 
 type SelectedCustomerProps = {
   first_name: string;

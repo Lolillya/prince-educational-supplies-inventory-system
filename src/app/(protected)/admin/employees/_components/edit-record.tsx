@@ -10,6 +10,7 @@ import Edit from '../../_components/edit'
 import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
 import EmojiPopover from '../../_components/emoji-picker'
+import { Switch } from '~/components/ui/switch'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -88,14 +89,21 @@ const EditRecord = () => {
 
 					<Separator orientation="horizontal" className="h-[2px]" />
 
-					<div className="flex flex-col gap-2">
-						<Label className="text-slate-400">Position</Label>
-						<div className="flex gap-3">
+					<div className="flex gap-3">
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Position</Label>
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none"
 								disabled={!isEditing}
-								placeholder="Top"
+								placeholder="Position"
 							/>
+						</div>
+						<div className="flex w-1/2 flex-col gap-2">
+							<Label className="text-slate-400">Allow admin access?</Label>
+							<div className='flex gap-3 items-center'>
+								<Switch disabled={!isEditing}/>
+								<p className='text-slate-700 text-sm'>No</p>
+							</div>
 						</div>
 					</div>
 

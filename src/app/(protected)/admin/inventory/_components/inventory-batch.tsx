@@ -1,15 +1,19 @@
 import { TooltipContent } from '@radix-ui/react-tooltip'
-import { ArrowUpRight, Box, Hash, Printer } from 'lucide-react'
+import { ArrowLeft, ArrowUpRight, Box, Hash } from 'lucide-react'
 import { Poppins } from 'next/font/google'
 import Link from 'next/link'
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
+import { Input } from '~/components/ui/input'
+import { Label } from '~/components/ui/label'
+import { ScrollArea } from '~/components/ui/scroll-area'
 import { Separator } from '~/components/ui/separator'
 import { Tooltip, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import RecordEditor from '../../_components/record-editor'
-import RecordExpand from '../../_components/record-expand'
-import BatchTable from './inventory-batch-table'
+import AddBatchLine from './add-batch-line'
+import BatchLineItem from './batch-line-item'
+import OutToOffice from './out-to-office'
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -77,7 +81,7 @@ const InventoryBatch = () => {
 							<InventoryBatchCard />
 						</DialogTrigger>
 						<DialogContent
-							className="!w-full !max-w-3xl [&>button]:hidden"
+							className="!w-full !max-w-2xl [&>button]:hidden"
 							onKeyDown={handleKeyDown}
 						>
 							<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
@@ -95,14 +99,71 @@ const InventoryBatch = () => {
 									</div>
 									<div className="flex items-center gap-3">
 										<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
-										<RecordExpand />
 									</div>
 								</div>
 							</DialogHeader>
 
 							<Separator orientation="horizontal" className="h-[2px]" />
 
-							<BatchTable />
+							<div className="flex flex-col gap-3">
+								<div className="flex gap-3 items-center">
+									<div className="group flex w-1/2 flex-col gap-2">
+										<Label className="text-slate-400">Unit</Label>
+										<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+											<Input
+												className="bg-slate-100 text-slate-700 shadow-none"
+												disabled={!isEditing}
+												defaultValue={'Unit'}
+											/> {/** Please pass real data here */}
+										</div>
+									</div>
+									<Separator orientation="vertical" className="h-14 w-[1px]" />
+									<div className="group flex w-1/2 items-end gap-2">
+										<div className="flex flex-col gap-1 w-1/2">
+											<Label className="text-slate-400">Stock</Label>
+											<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+												<Input
+													className="bg-slate-100 text-slate-700 shadow-none"
+													disabled={!isEditing}
+													defaultValue={'Stock'}
+												/>
+											</div>
+										</div>
+										<div className="flex flex-col gap-1 w-1/2">
+											<Label className="text-slate-400">Price per unit</Label>
+											<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+												<Input
+													className="bg-slate-100 text-slate-700 shadow-none"
+													disabled={!isEditing}
+													defaultValue={'Price'}
+												/>
+											</div>
+										</div>
+										<div className='!p-1 w-12 h-10 flex items-center justify-center'>
+											<TooltipProvider>
+												<Tooltip delayDuration={300}>
+													<TooltipTrigger asChild>
+														<ArrowLeft className='!w-5 !h-5 text-slate-400' strokeWidth={2.5} />
+													</TooltipTrigger>
+													<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
+														This is your main unit.
+													</TooltipContent>
+												</Tooltip>
+											</TooltipProvider>
+										</div>
+									</div>
+								</div>
+								<div className="border-b-[3px] border-dashed border-slate-200" />
+								<ScrollArea className='h-52'>
+									<div className="flex flex-col gap-4">
+										<BatchLineItem isEditing={isEditing} />
+										<BatchLineItem isEditing={isEditing} />
+										{isEditing && (
+											<AddBatchLine />
+										)}
+									</div>
+								</ScrollArea>
+							</div>
 
 							<Separator orientation="horizontal" className="h-[2px]" />
 
@@ -117,10 +178,7 @@ const InventoryBatch = () => {
 											Close
 										</Button>
 									</DialogClose>
-									<Button className="bg-green hover:bg-green/80" disabled={isEditing}>
-										<Printer />
-										Print Batch
-									</Button>
+									<OutToOffice isEditing={isEditing} />
 								</div>
 							</div>
 							{showWarning && (
@@ -144,10 +202,7 @@ const InventoryBatchCard = () => {
 	// TODO: reflect restock data based on selected supplier
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
-			<div className='flex items-baseline gap-4'>
-				<p className='text-slate-600 text-left'>Batch 1</p>
-				<p className='text-emerald-500 text-left text-sm'>Sufficient Stock</p>
-			</div>
+			<p className='text-slate-600 text-left'>Batch 1</p>
 			<div className="flex items-center gap-3 flex-grow overflow-hidden">
 				<TooltipProvider>
 					<Tooltip>

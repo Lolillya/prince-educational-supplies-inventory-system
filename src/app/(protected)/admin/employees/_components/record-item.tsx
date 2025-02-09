@@ -1,15 +1,13 @@
 
 import React from 'react'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Separator } from '~/components/ui/separator'
-import Favorite from './favorite'
-import MoreOptions from './more-options'
-import Delete from './delete'
+import Favorite from '../../_components/favorite';
+import Delete from '../../_components/delete';
 
 type RecordItemProps = {
 	id: string;
-	name: string | null;
+	name: string;
 	onClick: () => void;
 	isSelected: boolean;
 	recordType: string;
@@ -38,7 +36,6 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected, 
 						</div>
 					</div>
 					<div className='flex items-center gap-2'>
-						<Favorite />
 						<Delete recordInfo={name} recordType={recordType} />
 					</div>
 				</div>
@@ -48,4 +45,4 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected, 
 	)
 }
 
-export default RecordItem;
+export default RecordItem

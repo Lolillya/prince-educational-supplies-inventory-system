@@ -8,6 +8,11 @@ import RecordExpand from '../../_components/record-expand';
 import PayablesInfo from './payables-info';
 import { Avatar, AvatarFallback } from '~/components/ui/avatar';
 import { Poppins } from 'next/font/google';
+import MoreOptions from '../../_components/more-options';
+import UnpaidInvoice from './unpaid-invoice';
+import { ScrollArea } from '~/components/ui/scroll-area';
+import PaymentRecord from './payment-record';
+import PayablesTabs from './payables-tabs';
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -19,49 +24,14 @@ interface PayablesProps {
 }
 
 const Payables = ({ sum }: PayablesProps) => {
-
-	const [isEditing, setIsEditing] = useState(false);
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const [showWarning, setShowWarning] = useState(false);
-
-	const handleEdit = () => {
-		setIsEditing((prev) => !prev);
-		setShowWarning(false);
-	};
-
-	const handleKeyDown = (event: React.KeyboardEvent) => {
-		console.log("Key pressed:", event.key); // Log the key pressed
-		if (event.key === "Escape") {
-			if (isEditing) {
-				setShowWarning(true);
-				event.preventDefault();
-			}
-		}
-	};
+	const [selectedTab, setSelectedTab] = useState<"payables" | "payments">("payables");
 
 	return (
-		<Dialog
-			open={isDialogOpen}
-			onOpenChange={(open) => {
-				if (!open) {
-					if (isEditing) {
-						setShowWarning(true);
-						return;
-					}
-				}
-				setIsDialogOpen(open);
-				if (!open) {
-					setShowWarning(false);
-				}
-			}}
-		>
+		<Dialog>
 			<DialogTrigger>
 				<PayablesInfo sum={sum} />
 			</DialogTrigger>
-			<DialogContent
-				className="flex max-h-[80%] !w-full !max-w-3xl flex-col [&>button]:hidden"
-				onKeyDown={handleKeyDown}
-			>
+			<DialogContent className="flex max-h-[80%] !w-full !max-w-4xl flex-col [&>button]:hidden">
 				<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
 					<div className="flex items-center justify-between">
 						<div className='flex gap-5 items-center'>
@@ -75,53 +45,65 @@ const Payables = ({ sum }: PayablesProps) => {
 									LilyCo {/** Please pass real data here */}
 								</DialogTitle>
 								<p className='text-slate-400 text-sm'>
-									0123456789 {/** Please pass real data here */}
+									{7} unpaid invoices
 								</p>
 							</div>
 						</div>
-						<div className="flex items-center gap-3">
-							<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
-							<RecordExpand />
-						</div>
+						<PayablesTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
 					</div>
 				</DialogHeader>
 
 				<Separator orientation="horizontal" className="h-[2px]" />
 
-				<p>
-					Note: Mag add pa diri table similar to the ones so far. This will show data na nag order and pay si customer. Refer to figma file. 
-				</p>
+				<ScrollArea className='h-80'>
+					<div className='flex gap-2 flex-col'>
+						{selectedTab === "payables" ? (
+							<>
+								<UnpaidInvoice />
+								<UnpaidInvoice />
+								<UnpaidInvoice />
+								<UnpaidInvoice />
+								<UnpaidInvoice />
+								<UnpaidInvoice />
+							</>
+						) : (
+							<>
+								<PaymentRecord />
+								<PaymentRecord />
+								<PaymentRecord />
+								<PaymentRecord />
+								<PaymentRecord />
+								<PaymentRecord />
+							</>
+						)}
+					</div>
+				</ScrollArea>
 
 				<Separator orientation="horizontal" className="h-[2px]" />
 
 				<div className="flex items-center justify-between">
+
 					<div className="flex h-full flex-col justify-between gap-1">
 						<p className="text-base font-normal text-slate-700">
 							₱{5000} {/** Please pass real data here */}
 						</p>
-						<p className=" text-slate-400 text-sm tracking-wide">Unpaid Amount</p> 
+						<p className=" text-slate-400 text-sm tracking-wide">Unpaid Total</p>
 					</div>
 					<div className="flex items-center gap-2">
-						<DialogClose asChild disabled={isEditing}>
+						<DialogClose asChild>
 							<Button
 								variant={"secondary"}
 								className="text-slate-700 hover:bg-slate-200"
-								disabled={isEditing}
 							>
 								Close
 							</Button>
 						</DialogClose>
-						<Button className="bg-green hover:bg-green/80" disabled={isEditing}>
+						<Button className="bg-green hover:bg-green/80">
 							<Printer />
 							Print Statement
 						</Button>
 					</div>
 				</div>
-				{showWarning && (
-					<p className="text-right text-sm text-orange-400">
-						Whoops! Don't forget to save your changes.
-					</p>
-				)}
 			</DialogContent>
 		</Dialog>
 	)

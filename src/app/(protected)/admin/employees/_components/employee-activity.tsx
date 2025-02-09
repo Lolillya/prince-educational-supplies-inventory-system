@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { Separator } from '~/components/ui/separator'
 import RestockDialog from './restock-dialog'
 import InvoiceDialog from './invoice-dialog';
+import EmployeeTabs from './employee-tabs';
+import { useState } from 'react';
 
 interface EmployeeActivityProps {
 	restockId: number;
@@ -13,24 +15,35 @@ interface EmployeeActivityProps {
 }
 
 const EmployeeActivity = () => {
+	const [selectedTab, setSelectedTab] = useState<"restock" | "invoice">("restock");
 
 	return (
 		<div className='p-5 bg-white/60 rounded-lg text-slate-400'>
 			<div className='flex items-center justify-between'>
-				<Link href={''}>
-					<div className='w-fit flex items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500'>
-						Activity
-						<ArrowUpRight className='w-4 h-4' />
-					</div>
-				</Link>
+				<EmployeeTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
 				<p className='text-slate-400 text-sm pr-5'>
 					5 of 320
 				</p>
 			</div>
 			<div className='mt-2'>
 				<div className="flex flex-col gap-1">
-					<RestockDialog />
-					<InvoiceDialog />
+					{selectedTab === "restock" ? (
+						<>
+							<RestockDialog />
+							<RestockDialog />
+							<RestockDialog />
+							<RestockDialog />
+							<RestockDialog />
+						</>
+					) : (
+						<>
+							<InvoiceDialog />
+							<InvoiceDialog />
+							<InvoiceDialog />
+							<InvoiceDialog />
+							<InvoiceDialog />
+						</>
+					)}
 					<Separator orientation="horizontal" className="h-[1px]" />
 				</div>
 			</div>

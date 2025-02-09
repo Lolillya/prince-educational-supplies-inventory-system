@@ -66,9 +66,9 @@ const SelectedCustomer = ({
       <Separator className="mt-5 h-[1px] bg-slate-300" />
 
       <div className="mt-5 flex flex-col gap-3">
-        {/* <Payables
-          sum={}
-        /> */}
+        <Payables
+          sum={5000}
+        />
         <RecordInfo
           icon={User2}
           recordType={"Representative"}

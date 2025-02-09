@@ -9,7 +9,7 @@ import { api } from "~/trpc/react"
 import Filter from '../_components/filter'
 import NoRecordsMessage from '../_components/no-records-message'
 import RecordHeader from '../_components/record-header'
-import RecordItem from '../_components/record-item'
+import RecordItem from './_components/record-item'
 import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedEmployee from './_components/selected-employee'
@@ -99,7 +99,8 @@ const EmployeesPage = () => {
                       name={employee.Personal_Details.first_name + ' ' + employee.Personal_Details.last_name}
                       id={employee.Personal_Details_Id}
                       onClick={() => setSelectedRecord(employee)}
-                      isSelected={selectedRecord?.Personal_Details_Id === employee.Personal_Details_Id}
+                      isSelected={selectedRecord?.Personal_Details_Id === employee.Personal_Details_Id} 
+                      recordType={'Employees'}
                     />
                   ))}
                 </div>

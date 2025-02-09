@@ -11,33 +11,8 @@ const EmployeeActivityCard = ({ type }: EmployeeActivityCardProps) => {
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
 			<p className='text-slate-600 text-left'>
-				{type == 'invoice' ? (
-					'Invoice'
-				) : type == 'restock' ? (
-					'Restock'
-				) : (
-					'---'
-				)}
+				#12345678
 			</p>
-			<div className="flex items-center gap-3 flex-grow overflow-hidden">
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<Hash className="h-4 w-4" />
-						</TooltipTrigger>
-						<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-							{type == 'invoice' ? (
-								'Invoice record 12345678'
-							) : type == 'restock' ? (
-								'Restock record 12345678'
-							) : (
-								'Unknown record'
-							)}
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-				<p className="text-sm truncate">12345678</p>
-			</div>
 			<div className="flex items-center gap-4 text-slate-400">
 				<div className="flex items-center gap-3 text-slate-400">
 					<TooltipProvider>

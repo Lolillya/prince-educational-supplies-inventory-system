@@ -12,8 +12,8 @@ import NoRecordsMessage from "../_components/no-records-message"
 import SearchBar from "../_components/search-bar"
 import SelectRecordMessage from "../_components/select-record-message"
 import RecordHeader from "./_components/record-header"
-import RecordItem from "./_components/record-item"
 import SelectedItem from "./_components/selected-item"
+import RecordItem from "./_components/record-item"
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[];
@@ -117,8 +117,8 @@ const InventoryPage = () => {
                       id={item.inventory_id.toString()}
                       stockLevel={getStockLevel(item.variant.StockLevel, item.quantity)}
                       onClick={() => setSelectedRecord(item)}
-                      isSelected={selectedRecord?.variant_id === item.variant_id}
-                    />
+                      isSelected={selectedRecord?.variant_id === item.variant_id} 
+                      recordType={'Inventory'}                 />
                   ))}
                 </div>
               </ScrollArea>

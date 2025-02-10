@@ -21,7 +21,7 @@ interface DeleteProps {
 const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) => {
 	return (
 		<Dialog>
-			<DialogTrigger>
+			<DialogTrigger asChild>
 				<Button
 					variant="ghost"
 					className={`group flex h-12 w-12 items-center justify-center rounded-xl bg-transparent hover:bg-rose-200/60 transition-all duration-300 ${className}`}
@@ -38,8 +38,8 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) =>
 							Delete Record
 						</DialogTitle>
 						<div className="flex items-center gap-3 text-slate-400">
-							<DialogDescription className="text-sm tracking-wide">
-								<p>You're about to delete <span className="font-bold">{recordInfo}</span> from <span className="font-bold">{recordType}</span>.</p>
+							<DialogDescription className="text-sm tracking-wide text-slate-400">
+								You're about to delete <span className="font-bold">{recordInfo}</span> from <span className="font-bold">{recordType}</span>.
 							</DialogDescription>
 						</div>
 					</div>
@@ -56,7 +56,7 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) =>
 						/>
 					</div>
 					<div className="flex items-center gap-2 mt-1">
-						<AlertCircle className="text-rose-500 w-5 h-5"/>
+						<AlertCircle className="text-rose-500 w-5 h-5" />
 						<p className="text-rose-500">This action is irreversible!</p>
 					</div>
 				</div>

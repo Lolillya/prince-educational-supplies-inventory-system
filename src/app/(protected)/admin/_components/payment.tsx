@@ -13,7 +13,7 @@ interface PaymentProps {
 const Payment: React.FC<PaymentProps> = ({ className }) => {
 	return (
 		<Popover>
-			<PopoverTrigger>
+			<PopoverTrigger asChild>
 				<Button
 					variant="ghost"
 					className={`group flex h-12 w-12 items-center justify-center rounded-xl bg-transparent hover:bg-emerald-200/60 transition-all duration-300 ${className}`}

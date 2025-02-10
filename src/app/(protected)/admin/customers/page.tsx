@@ -104,11 +104,9 @@ const CustomersPage = () => {
                       name={customer.Personal_Details.company}
                       id={customer.Personal_Details_Id}
                       onClick={() => setSelectedRecord(customer)}
-                      isSelected={
-                        selectedRecord?.Personal_Details_Id ===
-                        customer.Personal_Details_Id
-                      }
-                    />
+                      isSelected={selectedRecord?.Personal_Details_Id ===
+                        customer.Personal_Details_Id}
+                      recordType={"Customers"} />
                   ))}
                 </div>
               </ScrollArea>
@@ -130,9 +128,7 @@ const CustomersPage = () => {
               <ScrollArea className="h-full w-full">
                 <div className="flex h-40 w-full flex-col">
                   <SelectedCustomer
-                    first_name={
-                      selectedRecord.Personal_Details.first_name ?? ""
-                    }
+                    first_name={selectedRecord.Personal_Details.first_name ?? ""}
                     last_name={selectedRecord.Personal_Details.last_name ?? ""}
                     id={selectedRecord.Personal_Details_Id}
                     company={selectedRecord.Personal_Details.company ?? ""}

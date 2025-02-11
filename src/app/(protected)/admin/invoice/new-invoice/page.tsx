@@ -102,16 +102,17 @@ const NewInvoice = () => {
 
   const {
     data: inventoryItems,
-    isLoading,
+    isLoading: loadingInventory,
     isError,
   } = api.invoice.getItems.useQuery();
 
-  const { data: supplierList } = api.invoice.getCustomers.useQuery();
+  const { data: supplierList, isLoading: loadingCustomers } =
+    api.invoice.getCustomers.useQuery();
+  const { data: nextInvoiceId, isLoading: loadingInvoiceId } =
+    api.invoice.getInvoiceId.useQuery();
 
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
-
-  const { data: nextInvoiceId } = api.invoice.getInvoiceId.useQuery();
 
   const updateCardDetails = (
     id: number,
@@ -246,7 +247,7 @@ const NewInvoice = () => {
     } else setFilteredSupplier([]);
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 
-  if (isLoading) {
+  if (loadingInventory || loadingCustomers || loadingInvoiceId) {
     return (
       <section className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner />

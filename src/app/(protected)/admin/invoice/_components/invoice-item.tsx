@@ -8,6 +8,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
+import { useState } from "react";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "~/components/ui/dialog";
+import { Label } from "~/components/ui/label";
 
 type Props = {
   line_items: {
@@ -31,15 +40,9 @@ type Props = {
 };
 
 const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
-  const {
-    // item,
-    // variant,
-    // brand,
-    quantity,
-    unit,
-    unit_price,
-    total_price,
-  } = line_items;
+  const { quantity, unit, unit_price, total_price } = line_items;
+
+  const [open, setOpen] = useState(false);
 
   return (
     <div className="rounded-lg bg-white/70 px-6 py-3">
@@ -69,12 +72,7 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
           </div>
         </div>
 
-        {/* <Separator
-          orientation="vertical"
-          className="h-16 w-[2px] rounded-lg bg-slate-200"
-        /> */}
-
-        <div className="between items-center justify-between pl-8">
+        <div className="between flex items-center justify-between gap-4 pl-8">
           <div className="flex flex-col gap-4">
             <p>₱ {total_price.toLocaleString()}</p>
             <div className="flex items-center gap-8 text-slate-400">
@@ -83,22 +81,44 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
               </div>
             </div>
           </div>
-          {/* <div>
+          <div>
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <MoreOptions />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                <DropdownMenuItem
+                  className="hover:!bg-slate-200 focus:!bg-slate-200"
+                  onSelect={() => setOpen(true)} // Open the dialog when clicking "View item"
+                >
                   View item
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Void
-                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div> */}
+
+            {/* Dialog Component */}
+            <Dialog open={open} onOpenChange={setOpen}>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Item Details</DialogTitle>
+                  <DialogDescription>
+                    <div>
+                      <Label>
+                        {line_items.variant.item.name} -{" "}
+                        {line_items.variant.item.brand.name} -{" "}
+                        {line_items.variant.name}
+                      </Label>
+
+                      <Label>{quantity}</Label>
+
+                      <Label></Label>
+                    </div>
+                  </DialogDescription>
+                </DialogHeader>
+              </DialogContent>
+            </Dialog>
+          </div>
         </div>
       </div>
     </div>

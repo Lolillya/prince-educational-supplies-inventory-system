@@ -67,7 +67,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
     >
       <DialogTrigger>
         <div className="flex items-center gap-2 rounded-lg px-3 py-2 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200 hover:text-slate-500">
-          View All
+          View Details
           <ArrowUpRight strokeWidth={2.5} className="h-4 w-4" />
         </div>
       </DialogTrigger>

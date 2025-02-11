@@ -33,7 +33,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <p className="text-xl">#{invoiceId}</p>
-            <Pin className="h-5 w-5 text-amber-400" />
+            <Pin className="h-5 w-5 rotate-45 text-amber-400" />
           </div>
           <div className="flex items text-right-center gap-4 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
@@ -63,13 +63,9 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
         /> */}
 
         <div className="flex items-center justify-between pl-8">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-2">
             <p className="text-xl text-right">₱ {grandTotal.toLocaleString()}</p>
-            <div className="flex items-center gap-8 text-slate-400">
-              <div className="flex items-center gap-3 text-slate-400">
-                <p className="text-sm text-right">Grand Total</p>
-              </div>
-            </div>
+            <p className="text-sm text-right text-slate-400">Grand Total</p>
           </div>
           {/* <div>
           </div> */}
@@ -106,7 +102,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             />
             <DropdownMenu>
               <DropdownMenuTrigger>
-                <MoreOptions className="h-9 !rounded-lg"/>
+                <MoreOptions className="h-9 !rounded-lg" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">

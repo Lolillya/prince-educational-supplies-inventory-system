@@ -54,11 +54,15 @@ const InvoicePage = () => {
     const invoiceClerk =
       (invoice.invoiceClerk.Personal_Details.first_name?.toLowerCase() ?? "") +
       (invoice.invoiceClerk.Personal_Details.last_name?.toLowerCase() ?? "");
-    const invoiceDate = invoice.created_at.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-    });
+    const dateMonth = invoice.created_at
+      .toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+      .toLowerCase();
+
+    console.log(dateMonth);
 
     return (
       invoice_number.includes(searchTerm.toLowerCase()) ||
@@ -66,11 +70,10 @@ const InvoicePage = () => {
       first_name?.includes(searchTerm.toLowerCase()) ||
       last_name?.includes(searchTerm.toLowerCase()) ||
       invoiceClerk.includes(searchTerm.toLowerCase()) ||
-      invoiceDate.includes(searchTerm.toLowerCase())
+      dateMonth.includes(searchTerm.toLowerCase())
     );
   });
 
-  console.log(filteredInvoices);
   // TODO: SEARCH FEATURE
 
   if (isLoading)

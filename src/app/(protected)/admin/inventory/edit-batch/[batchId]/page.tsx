@@ -91,10 +91,20 @@ const EditBatch = () => {
 
     const inventoryIdAsNumber = Number(batchId);
 
+    //old logic still working #333 the logic match  (variant.variant_id === inventoryIdAsNumber)
+    // const {
+    //     data: itemDataResponse,
+    //     isLoading: itemLoading,
+    //     isError: itemError,
+    // } = api.inventory.getInventoryItem.useQuery(
+    //     { id: inventoryIdAsNumber },
+    //     { enabled: !isNaN(inventoryIdAsNumber) },
+    // );
+
     const {
-        data: itemDataResponse,
-        isLoading: itemLoading,
-        isError: itemError,
+        data: inventoryDataResponse,
+        isLoading: inventoryLoading,
+        isError: inventoryError,
     } = api.inventory.getInventoryItem.useQuery(
         { id: inventoryIdAsNumber },
         { enabled: !isNaN(inventoryIdAsNumber) },
@@ -106,56 +116,97 @@ const EditBatch = () => {
         isError: allError,
     } = api.inventory.listAllData.useQuery();
 
-
     useEffect(() => {
-        if (itemDataResponse && inventoryIdAsNumber) {
-            // console.log("itemDataResponse:", itemDataResponse); // Log the full response
+        if (inventoryDataResponse && inventoryIdAsNumber) {
+            console.log("inventoryDataResponse:", inventoryDataResponse); // Log the full response
 
-            // Step 1: Find the inventory item by inventory_id to get the correct variant_id
-            const matchedInventory = itemDataResponse.find((variant) => {
-                // console.log("Checking variant:", variant); // Log each variant
-                // console.log("Variant ID:", variant.variant_id);
+            // Step 1: Get the variant_id from the inventory record
+            const variantId = inventoryDataResponse.variant_id;
 
-                // Check if this variant is associated with the correct inventory_id (inventoryIdAsNumber)
-                if (variant.variant_id === inventoryIdAsNumber) {
-                    // console.log("Found matching variant:", variant);
-                    return true; // Return this variant if it matches the inventory_id
-                }
-                return false; // No match
-            });
+            // Step 2: Use the variant_id to find the matching variant in the response
+            const matchedVariant = inventoryDataResponse.variant;
 
-            // Step 2: If we found the correct variant, check the BatchVariant to validate the link
-            if (matchedInventory) {
-                // console.log("Matched Inventory Variant:", matchedInventory);
+            if (matchedVariant) {
+                console.log("Matched Variant:", matchedVariant);
 
-                // Now, check if this variant_id exists in the BatchVariant table
-                const matchedBatchVariant = matchedInventory.BatchVariant.find((batchVariant) => {
-                    // console.log("Checking batch variant:", batchVariant);
-                    // console.log("Batch ID in BatchVariant:", batchVariant.batch_id);
+                // Step 3: Check if this variant_id exists in the BatchVariant table
+                const matchedBatchVariant = matchedVariant.BatchVariant.find((batchVariant) => {
+                    console.log("Checking batch variant:", batchVariant);
+                    console.log("Batch ID in BatchVariant:", batchVariant.batch_id);
 
                     // If we find the matching batch_id, return the variant
-                    if (batchVariant.variant_id === matchedInventory.variant_id) {
-                        // console.log("Found matching batch variant for variant_id:", batchVariant);
+                    if (batchVariant.variant_id === matchedVariant.variant_id) {
+                        console.log("Found matching batch variant for variant_id:", batchVariant);
                         return true;
                     }
                     return false;
                 });
 
-                // Step 3: Handle the result
+                // Step 4: Handle the result
                 if (matchedBatchVariant) {
-                    // console.log("Matched BatchVariant for Variant:", matchedInventory);
-                    setItemData(matchedInventory); // Set the matching variant in the state
+                    console.log("Matched BatchVariant for Variant:", matchedVariant);
+                    setItemData(matchedVariant); // Set the matching variant in the state
                 } else {
-                    // console.log("No matching batch variant found.");
+                    console.log("No matching batch variant found.");
                     setItemData(null); // Handle case when no batch variant is found
                 }
             } else {
-                // console.log("No matching variant found for the given inventory_id.");
+                console.log("No matching variant found for the given inventory_id.");
                 setItemData(null); // Handle case when no matching variant is found
             }
         }
-    }, [itemDataResponse, inventoryIdAsNumber]); // Dependency on inventoryIdAsNumber to trigger effect when it changes
+    }, [inventoryDataResponse, inventoryIdAsNumber]); // Dependency on inventoryIdAsNumber to trigger effect when it changes
 
+    //old logic still working #333 the logic match (variant.variant_id === inventoryIdAsNumber)
+    // useEffect(() => {
+    //     if (itemDataResponse && inventoryIdAsNumber) {
+    //         console.log("itemDataResponse:", itemDataResponse); // Log the full response
+    //
+    //         // Step 1: Find the inventory item by inventory_id to get the correct variant_id
+    //         const matchedInventory = itemDataResponse.find((variant) => {
+    //             console.log("Checking variant:", variant); // Log each variant
+    //             console.log("Variant ID:", variant.variant_id);
+    //
+    //             // Check if this variant is associated with the correct inventory_id (inventoryIdAsNumber)
+    //             if (variant.variant_id === inventoryIdAsNumber) {
+    //                 console.log("Found matching variant:", variant)
+    //                 return true; // Return this variant if it matches the inventory_id
+    //             }
+    //             return false; // No match
+    //         });
+    //
+    //         // Step 2: If we found the correct variant, check the BatchVariant to validate the link
+    //         if (matchedInventory) {
+    //             console.log("Matched Inventory Variant:", matchedInventory);
+    //
+    //             // Now, check if this variant_id exists in the BatchVariant table
+    //             const matchedBatchVariant = matchedInventory.BatchVariant.find((batchVariant) => {
+    //                 console.log("Checking batch variant:", batchVariant);
+    //                 console.log("Batch ID in BatchVariant:", batchVariant.batch_id);
+    //
+    //                 // If we find the matching batch_id, return the variant
+    //                 if (batchVariant.variant_id === matchedInventory.variant_id) {
+    //                     console.log("Found matching batch variant for variant_id:", batchVariant);
+    //                     return true;
+    //                 }
+    //                 return false;
+    //             });
+    //
+    //             // Step 3: Handle the result
+    //             if (matchedBatchVariant) {
+    //                 console.log("Matched BatchVariant for Variant:", matchedInventory);
+    //                 setItemData(matchedInventory); // Set the matching variant in the state
+    //             } else {
+    //                 console.log("No matching batch variant found.");
+    //                 setItemData(null); // Handle case when no batch variant is found
+    //             }
+    //         } else {
+    //             console.log("No matching variant found for the given inventory_id.");
+    //             setItemData(null); // Handle case when no matching variant is found
+    //         }
+    //     }
+    // }, [itemDataResponse, inventoryIdAsNumber]); // Dependency on inventoryIdAsNumber to trigger effect when it changes
+    //
 
 
     // useEffect(() => {
@@ -367,8 +418,8 @@ const EditBatch = () => {
     // };
 
     // Combine loading and error states
-    const isLoading = itemLoading || allLoading;
-    const isError = itemError || allError;
+    const isLoading = inventoryLoading || allLoading;
+    const isError = inventoryError || allError;
 
     if (isLoading)
         return (
@@ -472,3 +523,5 @@ const EditBatch = () => {
 };
 
 export default EditBatch;
+
+

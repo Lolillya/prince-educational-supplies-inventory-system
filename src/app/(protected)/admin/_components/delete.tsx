@@ -21,7 +21,7 @@ interface DeleteProps {
 const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) => {
 	return (
 		<Dialog>
-			<DialogTrigger>
+			<DialogTrigger asChild>
 				<Button
 					variant="ghost"
 					className={`group flex h-12 w-12 items-center justify-center rounded-xl bg-transparent hover:bg-rose-200/60 transition-all duration-300 ${className}`}

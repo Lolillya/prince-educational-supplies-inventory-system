@@ -117,7 +117,7 @@ const InventoryPage = () => {
                       id={item.inventory_id.toString()}
                       stockLevel={getStockLevel(item.variant.StockLevel, item.quantity)}
                       onClick={() => setSelectedRecord(item)}
-                      isSelected={selectedRecord?.variant_id === item.variant_id} 
+                      isSelected={selectedRecord?.variant_id === item.variant_id}
                       recordType={'Inventory'}                 />
                   ))}
                 </div>
@@ -143,6 +143,7 @@ const InventoryPage = () => {
                     stockLevel={getStockLevel(selectedRecord.variant.StockLevel, selectedRecord.quantity)}
                     category={selectedRecord.variant.item.category.name}
                     notes={selectedRecord.variant.item.description}
+                    batchVariants={selectedRecord.variant.BatchVariant}
                   />
                 </div>
               </ScrollArea>

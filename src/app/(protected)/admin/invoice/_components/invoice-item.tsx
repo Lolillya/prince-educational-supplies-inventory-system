@@ -31,13 +31,21 @@ type Props = {
 };
 
 const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
-  const { quantity, unit, unit_price, total_price } = line_items;
+  const {
+    // item,
+    // variant,
+    // brand,
+    quantity,
+    unit,
+    unit_price,
+    total_price,
+  } = line_items;
 
   return (
-    <div className="rounded-lg bg-white/70 p-3">
-      <div className="flex items-center justify-center">
-        <div className="flex w-1/2 gap-4">
-          <p>
+    <div className="rounded-lg bg-white/70 px-6 py-3">
+      <div className="flex items-center justify-between">
+        <div className="flex max-w-[75%] flex-col gap-4">
+          <p className="truncate">
             {line_items.variant.item.name} -{" "}
             {line_items.variant.item.brand.name} - {line_items.variant.name}
           </p>
@@ -57,17 +65,17 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
               orientation="vertical"
               className="h-4 w-[1px] bg-slate-200"
             />
-            <p className="text-sm">{line_items.discount}% Discount</p>
+            <p className="text-sm">{line_items.discount}</p>
           </div>
         </div>
 
-        <Separator
+        {/* <Separator
           orientation="vertical"
-          className="h-6 w-[2px] rounded-lg bg-slate-200"
-        />
+          className="h-16 w-[2px] rounded-lg bg-slate-200"
+        /> */}
 
-        <div className="flex w-1/2 items-center justify-between pl-8">
-          <div className="flex gap-4">
+        <div className="between items-center justify-between pl-8">
+          <div className="flex flex-col gap-4">
             <p>₱ {total_price.toLocaleString()}</p>
             <div className="flex items-center gap-8 text-slate-400">
               <div className="flex items-center gap-3 text-slate-400">
@@ -75,7 +83,7 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
               </div>
             </div>
           </div>
-          <div>
+          {/* <div>
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <MoreOptions />
@@ -84,9 +92,13 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View item
                 </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
+                  Void
+                </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

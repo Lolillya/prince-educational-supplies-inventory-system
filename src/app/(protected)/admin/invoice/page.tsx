@@ -72,8 +72,6 @@ const InvoicePage = () => {
     );
   });
 
-  // TODO: SEARCH FEATURE
-
   if (isLoading)
     return (
       <section className="flex h-screen w-full items-center justify-center">
@@ -83,7 +81,7 @@ const InvoicePage = () => {
 
   return (
     <section
-      className={`flex h-auto w-full flex-col gap-3 overflow-y-scroll px-20 py-10`}
+      className={`flex h-auto w-full flex-col gap-3 overflow-y-scroll px-20 pt-10`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -101,7 +99,7 @@ const InvoicePage = () => {
         </Button>
       </div>
 
-      <div className="mt-5 flex flex-col gap-4">
+      <div className="mt-5 grid grid-cols-2 gap-4 overflow-y-scroll rounded-lg">
         {filteredInvoices?.map((invoice, index) => (
           <InvoiceRecord
             key={index}

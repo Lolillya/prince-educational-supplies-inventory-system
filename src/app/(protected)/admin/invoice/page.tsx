@@ -43,7 +43,34 @@ const InvoicePage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery();
-  console.log("Hello WOrld");
+
+  const filteredInvoices = invoiceData?.filter((invoice) => {
+    const invoice_number = invoice.invoice_number.toString();
+    const company = invoice.customer.Personal_Details.company?.toLowerCase();
+    const first_name =
+      invoice.customer.Personal_Details.first_name?.toLowerCase();
+    const last_name =
+      invoice.customer.Personal_Details.last_name?.toLowerCase();
+    const invoiceClerk =
+      (invoice.invoiceClerk.Personal_Details.first_name?.toLowerCase() ?? "") +
+      (invoice.invoiceClerk.Personal_Details.last_name?.toLowerCase() ?? "");
+    const invoiceDate = invoice.created_at.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+    });
+
+    return (
+      invoice_number.includes(searchTerm.toLowerCase()) ||
+      company?.includes(searchTerm.toLowerCase()) ||
+      first_name?.includes(searchTerm.toLowerCase()) ||
+      last_name?.includes(searchTerm.toLowerCase()) ||
+      invoiceClerk.includes(searchTerm.toLowerCase()) ||
+      invoiceDate.includes(searchTerm.toLowerCase())
+    );
+  });
+
+  console.log(filteredInvoices);
   // TODO: SEARCH FEATURE
 
   if (isLoading)
@@ -74,7 +101,7 @@ const InvoicePage = () => {
       </div>
 
       <div className="mt-5 flex flex-col gap-4">
-        {invoiceData?.map((invoice, index) => (
+        {filteredInvoices?.map((invoice, index) => (
           <InvoiceRecord
             key={index}
             invoiceId={invoice.invoice_number}

@@ -93,6 +93,7 @@ export const invoiceRouter = createTRPCRouter({
               select: {
                 first_name: true,
                 last_name: true,
+                company: true,
               },
             },
           },

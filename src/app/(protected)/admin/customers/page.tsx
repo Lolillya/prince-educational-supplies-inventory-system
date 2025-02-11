@@ -108,6 +108,7 @@ const CustomersPage = () => {
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
                       }
+                      // recordType={}
                     />
                   ))}
                 </div>

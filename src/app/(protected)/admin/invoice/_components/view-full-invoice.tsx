@@ -14,7 +14,6 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
-import RecordEditor from "../../_components/record-editor";
 import InvoiceTable from "./invoice-table";
 import { InvoiceProps } from "../page";
 import RecordExpand from "../../_components/record-expand";
@@ -26,6 +25,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoiceClerk,
   grandTotal,
   line_items,
+  handleExport,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -37,7 +37,6 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
-    console.log("Key pressed:", event.key); // Log the key pressed
     if (event.key === "Escape") {
       if (isEditing) {
         setShowWarning(true);
@@ -133,7 +132,6 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
         <Textarea
           className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline focus:outline-2 focus:outline-slate-200"
           placeholder="Your record notes..."
-          // disabled={!isEditing}
         />
 
         <div className="flex items-center justify-between">
@@ -160,7 +158,19 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
                 Close
               </Button>
             </DialogClose>
-            <Button className="bg-green hover:bg-green/80" disabled={isEditing}>
+            <Button
+              className="bg-green hover:bg-green/80"
+              disabled={isEditing}
+              onClick={() =>
+                handleExport({
+                  line_items,
+                  invoice_number: invoiceId.toString(),
+                  customer,
+                  date,
+                  grandTotal: grandTotal.toString(),
+                })
+              }
+            >
               <Printer />
               Print Invoice
             </Button>

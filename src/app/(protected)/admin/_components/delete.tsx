@@ -33,7 +33,7 @@ const Delete: React.FC<DeleteProps> = ({
 }) => {
   return (
     <Dialog>
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <Button
           variant="ghost"
           className={`group flex h-12 w-12 items-center justify-center rounded-xl bg-transparent transition-all duration-300 hover:bg-rose-200/60 ${className}`}

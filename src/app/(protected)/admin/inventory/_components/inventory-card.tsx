@@ -33,17 +33,16 @@ type InventoryCardProps = {
 };
 
 const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange }: InventoryCardProps) => {
-    const supplierUnits = batch?.supplierUnits || batch?.batch?.batchVariants?.flatMap(b => b.SupplierUnit) || [];
+    // Get the batch_variant_id of the current batchVariant
+    const batchVariantId = batch?.batch_variant_id;
 
-    const mainSupplierUnits = batch?.supplierUnits?.[0] ? [batch.supplierUnits[0]] :
-        batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0] ? [batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]] : [];
+    // Access the supplierUnits from the nested structure and filter by batch_variant_id
+    const supplierUnits = batch?.batch?.batchVariants
+        ?.flatMap(b => b.SupplierUnit)
+        .filter(supplierUnit => supplierUnit.batch_variant_id === batchVariantId) || [];
 
-    // const supplierUnits = batch?.supplierUnits?.[0]
-    //     ? [batch.supplierUnits[0]]  // Fetch the first supplierUnit
-    //     : batch?.batch?.batchVariants?.flatMap(b => b.SupplierUnit) || [];  // If no first supplierUnit, fetch all from batchVariants
-
-    // const supplierUnits = batch?.supplierUnits || [];
-
+    // Use the first supplierUnit as the main supplier unit
+    const mainSupplierUnits = supplierUnits.length > 0 ? [supplierUnits[0]] : [];
 
     const [stockUnits, setStockUnits] = useState<StockUnitData[]>(mainSupplierUnits);
     const [detailedStockUnits, setDetailedStockUnits] = useState<StockUnitData[]>(() =>
@@ -55,6 +54,14 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
             conversionUnit: unit.ConversionRate?.[0]?.toUnit?.name || "",
         }))
     );
+
+    // // Log the batchVariant and supplierUnits for debugging
+    // useEffect(() => {
+    //     console.log("Batch Variant:", batch);
+    //     console.log("Supplier Units in Batch Variant:", supplierUnits);
+    // }, [batch, supplierUnits]);
+
+
 
     const [stock, setStock] = useState("");
     const [price, setPrice] = useState("");
@@ -115,6 +122,38 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
             setDropdownVisible(false);
         }
     }, [searchTerm, unitOptions]);
+
+    // useEffect(() => {
+    //     console.log("Detailed Stock Units Updated:", detailedStockUnits);
+    //     // Log additional details like batch/batchVariant ID, supplierUnit ID, and conversionRate ID
+    //     detailedStockUnits.forEach((unit, index) => {
+    //         console.log(`Row ${index + 1}:`, {
+    //             batchId: batch?.batch_id,
+    //             batchVariantId: batch?.batch?.batchVariants?.[0]?.batch_variant_id,
+    //             supplierUnitId: batch?.supplierUnits?.[index]?.supplier_unit_id,
+    //             conversionRateId: batch?.supplierUnits?.[index]?.ConversionRate?.[0]?.conversion_rate_id,
+    //             ...unit,
+    //         });
+    //     });
+    // }, [detailedStockUnits]);
+    useEffect(() => {
+        console.log("Detailed Stock Units Updated:", detailedStockUnits);
+        detailedStockUnits.forEach((unit, index) => {
+            const supplierUnit = batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[index];
+            const conversionRate = supplierUnit?.ConversionRate?.[0];
+
+            console.log(`Row ${index + 1}:`, {
+                batchId: batch?.batch_id,
+                batchVariantId: batch?.batch?.batchVariants?.[0]?.batch_variant_id,
+                supplierUnitId: supplierUnit?.supplier_unit_id, // Access supplier_unit_id
+                conversionRateId: conversionRate?.conversion_id, // Access conversion_id
+                conversionRate: conversionRate?.conversion_rate, // Access conversion_rate
+                fromUnit: conversionRate?.fromUnit?.name, // Access fromUnit name
+                toUnit: conversionRate?.toUnit?.name, // Access toUnit name
+                ...unit,
+            });
+        });
+    }, [detailedStockUnits, batch]);
 
     const handleSelectUnit = (unitName: string) => {
         setUnit(unitName);
@@ -247,6 +286,17 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
             i === index ? { ...unit, [field]: value } : unit
         );
 
+        // If the field being updated is "conversionUnit", cascade the change to the immediate next row
+        if (field === "conversionUnit") {
+            // Only update the immediate next row if it exists
+            if (index + 1 < updatedUnits.length) {
+                const nextUnit = updatedUnits[index + 1];
+
+                // Update the next row's unit to the new conversionUnit value
+                nextUnit.unit = value; // Always update the unit for the immediate next row
+            }
+        }
+
         // Check if the reset condition is triggered (conversionQty, conversionUnit, stock, or price is cleared)
         const isResetRequired =
             (field === "conversionQty" && (!value || value.trim() === "")) ||
@@ -293,8 +343,10 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
 
             // Perform calculations for the NEXT row
             if (conversionQty && conversionQty > 0 && !isNaN(conversionQty)) {
-                nextUnit.stock = (currentStock * conversionQty).toString();
-                nextUnit.price = (currentPrice / conversionQty).toFixed(2);
+                // nextUnit.stock = (currentStock * conversionQty).toString();
+                // nextUnit.price = (currentPrice / conversionQty).toFixed(2);
+                nextUnit.stock = "";
+                nextUnit.price = "";
             } else {
                 nextUnit.stock = "";
                 nextUnit.price = "";
@@ -314,7 +366,7 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
 
                 {batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.first_name || "Unknown"}{" "}
                 {batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.last_name || "Supplier"}
-                
+
             </Link>
           </span>
                 </p>
@@ -483,37 +535,51 @@ const StockUnit = ({
     onRemove: () => void;
     onUpdate: (field: keyof StockUnitData, value: string) => void;
 }) => {
+    // Local state for each input field
+    const [stock, setStock] = useState(unitData.stock);
+    const [price, setPrice] = useState(unitData.price);
+    const [conversionQty, setConversionQty] = useState(unitData.conversionQty);
+    const [conversionUnit, setConversionUnit] = useState(unitData.conversionUnit);
+
+    // Dropdown state for unit selection
     const [filteredUnits, setFilteredUnits] = useState<string[]>([]);
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
     const [searchTerm, setSearchTerm] = useState("");
 
-    useEffect(() => {
-        if (searchTerm) {
-            setFilteredUnits(
-                unitOptions.filter((unitName) =>
-                    unitName.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-            );
-            setDropdownVisible(true);
-        } else {
-            setFilteredUnits([]);
-            setDropdownVisible(false);
-        }
-    }, [searchTerm, unitOptions]);
+    // Update local state and propagate changes to the parent
+    const handleStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setStock(value);
+        onUpdate("stock", value); // Propagate changes to the parent
+    };
+
+    const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setPrice(value);
+        onUpdate("price", value); // Propagate changes to the parent
+    };
+
+    const handleConversionQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        setConversionQty(value);
+        onUpdate("conversionQty", value); // Propagate changes to the parent
+    };
 
     const handleSelectUnit = (selectedUnit: string) => {
-        onUpdate("conversionUnit", selectedUnit);
+        setConversionUnit(selectedUnit);
         setSearchTerm("");
         setDropdownVisible(false);
         setHighlightedIndex(-1);
+        onUpdate("conversionUnit", selectedUnit); // Propagate changes to the parent
     };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
         setSearchTerm(value);
         if (value === "") {
-            onUpdate("conversionUnit", "");
+            setConversionUnit("");
+            onUpdate("conversionUnit", ""); // Propagate changes to the parent
         }
     };
 
@@ -531,57 +597,65 @@ const StockUnit = ({
         }
     };
 
+    // Filter units based on the search term
+    useEffect(() => {
+        if (searchTerm) {
+            setFilteredUnits(
+                unitOptions.filter((unitName) =>
+                    unitName.toLowerCase().includes(searchTerm.toLowerCase())
+                )
+            );
+            setDropdownVisible(true);
+        } else {
+            setFilteredUnits([]);
+            setDropdownVisible(false);
+        }
+    }, [searchTerm, unitOptions]);
+
     return (
         <div className="mt-2 flex items-center">
             <div className="grid grid-cols-5 gap-3 pr-4">
+                {/* Stock Input */}
                 <div className="flex flex-col items-start gap-1">
                     <Input
                         placeholder="000"
-                        value={unitData.stock} // Use the value from `unitData`
-                        onChange={(e) => onUpdate("stock", e.target.value)}
-                        // disabled
+                        value={stock}
+                        onChange={handleStockChange}
                     />
                 </div>
+
+                {/* Price Input */}
                 <div className="flex flex-col items-start gap-1">
                     <Input
                         placeholder="0000.00"
-                        value={unitData.price} // Use the value from `unitData`
-                        onChange={(e) => onUpdate("price", e.target.value)}
-                        // disabled
+                        value={price}
+                        onChange={handlePriceChange}
                     />
                 </div>
+
+                {/* Unit Input (Disabled) */}
                 <div className="flex flex-col items-start gap-1">
                     <Input
                         placeholder="Unit"
-                        value={unitData.unit || previousUnits} // Show `unitData.unit` or previous units
+                        value={unitData.unit || previousUnits}
                         disabled
-                        onChange={(e) => onUpdate("unit", e.target.value)}
                     />
                 </div>
+
+                {/* Conversion Input */}
                 <div className="col-span-2 flex flex-col items-start gap-1 relative">
                     <div className="flex">
                         <Input
                             placeholder="Qty."
                             className="rounded-r-none"
-                            value={unitData.conversionQty}
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                // Allow only numbers and a single optional decimal point
-                                if (/^\d*\.?\d*$/.test(value)) {
-                                    onUpdate("conversionQty", value);
-                                }
-                            }}
+                            value={conversionQty}
+                            onChange={handleConversionQtyChange}
                         />
                         <Input
                             placeholder="Units"
                             className="rounded-l-none"
-                            value={searchTerm || unitData.conversionUnit} // Show searchTerm or conversionUnit
-                            onChange={(e) => {
-                                const value = e.target.value;
-                                if (/^[a-zA-Z]*$/.test(value)) {
-                                    handleSearchChange(e);
-                                }
-                            }}
+                            value={searchTerm || conversionUnit}
+                            onChange={handleSearchChange}
                             onFocus={() => setDropdownVisible(true)}
                             onBlur={() => setDropdownVisible(false)}
                             onKeyDown={handleKeyDown}
@@ -641,4 +715,6 @@ const AddStockUnit = ({ onAdd }: { onAdd: () => void }) => {
 };
 
 export default InventoryCard;
+
+
 

@@ -106,11 +106,7 @@ const InvoicePage = () => {
             key={index}
             invoiceId={invoice.invoice_number}
             date={invoice.created_at}
-            customer={
-              invoice.customer.Personal_Details.first_name +
-              " " +
-              invoice.customer.Personal_Details.last_name
-            }
+            customer={invoice.customer.Personal_Details.company ?? ""}
             invoiceClerk={
               invoice.invoiceClerk.Personal_Details.first_name +
               " " +

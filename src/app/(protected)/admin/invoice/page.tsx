@@ -62,8 +62,6 @@ const InvoicePage = () => {
       })
       .toLowerCase();
 
-    console.log(dateMonth);
-
     return (
       invoice_number.includes(searchTerm.toLowerCase()) ||
       company?.includes(searchTerm.toLowerCase()) ||

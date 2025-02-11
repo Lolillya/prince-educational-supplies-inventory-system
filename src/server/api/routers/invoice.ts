@@ -169,6 +169,7 @@ export const invoiceRouter = createTRPCRouter({
           },
         });
 
+        console.log(createdInvoice);
         const invoiceId = createdInvoice.invoice_id;
 
         const createdLineItems = await Promise.all(

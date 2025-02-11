@@ -27,22 +27,22 @@ const NewCustomer = () => {
   });
 
   const handleStateChange = <K extends keyof CustomerData>(
-      field: K,
-      value: CustomerData[K],
+    field: K,
+    value: CustomerData[K],
   ) => {
     setCustomerData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-  // console.log(customerData.businessName);
+
   return (
-      <section
-          className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
-      >
-        <CustomerRouter title="NEW CUSTOMER" />
-        <NewCustomerState id="" />
-      </section>
+    <section
+      className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
+    >
+      <CustomerRouter title="NEW CUSTOMER" />
+      <NewCustomerState id="" />
+    </section>
   );
 };
 

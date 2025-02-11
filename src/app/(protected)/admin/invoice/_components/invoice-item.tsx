@@ -42,12 +42,11 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
   } = line_items;
 
   return (
-    <div className="rounded-lg bg-white/70 p-6">
-      <div className="flex items-center justify-center">
-        <div className="flex w-1/2 flex-col gap-4">
-          <p>
-            {line_items.variant.item.name} -{" "}
-            {line_items.variant.item.brand.name} - {line_items.variant.name}
+    <div className="rounded-lg bg-white/70 py-3 px-6">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 max-w-[75%]">
+          <p className="truncate">
+            {line_items.variant.item.name} - {line_items.variant.item.brand.name} - {line_items.variant.name}
           </p>
           <div className="flex items-center gap-5 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
@@ -69,12 +68,12 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
           </div>
         </div>
 
-        <Separator
+        {/* <Separator
           orientation="vertical"
           className="h-16 w-[2px] rounded-lg bg-slate-200"
-        />
+        /> */}
 
-        <div className="flex w-1/2 items-center justify-between pl-8">
+        <div className="between items-center justify-between pl-8">
           <div className="flex flex-col gap-4">
             <p>₱ {total_price.toLocaleString()}</p>
             <div className="flex items-center gap-8 text-slate-400">
@@ -83,7 +82,7 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
               </div>
             </div>
           </div>
-          <div>
+          {/* <div>
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <MoreOptions />
@@ -98,7 +97,7 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

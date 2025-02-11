@@ -90,7 +90,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               </div>
             </div>
             <div className="flex items-center gap-3">
-              <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+              {/* <RecordEditor isEditing={isEditing} handleEdit={handleEdit} /> */}
               <RecordExpand />
             </div>
           </div>
@@ -133,7 +133,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
         <Textarea
           className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline focus:outline-2 focus:outline-slate-200"
           placeholder="Your record notes..."
-          disabled={!isEditing}
+          // disabled={!isEditing}
         />
 
         <div className="flex items-center justify-between">

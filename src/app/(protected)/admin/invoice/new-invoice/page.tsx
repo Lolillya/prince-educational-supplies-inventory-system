@@ -111,6 +111,8 @@ const NewInvoice = () => {
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
+  const { data: nextInvoiceId } = api.invoice.getInvoiceId.useQuery();
+
   const updateCardDetails = (
     id: number,
     totalPrice: number,
@@ -291,7 +293,9 @@ const NewInvoice = () => {
             </DialogContent>
           </Dialog>
           <span className="font-bold">NEW INVOICE</span>
-          <span className="text-gray-400 ml-3 text-sm font-light">#12345</span>
+          <span className="text-gray-400 ml-3 text-sm font-light">
+            #{nextInvoiceId}
+          </span>
         </div>
       </div>
 

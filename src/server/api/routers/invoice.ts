@@ -69,6 +69,21 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
+  getInvoiceId: publicProcedure.query(async ({ ctx }) => {
+    try {
+      const lastBatch = await ctx.db.invoice.findFirst({
+        orderBy: { invoice_number: "desc" },
+        select: { invoice_number: true },
+      });
+
+      const nextInvoiceId = lastBatch ? lastBatch.invoice_number + 1 : 1;
+      return nextInvoiceId;
+    } catch (error) {
+      console.error("Error fetching batch_id:", error);
+      throw new Error("Failed to fetch batch_id.");
+    }
+  }),
+
   getInvoice: publicProcedure.query(async ({ ctx }) => {
     return ctx.db.invoice.findMany({
       select: {

@@ -119,6 +119,11 @@ const InvoicePage = () => {
     const doc = new jsPDF();
     // const formatCurrency = (amount: number) =>
     //   `₱${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    const fomattedDate = new Date(date).toLocaleDateString("en-US", {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+    });
 
     doc.setFontSize(12);
     doc.text(`Customer Code: INSERT CODE`, 14, 15);
@@ -126,7 +131,7 @@ const InvoicePage = () => {
     doc.text(`TERM: 30`, 14, 29);
 
     doc.text(`DR/Invoice No.: ${invoice_number}`, 160, 15);
-    doc.text(`DATE: ${date}`, 160, 22);
+    doc.text(`DATE: ${fomattedDate}`, 160, 22);
 
     const tableColumns = [
       "DESCRIPTION",

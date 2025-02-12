@@ -13,14 +13,12 @@ const authConfig: NextAuthConfig = {
 
         if (validatedFields.success) {
           const { username, password } = validatedFields.data;
-          // console.log("validation success");
 
           const user = await getUserByUsername(username);
-          console.log(user);
 
           if (user && user.password === password) {
             const role = await getUserRole(user.personal_details_id);
-            console.log(role);
+
             return {
               id: user.personal_details_id,
               username: user.username,

@@ -27,22 +27,22 @@ const NewEmployee = () => {
   });
 
   const handleStateChange = <K extends keyof EmployeeData>(
-      field: K,
-      value: EmployeeData[K],
+    field: K,
+    value: EmployeeData[K],
   ) => {
     setEmployeeData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-  // console.log(employeeData.businessName);
+
   return (
-      <section
-          className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
-      >
-        <EmployeeRouter title="NEW EMPLOYEE" />
-        <NewEmployeeState id="" />
-      </section>
+    <section
+      className={`flex h-screen w-screen flex-col gap-3 overflow-y-scroll p-10`}
+    >
+      <EmployeeRouter title="NEW EMPLOYEE" />
+      <NewEmployeeState id="" />
+    </section>
   );
 };
 

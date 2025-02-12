@@ -43,8 +43,34 @@ const InvoicePage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery();
-  console.log("Hello WOrld");
-  // TODO: SEARCH FEATURE
+
+  const filteredInvoices = invoiceData?.filter((invoice) => {
+    const invoice_number = invoice.invoice_number.toString();
+    const company = invoice.customer.Personal_Details.company?.toLowerCase();
+    const first_name =
+      invoice.customer.Personal_Details.first_name?.toLowerCase();
+    const last_name =
+      invoice.customer.Personal_Details.last_name?.toLowerCase();
+    const invoiceClerk =
+      (invoice.invoiceClerk.Personal_Details.first_name?.toLowerCase() ?? "") +
+      (invoice.invoiceClerk.Personal_Details.last_name?.toLowerCase() ?? "");
+    const dateMonth = invoice.created_at
+      .toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
+        year: "numeric",
+      })
+      .toLowerCase();
+
+    return (
+      invoice_number.includes(searchTerm.toLowerCase()) ||
+      company?.includes(searchTerm.toLowerCase()) ||
+      first_name?.includes(searchTerm.toLowerCase()) ||
+      last_name?.includes(searchTerm.toLowerCase()) ||
+      invoiceClerk.includes(searchTerm.toLowerCase()) ||
+      dateMonth.includes(searchTerm.toLowerCase())
+    );
+  });
 
   if (isLoading)
     return (
@@ -55,7 +81,7 @@ const InvoicePage = () => {
 
   return (
     <section
-      className={`flex h-auto w-full flex-col gap-3 overflow-y-scroll px-20 py-10`}
+      className={`flex h-auto w-full flex-col gap-3 overflow-y-scroll px-20 pt-10`}
     >
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-3">
@@ -73,17 +99,13 @@ const InvoicePage = () => {
         </Button>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-4">
-        {invoiceData?.map((invoice, index) => (
+      <div className="mt-5 grid grid-cols-2 gap-4 overflow-y-scroll rounded-lg">
+        {filteredInvoices?.map((invoice, index) => (
           <InvoiceRecord
             key={index}
             invoiceId={invoice.invoice_number}
             date={invoice.created_at}
-            customer={
-              invoice.customer.Personal_Details.first_name +
-              " " +
-              invoice.customer.Personal_Details.last_name
-            }
+            customer={invoice.customer.Personal_Details.company ?? ""}
             invoiceClerk={
               invoice.invoiceClerk.Personal_Details.first_name +
               " " +

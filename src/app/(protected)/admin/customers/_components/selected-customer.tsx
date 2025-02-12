@@ -6,6 +6,7 @@ import RecordNotes from "../../_components/record-notes";
 import EditRecord from "./edit-record";
 import CustomerInvoice from "./customer-invoice";
 import { useState } from "react";
+import Payables from "./payables";
 
 type SelectedCustomerProps = {
   first_name: string;
@@ -65,9 +66,8 @@ const SelectedCustomer = ({
       <Separator className="mt-5 h-[1px] bg-slate-300" />
 
       <div className="mt-5 flex flex-col gap-3">
-        <Payables
-          sum={5000}
-        />
+        <Payables sum={5000} />
+
         <RecordInfo
           icon={User2}
           recordType={"Representative"}

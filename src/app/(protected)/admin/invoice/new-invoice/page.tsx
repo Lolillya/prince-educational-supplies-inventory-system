@@ -102,11 +102,14 @@ const NewInvoice = () => {
 
   const {
     data: inventoryItems,
-    isLoading,
+    isLoading: loadingInventory,
     isError,
   } = api.invoice.getItems.useQuery();
 
-  const { data: supplierList } = api.invoice.getCustomers.useQuery();
+  const { data: supplierList, isLoading: loadingCustomers } =
+    api.invoice.getCustomers.useQuery();
+  const { data: nextInvoiceId, isLoading: loadingInvoiceId } =
+    api.invoice.getInvoiceId.useQuery();
 
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
@@ -244,7 +247,7 @@ const NewInvoice = () => {
     } else setFilteredSupplier([]);
   }, [selectedItems, searchTerm, inventoryItems, supplierSearchTerm]);
 
-  if (isLoading) {
+  if (loadingInventory || loadingCustomers || loadingInvoiceId) {
     return (
       <section className="flex h-screen w-full items-center justify-center">
         <LoadingSpinner />
@@ -291,7 +294,9 @@ const NewInvoice = () => {
             </DialogContent>
           </Dialog>
           <span className="font-bold">NEW INVOICE</span>
-          <span className="text-gray-400 ml-3 text-sm font-light">#12345</span>
+          <span className="text-gray-400 ml-3 text-sm font-light">
+            #{nextInvoiceId}
+          </span>
         </div>
       </div>
 

@@ -57,8 +57,6 @@ const CustomersPage = () => {
 
   const { data: customerData } = api.customers.list.useQuery();
 
-  console.log(selectedRecord);
-
   const filteredCustomers = customerData?.filter((customer) => {
     const company = customer.Personal_Details.company?.toLowerCase() ?? "";
     const contact = customer.Personal_Details.contact?.toLowerCase() ?? "";
@@ -108,6 +106,7 @@ const CustomersPage = () => {
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
                       }
+                      // recordType={}
                     />
                   ))}
                 </div>

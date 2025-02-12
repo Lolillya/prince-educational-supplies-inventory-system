@@ -3,7 +3,6 @@
 import {
   Archive,
   ChartPie,
-  History,
   IdCard,
   Info,
   LogOut,

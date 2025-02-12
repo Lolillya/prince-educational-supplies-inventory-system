@@ -25,9 +25,36 @@ const RestockRecord: React.FC<RestockProps> = ({
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
       <div className="flex items-center justify-between px-6">
         <div className="flex flex-col gap-2">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-3">
             <p className="text-xl">#{restockId}</p>
             <Pin className="h-5 w-5 rotate-45 text-amber-400" />
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center justify-center">
+                <MoreOptions className="!h-1 !w-1 !rounded-lg" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="text-slate-700 shadow-none">
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  Print
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  Export
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  View Restock
+                </DropdownMenuItem>
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  View Supplier
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
+                  Void
+                </DropdownMenuItem>
+                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
+                  Delete
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
@@ -96,33 +123,7 @@ const RestockRecord: React.FC<RestockProps> = ({
               orientation="vertical"
               className="h-6 w-[2px] bg-slate-200"
             />
-            <DropdownMenu>
-              <DropdownMenuTrigger>
-                <MoreOptions className="h-9 !rounded-lg" />
-              </DropdownMenuTrigger>
-              <DropdownMenuContent className="text-slate-700 shadow-none">
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Print
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Export
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  View Restock
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  View Supplier
-                </DropdownMenuItem>
-                <DropdownMenuSeparator />
-                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Void
-                </DropdownMenuItem>
-                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
           </div>
         </div>
       </div>

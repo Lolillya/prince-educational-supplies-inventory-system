@@ -13,6 +13,7 @@ import { LoadingSpinner } from "~/components/loading";
 
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 export type InvoiceProps = {
   invoiceId: number;
@@ -178,9 +179,9 @@ const InvoicePage = () => {
 
   return (
     <section
-      className={`flex h-auto w-full flex-col gap-3 overflow-y-scroll px-20 pt-10`}
+      className={`flex h-auto w-full flex-col gap-3 pt-10`}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex px-20 items-center justify-between">
         <div className="flex items-center gap-3">
           <SearchBar
             value={searchTerm}
@@ -196,24 +197,26 @@ const InvoicePage = () => {
         </Button>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-4 overflow-y-scroll rounded-lg">
-        {filteredInvoices?.map((invoice, index) => (
-          <InvoiceRecord
-            key={index}
-            invoiceId={invoice.invoice_number}
-            date={invoice.created_at}
-            customer={invoice.customer.Personal_Details.company ?? ""}
-            invoiceClerk={
-              invoice.invoiceClerk.Personal_Details.first_name +
-              " " +
-              invoice.invoiceClerk.Personal_Details.last_name
-            }
-            grandTotal={invoice.total_amount}
-            line_items={invoice.line_items}
-            handleExport={handleExport}
-          />
-        ))}
-      </div>
+      <ScrollArea className="mt-5 mb-10">
+        <div className="grid grid-cols-2 gap-4 rounded-lg px-20">
+          {filteredInvoices?.map((invoice, index) => (
+            <InvoiceRecord
+              key={index}
+              invoiceId={invoice.invoice_number}
+              date={invoice.created_at}
+              customer={invoice.customer.Personal_Details.company ?? ""}
+              invoiceClerk={
+                invoice.invoiceClerk.Personal_Details.first_name +
+                " " +
+                invoice.invoiceClerk.Personal_Details.last_name
+              }
+              grandTotal={invoice.total_amount}
+              line_items={invoice.line_items}
+              handleExport={handleExport}
+            />
+          ))}
+        </div>
+      </ScrollArea>
     </section>
   );
 };

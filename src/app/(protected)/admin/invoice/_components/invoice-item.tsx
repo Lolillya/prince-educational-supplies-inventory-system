@@ -81,8 +81,8 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
               </div>
             </div>
           </div>
-          <div>
-            <DropdownMenu>
+          {/*<div>
+             <DropdownMenu>
               <DropdownMenuTrigger>
                 <MoreOptions />
               </DropdownMenuTrigger>
@@ -95,10 +95,10 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
               </DropdownMenuContent>
-            </DropdownMenu>
+            </DropdownMenu> */}
 
-            {/* Dialog Component */}
-            <Dialog open={open} onOpenChange={setOpen}>
+          {/* Dialog Component */}
+          {/* <Dialog open={open} onOpenChange={setOpen}>
               <DialogContent>
                 <DialogHeader>
                   <DialogTitle>Item Details</DialogTitle>
@@ -117,8 +117,8 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
                   </DialogDescription>
                 </DialogHeader>
               </DialogContent>
-            </Dialog>
-          </div>
+            </Dialog> 
+          </div>*/}
         </div>
       </div>
     </div>

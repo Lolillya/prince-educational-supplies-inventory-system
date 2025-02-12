@@ -10,6 +10,7 @@ import { api } from "~/trpc/react";
 import Filter from "../_components/filter";
 import SearchBar from "../_components/search-bar";
 import RestockRecord from "./_components/restock-record";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -53,9 +54,9 @@ const RestockPage = () => {
 
   return (
     <section
-      className={`h-auto w-full ${poppins.className} flex flex-col gap-3 overflow-y-scroll px-20 py-10`}
+      className={`h-auto w-full ${poppins.className} flex flex-col gap-3 py-10`}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between px-20">
         <div className="flex items-center gap-3">
           <SearchBar
             value={""}
@@ -72,19 +73,21 @@ const RestockPage = () => {
         </Button>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-4">
-        {restockData?.map((restock: RestockProps) => (
-          <RestockRecord
-            key={restock.restockId}
-            restockId={restock.restockId}
-            date={restock.date}
-            supplier={restock.supplier}
-            addedStock={restock.addedStock}
-            restockItems={restock.restockItems}
-            onViewAll={handleViewAll}
-          />
-        ))}
-      </div>
+      <ScrollArea className="mt-5">
+        <div className="grid grid-cols-2 px-20 gap-4">
+          {restockData?.map((restock: RestockProps) => (
+            <RestockRecord
+              key={restock.restockId}
+              restockId={restock.restockId}
+              date={restock.date}
+              supplier={restock.supplier}
+              addedStock={restock.addedStock}
+              restockItems={restock.restockItems}
+              onViewAll={handleViewAll}
+            />
+          ))}
+        </div>
+      </ScrollArea>
     </section>
   );
 };

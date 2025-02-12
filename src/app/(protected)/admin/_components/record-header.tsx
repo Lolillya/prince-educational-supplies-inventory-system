@@ -1,5 +1,6 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import MoreOptions from './more-options';
+import ClearList from './clear-list';
 
 interface RecordHeaderProps {
 	record: string;
@@ -22,9 +23,7 @@ const RecordHeader = ({ record, number }: RecordHeaderProps) => {
 						Export List
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
-					<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-						Clear list
-					</DropdownMenuItem>
+					<ClearList recordType={record} />
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>

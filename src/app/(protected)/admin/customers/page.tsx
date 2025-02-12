@@ -13,6 +13,7 @@ import RecordItem from "../_components/record-item";
 import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
+import { Toaster } from "~/components/ui/sonner";
 
 interface Customer {
   id: string;
@@ -91,6 +92,7 @@ const CustomersPage = () => {
           <RecordHeader
             record="Customers"
             number={filteredCustomers?.length ?? 0}
+            data={filteredCustomers ?? []}          
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredCustomers?.length ?? 0) > 0 ? (
@@ -106,7 +108,7 @@ const CustomersPage = () => {
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
                       }
-                      // recordType={}
+                      recordType={'Customers'}
                     />
                   ))}
                 </div>
@@ -158,6 +160,7 @@ const CustomersPage = () => {
           </div>
         </div>
       </div>
+      <Toaster />
     </section>
   );
 };

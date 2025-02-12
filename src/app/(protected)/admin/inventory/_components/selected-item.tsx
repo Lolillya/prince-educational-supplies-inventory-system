@@ -4,6 +4,7 @@ import RecordInfo from '../../_components/record-info';
 import RecordNotes from '../../_components/record-notes';
 import EditRecord from './edit-record';
 import InventoryBatch from './inventory-batch';
+import {BatchVariant} from "@prisma/client";
 
 type SelectedItemProps = {
 	id: string;
@@ -13,6 +14,7 @@ type SelectedItemProps = {
 	category: string;
 	stockLevel: string;
 	notes?: string;
+	batchVariants: BatchVariant[];
 }
 
 const SelectedItem = ({
@@ -22,7 +24,9 @@ const SelectedItem = ({
 	brand,
 	category,
 	stockLevel,
-	notes }:
+	notes,
+	batchVariants
+}:
 	SelectedItemProps) => {
 	return (
 		<div className='flex flex-col w-full p-5'>
@@ -84,7 +88,10 @@ const SelectedItem = ({
 			<div className='mt-5'>
 
 				{/* //TODO: reflect invoice data based on selected customer */}
-				<InventoryBatch />
+				<InventoryBatch
+					batchVariants={batchVariants}
+					selectedVariantId={Number(id)}
+				/>
 			</div>
 
 		</div>

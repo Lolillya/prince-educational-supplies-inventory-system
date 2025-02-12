@@ -20,6 +20,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   invoiceClerk,
   grandTotal,
   line_items,
+  handleExport,
 }) => {
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
@@ -87,6 +88,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               invoiceClerk={invoiceClerk}
               grandTotal={grandTotal}
               line_items={line_items}
+              handleExport={handleExport}
             />
             <Separator
               orientation="vertical"

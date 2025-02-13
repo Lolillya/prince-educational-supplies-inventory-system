@@ -211,7 +211,7 @@ const InvoicePage = () => {
       </div>
 
       <ScrollArea className="mt-5">
-        <div className="grid grid-cols-2 px-20 gap-4">
+        <div className="grid grid-cols-2 px-20 gap-4 pb-10">
         {filteredInvoices
           ?.sort()
           ?.reverse()

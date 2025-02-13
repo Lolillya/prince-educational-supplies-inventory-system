@@ -4,15 +4,15 @@ import ClearList from './clear-list';
 import { handleExport as exportSuppliers } from '~/lib/utils/exportSuppliers';
 import { handleExport as exportCustomers } from '~/lib/utils/exportCustomers';
 import { handleExport as exportEmployees } from '~/lib/utils/exportEmployees';
-import { Supplier } from '~/types/suppliers';
-import { Customer } from '~/types/customers';
+import type { Supplier } from '~/types/suppliers';
+import type { Customer } from '~/types/customers';
 import { toast } from 'sonner';
-import { Employee } from '~/types/employees';
+import type { Employee } from '~/types/employees';
 
 interface RecordHeaderProps {
 	record: 'Suppliers' | 'Customers' | 'Employees';
 	number: number;
-	data: Supplier[] | Customer[];
+	data: Supplier[] | Customer[] | Employee[];
 }
 
 const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
@@ -29,8 +29,6 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 				: record === 'Employees'
 					? exportEmployees({ employees: data as Employee[] })
 					: false;
-
-		console.log(success);
 
 		if (success) {
 			toast('🎉 Your file has been exported successfully!', {

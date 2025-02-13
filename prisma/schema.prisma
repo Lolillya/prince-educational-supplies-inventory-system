@@ -43,14 +43,19 @@ model User_Role {
   id                  String           @id @default(uuid())
   Personal_Details_Id String           @unique
   role_Id             Int
+  emoji               String           @default("👑") // Default emoji is a crown
   History_Log         History_Log[]
   Inventory_Log       Inventory_Log[]
   customerInvoices    Invoice[]        @relation("CustomerRelation")
   clerkInvoices       Invoice[]        @relation("InvoiceClerkRelation")
   Invoice             Invoice[]
   SupplierUnit        SupplierUnit[]
+  restockedBatches    Batch[]
   Personal_Details    Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
   Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  userFavorites       Favorite[]       @relation("UserFavorites")
+  favoritedBy         Favorite[]       @relation("FavoritedContact")
+  pins                Pin[]
 }
 
 model Authentication {
@@ -116,6 +121,7 @@ model Variant {
   variant_id   Int            @id @default(autoincrement())
   item_id      Int
   name         String
+  description  String?
   discount_id  Int?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
@@ -125,15 +131,20 @@ model Variant {
   StockLevel   StockLevel?
   discount     Discount?      @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   item         Item           @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
+  favoritedBy  Favorite[]
 }
 
 model Batch {
   batch_id      Int            @id @default(autoincrement())
   batch_code    String?        @unique
   quantity      Int
+  notes         String?
+  restock_clerk String         @default("5511e159-d368-4293-8520-b381c1136383")
   created_at    DateTime       @default(now())
   updated_at    DateTime       @updatedAt
   batchVariants BatchVariant[]
+  user          User_Role      @relation(fields: [restock_clerk], references: [id])
+  pinnedBy      Pin[]
 }
 
 model BatchVariant {
@@ -227,6 +238,7 @@ model Inventory_Log {
 model Invoice {
   invoice_id      Int           @id @default(autoincrement())
   invoice_number  Int           @unique @default(autoincrement())
+  notes           String?
   customer_id     String
   invoice_clerk   String
   created_at      DateTime      @default(now())
@@ -243,6 +255,7 @@ model Invoice {
   line_items      Line_Item[]
   Payment         Payment[]
   payment_logs    Payment_Log[]
+  pinnedBy        Pin[]
 }
 
 model Line_Item {
@@ -303,6 +316,46 @@ model History_Log {
   timestamp      DateTime   @default(now())
   details        Json?
   user           User_Role? @relation(fields: [user_id], references: [Personal_Details_Id])
+}
+
+model Favorite {
+  favorite_id Int      @id @default(autoincrement())
+  user_id     String // The user who created the favorite
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  // References to different entities that can be favorited
+  variant_id Int?
+  contact_id String? // This will reference User_Role for both suppliers and customers
+
+  // Relations
+  user    User_Role  @relation("UserFavorites", fields: [user_id], references: [id])
+  variant Variant?   @relation(fields: [variant_id], references: [variant_id])
+  contact User_Role? @relation("FavoritedContact", fields: [contact_id], references: [id])
+
+  // Ensure a user can't favorite the same item twice
+  @@unique([user_id, variant_id])
+  @@unique([user_id, contact_id])
+}
+
+model Pin {
+  pin_id     Int      @id @default(autoincrement())
+  user_id    String // The user who created the pin
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  // References to different entities that can be pinned
+  invoice_id Int?
+  batch_id   Int?
+
+  // Relations
+  user    User_Role @relation(fields: [user_id], references: [id])
+  invoice Invoice?  @relation(fields: [invoice_id], references: [invoice_id])
+  batch   Batch?    @relation(fields: [batch_id], references: [batch_id])
+
+  // Ensure a user can't pin the same item twice
+  @@unique([user_id, invoice_id])
+  @@unique([user_id, batch_id])
 }
 
 enum Roles {

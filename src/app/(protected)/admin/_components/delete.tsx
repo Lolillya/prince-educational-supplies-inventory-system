@@ -1,6 +1,6 @@
 import { AlertCircle, Trash2 } from "lucide-react";
 import { Poppins } from "next/font/google";
-import React from "react";
+import React, {useState} from "react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
@@ -16,9 +16,31 @@ interface DeleteProps {
 	className?: string;
 	recordInfo: string | null;
 	recordType: string;
+	variantId: number;
+	onDelete: (variantId: number) => void;
+	onVerifyPassword: (password: string) => Promise<boolean>;
 }
 
-const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) => {
+const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType, variantId, onDelete, onVerifyPassword, }) => {
+	const [password, setPassword] = useState<string>("");
+	const [error, setError] = useState<string | null>(null);
+
+	const handleDelete = async () => {
+		if (!password) {
+			setError("Please enter your password to confirm.");
+			return;
+		}
+
+		// Verify the password
+		const isPasswordCorrect = await onVerifyPassword(password);
+		if (!isPasswordCorrect) {
+			setError("Incorrect password.");
+			return;
+		}
+
+		// If password is correct, proceed with deletion
+		onDelete(variantId);
+	};
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -53,11 +75,15 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) =>
 						<Input
 							className="bg-slate-100 text-slate-700 shadow-none"
 							placeholder="Password"
+							type="password"
+							value={password}
+							onChange={(e) => setPassword(e.target.value)}
 						/>
 					</div>
 					<div className="flex items-center gap-2 mt-1">
 						<AlertCircle className="text-rose-500 w-5 h-5"/>
-						<p className="text-rose-500">This action is irreversible!</p>
+						<p className="text-rose-500">{error}</p>
+						{/*<p className="text-rose-500">This action is irreversible!</p>*/}
 					</div>
 				</div>
 
@@ -69,7 +95,10 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType }) =>
 							Cancel
 						</Button>
 					</DialogClose>
-					<Button className="bg-red hover:bg-red/80">
+					<Button
+						className="bg-red hover:bg-red/80"
+						onClick={handleDelete}
+					>
 						Delete Record
 					</Button>
 				</div>

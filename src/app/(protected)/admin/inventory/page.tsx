@@ -14,6 +14,7 @@ import SelectRecordMessage from "../_components/select-record-message"
 import RecordHeader from "./_components/record-header"
 import SelectedItem from "./_components/selected-item"
 import RecordItem from "./_components/record-item"
+import { useSession } from "next-auth/react";
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[];
@@ -68,6 +69,51 @@ const InventoryPage = () => {
 
   const { data: inventoryData } = api.inventory.listInventory.useQuery();
 
+    const deleteVariantMutation = api.inventory.deleteVariant.useMutation({
+      onSuccess: () => {
+        router.refresh(); // Refresh the page to reflect the deletion
+      },
+      onError: (error) => {
+        console.error("Failed to delete variant:", error);
+      },
+    });
+
+    const handleDeleteVariant = (variantId: number) => {
+      deleteVariantMutation.mutate({ variantId });
+    };
+
+  const { data: session } = useSession();
+  const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
+
+  const verifyPasswordMutation = api.inventory.verifyPassword.useMutation({
+    onSuccess: () => {
+      // Handle successful password verification
+      console.log("Password verified!");
+    },
+    onError: (error) => {
+      // Handle password verification error
+      console.error("Password verification failed:", error.message);
+    },
+  });
+
+  const handleVerifyPassword = async (password: string) => {
+    if (!personalDetailsId) {
+      console.error("No personal details ID found in session.");
+      return;
+    }
+
+    try {
+      await verifyPasswordMutation.mutateAsync({
+        personalDetailsId,
+        password,
+      });
+      return true; // Password is correct
+    } catch (error) {
+      return false; // Password is incorrect
+    }
+  };
+
+
   const getStockLevel = (
     stockLevel: { low_stock: number; very_low_stock: number } | null,
     inventoryQuantity: number
@@ -118,7 +164,11 @@ const InventoryPage = () => {
                       stockLevel={getStockLevel(item.variant.StockLevel, item.quantity)}
                       onClick={() => setSelectedRecord(item)}
                       isSelected={selectedRecord?.variant_id === item.variant_id}
-                      recordType={'Inventory'}                 />
+                      recordType={'Inventory'}
+                      variantId={item.variant_id}
+                      onDelete={handleDeleteVariant}
+                      onVerifyPassword={handleVerifyPassword}
+                    />
                   ))}
                 </div>
               </ScrollArea>

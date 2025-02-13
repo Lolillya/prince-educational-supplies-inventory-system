@@ -69,18 +69,27 @@ const InventoryPage = () => {
 
   const { data: inventoryData } = api.inventory.listInventory.useQuery();
 
-    const deleteVariantMutation = api.inventory.deleteVariant.useMutation({
-      onSuccess: () => {
-        router.refresh(); // Refresh the page to reflect the deletion
-      },
-      onError: (error) => {
-        console.error("Failed to delete variant:", error);
-      },
-    });
+  const utils = api.useUtils(); // Get the utils object
 
-    const handleDeleteVariant = (variantId: number) => {
-      deleteVariantMutation.mutate({ variantId });
-    };
+  const deleteVariantMutation = api.inventory.deleteVariant.useMutation({
+    onSuccess: () => {
+      console.log("Variant successfully deleted!");
+      utils.inventory.listInventory.invalidate(); // Invalidate the cache for the listInventory query
+      router.refresh(); // Optional: Refresh the page if needed
+    },
+    onError: (error) => {
+      console.error("Failed to delete variant:", error);
+    },
+  });
+
+  const handleDeleteVariant = async (variantId: number) => {
+    try {
+      await deleteVariantMutation.mutateAsync({ variantId });
+      console.log("Variant successfully deleted!");
+    } catch (error) {
+      console.error("Failed to delete variant:", error);
+    }
+  };
 
   const { data: session } = useSession();
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session

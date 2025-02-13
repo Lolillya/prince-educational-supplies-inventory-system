@@ -119,6 +119,11 @@ const InvoicePage = () => {
     const doc = new jsPDF();
     // const formatCurrency = (amount: number) =>
     //   `₱${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
+    const fomattedDate = new Date(date).toLocaleDateString("en-US", {
+      year: "2-digit",
+      month: "2-digit",
+      day: "2-digit",
+    });
 
     doc.setFontSize(12);
     doc.text(`Customer Code: INSERT CODE`, 14, 15);
@@ -126,14 +131,21 @@ const InvoicePage = () => {
     doc.text(`TERM: 30`, 14, 29);
 
     doc.text(`DR/Invoice No.: ${invoice_number}`, 160, 15);
-    doc.text(`DATE: ${date}`, 160, 22);
+    doc.text(`DATE: ${fomattedDate}`, 160, 22);
 
-    const tableColumns = ["DESCRIPTION", "QTY UNIT", "UNIT PRICE", "TOTAL"];
+    const tableColumns = [
+      "DESCRIPTION",
+      "QTY UNIT",
+      "UNIT PRICE",
+      "DISCOUNT",
+      "TOTAL",
+    ];
 
     const tableRows = line_items.map((item) => [
       `${item.variant.item.brand.name} - ${item.variant.item.name} - ${item.variant.name}`,
       item.quantity.toString(),
       `${item.unit_price}`,
+      `${item.discount}`,
       `${item.total_price}`,
     ]);
 
@@ -155,6 +167,7 @@ const InvoicePage = () => {
         1: { cellWidth: 30 },
         2: { cellWidth: 30 },
         3: { cellWidth: 30 },
+        4: { cellWidth: 30 },
       },
     });
 
@@ -173,7 +186,7 @@ const InvoicePage = () => {
     doc.setFontSize(8);
     doc.text("FRINT NAME AND SIGN ABOVE NAME", 14, finalY + 30);
 
-    doc.save("invoice_7707.pdf");
+    doc.save(`invoice_${invoice_number}.pdf`);
   };
 
   return (
@@ -197,22 +210,25 @@ const InvoicePage = () => {
       </div>
 
       <div className="mt-5 grid grid-cols-2 gap-4 overflow-y-scroll rounded-lg">
-        {filteredInvoices?.map((invoice, index) => (
-          <InvoiceRecord
-            key={index}
-            invoiceId={invoice.invoice_number}
-            date={invoice.created_at}
-            customer={invoice.customer.Personal_Details.company ?? ""}
-            invoiceClerk={
-              invoice.invoiceClerk.Personal_Details.first_name +
-              " " +
-              invoice.invoiceClerk.Personal_Details.last_name
-            }
-            grandTotal={invoice.total_amount}
-            line_items={invoice.line_items}
-            handleExport={handleExport}
-          />
-        ))}
+        {filteredInvoices
+          ?.sort()
+          ?.reverse()
+          .map((invoice, index) => (
+            <InvoiceRecord
+              key={index}
+              invoiceId={invoice.invoice_number}
+              date={invoice.created_at}
+              customer={invoice.customer.Personal_Details.company ?? ""}
+              invoiceClerk={
+                invoice.invoiceClerk.Personal_Details.first_name +
+                " " +
+                invoice.invoiceClerk.Personal_Details.last_name
+              }
+              grandTotal={invoice.total_amount}
+              line_items={invoice.line_items}
+              handleExport={handleExport}
+            />
+          ))}
       </div>
     </section>
   );

@@ -9,7 +9,12 @@ import { CalendarDateRangePicker } from "./_components/date-range-picker";
 import Notification from "./_components/notifications";
 import Ranking from "./_components/ranking";
 import SalesAreaCard from "./_components/sales-area";
-import { CustomerStatus, StockInStatus, StockOutStatus, SupplierStatus } from "./_components/status-card";
+import {
+  CustomerStatus,
+  StockInStatus,
+  StockOutStatus,
+  SupplierStatus,
+} from "./_components/status-card";
 
 // ALL OF THE DATA HERE ARE CONSTANTS. KULANG LANG QUERY KAY DI KO KABALO :(
 // PIE CHART DATA
@@ -17,14 +22,14 @@ interface PieChartData {
   category: string;
   sales: number;
   fill: string;
-};
+}
 
 interface PieChartConfig {
   [key: string]: {
     label: string;
     color: string;
   };
-};
+}
 
 const pieChartData: PieChartData[] = [
   { category: "Stationery", sales: 275, fill: "hsl(var(--chart-1))" },
@@ -46,14 +51,14 @@ const pieChartConfig: PieChartConfig = pieChartData.reduce((config, item) => {
 interface AreaChartData {
   month: string;
   sales: number;
-};
+}
 
 interface AreaChartConfig {
   [key: string]: {
     label: string;
     color: string;
   };
-};
+}
 
 const areaChartData: AreaChartData[] = [
   { month: "January", sales: 123 },
@@ -77,63 +82,63 @@ const areaChartConfig: AreaChartConfig = {
 interface Notifications {
   date: string;
   time: string;
-  type: 'restocked' | 'stocked out' | 'edit' | 'delete';
+  type: "restocked" | "stocked out" | "edit" | "delete";
   employee: string;
   details: {
     supplier?: string;
     customer?: string;
-    recordType?: 'inventory' | 'suppliers' | 'customers' | 'other';
+    recordType?: "inventory" | "suppliers" | "customers" | "other";
     recordName?: string;
   };
 }
 
 const notifications: Notifications[] = [
   {
-    date: '2024-12-22',
-    time: '10:30 AM',
-    type: 'restocked',
-    employee: 'John Doe',
+    date: "2024-12-22",
+    time: "10:30 AM",
+    type: "restocked",
+    employee: "John Doe",
     details: {
-      supplier: 'ABC Supplies',
+      supplier: "ABC Supplies",
     },
   },
   {
-    date: '2024-12-22',
-    time: '11:15 AM',
-    type: 'stocked out',
-    employee: 'Jane Smith',
+    date: "2024-12-22",
+    time: "11:15 AM",
+    type: "stocked out",
+    employee: "Jane Smith",
     details: {
-      customer: 'XYZ Retail',
+      customer: "XYZ Retail",
     },
   },
   {
-    date: '2024-12-22',
-    time: '1:45 PM',
-    type: 'edit',
-    employee: 'John Doe',
+    date: "2024-12-22",
+    time: "1:45 PM",
+    type: "edit",
+    employee: "John Doe",
     details: {
-      recordType: 'inventory',
-      recordName: 'Product ABC',
+      recordType: "inventory",
+      recordName: "Product ABC",
     },
   },
   {
-    date: '2024-12-22',
-    time: '2:00 PM',
-    type: 'delete',
-    employee: 'Jane Smith',
+    date: "2024-12-22",
+    time: "2:00 PM",
+    type: "delete",
+    employee: "Jane Smith",
     details: {
-      recordType: 'customers',
-      recordName: 'Customer XYZ',
+      recordType: "customers",
+      recordName: "Customer XYZ",
     },
   },
   {
-    date: '2024-12-22',
-    time: '2:00 PM',
-    type: 'delete',
-    employee: 'Jane Smith',
+    date: "2024-12-22",
+    time: "2:00 PM",
+    type: "delete",
+    employee: "Jane Smith",
     details: {
-      recordType: 'customers',
-      recordName: 'Customer XYZ',
+      recordType: "customers",
+      recordName: "Customer XYZ",
     },
   },
 ];
@@ -145,7 +150,7 @@ interface Leaderboard {
   record: string;
   stockCount?: number;
   salesCount?: number;
-};
+}
 
 const supplierLeaderboard: Leaderboard[] = [
   { rank: 1, record: "Adrian Huang", stockCount: 800 },
@@ -160,20 +165,21 @@ const customerLeaderboard: Leaderboard[] = [
 ];
 
 const AdminDashboard = () => {
-
   const session = useSession();
+  console.log(session);
 
   return (
-
-    <section className="flex flex-col min-h-screen py-10 px-20">
-
-      <div className="flex justify-between items-center">
-        <h2 className="font-bold text-3xl text-slate-700">
+    <section className="flex min-h-screen flex-col px-20 py-10">
+      <div className="flex items-center justify-between">
+        <h2 className="text-3xl font-bold text-slate-700">
           Hello, {session.data?.user.firstName}!
         </h2>
-        <div className="flex gap-4 items-center">
+        <div className="flex items-center gap-4">
           <Notification notifications={notifications} />
-          <Separator orientation="vertical" className="h-10 bg-slate-200 w-[2px]" />
+          <Separator
+            orientation="vertical"
+            className="h-10 w-[2px] bg-slate-200"
+          />
           <CalendarDateRangePicker />
           <Button className="bg-green hover:bg-green/80">
             <Download strokeWidth={2.5} />
@@ -184,23 +190,32 @@ const AdminDashboard = () => {
 
       <Separator orientation="horizontal" className="mt-4 h-[2px]" />
 
-      <div className="flex justify-between items-center gap-4 mt-4">
+      <div className="mt-4 flex items-center justify-between gap-4">
         <StockInStatus percentage={-10} count={1234} />
         <StockOutStatus percentage={24} count={4567} />
         <CustomerStatus count={324} />
         <SupplierStatus count={463} />
       </div>
 
-      <div className="mt-4 flex items-center justify-between gap-4 w-full h-full">
-        <div className="flex flex-col gap-4 w-1/2 h-full">
-          <CategoryPieCard pieChartData={pieChartData} pieChartConfig={pieChartConfig} totalSales={1110} />
-          <SalesAreaCard areaChartData={areaChartData} areaChartConfig={areaChartConfig} />
+      <div className="mt-4 flex h-full w-full items-center justify-between gap-4">
+        <div className="flex h-full w-1/2 flex-col gap-4">
+          <CategoryPieCard
+            pieChartData={pieChartData}
+            pieChartConfig={pieChartConfig}
+            totalSales={1110}
+          />
+          <SalesAreaCard
+            areaChartData={areaChartData}
+            areaChartConfig={areaChartConfig}
+          />
         </div>
-        <div className="w-1/2 h-full">
-          <Ranking suppliers={supplierLeaderboard} customers={customerLeaderboard} />
+        <div className="h-full w-1/2">
+          <Ranking
+            suppliers={supplierLeaderboard}
+            customers={customerLeaderboard}
+          />
         </div>
       </div>
-
     </section>
   );
 };

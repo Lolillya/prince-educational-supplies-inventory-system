@@ -732,6 +732,33 @@ export const inventoryRouter = createTRPCRouter({
             return { message: "Variant and all related records deleted successfully." };
         }),
 
+    verifyPassword: publicProcedure
+        .input(
+            z.object({
+                personalDetailsId: z.string(), // ID from the session
+                password: z.string(), // Password input by the user
+            })
+        )
+        .mutation(async ({ input }) => {
+            const { personalDetailsId, password } = input;
+
+            // Fetch the authentication record for the user
+            const authRecord = await prisma.authentication.findUnique({
+                where: { personal_details_id: personalDetailsId },
+            });
+
+            if (!authRecord) {
+                throw new Error("User not found.");
+            }
+
+            // Compare the input password with the stored password
+            if (authRecord.password !== password) {
+                throw new Error("Incorrect password.");
+            }
+
+            return { success: true, message: "Password verified." };
+        }),
+
     // it return different variant_id value error creating new variant on edit-item
     // editItem: publicProcedure
     //     .input(

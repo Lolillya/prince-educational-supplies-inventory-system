@@ -47,12 +47,12 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
   return (
     <div className="rounded-lg bg-white/70 px-6 py-3">
       <div className="flex items-center justify-between">
-        <div className="flex max-w-[75%] flex-col gap-4">
+        <div className="flex max-w-[75%] flex-col gap-3">
           <p className="truncate">
-            {line_items.variant.item.name} -{" "}
+            {line_items.variant.item.name} - {" "}
             {line_items.variant.item.brand.name} - {line_items.variant.name}
           </p>
-          <div className="flex items-center gap-5 text-slate-400">
+          <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
               <Box className="h-4 w-4" />
               <p className="text-sm">
@@ -73,7 +73,7 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
         </div>
 
         <div className="between flex items-center justify-between gap-4 pl-8">
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3">
             <p>₱ {total_price.toLocaleString()}</p>
             <div className="flex items-center gap-8 text-slate-400">
               <div className="flex items-center gap-3 text-slate-400">

@@ -119,10 +119,10 @@ const RestockRecord: React.FC<RestockProps> = ({
               addedStock={addedStock}
               restockItems={restockItems}
             />
-            <Separator
+            {/* <Separator
               orientation="vertical"
               className="h-6 w-[2px] bg-slate-200"
-            />
+            /> */}
             
           </div>
         </div>

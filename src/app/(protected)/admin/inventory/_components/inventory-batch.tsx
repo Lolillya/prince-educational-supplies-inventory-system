@@ -42,7 +42,7 @@ interface BatchVariant {
 	}[];
 	batch: {
 		batch_id: string;
-		batch_code: string;
+		batch_number: string;
 	};
 }
 
@@ -237,10 +237,10 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
                       <DialogDescription className="text-sm tracking-wide">
                         {/*{selectedBatchNumber*/}
                         {/*	? `ID: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_id || 'N/A'}, */}
-                        {/*	Code: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_code || 'N/A'}`*/}
+                        {/*	Code: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_number || 'N/A'}`*/}
                         {/*	: 'ID: N/A, Code: N/A'}*/}
                         {batchVariants[selectedBatchNumber - 1]?.batch
-                          ?.batch_code || "N/A"}
+                          ?.batch_number || "N/A"}
                       </DialogDescription>
                     </div>
                   </div>
@@ -436,13 +436,13 @@ const InventoryBatchCard = ({
 						</TooltipTrigger>
 						<TooltipContent
 							className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-							From restock record {batchVariant.batch?.batch_code || 'N/A'}
+							From restock record {batchVariant.batch?.batch_number || 'N/A'}
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>
 				<p className="text-sm truncate">
 					{/*ID: {batchVariant.batch?.batch_id || 'N/A'}, Code: */}
-					{batchVariant.batch?.batch_code || 'N/A'}
+					{batchVariant.batch?.batch_number || 'N/A'}
 				</p>
 			</div>
 			<div className="flex items-center gap-4 text-slate-400">

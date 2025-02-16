@@ -255,7 +255,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               <TableCell># {unit.unit.name}</TableCell>
                               <TableCell>{unit.quantity_per_unit}</TableCell>
                               <TableCell className="text-right">
-                                P {unit.price}
+                                P {unit.price.toFixed(2)}
                               </TableCell>
                               {/* <TableCell>
                                 <Button variant="link">Out to office</Button>
@@ -371,7 +371,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 key={`${batchIndex}-${ywa.unit.unit_id}-${ywaIndex}`}
                                 value={ywa.price.toString()}
                               >
-                                {ywa.price}
+                                {ywa.price.toFixed(2).toString()}
                               </SelectItem>
                             )),
                         )}
@@ -381,7 +381,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     <Input
                       className="rounded-r-none border shadow-none"
                       placeholder="Select Pricing"
-                      value={price}
+                      value={price.toFixed(2).toString()}
                       disabled={
                         !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                       }
@@ -453,7 +453,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
       <div className="flex items-center gap-3 py-3">
         <Label className="font-bold">Total </Label>
-        <Input className="shadow-none" disabled value={totalPrice} />
+        <Input className="shadow-none" disabled value={totalPrice.toFixed(2)} />
       </div>
       {/* <p className="text-gray-400 mt-4 text-sm">
         Insufficient stock from Batch 1!

@@ -368,7 +368,7 @@ const NewInvoice = () => {
       </div>
 
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
-        <span>TOTAL: P{grandTotal}</span>
+        <span>TOTAL: ₱ {grandTotal.toFixed(2)}</span>
         <Dialog>
           <DialogTrigger asChild>
             <Button
@@ -447,19 +447,23 @@ const NewInvoice = () => {
                       </TableCell>
                       <TableCell>{item[1].quantity}</TableCell>
                       <TableCell>{item[1].selectedUnit.unitName}</TableCell>
-                      <TableCell>{item[1].unitPrice}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
+                        {item[1].unitPrice.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
                         {item[1].discount}{" "}
                         {item[1].discountType === "%" ? "%" : ""}
                       </TableCell>
-                      <TableCell>{item[1].totalPrice}</TableCell>
+                      <TableCell className="text-right">
+                        {item[1].totalPrice.toFixed(2)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
               <div className="bottom-0 flex w-full justify-end">
                 <div className="flex items-center gap-3">
-                  <span>TOTAL: P{grandTotal}</span>
+                  <span>TOTAL: P{grandTotal.toFixed(2).toString()}</span>
                   <Button
                     className="bg-green px-7 font-bold"
                     size={"lg"}

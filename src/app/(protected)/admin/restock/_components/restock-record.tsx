@@ -18,6 +18,7 @@ const RestockRecord: React.FC<RestockProps> = ({
   restockId,
   date,
   supplier,
+  restockClerk,
   addedStock,
   restockItems,
 }) => {
@@ -123,6 +124,7 @@ const RestockRecord: React.FC<RestockProps> = ({
               restockId={restockId}
               date={date}
               supplier={supplier}
+              restockClerk={restockClerk}
               addedStock={addedStock}
               restockItems={restockItems}
           />

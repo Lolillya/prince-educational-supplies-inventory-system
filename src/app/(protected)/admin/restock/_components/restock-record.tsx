@@ -28,12 +28,19 @@ const RestockRecord: React.FC<RestockProps> = ({
           <p className="text-xl">#{restockId}</p>
           <div className="flex items-center gap-6 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
-              <Calendar className="h-4 w-4" />
-              <p className="text-sm">{date}</p>
+              <Calendar className="h-4 w-4"/>
+              <p className="text-sm">
+                {new Date(date).toLocaleDateString("en-US", {
+                  year: "numeric",
+                  month: "long",
+                  day: "numeric",
+                })}
+              </p>
+
             </div>
             <Separator
-              orientation="vertical"
-              className="h-6 w-[2px] bg-slate-200"
+                orientation="vertical"
+                className="h-6 w-[2px] bg-slate-200"
             />
             <div className="flex items-center gap-3">
               <Truck className="h-4 w-4" />

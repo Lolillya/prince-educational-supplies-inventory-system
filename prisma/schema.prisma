@@ -32,6 +32,7 @@ model Personal_Details {
   location            Location?            @relation(fields: [location_id], references: [location_id])
   User_Role           User_Role?
   Batch               Batch[]
+  Inventory           Inventory[]
 }
 
 model Role {
@@ -189,11 +190,14 @@ model ConversionRate {
 }
 
 model Inventory {
-  inventory_id Int      @id @default(autoincrement())
-  variant_id   Int
-  quantity     Int
-  last_updated DateTime @default(now())
-  variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+  inventory_id     Int              @id @default(autoincrement())
+  variant_id       Int
+  inventory_number Int              @unique @default(autoincrement())
+  quantity         Int
+  inventory_clerk  String
+  Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
+  last_updated     DateTime         @default(now())
+  variant          Variant          @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model StockLevel {

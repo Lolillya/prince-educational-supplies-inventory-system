@@ -16,6 +16,7 @@ import { Input } from "~/components/ui/input";
 import { api } from "~/trpc/react";
 import {Card, CardContent} from "~/components/ui/card";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 type Item = {
@@ -33,7 +34,8 @@ type Item = {
 
 const NewItem = () => {
     const router = useRouter();
-    const utils = api.useUtils(); // Get the utils object
+    const utils = api.useUtils();
+    const session = useSession();
 
     const [isOpen, setIsOpen] = useState(false);
     const [isDialogCancelOpen, setIsDialogCancelOpen] = useState(false);
@@ -448,10 +450,12 @@ const NewItem = () => {
                 });
 
                 console.log("Created Stock Level for Variant:", variant.name);
-
+                
                 await createInventoryMutation({
                     variant_id: variant.variant_id,
                     quantity: 0,
+                    inventory_clerk: session.data?.user.id ?? "", // Add inventory_clerk
+                    inventory_number: Math.floor(1000000 + Math.random() * 9000000), // Generate a 7-digit inventory number
                 });
 
                 console.log("Created Inventory for Variant:", variant.name);

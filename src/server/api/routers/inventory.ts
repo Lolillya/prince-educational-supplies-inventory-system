@@ -587,6 +587,8 @@ export const inventoryRouter = createTRPCRouter({
             z.object({
                 variant_id: z.number(),
                 quantity: z.number(),
+                inventory_clerk: z.string(), // Ensure this matches the schema
+                inventory_number: z.number(), // Ensure this matches the schema
             })
         )
         .mutation(async ({ input }) => {
@@ -594,6 +596,8 @@ export const inventoryRouter = createTRPCRouter({
                 data: {
                     variant_id: input.variant_id,
                     quantity: input.quantity,
+                    inventory_clerk: input.inventory_clerk, // Add this field
+                    inventory_number: input.inventory_number, // Add this field
                 },
             });
             return inventory;

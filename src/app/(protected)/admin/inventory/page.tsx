@@ -59,6 +59,7 @@ interface InventoryItem {
   inventory_id: number;
   variant_id: number;
   quantity: number;
+  inventory_number: number;
   variant: Variant;
 }
 
@@ -170,6 +171,7 @@ const InventoryPage = () => {
                       key={item.inventory_id}
                       name={`${item.variant.item.name} - ${item.variant.item.brand.name} - ${item.variant.name}`}
                       id={item.inventory_id.toString()}
+                      inventoryNumber={item.inventory_number.toString()}
                       stockLevel={getStockLevel(item.variant.StockLevel, item.quantity)}
                       onClick={() => setSelectedRecord(item)}
                       isSelected={selectedRecord?.variant_id === item.variant_id}
@@ -196,6 +198,7 @@ const InventoryPage = () => {
                 <div className="flex flex-col w-full h-40">
                   <SelectedItem
                     id={selectedRecord.variant_id.toString()}
+                    inventoryNumber={selectedRecord.inventory_number.toString()}
                     variant={selectedRecord.variant.name ?? ""}
                     item={selectedRecord.variant.item.name}
                     brand={selectedRecord.variant.item.brand.name}

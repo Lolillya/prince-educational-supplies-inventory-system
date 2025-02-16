@@ -375,7 +375,7 @@ const NewInvoice = () => {
               size={"lg"}
               className="bg-green py-8 text-sm font-bold text-white"
             >
-              Confirm Resock
+              Confirm Invoice
             </Button>
           </DialogTrigger>
           <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">

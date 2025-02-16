@@ -31,6 +31,8 @@ model Personal_Details {
   Authentication_Log  Authentication_Log[]
   location            Location?            @relation(fields: [location_id], references: [location_id])
   User_Role           User_Role?
+  Batch               Batch[]
+  Inventory           Inventory[]
 }
 
 model Role {
@@ -40,17 +42,21 @@ model Role {
 }
 
 model User_Role {
-  id                  String           @id @default(uuid())
-  Personal_Details_Id String           @unique
-  role_Id             Int
-  History_Log         History_Log[]
-  Inventory_Log       Inventory_Log[]
-  customerInvoices    Invoice[]        @relation("CustomerRelation")
-  clerkInvoices       Invoice[]        @relation("InvoiceClerkRelation")
-  Invoice             Invoice[]
-  SupplierUnit        SupplierUnit[]
-  Personal_Details    Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
-  Role                Role             @relation(fields: [role_Id], references: [role_Id])
+  id                                      String           @id @default(uuid())
+  Personal_Details_Id                     String           @unique
+  role_Id                                 Int
+  emoji                                   String           @default("👑")
+  Favorite_Favorite_contact_idToUser_Role Favorite[]       @relation("Favorite_contact_idToUser_Role")
+  Favorite_Favorite_user_idToUser_Role    Favorite[]       @relation("Favorite_user_idToUser_Role")
+  History_Log                             History_Log[]
+  Inventory_Log                           Inventory_Log[]
+  customerInvoices                        Invoice[]        @relation("CustomerRelation")
+  clerkInvoices                           Invoice[]        @relation("InvoiceClerkRelation")
+  Invoice                                 Invoice[]
+  Pin                                     Pin[]
+  SupplierUnit                            SupplierUnit[]
+  Personal_Details                        Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
+  Role                                    Role             @relation(fields: [role_Id], references: [role_Id])
 }
 
 model Authentication {
@@ -119,7 +125,9 @@ model Variant {
   discount_id  Int?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
+  description  String?
   BatchVariant BatchVariant[]
+  Favorite     Favorite[]
   inventory    Inventory[]
   LineItem     Line_Item[]
   StockLevel   StockLevel?
@@ -128,12 +136,16 @@ model Variant {
 }
 
 model Batch {
-  batch_id      Int            @id @default(autoincrement())
-  batch_code    String?        @unique
-  quantity      Int
-  created_at    DateTime       @default(now())
-  updated_at    DateTime       @updatedAt
-  batchVariants BatchVariant[]
+  batch_id         Int              @id @default(autoincrement())
+  batch_number     Int              @unique @default(autoincrement())
+  quantity         Int
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  notes            String?
+  restock_clerk    String
+  Personal_Details Personal_Details @relation(fields: [restock_clerk], references: [personal_details_id])
+  batchVariants    BatchVariant[]
+  Pin              Pin[]
 }
 
 model BatchVariant {
@@ -178,11 +190,14 @@ model ConversionRate {
 }
 
 model Inventory {
-  inventory_id Int      @id @default(autoincrement())
-  variant_id   Int
-  quantity     Int
-  last_updated DateTime @default(now())
-  variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+  inventory_id     Int              @id @default(autoincrement())
+  variant_id       Int
+  inventory_number Int              @unique @default(autoincrement())
+  quantity         Int
+  inventory_clerk  String
+  Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
+  last_updated     DateTime         @default(now())
+  variant          Variant          @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model StockLevel {
@@ -235,6 +250,7 @@ model Invoice {
   discount        Float?
   status          String
   payment_term_id Int
+  notes           String?
   user_RoleId     String?
   customer        User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id])
   invoiceClerk    User_Role     @relation("InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
@@ -243,6 +259,7 @@ model Invoice {
   line_items      Line_Item[]
   Payment         Payment[]
   payment_logs    Payment_Log[]
+  Pin             Pin[]
 }
 
 model Line_Item {
@@ -304,6 +321,80 @@ model History_Log {
   details        Json?
   user           User_Role? @relation(fields: [user_id], references: [Personal_Details_Id])
 }
+
+model Favorite {
+  favorite_id                              Int        @id @default(autoincrement())
+  user_id                                  String
+  created_at                               DateTime   @default(now())
+  updated_at                               DateTime
+  variant_id                               Int?
+  contact_id                               String?
+  User_Role_Favorite_contact_idToUser_Role User_Role? @relation("Favorite_contact_idToUser_Role", fields: [contact_id], references: [id])
+  User_Role_Favorite_user_idToUser_Role    User_Role  @relation("Favorite_user_idToUser_Role", fields: [user_id], references: [id])
+  Variant                                  Variant?   @relation(fields: [variant_id], references: [variant_id])
+
+  @@unique([user_id, contact_id])
+  @@unique([user_id, variant_id])
+}
+
+model Pin {
+  pin_id     Int       @id @default(autoincrement())
+  user_id    String
+  created_at DateTime  @default(now())
+  updated_at DateTime
+  invoice_id Int?
+  batch_id   Int?
+  Batch      Batch?    @relation(fields: [batch_id], references: [batch_id])
+  Invoice    Invoice?  @relation(fields: [invoice_id], references: [invoice_id])
+  User_Role  User_Role @relation(fields: [user_id], references: [id])
+
+  @@unique([user_id, batch_id])
+  @@unique([user_id, invoice_id])
+}
+
+// model FavoriteInventory {
+//   favorite_id String @id @default(uuid())
+//   user        User   @relation(fields: [user_id], references: [id])
+//   variant     Variant @relation(fields: [variant_id], references: [variant_id])
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
+//
+//   user_id    String
+//   variant_id Int
+// }
+//
+// model FavoriteContact {
+//   favorite_id String @id @default(uuid())
+//   user        User   @relation(fields: [user_id], references: [id])
+//   contact     Personal_Details @relation(fields: [contact_id], references: [personal_details_id])
+//   created_at  DateTime @default(now())
+//   updated_at  DateTime @updatedAt
+//
+//   user_id    String
+//   contact_id String
+// }
+
+// model PinRestock {
+//   pin_id     String   @id @default(uuid())
+//   user       User     @relation(fields: [user_id], references: [id])
+//   batch      Batch    @relation(fields: [batch_id], references: [batch_id])
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//
+//   user_id  String
+//   batch_id Int
+// }
+//
+// model PinInvoice {
+//   pin_id     String   @id @default(uuid())
+//   user       User     @relation(fields: [user_id], references: [id])
+//   invoice    Invoice  @relation(fields: [invoice_id], references: [invoice_id])
+//   created_at DateTime @default(now())
+//   updated_at DateTime @updatedAt
+//
+//   user_id    String
+//   invoice_id Int
+// }
 
 enum Roles {
   ADMIN

@@ -25,6 +25,7 @@ import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
 import SupplierDropdown from "../_components/Supplier-Dropdown";
 import { HoverCard, HoverCardTrigger, HoverCardContent } from "../_components/Hover-Card"
+import { useSession } from "next-auth/react";
 
 // Define the data structure for inventory items
 
@@ -52,6 +53,8 @@ type InventoryItem = {
 
 const InvoiceAddStock = () => {
   const router = useRouter();
+  const session = useSession();
+
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
@@ -222,8 +225,11 @@ const InvoiceAddStock = () => {
 
       console.log("Payload before mutation:", payload);
 
+      // Add restock_clerk to the payload
+      const restockClerk = session.data?.user.id ?? "";
+
       // Perform mutation (save data)
-      await saveRestock({ selectedItems: payload, supplierId });
+      await saveRestock({ selectedItems: payload, supplierId, restockClerk });
 
       // Show success dialog
       setDialogMessage("Restock data saved successfully!");

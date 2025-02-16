@@ -270,7 +270,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 </Accordion>
               );
             })}
-            <Separator orientation="horizontal" className="h-0.5 bg-black" />
+            {/* <Separator orientation="horizontal" className="h-0.5 bg-black" />
             <Accordion type="single">
               <AccordionItem
                 value={id.toString()}
@@ -287,7 +287,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <AccordionContent></AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button variant={"default"}>Continue</Button>
+            <Button variant={"default"}>Continue</Button> */}
           </div>
         </PopoverContent>
       </Popover>

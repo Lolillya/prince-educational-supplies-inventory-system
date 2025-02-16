@@ -246,7 +246,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             <TableHead>Conversion</TableHead>
                             <TableHead>Quantity</TableHead>
                             <TableHead className="text-right">Price</TableHead>
-                            <TableHead></TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
@@ -258,9 +257,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               <TableCell className="text-right">
                                 P {unit.price}
                               </TableCell>
-                              <TableCell>
+                              {/* <TableCell>
                                 <Button variant="link">Out to office</Button>
-                              </TableCell>
+                              </TableCell> */}
                             </TableRow>
                           ))}
                         </TableBody>
@@ -270,7 +269,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 </Accordion>
               );
             })}
-            {/* <Separator orientation="horizontal" className="h-0.5 bg-black" />
+            <Separator orientation="horizontal" className="h-0.5 bg-black" />
             <Accordion type="single">
               <AccordionItem
                 value={id.toString()}
@@ -287,7 +286,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <AccordionContent></AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button variant={"default"}>Continue</Button> */}
+            <Button variant={"default"}>Continue</Button>
           </div>
         </PopoverContent>
       </Popover>

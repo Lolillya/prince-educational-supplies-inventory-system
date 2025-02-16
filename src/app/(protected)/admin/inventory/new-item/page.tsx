@@ -16,6 +16,7 @@ import { Input } from "~/components/ui/input";
 import { api } from "~/trpc/react";
 import {Card, CardContent} from "~/components/ui/card";
 import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
 import { useMutation, useQuery } from "@tanstack/react-query";
 
 type Item = {
@@ -33,6 +34,9 @@ type Item = {
 
 const NewItem = () => {
     const router = useRouter();
+    const utils = api.useUtils();
+    const session = useSession();
+
     const [isOpen, setIsOpen] = useState(false);
     const [isDialogCancelOpen, setIsDialogCancelOpen] = useState(false);
     const [isDialogSaveOpen, setIsDialogSaveOpen] = useState(false);
@@ -70,6 +74,11 @@ const NewItem = () => {
     const [selectedCategory, setSelectedCategory] = useState(null);
     const [selectedVariant, setSelectedVariant] = useState(null);
     const [selectedVariants, setSelectedVariants] = useState([]);
+
+
+    const { data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem } =
+        api.inventory.getItemId.useQuery();
+
 
     const {data: data, isLoading, isError} = api.inventory.listAllData.useQuery();
     const { mutateAsync: createItem, Loading, Error } = api.inventory.createItem.useMutation();
@@ -304,12 +313,57 @@ const NewItem = () => {
     };
 
     const handleSave = async () => {
+        const hasAtLeastOneVariant = cards.some(card => card.variant.trim() !== "");
+
+        if (!hasAtLeastOneVariant) {
+            setDialogMessage("Please fill out at least one variant row.");
+            setIsDialogSaveOpen(true);
+            return;
+        }
+
+        // Collect all validation errors
+        const errors = [];
+
+        // Check the first variant
+        const firstVariant = cards[0];
+        if (firstVariant.variant.trim() !== "") {
+            if (firstVariant.lowStock === null || firstVariant.lowStock === "" || firstVariant.lowStock <= 0) {
+                errors.push("Low Stock value for the first variant must be greater than 0.");
+            }
+            if (firstVariant.veryLowStock === null || firstVariant.veryLowStock === "" || firstVariant.veryLowStock <= 0) {
+                errors.push("Very Low Stock value for the first variant must be greater than 0.");
+            }
+        } else {
+            errors.push("The first variant must be filled out.");
+        }
+
+        // Check additional variants
+        for (let i = 1; i < cards.length; i++) {
+            const card = cards[i];
+            if (card.variant.trim() !== "") {
+                if (card.lowStock === null || card.lowStock === "" || card.lowStock <= 0) {
+                    errors.push(`Low Stock value for variant "${card.variant}" must be greater than 0.`);
+                }
+                if (card.veryLowStock === null || card.veryLowStock === "" || card.veryLowStock <= 0) {
+                    errors.push(`Very Low Stock value for variant "${card.variant}" must be greater than 0.`);
+                }
+            } else if (card.lowStock !== 0 || card.veryLowStock !== 0) {
+                errors.push(`Variant row ${i + 1} has Low Stock or Very Low Stock values but no variant name. Please fill out the variant name or clear the stock values.`);
+            }
+        }
+
+        // If there are errors, show them and stop
+        if (errors.length > 0) {
+            setDialogMessage(errors.join("\n"));
+            setIsDialogSaveOpen(true);
+            return;
+        }
+
         if (
             (!itemSearch && !selectedItem) ||
             (!brandSearch && !selectedBrand) ||
             (!categorySearch && !selectedCategory) ||
-            !itemDescription ||
-            cards.length === 0
+            !itemDescription
         ) {
             setDialogMessage("Please fill out all required fields.");
             setIsDialogSaveOpen(true);
@@ -319,11 +373,14 @@ const NewItem = () => {
         setIsSaving(true);
 
         try {
+            // Filter out empty variants
+            const validCards = cards.filter(card => card.variant.trim() !== "");
+
             console.log("Item:", itemSearch || selectedItem);
             console.log("Brand:", brandSearch || selectedBrand);
             console.log("Category:", categorySearch || selectedCategory);
             console.log("Item Description:", itemDescription);
-            console.log("Variants:", cards);
+            console.log("Valid Variants:", validCards);
 
             const brandId = selectedBrand
                 ? selectedBrand.brand_id
@@ -378,7 +435,7 @@ const NewItem = () => {
                 console.log("Created new item:", item);
             }
 
-            for (const card of cards) {
+            for (const card of validCards) {
                 const variant = await createVariantMutation({
                     item_id: item.item_id,
                     name: card.variant,
@@ -393,10 +450,12 @@ const NewItem = () => {
                 });
 
                 console.log("Created Stock Level for Variant:", variant.name);
-
+                
                 await createInventoryMutation({
                     variant_id: variant.variant_id,
                     quantity: 0,
+                    inventory_clerk: session.data?.user.id ?? "", // Add inventory_clerk
+                    inventory_number: Math.floor(1000000 + Math.random() * 9000000), // Generate a 7-digit inventory number
                 });
 
                 console.log("Created Inventory for Variant:", variant.name);
@@ -404,6 +463,13 @@ const NewItem = () => {
 
             setDialogMessage("New item created successfully!");
             setIsDialogSaveOpen(true);
+
+            utils.inventory.listInventory.invalidate();
+
+            setTimeout(() => {
+                router.push("/admin/inventory");
+            }, 2000);
+
             setItem("");
             setBrand("");
             setCategory("");
@@ -495,7 +561,7 @@ const NewItem = () => {
                         </DialogContent>
                     </Dialog>
                     <span className="font-bold">NEW ITEM</span>
-                    <span className="ml-3 text-sm font-light text-textGray">#123456</span>
+                    <span className="ml-3 text-sm font-light text-textGray">#{nextItemId}</span>
                 </div>
             </div>
             <div className="flex flex-col gap-10 p-10">

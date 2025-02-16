@@ -316,15 +316,23 @@ export const restockRouter = createTRPCRouter({
                     })
                 ),
                 supplierId: z.string(),
+                restockClerk: z.string(),
             })
         )
         .mutation(async ({ input }) => {
-            const { selectedItems, supplierId } = input;
+            const { selectedItems, supplierId, restockClerk } = input;
+
+            // Generate a 7-digit batch_number
+            const generateBatchNumber = () => {
+                return Math.floor(1000000 + Math.random() * 9000000); // Generates a 7-digit number
+            };
 
             // Create a batch for the overall total stock quantity (using totalStock for batch creation)
             const batch = await db.batch.create({
                 data: {
                     quantity: selectedItems.reduce((acc, item) => acc + item.totalStock, 0), // Total stock quantity across all variants
+                    batch_number: generateBatchNumber(), // Generate a 7-digit batch number
+                    restock_clerk: restockClerk, // Add restock_clerk
                 },
             });
 
@@ -508,16 +516,20 @@ export const restockRouter = createTRPCRouter({
                             },
                         },
                     },
+                    Personal_Details: true,
                 },
                 orderBy: { created_at: "desc" },
             });
 
             const formattedRestocks = restocks.map((batch) => ({
-                restockId: batch.batch_id,
+                restockId: batch.batch_number,
                 date: batch.created_at.toISOString().split("T")[0], // Format date to YYYY-MM-DD
                 supplier: batch.batchVariants[0]?.SupplierUnit[0]?.supplier?.Personal_Details
                     ? batch.batchVariants[0]?.SupplierUnit[0]?.supplier.Personal_Details.company
                     : "Unknown", // Get supplier's name from personal details
+                restockClerk: batch.Personal_Details
+                    ? `${batch.Personal_Details.first_name} ${batch.Personal_Details.last_name}` // Get clerk's full name
+                    : "Unknown", // Fallback if clerk details are missing
                 addedStock: batch.quantity,
                 restockItems: batch.batchVariants.map((batchVariant) => {
                     const unitConversions = batchVariant.SupplierUnit.flatMap((supplierUnit) =>

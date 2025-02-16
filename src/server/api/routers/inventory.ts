@@ -459,6 +459,20 @@ export const inventoryRouter = createTRPCRouter({
         }
     }),
 
+    getItemId: publicProcedure.query(async () => {
+        try {
+            const lastItem = await db.inventory.findFirst({
+                orderBy: { inventory_id: "desc" },
+                select: { inventory_id: true },
+            });
+
+            const nextItemId = lastItem ? lastItem.inventory_id + 1 : 1;
+            return nextItemId;
+        } catch (error) {
+            console.error("Error fetching inventory_id:", error);
+            throw new Error("Failed to fetch inventory_id.");
+        }
+    }),
 
     createBrand: publicProcedure
         .input(z.object({ name: z.string() }))
@@ -553,8 +567,8 @@ export const inventoryRouter = createTRPCRouter({
         .input(
             z.object({
                 variant_id: z.number(),
-                low_stock: z.number(),
-                very_low_stock: z.number(),
+                low_stock: z.number().min(1, "Low Stock must be greater than 0."),
+                very_low_stock: z.number().min(1, "Very Low Stock must be greater than 0."),
             })
         )
         .mutation(async ({ input }) => {
@@ -573,6 +587,8 @@ export const inventoryRouter = createTRPCRouter({
             z.object({
                 variant_id: z.number(),
                 quantity: z.number(),
+                inventory_clerk: z.string(), // Ensure this matches the schema
+                inventory_number: z.number(), // Ensure this matches the schema
             })
         )
         .mutation(async ({ input }) => {
@@ -580,6 +596,8 @@ export const inventoryRouter = createTRPCRouter({
                 data: {
                     variant_id: input.variant_id,
                     quantity: input.quantity,
+                    inventory_clerk: input.inventory_clerk, // Add this field
+                    inventory_number: input.inventory_number, // Add this field
                 },
             });
             return inventory;
@@ -730,6 +748,33 @@ export const inventoryRouter = createTRPCRouter({
             });
 
             return { message: "Variant and all related records deleted successfully." };
+        }),
+
+    verifyPassword: publicProcedure
+        .input(
+            z.object({
+                personalDetailsId: z.string(), // ID from the session
+                password: z.string(), // Password input by the user
+            })
+        )
+        .mutation(async ({ input }) => {
+            const { personalDetailsId, password } = input;
+
+            // Fetch the authentication record for the user
+            const authRecord = await prisma.authentication.findUnique({
+                where: { personal_details_id: personalDetailsId },
+            });
+
+            if (!authRecord) {
+                throw new Error("User not found.");
+            }
+
+            // Compare the input password with the stored password
+            if (authRecord.password !== password) {
+                throw new Error("Incorrect password.");
+            }
+
+            return { success: true, message: "Password verified." };
         }),
 
     // it return different variant_id value error creating new variant on edit-item

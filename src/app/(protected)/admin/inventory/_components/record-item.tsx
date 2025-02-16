@@ -7,14 +7,18 @@ import MoreOptions from '../../_components/more-options'
 import Delete from '../../_components/delete'
 type RecordItemProps = {
 	id: string;
+	inventoryNumber: string;
 	name: string;
 	stockLevel: string;
 	onClick?: () => void;
 	isSelected?: boolean;
 	recordType: string;
+	variantId: number; // Add variantId
+	onDelete: (variantId: number) => void;
+	onVerifyPassword: (password: string) => Promise<boolean>;
 }
 
-const RecordItem: React.FC<RecordItemProps> = ({ id, name, stockLevel, onClick, isSelected, recordType }) => {
+const RecordItem: React.FC<RecordItemProps> = ({ id, inventoryNumber, name, stockLevel, onClick, isSelected, recordType, variantId, onDelete, onVerifyPassword,  }) => {
 	return (
 		<>
 			<div
@@ -33,13 +37,19 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, stockLevel, onClick, 
 								{name}
 							</p>
 							<p className='text-slate-400 text-sm'>
-								{id}
+								{inventoryNumber}
 							</p>
 						</div>
 					</div>
 					<div className='flex items-center gap-2'>
 						<Favorite />
-						<Delete recordInfo={name} recordType={recordType}	/>
+						<Delete
+							recordInfo={name}
+							recordType={recordType}
+							variantId={variantId}
+							onDelete={onDelete}
+							onVerifyPassword={onVerifyPassword}
+						/>
 					</div>
 				</div>
 			</div>

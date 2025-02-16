@@ -8,9 +8,21 @@ import OutToOfficeSm from './out-to-office-sm'
 
 interface BatchLineItemProps {
 	isEditing: boolean;
+	conversionQty?: number;
+	conversionUnit?: string;
+	stock?: number;
+	price?: number;
+	mainUnit?: string;
 }
 
-const BatchLineItem = ({ isEditing }: BatchLineItemProps) => {
+const BatchLineItem = ({
+						   isEditing,
+						   conversionQty,
+						   conversionUnit,
+						   stock,
+						   price,
+						   mainUnit
+					   }: BatchLineItemProps) => {
 	return (
 		<div className="flex gap-3 items-center">
 			{/* <div className="group flex w-4/12 items-center gap-2">
@@ -86,12 +98,16 @@ const BatchLineItem = ({ isEditing }: BatchLineItemProps) => {
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none rounded-r-none w-1/3"
 								disabled={!isEditing}
+								// value={mainUnit || ''}
+								value={conversionQty || ''}
 								placeholder={'Qty'}
 							/>
 							<Separator orientation="vertical" className="h-10 w-1" />
 							<Input
 								className="bg-slate-100 text-slate-700 shadow-none rounded-l-none w-2/3"
 								disabled={!isEditing}
+								value={conversionUnit || ''}
+								// value={conversionQty ? `${conversionQty} ${conversionUnit}` : ''}
 								placeholder={'Unit'}
 							/>
 						</div>
@@ -106,6 +122,7 @@ const BatchLineItem = ({ isEditing }: BatchLineItemProps) => {
 						<Input
 							className="bg-slate-100 text-slate-700 shadow-none"
 							disabled={!isEditing}
+							value={stock?.toLocaleString() || ''}
 							placeholder='Stock'
 						/>
 					</div>
@@ -116,6 +133,7 @@ const BatchLineItem = ({ isEditing }: BatchLineItemProps) => {
 						<Input
 							className="bg-slate-100 text-slate-700 shadow-none"
 							disabled={!isEditing}
+							value={price?.toFixed(2) || ''}
 							placeholder='Price'
 						/>
 					</div>

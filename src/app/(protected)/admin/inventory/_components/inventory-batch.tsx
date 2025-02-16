@@ -19,7 +19,6 @@ import OutToOffice from './out-to-office'
 import { useRouter } from "next/navigation";
 import {ConversionRate, SupplierUnit} from "@prisma/client";
 
-
 const poppins = Poppins({
 	subsets: ["latin"],
 	weight: ["400", "700"],
@@ -43,7 +42,7 @@ interface BatchVariant {
 	}[];
 	batch: {
 		batch_id: string;
-		batch_code: string;
+		batch_number: string;
 	};
 }
 
@@ -72,7 +71,31 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
 	const [showWarning, setShowWarning] = useState(false);
 	const [selectedBatchNumber, setSelectedBatchNumber] = useState<number | null>(null);
 	const [showAllBatches, setShowAllBatches] = useState(false);
+    const shouldShowMore = batchVariants.length > 2;
 	const visibleBatches = showAllBatches ? batchVariants : batchVariants.slice(0, 2);
+
+	const selectedBatch = selectedBatchNumber
+		? batchVariants[selectedBatchNumber - 1]
+		: null;
+
+// Access the first SupplierUnit for the selected batchVariant
+	const mainSupplierUnit = selectedBatch?.batch?.batchVariants
+		?.find((bv) => bv.batch_variant_id === selectedBatch.batch_variant_id)
+		?.SupplierUnit?.[0];
+
+// Debugging: Log selectedBatch and mainSupplierUnit
+	console.log("Selected Batch:", selectedBatch);
+	console.log("Main Supplier Unit:", mainSupplierUnit);
+
+// Fetch unitName, stockQuantity, and unitPrice with proper fallbacks
+	const unitName = mainSupplierUnit?.unit?.name ?? 'N/A';
+	const stockQuantity = mainSupplierUnit?.quantity_per_unit ?? 0;
+	const unitPrice = mainSupplierUnit?.price ?? 0;
+
+// Debugging: Log fetched values
+	console.log("Unit Name:", unitName);
+	console.log("Stock Quantity:", stockQuantity);
+	console.log("Unit Price:", unitPrice);
 
 	const handleEdit = () => {
 		setIsEditing((prev) => !prev);
@@ -99,226 +122,281 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
 	};
 
 	return (
-		<div className='p-5 bg-white/60 rounded-lg text-slate-400'>
-			<div className='flex items-center justify-between'>
-				<Dialog>
-					<DialogTrigger asChild>
-						<Link href={''}>
-							<div
-								className='w-fit flex items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500'>
-								Batches
-								<ArrowUpRight className='w-4 h-4'/>
-							</div>
-						</Link>
-					</DialogTrigger>
-					<DialogContent>
-						<DialogTitle className="text-center font-bold">
-							Verify it's you!
-						</DialogTitle>
+    <div className="rounded-lg bg-white/60 p-5 text-slate-400">
+      <div className="flex items-center justify-between">
+        <Dialog>
+          <DialogTrigger asChild>
+            <Link href={""}>
+              <div className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
+                Batches
+                <ArrowUpRight className="h-4 w-4" />
+              </div>
+            </Link>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogTitle className="text-center font-bold">
+              Verify it's you!
+            </DialogTitle>
 
-						<div className="flex flex-col gap-1">
-							<Label className="text-textGray">Password</Label>
-							<Input
-								placeholder="Enter Password"
-								className="p-6 placeholder:text-textGray"
-							/>
-						</div>
-						<div className="flex justify-center gap-3">
-							<Button
-								size={"lg"}
-								onClick={(e) => {
-									e.stopPropagation();
-									if (selectedVariantId) {
-										handleEditBatch(selectedVariantId);
-									} else {
-										console.error("No item selected to continue.");
-									}
-								}}
-							>
-								Continue
-							</Button>
-						</div>
-					</DialogContent>
-				</Dialog>
-				<p className='text-slate-400 text-sm pr-5'>
-					{visibleBatches.length} of {batchVariants.length} Batches
-				</p>
-			</div>
-			<div className='mt-2'>
-				<div className="flex flex-col gap-1">
-					{/* //TODO: map restock data based on selected supplier */}
-					<Dialog
-						open={isDialogOpen}
-						onOpenChange={(open) => {
-							if (!open) {
-								if (isEditing) {
-									setShowWarning(true);
-									return;
-								}
-							}
-							setIsDialogOpen(open);
-							if (!open) {
-								setShowWarning(false);
-							}
-						}}
-					>
-						<DialogTrigger>
-							{visibleBatches.map((batchVariant, index) => {
-								// Filter SupplierUnit and ConversionRate data for the selected batch
-								const supplierUnits = batchVariant.batch?.batchVariants
-									?.filter((bv) => bv.batch_variant_id === batchVariant.batch_variant_id) // Filter by batch_variant_id
-									.flatMap((bv) => bv.SupplierUnit || []) || [];
+            <div className="flex flex-col gap-1">
+              <Label className="text-textGray">Password</Label>
+              <Input
+                placeholder="Enter Password"
+                className="p-6 placeholder:text-textGray"
+              />
+            </div>
+            <div className="flex justify-center gap-3">
+              <Button
+                size={"lg"}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  if (selectedVariantId) {
+                    handleEditBatch(selectedVariantId);
+                  } else {
+                    // console.error("No item selected to continue.");
+                  }
+                }}
+              >
+                Continue
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+        <p className="pr-5 text-sm text-slate-400">
+          {visibleBatches.length} of {batchVariants.length} Batches
+        </p>
+      </div>
+      <div className="mt-2">
+        <div className="flex flex-col gap-1">
+          {/* //TODO: map restock data based on selected supplier */}
+          <Dialog
+            open={isDialogOpen}
+            onOpenChange={(open) => {
+              if (!open) {
+                if (isEditing) {
+                  setShowWarning(true);
+                  return;
+                }
+              }
+              setIsDialogOpen(open);
+              if (!open) {
+                setShowWarning(false);
+              }
+            }}
+          >
+            <DialogTrigger>
+              {visibleBatches.map((batchVariant, index) => {
+                // Filter SupplierUnit and ConversionRate data for the selected batch
+                const supplierUnits =
+                  batchVariant.batch?.batchVariants
+                    ?.filter(
+                      (bv) =>
+                        bv.batch_variant_id === batchVariant.batch_variant_id,
+                    ) // Filter by batch_variant_id
+                    .flatMap((bv) => bv.SupplierUnit || []) || [];
 
-								const unitConversions = supplierUnits.flatMap(
-									(unit) => unit.ConversionRate || []
-								);
+                const unitConversions = supplierUnits.flatMap(
+                  (unit) => unit.ConversionRate || [],
+                );
 
-								// Debugging: Log extracted data
-								console.log('Batch Variant:', batchVariant);
-								console.log('Supplier Units:', supplierUnits);
-								console.log('Unit Conversions:', unitConversions);
+                // Debugging: Log extracted data
+                // console.log('Batch Variant:', batchVariant);
+                // console.log('Supplier Units:', supplierUnits);
+                // console.log('Unit Conversions:', unitConversions);
 
-								return (
-									<InventoryBatchCard
-										key={batchVariant.batch_variant_id}
-										batchVariant={batchVariant}
-										batchNumber={index + 1}
-										onClick={() => handleBatchClick(index + 1)}
-										supplierUnit={supplierUnits}
-										unitConversion={unitConversions}
-									/>
-								);
-							})}
-						</DialogTrigger>
-						<DialogContent
-							className="!w-full !max-w-2xl [&>button]:hidden"
-							onKeyDown={handleKeyDown}
-						>
-							<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
-								<div className="flex items-center justify-between">
-									<div className="flex flex-col gap-2">
-										<DialogTitle className="text-xl font-normal text-slate-700">
-											<span>{selectedBatchNumber ? `Batch ${selectedBatchNumber}` : 'Batch Details'}</span>
-										</DialogTitle>
-										<div className="flex items-center gap-3 text-slate-400">
-											<Hash className="h-4 w-4" />
-											<DialogDescription className="text-sm tracking-wide">
-												{/*{selectedBatchNumber*/}
-												{/*	? `ID: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_id || 'N/A'}, */}
-												{/*	Code: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_code || 'N/A'}`*/}
-												{/*	: 'ID: N/A, Code: N/A'}*/}
-												{batchVariants[selectedBatchNumber - 1]?.batch?.batch_code || 'N/A'}
-											</DialogDescription>
-										</div>
-									</div>
-									<div className="flex items-center gap-3">
-										<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
-									</div>
-								</div>
-							</DialogHeader>
+                return (
+                  <InventoryBatchCard
+                    key={batchVariant.batch_variant_id}
+                    batchVariant={batchVariant}
+                    batchNumber={index + 1}
+                    onClick={() => handleBatchClick(index + 1)}
+                    supplierUnit={supplierUnits}
+                    unitConversion={unitConversions}
+                  />
+                );
+              })}
+            </DialogTrigger>
+            <DialogContent
+              className="!w-full !max-w-2xl [&>button]:hidden"
+              onKeyDown={handleKeyDown}
+            >
+              <DialogHeader
+                className={`text-xl ${poppins.className} font-normal`}
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex flex-col gap-2">
+                    <DialogTitle className="text-xl font-normal text-slate-700">
+                      <span>
+                        {selectedBatchNumber
+                          ? `Batch ${selectedBatchNumber}`
+                          : "Batch Details"}
+                      </span>
+                    </DialogTitle>
+                    <div className="flex items-center gap-3 text-slate-400">
+                      <Hash className="h-4 w-4" />
+                      <DialogDescription className="text-sm tracking-wide">
+                        {/*{selectedBatchNumber*/}
+                        {/*	? `ID: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_id || 'N/A'}, */}
+                        {/*	Code: ${batchVariants[selectedBatchNumber - 1]?.batch?.batch_number || 'N/A'}`*/}
+                        {/*	: 'ID: N/A, Code: N/A'}*/}
+                        {batchVariants[selectedBatchNumber - 1]?.batch
+                          ?.batch_number || "N/A"}
+                      </DialogDescription>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <RecordEditor
+                      isEditing={isEditing}
+                      handleEdit={handleEdit}
+                    />
+                  </div>
+                </div>
+              </DialogHeader>
 
-							<Separator orientation="horizontal" className="h-[2px]" />
+              <Separator orientation="horizontal" className="h-[2px]" />
 
-							<div className="flex flex-col gap-3">
-								<div className="flex gap-3 items-center">
-									<div className="group flex w-1/2 flex-col gap-2">
-										<Label className="text-slate-400">Unit</Label>
-										<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-											<Input
-												className="bg-slate-100 text-slate-700 shadow-none"
-												disabled={!isEditing}
-												defaultValue={'Unit'}
-											/> {/** Please pass real data here */}
-										</div>
-									</div>
-									<Separator orientation="vertical" className="h-14 w-[1px]" />
-									<div className="group flex w-1/2 items-end gap-2">
-										<div className="flex flex-col gap-1 w-1/2">
-											<Label className="text-slate-400">Stock</Label>
-											<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-												<Input
-													className="bg-slate-100 text-slate-700 shadow-none"
-													disabled={!isEditing}
-													defaultValue={'Stock'}
-												/>
-											</div>
-										</div>
-										<div className="flex flex-col gap-1 w-1/2">
-											<Label className="text-slate-400">Price per unit</Label>
-											<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-												<Input
-													className="bg-slate-100 text-slate-700 shadow-none"
-													disabled={!isEditing}
-													defaultValue={'Price'}
-												/>
-											</div>
-										</div>
-										<div className='!p-1 w-12 h-10 flex items-center justify-center'>
-											<TooltipProvider>
-												<Tooltip delayDuration={300}>
-													<TooltipTrigger asChild>
-														<ArrowLeft className='!w-5 !h-5 text-slate-400' strokeWidth={2.5} />
-													</TooltipTrigger>
-													<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-														This is your main unit.
-													</TooltipContent>
-												</Tooltip>
-											</TooltipProvider>
-										</div>
-									</div>
-								</div>
-								<div className="border-b-[3px] border-dashed border-slate-200" />
-								<ScrollArea className='h-52'>
-									<div className="flex flex-col gap-4">
-										<BatchLineItem isEditing={isEditing} />
-										<BatchLineItem isEditing={isEditing} />
-										{isEditing && (
-											<AddBatchLine />
-										)}
-									</div>
-								</ScrollArea>
-							</div>
+              <div className="flex flex-col gap-3">
+                <div className="flex items-center gap-3">
+                  <div className="group flex w-1/2 flex-col gap-2">
+                    <Label className="text-slate-400">Unit</Label>
+                    <div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+                      <Input
+                        className="bg-slate-100 text-slate-700 shadow-none"
+                        disabled={!isEditing}
+                        defaultValue={unitName}
+                      />{" "}
+                      {/** Please pass real data here */}
+                    </div>
+                  </div>
+                  <Separator orientation="vertical" className="h-14 w-[1px]" />
+                  <div className="group flex w-1/2 items-end gap-2">
+                    <div className="flex w-1/2 flex-col gap-1">
+                      <Label className="text-slate-400">Stock</Label>
+                      <div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+                        <Input
+                          className="bg-slate-100 text-slate-700 shadow-none"
+                          disabled={!isEditing}
+                          defaultValue={stockQuantity}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex w-1/2 flex-col gap-1">
+                      <Label className="text-slate-400">Price per unit</Label>
+                      <div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+                        <Input
+                          className="bg-slate-100 text-slate-700 shadow-none"
+                          disabled={!isEditing}
+                          defaultValue={unitPrice}
+                        />
+                      </div>
+                    </div>
+                    <div className="flex h-10 w-12 items-center justify-center !p-1">
+                      <TooltipProvider>
+                        <Tooltip delayDuration={300}>
+                          <TooltipTrigger asChild>
+                            <ArrowLeft
+                              className="!h-5 !w-5 text-slate-400"
+                              strokeWidth={2.5}
+                            />
+                          </TooltipTrigger>
+                          <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+                            This is your main unit.
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
+                </div>
+                <div className="border-b-[3px] border-dashed border-slate-200" />
+                {/*<ScrollArea className='h-52'>*/}
+                {/*	<div className="flex flex-col gap-4">*/}
+                {/*		<BatchLineItem isEditing={isEditing} />*/}
+                {/*		<BatchLineItem isEditing={isEditing} />*/}
+                {/*		{isEditing && (*/}
+                {/*			<AddBatchLine />*/}
+                {/*		)}*/}
+                {/*	</div>*/}
+                {/*</ScrollArea>*/}
+                {/* Inside DialogContent -> ScrollArea */}
+				  <ScrollArea className="h-52">
+					  <div className="flex flex-col gap-4">
+						  {selectedBatch?.batch?.batchVariants
+							  ?.find((bv) => bv.batch_variant_id === selectedBatch.batch_variant_id)
+							  ?.SupplierUnit?.map((supplierUnit) =>
+								  supplierUnit.ConversionRate?.map((conversion) => {
+									  const convertedStock =
+										  (selectedBatch?.quantity || 0) *
+										  (supplierUnit.quantity_per_unit || 0) *
+										  (conversion.conversion_rate || 0);
 
-							<Separator orientation="horizontal" className="h-[2px]" />
+									  const convertedPrice =
+										  (supplierUnit.price || 0) / (conversion.conversion_rate || 1);
 
-							<div className="flex items-center justify-between">
-								<div className="flex flex-col">
-									<p className="text-base font-normal text-slate-700">
-										{selectedBatchNumber
-											? batchVariants[selectedBatchNumber - 1]?.quantity ?? 'N/A'
-											: 'N/A'}
-									</p>
-									<p className="text-sm text-slate-400">Remaining Stock</p>
-								</div>
-								<div className="flex items-center gap-2">
-									<DialogClose asChild disabled={isEditing}>
-									<Button variant="secondary" className="text-slate-700 hover:bg-slate-200" disabled={isEditing}>
-											Close
-										</Button>
-									</DialogClose>
-									<OutToOffice isEditing={isEditing} />
-								</div>
-							</div>
-							{showWarning && (
-								<p className="text-right text-sm text-orange-400">
-									Whoops! Don't forget to save your changes.
-								</p>
-							)}
-						</DialogContent>
-					</Dialog>
-					<Separator orientation="horizontal" className="h-[1px]" />
-				</div>
-			</div>
-			<div className='mt-4'>
-				<p
-					className='text-center hover:underline cursor-pointer'
-					onClick={handleShowMore}
-				>
-					{showAllBatches ? 'Show less' : 'Show more'}
-				</p>
-			</div>
-		</div>
-	)
+									  return (
+										  <BatchLineItem
+											  key={`${supplierUnit.supplier_unit_id}-${conversion.conversion_id}`} // Unique key
+											  isEditing={isEditing}
+											  conversionQty={conversion.conversion_rate}
+											  conversionUnit={conversion.toUnit?.name}
+											  stock={convertedStock}
+											  price={convertedPrice}
+											  mainUnit={supplierUnit.unit?.name || 'N/A'}
+										  />
+									  );
+								  }),
+							  )}
+						  {isEditing && <AddBatchLine />}
+					  </div>
+				  </ScrollArea>
+              </div>
+
+              <Separator orientation="horizontal" className="h-[2px]" />
+
+              <div className="flex items-center justify-between">
+                <div className="flex flex-col">
+                  <p className="text-base font-normal text-slate-700">
+                    {selectedBatchNumber
+                      ? (batchVariants[selectedBatchNumber - 1]?.quantity ??
+                        "N/A")
+                      : "N/A"}
+                  </p>
+                  <p className="text-sm text-slate-400">Remaining Stock</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <DialogClose asChild disabled={isEditing}>
+                    <Button
+                      variant="secondary"
+                      className="text-slate-700 hover:bg-slate-200"
+                      disabled={isEditing}
+                    >
+                      Close
+                    </Button>
+                  </DialogClose>
+                  <OutToOffice isEditing={isEditing} />
+                </div>
+              </div>
+              {showWarning && (
+                <p className="text-right text-sm text-orange-400">
+                  Whoops! Don't forget to save your changes.
+                </p>
+              )}
+            </DialogContent>
+          </Dialog>
+          <Separator orientation="horizontal" className="h-[1px]" />
+        </div>
+      </div>
+        {shouldShowMore && (
+            <div className="mt-4">
+                <p
+                    className="cursor-pointer text-center hover:underline"
+                    onClick={handleShowMore}
+                >
+                    {showAllBatches ? "Show less" : "Show more"}
+                </p>
+            </div>
+        )}
+    </div>
+  );
 }
 
 interface InventoryBatchCardProps {
@@ -337,8 +415,8 @@ const InventoryBatchCard = ({
 								unitConversion,
 							}: InventoryBatchCardProps) => {
 	// Debugging: Log supplierUnit and unitConversion data
-	console.log('SupplierUnit Data:', supplierUnit);
-	console.log('UnitConversion Data:', unitConversion);
+	// console.log('SupplierUnit Data:', supplierUnit);
+	// console.log('UnitConversion Data:', unitConversion);
 
 	// Get the main first supplier unit
 	const mainSupplierUnit = supplierUnit[0];
@@ -346,7 +424,9 @@ const InventoryBatchCard = ({
 	// TODO: reflect restock data based on selected supplier
 	return (
 		<div
-			className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
+			className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'
+			onClick={onClick}
+		>
 			<p className='text-slate-600 text-left'>Batch {batchNumber}</p>
 			<div className="flex items-center gap-3 flex-grow overflow-hidden">
 				<TooltipProvider>
@@ -356,23 +436,24 @@ const InventoryBatchCard = ({
 						</TooltipTrigger>
 						<TooltipContent
 							className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-							From restock record {batchVariant.batch?.batch_code || 'N/A'}
+							From restock record {batchVariant.batch?.batch_number || 'N/A'}
 						</TooltipContent>
 					</Tooltip>
 				</TooltipProvider>
 				<p className="text-sm truncate">
 					{/*ID: {batchVariant.batch?.batch_id || 'N/A'}, Code: */}
-					{batchVariant.batch?.batch_code || 'N/A'}
+					{batchVariant.batch?.batch_number || 'N/A'}
 				</p>
 			</div>
 			<div className="flex items-center gap-4 text-slate-400">
 				<div className="flex items-center gap-3">
 					<TooltipProvider>
 						<Tooltip>
-						<TooltipTrigger asChild>
-								<Box className="h-4 w-4" />
+							<TooltipTrigger asChild>
+								<Box className="h-4 w-4"/>
 							</TooltipTrigger>
-							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
+							<TooltipContent
+								className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
 								{batchVariant.quantity ?? 'N/A'} remaining stock
 							</TooltipContent>
 						</Tooltip>

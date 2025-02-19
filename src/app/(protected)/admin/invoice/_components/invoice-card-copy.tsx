@@ -386,6 +386,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                       }
                       onChange={(e) => setPrice(Number(e.target.value))}
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(
+                          /[^0-9]/g,
+                          "",
+                        );
+                      }}
                     />
                   )}
 

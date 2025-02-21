@@ -165,10 +165,10 @@ const InvoicePage = () => {
       },
       columnStyles: {
         0: { cellWidth: 80 },
-        1: { cellWidth: 30 },
-        2: { cellWidth: 30 },
-        3: { cellWidth: 30 },
-        4: { cellWidth: 30 },
+        1: { cellWidth: 25 },
+        2: { cellWidth: 25 },
+        3: { cellWidth: 25 },
+        4: { cellWidth: 25 },
       },
     });
 

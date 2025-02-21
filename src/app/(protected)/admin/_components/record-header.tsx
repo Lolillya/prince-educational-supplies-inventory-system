@@ -1,12 +1,45 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import MoreOptions from './more-options';
+import ClearList from './clear-list';
+import { handleExport as exportSuppliers } from '~/lib/utils/exportSuppliers';
+import { handleExport as exportCustomers } from '~/lib/utils/exportCustomers';
+import { handleExport as exportEmployees } from '~/lib/utils/exportEmployees';
+import type { Supplier } from '~/types/suppliers';
+import type { Customer } from '~/types/customers';
+import { toast } from 'sonner';
+import type { Employee } from '~/types/employees';
 
 interface RecordHeaderProps {
-	record: string;
+	record: 'Suppliers' | 'Customers' | 'Employees';
 	number: number;
+	data: Supplier[] | Customer[] | Employee[];
 }
 
-const RecordHeader = ({ record, number }: RecordHeaderProps) => {
+const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
+	const handleExport = () => {
+		if (!data || data.length === 0) {
+			toast(`❌ No ${record.toLowerCase()} data available to export.`);
+			return;
+		}
+
+		const success = record === 'Suppliers'
+			? exportSuppliers({ suppliers: data as Supplier[] })
+			: record === 'Customers'
+				? exportCustomers({ customers: data as Customer[] })
+				: record === 'Employees'
+					? exportEmployees({ employees: data as Employee[] })
+					: false;
+
+		if (success) {
+			toast('🎉 Your file has been exported successfully!', {
+				description: 'Check your downloads folder.',
+			});
+		} else {
+			toast(`❌ No ${record.toLowerCase()} data available to export.`);
+		}
+
+	};
+
 	return (
 		<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3 flex items-center justify-between">
 			<div className='flex items-center gap-2'>
@@ -18,17 +51,18 @@ const RecordHeader = ({ record, number }: RecordHeaderProps) => {
 					<MoreOptions className='!h-[1px] mr-1' />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent>
-					<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+					<DropdownMenuItem
+						onClick={handleExport}
+						className="hover:!bg-slate-200 focus:!bg-slate-200"
+					>
 						Export List
 					</DropdownMenuItem>
 					<DropdownMenuSeparator />
-					<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-						Clear list
-					</DropdownMenuItem>
+					<ClearList recordType={record} />
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
-	)
+	);
 }
 
-export default RecordHeader
+export default RecordHeader;

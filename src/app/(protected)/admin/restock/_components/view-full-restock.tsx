@@ -29,6 +29,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
   restockId,
   date,
   supplier,
+  restockClerk,
   addedStock,
   restockItems = [], // Default to an empty array
 }) => {
@@ -111,6 +112,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
             <Input
               className="bg-slate-100 text-slate-700 shadow-none"
               disabled={!isEditing}
+              value={restockClerk}
             />
           </div>
         </div>

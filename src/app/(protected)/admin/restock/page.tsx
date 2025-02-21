@@ -21,6 +21,7 @@ export type RestockProps = {
   restockId: number;
   date: string;
   supplier: string;
+  restockClerk: string;
   addedStock: number;
   restockItems: {
     variant: string;
@@ -81,6 +82,7 @@ const RestockPage = () => {
               restockId={restock.restockId}
               date={restock.date}
               supplier={restock.supplier}
+              restockClerk={restock.restockClerk}
               addedStock={restock.addedStock}
               restockItems={restock.restockItems}
               onViewAll={handleViewAll}

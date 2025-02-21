@@ -26,6 +26,13 @@ import { api } from "~/trpc/react";
 import { LoadingSpinner } from "~/components/loading";
 import { useSession } from "next-auth/react";
 import { toast } from "~/hooks/use-toast";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 
 type InventoryItem = {
   inventory_id: number;
@@ -97,7 +104,8 @@ const NewInvoice = () => {
   >({});
 
   const [grandTotal, setGrandTotal] = useState<number>(0);
-
+  const [discount, setDiscount] = useState<number>(0);
+  const [discountType, setDiscountType] = useState("%");
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
 
   const {
@@ -148,10 +156,25 @@ const NewInvoice = () => {
   };
 
   const calculateGrandTotal = () => {
-    setGrandTotal(0);
-    Object.entries(activeCards).map((card) => {
-      setGrandTotal((prevState) => (prevState += card[1].totalPrice));
-    });
+    // Calculate total from activeCards
+    let total = Object.values(activeCards).reduce(
+      (sum, card) => sum + card.totalPrice,
+      0,
+    );
+
+    // Apply discount after calculating total
+    if (discount !== 0) {
+      total =
+        discountType === "%"
+          ? total * (1 - Number(discount) / 100) // Apply percentage discount
+          : total - Number(discount); // Apply fixed discount
+    }
+
+    // Ensure total is not negative
+    total = Math.max(0, total);
+
+    console.log(total);
+    setGrandTotal(total);
   };
 
   const handleSaveInvoice = () => {
@@ -179,7 +202,6 @@ const NewInvoice = () => {
       })),
     };
     createInvoice(invoiceData);
-    console.log(session);
   };
 
   const handleRemoveBatch = (id: number) => {
@@ -217,9 +239,22 @@ const NewInvoice = () => {
     setSearchTerm("");
   };
 
+  const calculateGrandTotalDiscount = () => {
+    const total =
+      discountType === "%"
+        ? grandTotal * (1 - Number(discount) / 100)
+        : grandTotal - Number(discount);
+
+    setGrandTotal(total);
+  };
+
+  // useEffect(() => {
+  //   calculateGrandTotalDiscount();
+  // }, [discount]);
+
   useEffect(() => {
     calculateGrandTotal();
-  }, [activeCards]);
+  }, [activeCards, discount]);
 
   useEffect(() => {
     if (searchTerm && inventoryItems) {
@@ -303,6 +338,7 @@ const NewInvoice = () => {
       <div className="flex w-full justify-center gap-3">
         <div className="relative flex w-full max-w-md items-center justify-center">
           <Search className="absolute left-3 top-1/2 -translate-y-1/2 transform text-textGray" />
+
           <Input
             placeholder="Search"
             className="bg-gray p-5 pl-10"
@@ -368,7 +404,49 @@ const NewInvoice = () => {
       </div>
 
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
-        <span>TOTAL: P{grandTotal}</span>
+        <div className="flex items-center">
+          <span>TOTAL: ₱ {grandTotal.toFixed(2)}</span>
+          <div className="ml-20 flex">
+            <div className="relative flex items-center justify-end">
+              {/* <Label className="absolute mr-2 font-light text-textGray">
+                Discount
+              </Label> */}
+              <Input
+                className="rounded-r-none border font-light shadow-none placeholder:font-light"
+                placeholder="Discount"
+                value={discount.toString()}
+                type="number"
+                onChange={(e) => setDiscount(Number(e.target.value))}
+                onInput={(e) => {
+                  e.currentTarget.value = e.currentTarget.value.replace(
+                    /[^0-9]/g,
+                    "",
+                  );
+                }}
+              />
+            </div>
+            <Select
+              value={discountType}
+              // disabled={
+              //   !(
+              //     unitQuantity !== 0 &&
+              //     selectedUnit.unitName !== "" &&
+              //     price !== 0 &&
+              //     supplier !== ""
+              //   )
+              // }
+              onValueChange={(value) => setDiscountType(value)}
+            >
+              <SelectTrigger className="rounded-l-none">
+                <SelectValue placeholder="%" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="%">%</SelectItem>
+                <SelectItem value="Fixed">Fixed</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
         <Dialog>
           <DialogTrigger asChild>
             <Button
@@ -447,19 +525,23 @@ const NewInvoice = () => {
                       </TableCell>
                       <TableCell>{item[1].quantity}</TableCell>
                       <TableCell>{item[1].selectedUnit.unitName}</TableCell>
-                      <TableCell>{item[1].unitPrice}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-right">
+                        {item[1].unitPrice.toFixed(2)}
+                      </TableCell>
+                      <TableCell className="text-right">
                         {item[1].discount}{" "}
                         {item[1].discountType === "%" ? "%" : ""}
                       </TableCell>
-                      <TableCell>{item[1].totalPrice}</TableCell>
+                      <TableCell className="text-right">
+                        {item[1].totalPrice.toFixed(2)}
+                      </TableCell>
                     </TableRow>
                   ))}
                 </TableBody>
               </Table>
               <div className="bottom-0 flex w-full justify-end">
                 <div className="flex items-center gap-3">
-                  <span>TOTAL: P{grandTotal}</span>
+                  <span>TOTAL: P{grandTotal.toFixed(2).toString()}</span>
                   <Button
                     className="bg-green px-7 font-bold"
                     size={"lg"}

@@ -255,11 +255,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               <TableCell># {unit.unit.name}</TableCell>
                               <TableCell>{unit.quantity_per_unit}</TableCell>
                               <TableCell className="text-right">
-                                P {unit.price.toFixed(2)}
+                                ₱ {unit.price.toFixed(2)}
                               </TableCell>
-                              {/* <TableCell>
-                                <Button variant="link">Out to office</Button>
-                              </TableCell> */}
                             </TableRow>
                           ))}
                         </TableBody>
@@ -326,7 +323,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedBatches?.map((batch) =>
+                      {selectedBatches?.map((batch, index) =>
                         batch.supplierUnits.map((unit) => (
                           <SelectItem
                             key={`${batch.index}-${unit.unit.unit_id}`}
@@ -334,9 +331,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               name: unit.unit.name,
                               id: unit.unit.unit_id,
                               quantity: unit.quantity_per_unit,
+                              batch: index + 1,
                             })}
                           >
-                            {unit.unit.name}
+                            {unit.unit.name} Batch #{index + 1}
                           </SelectItem>
                         )),
                       )}
@@ -369,9 +367,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             .map((ywa, ywaIndex) => (
                               <SelectItem
                                 key={`${batchIndex}-${ywa.unit.unit_id}-${ywaIndex}`}
-                                value={ywa.price.toString()}
+                                value={`${ywa.price.toFixed(2)}|Batch#${batchIndex + 1}`}
                               >
-                                {ywa.price.toFixed(2).toString()}
+                                <div className="pointer-events-none flex w-full items-center justify-center gap-10">
+                                  <Label>{ywa.price.toFixed(2)}</Label>
+                                  <Label className="text-textGray">{`Batch #${batchIndex + 1}`}</Label>
+                                </div>
                               </SelectItem>
                             )),
                         )}

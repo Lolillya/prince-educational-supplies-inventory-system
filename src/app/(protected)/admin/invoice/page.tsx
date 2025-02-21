@@ -13,6 +13,7 @@ import { LoadingSpinner } from "~/components/loading";
 
 import jsPDF from "jspdf";
 import "jspdf-autotable";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 export type InvoiceProps = {
   invoiceId: number;
@@ -191,9 +192,9 @@ const InvoicePage = () => {
 
   return (
     <section
-      className={`flex h-auto w-full flex-col gap-3 overflow-y-scroll px-20 pt-10`}
+      className={`flex h-auto w-full flex-col gap-3 pt-10`}
     >
-      <div className="flex items-center justify-between">
+      <div className="flex px-20 items-center justify-between">
         <div className="flex items-center gap-3">
           <SearchBar
             value={searchTerm}
@@ -209,7 +210,8 @@ const InvoicePage = () => {
         </Button>
       </div>
 
-      <div className="mt-5 grid grid-cols-2 gap-4 overflow-y-scroll rounded-lg">
+      <ScrollArea className="mt-5">
+        <div className="grid grid-cols-2 px-20 gap-4 pb-10">
         {filteredInvoices
           ?.sort()
           ?.reverse()
@@ -229,7 +231,8 @@ const InvoicePage = () => {
               handleExport={handleExport}
             />
           ))}
-      </div>
+        </div>
+      </ScrollArea>
     </section>
   );
 };

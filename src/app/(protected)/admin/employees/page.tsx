@@ -13,6 +13,7 @@ import RecordItem from './_components/record-item'
 import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedEmployee from './_components/selected-employee'
+import { Toaster } from '~/components/ui/sonner'
 
 interface Employee {
   id: string;
@@ -48,7 +49,7 @@ const EmployeesPage = () => {
   const [selectedRecord, setSelectedRecord] = useState<Employee | null>(null);
 
   const { data: employeeData } = api.employees.list.useQuery();
-  
+
   // const { data: activityData } = api.restock.getActivityData.useQuery(); 
   // TODO: fetch employee activity data: restocks, invoices, edits, deletes...
 
@@ -88,7 +89,11 @@ const EmployeesPage = () => {
       </div>
       <div className="mt-8 flex gap-3 flex-grow">
         <div className="flex flex-col gap-3 w-3/5 flex-grow">
-          <RecordHeader record="Employees" number={filteredEmployees?.length ?? 0} />
+          <RecordHeader
+            record="Employees"
+            number={filteredEmployees?.length ?? 0} 
+            data={filteredEmployees ?? []}
+          />
           <div className="flex flex-grow rounded-lg h-full overflow-hidden">
             {(filteredEmployees?.length ?? 0) > 0 ? (
               <ScrollArea className="w-full h-full">
@@ -99,7 +104,7 @@ const EmployeesPage = () => {
                       name={employee.Personal_Details.first_name + ' ' + employee.Personal_Details.last_name}
                       id={employee.Personal_Details_Id}
                       onClick={() => setSelectedRecord(employee)}
-                      isSelected={selectedRecord?.Personal_Details_Id === employee.Personal_Details_Id} 
+                      isSelected={selectedRecord?.Personal_Details_Id === employee.Personal_Details_Id}
                       recordType={'Employees'}
                     />
                   ))}
@@ -144,6 +149,7 @@ const EmployeesPage = () => {
           </div>
         </div>
       </div>
+      <Toaster />
     </section>
   )
 }

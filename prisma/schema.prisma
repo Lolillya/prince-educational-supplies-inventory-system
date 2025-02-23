@@ -29,10 +29,10 @@ model Personal_Details {
   location_id         Int?
   auth                Authentication?
   Authentication_Log  Authentication_Log[]
-  location            Location?            @relation(fields: [location_id], references: [location_id])
-  User_Role           User_Role?
   Batch               Batch[]
   Inventory           Inventory[]
+  location            Location?            @relation(fields: [location_id], references: [location_id])
+  User_Role           User_Role?
 }
 
 model Role {
@@ -195,8 +195,8 @@ model Inventory {
   inventory_number Int              @unique @default(autoincrement())
   quantity         Int
   inventory_clerk  String
-  Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
   last_updated     DateTime         @default(now())
+  Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
   variant          Variant          @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
@@ -351,50 +351,6 @@ model Pin {
   @@unique([user_id, batch_id])
   @@unique([user_id, invoice_id])
 }
-
-// model FavoriteInventory {
-//   favorite_id String @id @default(uuid())
-//   user        User   @relation(fields: [user_id], references: [id])
-//   variant     Variant @relation(fields: [variant_id], references: [variant_id])
-//   created_at  DateTime @default(now())
-//   updated_at  DateTime @updatedAt
-//
-//   user_id    String
-//   variant_id Int
-// }
-//
-// model FavoriteContact {
-//   favorite_id String @id @default(uuid())
-//   user        User   @relation(fields: [user_id], references: [id])
-//   contact     Personal_Details @relation(fields: [contact_id], references: [personal_details_id])
-//   created_at  DateTime @default(now())
-//   updated_at  DateTime @updatedAt
-//
-//   user_id    String
-//   contact_id String
-// }
-
-// model PinRestock {
-//   pin_id     String   @id @default(uuid())
-//   user       User     @relation(fields: [user_id], references: [id])
-//   batch      Batch    @relation(fields: [batch_id], references: [batch_id])
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-//
-//   user_id  String
-//   batch_id Int
-// }
-//
-// model PinInvoice {
-//   pin_id     String   @id @default(uuid())
-//   user       User     @relation(fields: [user_id], references: [id])
-//   invoice    Invoice  @relation(fields: [invoice_id], references: [invoice_id])
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-//
-//   user_id    String
-//   invoice_id Int
-// }
 
 enum Roles {
   ADMIN

@@ -13,6 +13,7 @@ import RecordItem from '../_components/record-item'
 import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedSupplier from './_components/selected-supplier'
+import { Toaster } from '~/components/ui/sonner'
 
 interface Supplier {
   id: string;
@@ -64,6 +65,7 @@ const SuppliersPage = () => {
     }
   );
 
+  //TODO: Change reference to ID becuase companies might have the same name
   const supplierRestockData = selectedRecord
     ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
     : [];
@@ -86,7 +88,11 @@ const SuppliersPage = () => {
       </div>
       <div className="mt-8 flex gap-3 flex-grow">
         <div className="flex flex-col gap-3 w-3/5 flex-grow">
-          <RecordHeader record="Suppliers" number={filteredSuppliers?.length ?? 0} />
+          <RecordHeader
+            record="Suppliers"
+            number={filteredSuppliers?.length ?? 0}
+            data={filteredSuppliers ?? []}
+          />
           <div className="flex flex-grow rounded-lg h-full overflow-hidden">
             {(filteredSuppliers?.length ?? 0) > 0 ? (
               <ScrollArea className="w-full h-full">
@@ -147,6 +153,7 @@ const SuppliersPage = () => {
           </div>
         </div>
       </div>
+      <Toaster />
     </section>
   )
 }

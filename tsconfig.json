@@ -27,7 +27,9 @@
     "baseUrl": ".",
     "paths": {
       "~/*": ["./src/*"]
-    }
+    },
+    "sourceMap": true,
+    "outDir": "dist"
   },
   "include": [
     ".eslintrc.cjs",
@@ -38,5 +40,11 @@
     "**/*.js",
     ".next/types/**/*.ts"
   ],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "sourceMap": true,
+  "outDir": "dist",
+  "strict": true,
+  "lib": ["esnext"],
+  "target": "es2016",
+  "module": "commonjs"
 }

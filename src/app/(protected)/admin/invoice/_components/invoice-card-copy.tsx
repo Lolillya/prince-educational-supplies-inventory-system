@@ -434,16 +434,19 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     <Input
                       className="rounded-r-none border shadow-none"
                       placeholder="Select Pricing"
-                      value={price.price.toFixed(2).toString()}
+                      value={price.price === 0 ? "" : price.price.toString()} // Ensure empty string for default
                       disabled={
                         !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                       }
-                      // onChange={(e) => setPrice(Number(e.target.value))}
-                      onInput={(e) => {
-                        e.currentTarget.value = e.currentTarget.value.replace(
-                          /[^0-9]/g,
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(
+                          /[^0-9.]/g,
                           "",
-                        );
+                        ); // Allow numbers & decimal
+                        setPrice({
+                          price: numericValue ? Number(numericValue) : 0,
+                          batch: 0,
+                        });
                       }}
                     />
                   )}

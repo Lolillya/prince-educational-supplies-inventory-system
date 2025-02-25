@@ -15,6 +15,7 @@ type SelectedItemProps = {
 	stockLevel: string;
 	notes?: string;
 	batchVariants: BatchVariant[];
+	onVerifyPassword: (password: string) => Promise<boolean>;
 }
 
 const SelectedItem = ({
@@ -25,7 +26,8 @@ const SelectedItem = ({
 	category,
 	stockLevel,
 	notes,
-	batchVariants
+	batchVariants,
+	onVerifyPassword
 }:
 	SelectedItemProps) => {
 	return (
@@ -91,6 +93,7 @@ const SelectedItem = ({
 				<InventoryBatch
 					batchVariants={batchVariants}
 					selectedVariantId={Number(id)}
+					onVerifyPassword={onVerifyPassword}
 				/>
 			</div>
 

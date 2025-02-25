@@ -7,28 +7,28 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "~/components/ui/dialog";
-import { Dialog } from "~/components/ui/dialog-transparent";
-import { Label } from "~/components/ui/label";
-import { ArrowLeft, Plus, X } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { Textarea } from "~/components/ui/textarea";
-import { Input } from "~/components/ui/input";
-import { api } from "~/trpc/react";
+import {Dialog} from "~/components/ui/dialog-transparent";
+import {Label} from "~/components/ui/label";
+import {ArrowLeft, Plus, X} from "lucide-react";
+import {Button} from "~/components/ui/button";
+import {Textarea} from "~/components/ui/textarea";
+import {Input} from "~/components/ui/input";
+import {api} from "~/trpc/react";
 import {Card, CardContent} from "~/components/ui/card";
-import { useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import {useRouter} from "next/navigation";
+import {useSession} from "next-auth/react";
+import {useMutation, useQuery} from "@tanstack/react-query";
 
 type Item = {
-  variant: {
-    item: {
-      name: string;
-      brand: {
-        name: string;
-      };
+    variant: {
+        item: {
+            name: string;
+            brand: {
+                name: string;
+            };
+        };
+        name?: string;
     };
-    name?: string;
-  };
 };
 
 
@@ -76,29 +76,35 @@ const NewItem = () => {
     const [selectedVariants, setSelectedVariants] = useState([]);
 
 
-    const { data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem } =
+    const {data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem} =
         api.inventory.getItemId.useQuery();
 
 
     const {data: data, isLoading, isError} = api.inventory.listAllData.useQuery();
-    const { mutateAsync: createItem, Loading, Error } = api.inventory.createItem.useMutation();
+    const {mutateAsync: createItem, Loading, Error} = api.inventory.createItem.useMutation();
 // Use mutations outside the handleSave function to avoid invalid hook calls.
-    const { mutateAsync: createBrandMutation } = api.inventory.createBrand.useMutation();
-    const { mutateAsync: createCategoryMutation } = api.inventory.createCategory.useMutation();
-    const { mutateAsync: createItemMutation } = api.inventory.createItem.useMutation();
-    const { mutateAsync: createVariantMutation } = api.inventory.createVariant.useMutation();
-    const { mutateAsync: createStockLevelMutation } = api.inventory.createStockLevel.useMutation();
-    const { mutateAsync: createInventoryMutation } = api.inventory.createInventory.useMutation();
-    const { mutateAsync: updateItemMutation } = api.inventory.updateItem.useMutation();
+    const {mutateAsync: createBrandMutation} = api.inventory.createBrand.useMutation();
+    const {mutateAsync: createCategoryMutation} = api.inventory.createCategory.useMutation();
+    const {mutateAsync: createItemMutation} = api.inventory.createItem.useMutation();
+    const {mutateAsync: createVariantMutation} = api.inventory.createVariant.useMutation();
+    const {mutateAsync: createStockLevelMutation} = api.inventory.createStockLevel.useMutation();
+    const {mutateAsync: createInventoryMutation} = api.inventory.createInventory.useMutation();
+    const {mutateAsync: updateItemMutation} = api.inventory.updateItem.useMutation();
 
     // const [cards, setCards] = useState([{ id: Date.now() }]);
-    const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+    // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+    const [cards, setCards] = useState([{
+        id: Date.now(),
+        variant: "",
+        lowStock: 0,
+        veryLowStock: 0,
+        isExisting: false
+    }]);
 
     const [isSaving, setIsSaving] = useState(false);
 
     const [lowStock, setLowStock] = useState(0);
     const [veryLowStock, setVeryLowStock] = useState(0);
-
 
 
     // Memoized states
@@ -130,10 +136,10 @@ const NewItem = () => {
                     itemName.toLowerCase().includes(itemSearch.toLowerCase())
                 )
             );
-            setDropdownVisible((prev) => ({ ...prev, item: true }));
+            setDropdownVisible((prev) => ({...prev, item: true}));
         } else {
             setFilteredItems([]);
-            setDropdownVisible((prev) => ({ ...prev, item: false }));
+            setDropdownVisible((prev) => ({...prev, item: false}));
         }
     }, [itemSearch, itemOptions]);
 
@@ -144,10 +150,10 @@ const NewItem = () => {
                     brandName.toLowerCase().includes(brandSearch.toLowerCase())
                 )
             );
-            setDropdownVisible((prev) => ({ ...prev, brand: true }));
+            setDropdownVisible((prev) => ({...prev, brand: true}));
         } else {
             setFilteredBrands([]);
-            setDropdownVisible((prev) => ({ ...prev, brand: false }));
+            setDropdownVisible((prev) => ({...prev, brand: false}));
         }
     }, [brandSearch, brandOptions]);
 
@@ -158,13 +164,58 @@ const NewItem = () => {
                     categoryName.toLowerCase().includes(categorySearch.toLowerCase())
                 )
             );
-            setDropdownVisible((prev) => ({ ...prev, category: true }));
+            setDropdownVisible((prev) => ({...prev, category: true}));
         } else {
             setFilteredCategories([]);
-            setDropdownVisible((prev) => ({ ...prev, category: false }));
+            setDropdownVisible((prev) => ({...prev, category: false}));
         }
     }, [categorySearch, categoryOptions]);
 
+    useEffect(() => {
+        const currentBrand = selectedBrand?.name ?? brandSearch;
+        const currentCategory = selectedCategory?.name ?? categorySearch;
+
+        if (item && currentBrand && currentCategory) {
+            const matchingItem = items.find(
+                i => i.name === item &&
+                    i.brand?.name === currentBrand &&
+                    i.category?.name === currentCategory
+            );
+
+            if (matchingItem) {
+                const variants = matchingItem.variants.map(v => ({
+                    id: v.variant_id,
+                    variant: v.name,
+                    lowStock: v.StockLevel?.low_stock || 0,
+                    veryLowStock: v.StockLevel?.very_low_stock || 0, // Add comma here
+                    isExisting: true
+                }));
+                setCards(variants.length > 0 ? variants : [{
+                    id: Date.now(),
+                    variant: "",
+                    lowStock: 0,
+                    veryLowStock: 0,
+                    isExisting: false
+                }]);
+            } else {
+                setCards([{
+                    id: Date.now(),
+                    variant: "",
+                    lowStock: 0,
+                    veryLowStock: 0,
+                    isExisting: false
+                }]);
+            }
+        } else {
+            setCards([{
+                id: Date.now(),
+                variant: "",
+                lowStock: 0,
+                veryLowStock: 0,
+                isExisting: false
+            }]);
+        }
+    }, [item, brandSearch, selectedBrand, categorySearch, selectedCategory, items]);
     const handleSelect = (type: string, name: string) => {
         switch (type) {
             case "item":
@@ -178,6 +229,14 @@ const NewItem = () => {
                     console.log("Selected Item:", selectedItem);
                 }
                 break;
+            // case "item":
+            //     setItem(name);
+            //     const selectedItem = items.find(item => item.name === name);
+            //     if (selectedItem) {
+            //         setSelectedItem(selectedItem);
+            //         setItemDescription(selectedItem.description || "");
+            //     }
+            //     break;
             case "category":
                 if (categoryOptions.includes(name)) {
                     setCategory(name);
@@ -207,9 +266,8 @@ const NewItem = () => {
         else if (type === "category") setCategorySearch("");
         else if (type === "brand") setBrandSearch("");
 
-        setDropdownVisible((prev) => ({ ...prev, [type]: false }));
+        setDropdownVisible((prev) => ({...prev, [type]: false}));
     };
-
 
 
     const handleSearchItem = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -241,7 +299,8 @@ const NewItem = () => {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, field: string) => {
         let filteredOptions = [];
-        let setHighlightedIndexFn = (index: number) => {};
+        let setHighlightedIndexFn = (index: number) => {
+        };
 
         switch (field) {
             case "item":
@@ -277,8 +336,17 @@ const NewItem = () => {
         }
     };
 
+    // const handleAddCard = () => {
+    //     setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+    // }
     const handleAddCard = () => {
-        setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+        setCards([...cards, {
+            id: Date.now(),
+            variant: "",
+            lowStock: 0,
+            veryLowStock: 0,
+            isExisting: false
+        }]);
     };
 
     const handleDeleteCard = (id) => {
@@ -304,13 +372,21 @@ const NewItem = () => {
             category: false,
             variant: false,
         });
-        setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+        setCards([{
+            id: Date.now(),
+            variant: "",
+            lowStock: 0,
+            veryLowStock: 0,
+            isExisting: false
+        }]);
         setIsDialogCancelOpen(false);
     };
 
     const handleCancelClear = () => {
         setIsDialogCancelOpen(false);
     };
+
+    const {mutateAsync: updateVariantMutation} = api.inventory.updateVariant.useMutation();
 
     const handleSave = async () => {
         const hasAtLeastOneVariant = cards.some(card => card.variant.trim() !== "");
@@ -373,8 +449,14 @@ const NewItem = () => {
         setIsSaving(true);
 
         try {
-            // Filter out empty variants
-            const validCards = cards.filter(card => card.variant.trim() !== "");
+            // Filter out empty variants and existing ones
+            const validCards = cards.filter(card =>
+                !card.isExisting && card.variant.trim() !== ""
+            );
+            // try {
+            //     // Filter out empty variants
+            //     const validCards = cards.filter(card => card.variant.trim() !== "");
+
 
             console.log("Item:", itemSearch || selectedItem);
             console.log("Brand:", brandSearch || selectedBrand);
@@ -384,13 +466,13 @@ const NewItem = () => {
 
             const brandId = selectedBrand
                 ? selectedBrand.brand_id
-                : await createBrandMutation({ name: brandSearch }).then((res) => res.brand_id);
+                : await createBrandMutation({name: brandSearch}).then((res) => res.brand_id);
 
             console.log("Brand ID:", brandId);
 
             const categoryId = selectedCategory
                 ? selectedCategory.category_id
-                : await createCategoryMutation({ name: categorySearch }).then((res) => res.category_id);
+                : await createCategoryMutation({name: categorySearch}).then((res) => res.category_id);
 
             console.log("Category ID:", categoryId);
 
@@ -436,11 +518,11 @@ const NewItem = () => {
             }
 
             for (const card of validCards) {
+                // Only create new variants (existing ones are filtered out)
                 const variant = await createVariantMutation({
                     item_id: item.item_id,
                     name: card.variant,
                 });
-
                 console.log("Created Variant:", variant);
 
                 await createStockLevelMutation({
@@ -449,17 +531,14 @@ const NewItem = () => {
                     very_low_stock: card.veryLowStock,
                 });
 
-                console.log("Created Stock Level for Variant:", variant.name);
-                
                 await createInventoryMutation({
                     variant_id: variant.variant_id,
                     quantity: 0,
-                    inventory_clerk: session.data?.user.id ?? "", // Add inventory_clerk
-                    inventory_number: Math.floor(1000000 + Math.random() * 9000000), // Generate a 7-digit inventory number
+                    inventory_clerk: session.data?.user.id ?? "",
+                    inventory_number: Math.floor(1000000 + Math.random() * 9000000),
                 });
-
-                console.log("Created Inventory for Variant:", variant.name);
             }
+
 
             setDialogMessage("New item created successfully!");
             setIsDialogSaveOpen(true);
@@ -484,7 +563,7 @@ const NewItem = () => {
                 category: false,
                 variant: false,
             });
-            setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+            setCards([{id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0}]);
             setIsDialogCancelOpen(false);
         } catch (error) {
             console.error("Error saving item:", error);
@@ -502,7 +581,7 @@ const NewItem = () => {
         content = <p>Error loading units</p>;
     }
 
-        return (
+    return (
         <section className="flex w-full flex-col gap-3 p-10">
             <div className="border-b-100 relative flex items-center justify-between border-b p-3">
                 <div className="flex items-center gap-2">
@@ -711,12 +790,15 @@ const NewItem = () => {
                                         placeholder="Variant"
                                         value={card.variant}
                                         onChange={(e) => {
-                                            const updatedCards = [...cards];
-                                            updatedCards[index].variant = e.target.value;
-                                            setCards(updatedCards);
-                                            console.log(`Variant Updated: ${e.target.value}`);
+                                            if (!card.isExisting) {
+                                                const updatedCards = [...cards];
+                                                updatedCards[index].variant = e.target.value;
+                                                setCards(updatedCards);
+                                                console.log(`Variant Updated: ${e.target.value}`);
+                                            }
                                         }}
                                         className="bg-white text-black placeholder-slate-500"
+                                        disabled={card.isExisting}
                                     />
                                 </div>
                                 <div className="relative flex w-full items-center">
@@ -724,13 +806,16 @@ const NewItem = () => {
                                     <Input
                                         value={card.lowStock || ""}
                                         onChange={(e) => {
-                                            const updatedCards = [...cards];
-                                            updatedCards[index].lowStock = e.target.value ? Number(e.target.value) : 0;
-                                            setCards(updatedCards);
-                                            console.log(`Low Stock for Variant '${card.variant}': ${e.target.value}`);
+                                            if (!card.isExisting) {
+                                                const updatedCards = [...cards];
+                                                updatedCards[index].lowStock = e.target.value ? Number(e.target.value) : 0;
+                                                setCards(updatedCards);
+                                                console.log(`Low Stock for Variant '${card.variant}': ${e.target.value}`);
+                                            }
                                         }}
                                         className="flex-1 rounded-lg bg-white p-5"
                                         placeholder="Low Stock"
+                                        disabled={card.isExisting}
                                     />
                                 </div>
                                 <div className="relative flex w-full items-center">
@@ -738,24 +823,21 @@ const NewItem = () => {
                                     <Input
                                         value={card.veryLowStock || ""}
                                         onChange={(e) => {
-                                            const updatedCards = [...cards];
-                                            updatedCards[index].veryLowStock = e.target.value ? Number(e.target.value) : 0;
-                                            setCards(updatedCards);
-                                            console.log(`Very Low Stock for Variant '${card.variant}': ${e.target.value}`);
+                                            if (!card.isExisting) {
+                                                const updatedCards = [...cards];
+                                                updatedCards[index].veryLowStock = e.target.value ? Number(e.target.value) : 0;
+                                                setCards(updatedCards);
+                                                console.log(`Very Low Stock for Variant '${card.variant}': ${e.target.value}`);
+                                            }
                                         }}
                                         className="flex-1 rounded-lg bg-white p-5"
                                         placeholder="Very Low Stock"
+                                        disabled={card.isExisting}
                                     />
                                 </div>
                                 <div className="flex items-center">
                                     <div className="relative ml-auto flex w-full items-center">
-                                        {index === cards.length - 1 ? (
-                                            <Plus
-                                                size={15}
-                                                className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
-                                                onClick={handleAddCard}
-                                            />
-                                        ) : (
+                                        {!card.isExisting && (
                                             <X
                                                 size={15}
                                                 className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
@@ -763,10 +845,22 @@ const NewItem = () => {
                                             />
                                         )}
                                     </div>
+
                                 </div>
                             </CardContent>
                         </Card>
                     ))}
+                    <div className="mt-4">
+                        <Button
+                            variant="outline"
+                            className="w-full"
+                            onClick={handleAddCard}
+                        >
+                            <Plus className="mr-2 h-4 w-4"/>
+                            Add Variant
+                        </Button>
+                    </div>
+
                     <div
                         className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
                         <Button
@@ -778,8 +872,10 @@ const NewItem = () => {
 
                         {/* Confirmation dialog triggered by the "Clear" button */}
                         <Dialog open={isDialogCancelOpen} onOpenChange={(open) => setIsDialogCancelOpen(open)}>
-                            <DialogContent className="w-full max-w-lg p-10 flex flex-col gap-6 bg-white rounded-lg shadow-lg">
-                                <DialogTitle className="text-center text-xl font-semibold">Clear All Fields</DialogTitle>
+                            <DialogContent
+                                className="w-full max-w-lg p-10 flex flex-col gap-6 bg-white rounded-lg shadow-lg">
+                                <DialogTitle className="text-center text-xl font-semibold">Clear All
+                                    Fields</DialogTitle>
                                 <DialogHeader className="text-center text-lg">
                                     Are you sure you want to clear all the fields? This action cannot be undone.
                                 </DialogHeader>

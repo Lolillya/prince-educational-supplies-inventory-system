@@ -38,13 +38,13 @@ const RestockItem: React.FC<RestockItemsProps> = ({
   unitConversion,
 }) => {
   return (
-    <div className="rounded-lg bg-white/70 p-6">
-      <div className="flex items-center justify-center">
-        <div className="flex w-1/2 flex-col gap-4">
-          <p>
+    <div className="rounded-lg bg-white/70 py-3 px-6">
+      <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-3 max-w-[75%]">
+          <p className="truncate">
             {item} - {brand} - {variant}
           </p>
-          <div className="flex items-center gap-5 text-slate-400">
+          <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
               <Box className="h-4 w-4" />
               <p className="text-sm">{mainUnit}</p>
@@ -73,13 +73,13 @@ const RestockItem: React.FC<RestockItemsProps> = ({
           </div>
         </div>
 
-        <Separator
+        {/* <Separator
           orientation="vertical"
           className="h-16 w-[2px] rounded-lg bg-slate-200"
-        />
+        /> */}
 
-        <div className="flex w-1/2 items-center justify-between pl-8">
-          <div className="flex flex-col gap-4">
+        <div className="flex items-center justify-between pl-8">
+          <div className="flex flex-col gap-3 items-end">
             <p>{quantity.toLocaleString()}</p>
             <div className="flex items-center gap-8 text-slate-400">
               <div className="flex items-center gap-3 text-slate-400">
@@ -87,7 +87,7 @@ const RestockItem: React.FC<RestockItemsProps> = ({
               </div>
             </div>
           </div>
-          <div>
+          {/* <div>
             <DropdownMenu>
               <DropdownMenuTrigger>
                 <MoreOptions />
@@ -102,7 +102,7 @@ const RestockItem: React.FC<RestockItemsProps> = ({
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
-          </div>
+          </div> */}
         </div>
       </div>
     </div>

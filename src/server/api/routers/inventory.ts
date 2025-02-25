@@ -5,11 +5,9 @@ import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
 
-// Helper function to normalize input
 const normalizeInput = (value: any) =>
     typeof value === "string" && value.trim() === "" ? null : value;
 
-// Zod schema for item input validation
 const itemSchema = z.object({
     name: z
         .string()
@@ -28,7 +26,6 @@ const itemSchema = z.object({
         .transform(normalizeInput),
 });
 
-// Zod schema for variant input validation
 const variantSchema = z.object({
     itemId: z.number().int().positive("Item ID must be a positive integer"),
     name: z
@@ -43,66 +40,10 @@ const variantSchema = z.object({
         .transform(normalizeInput),
 });
 
-// Zod schema for inventory input validation
 const inventorySchema = z.object({
     variantId: z.number().int().positive("Variant ID must be a positive integer"),
     quantity: z.number().int().min(0, "Quantity must be at least 0"),
 });
-
-// export const inventoryRouter = createTRPCRouter({
-//     listInventory: publicProcedure.query(async () => {
-//         return db.inventory.findMany({
-//             include: {
-//                 variant: {
-//                     include: {
-//                         item: {
-//                             include: {
-//                                 brand: true,
-//                                 category: true,
-//                             },
-//                         },
-//                         BatchVariant: {
-//                             include: {
-//                                 batch: {
-//                                     include: {
-//                                         batchVariants: {
-//                                             include: {
-//                                                 SupplierUnit: {
-//                                                     include: {
-//                                                         supplier: {
-//                                                             include: {
-//                                                                 Personal_Details: true,
-//                                                             },
-//                                                         },
-//                                                         unit: true,
-//                                                         ConversionRate: {
-//                                                             select: {
-//                                                                 conversion_rate: true,
-//                                                                 fromUnit: {
-//                                                                     select: {
-//                                                                         name: true,
-//                                                                     },
-//                                                                 },
-//                                                                 toUnit: {
-//                                                                     select: {
-//                                                                         name: true,
-//                                                                     },
-//                                                                 },
-//                                                             },
-//                                                         },
-//                                                     },
-//                                                 },
-//                                             },
-//                                         },
-//                                     },
-//                                 },
-//                             },
-//                         },
-//                     },
-//                 },
-//             },
-//         });
-//     }),
 
 export const inventoryRouter = createTRPCRouter({
     listInventory: publicProcedure.query(async () => {
@@ -153,170 +94,14 @@ export const inventoryRouter = createTRPCRouter({
                                 },
                             },
                         },
-                        StockLevel: true, // Ensure StockLevel is included in the query
+                        StockLevel: true,
                     },
                 },
             },
         });
-        console.log(inventory);  // Log the result to check if StockLevel is returned
+        console.log(inventory);
         return inventory;
     }),
-
-//old logic still working #333 the logic match  (variant.variant_id === inventoryIdAsNumber)
-    // getInventoryItem: publicProcedure
-    //     .input(z.object({ id: z.number() }))
-    //     .query(async ({ input }) => {
-    //         // Fetch the inventory record and include related data
-    //         const inventoryRecord = await db.inventory.findUnique({
-    //             where: { inventory_id: input.id },
-    //             include: {
-    //                 variant: {
-    //                     include: {
-    //                         item: {
-    //                             include: {
-    //                                 variants: true, // Fetch all variants linked to the item
-    //                             },
-    //                         },
-    //                     },
-    //                 },
-    //             },
-    //         });
-    //
-    //         // If no inventory record is found, return null
-    //         if (!inventoryRecord || !inventoryRecord.variant) {
-    //             return null;
-    //         }
-    //
-    //         // Step 2: Get the item_id from the associated variant
-    //         const itemId = inventoryRecord.variant.item_id;
-    //
-    //         // Step 3: Fetch all variants associated with the item_id
-    //         const variants = await db.variant.findMany({
-    //             where: { item_id: itemId }, // Use the item_id to fetch all variants
-    //             include: {
-    //                 item: {
-    //                     include: {
-    //                         brand: true,
-    //                         category: true,
-    //                     },
-    //                 },
-    //                 StockLevel: true,
-    //                 BatchVariant: {
-    //                     include: {
-    //                         batch: {
-    //                             include: {
-    //                                 batchVariants: {
-    //                                     include: {
-    //                                         SupplierUnit: {
-    //                                             include: {
-    //                                                 supplier: {
-    //                                                     include: {
-    //                                                         Personal_Details: true,
-    //                                                     },
-    //                                                 },
-    //                                                 unit: true,
-    //                                                 ConversionRate: {
-    //                                                     select: {
-    //                                                         conversion_rate: true,
-    //                                                         fromUnit: {
-    //                                                             select: {
-    //                                                                 name: true,
-    //                                                             },
-    //                                                         },
-    //                                                         toUnit: {
-    //                                                             select: {
-    //                                                                 name: true,
-    //                                                             },
-    //                                                         },
-    //                                                     },
-    //                                                 },
-    //                                             },
-    //                                         },
-    //                                     },
-    //                                 },
-    //                             },
-    //                         },
-    //                     },
-    //                 },
-    //             },
-    //         });
-    //
-    //         // If no variants are found, return null
-    //         if (!variants || variants.length === 0) {
-    //             return null;
-    //         }
-    //
-    //         // Return the variants associated with the item
-    //         return variants;
-    //     }),
-
-    //WORKING FETCH NEW APPROACH
-    // getInventoryItem: publicProcedure
-    //     .input(z.object({ id: z.number() }))
-    //     .query(async ({ input }) => {
-    //         // Fetch the inventory record and include related data
-    //         const inventoryRecord = await db.inventory.findUnique({
-    //             where: { inventory_id: input.id },
-    //             include: {
-    //                 variant: {
-    //                     include: {
-    //                         item: {
-    //                             include: {
-    //                                 variants: true, // Fetch all variants linked to the item
-    //                             },
-    //                         },
-    //                         StockLevel: true,
-    //                         BatchVariant: {
-    //                             include: {
-    //                                 batch: {
-    //                                     include: {
-    //                                         batchVariants: {
-    //                                             include: {
-    //                                                 SupplierUnit: {
-    //                                                     include: {
-    //                                                         supplier: {
-    //                                                             include: {
-    //                                                                 Personal_Details: true,
-    //                                                             },
-    //                                                         },
-    //                                                         unit: true,
-    //                                                         ConversionRate: {
-    //                                                             select: {
-    //                                                                 conversion_rate: true,
-    //                                                                 fromUnit: {
-    //                                                                     select: {
-    //                                                                         name: true,
-    //                                                                     },
-    //                                                                 },
-    //                                                                 toUnit: {
-    //                                                                     select: {
-    //                                                                         name: true,
-    //                                                                     },
-    //                                                                 },
-    //                                                             },
-    //                                                         },
-    //                                                     },
-    //                                                 },
-    //                                             },
-    //                                         },
-    //                                     },
-    //                                 },
-    //                             },
-    //                         },
-    //                     },
-    //                 },
-    //             },
-    //         });
-    //
-    //         // If no inventory record is found, return null
-    //         if (!inventoryRecord || !inventoryRecord.variant) {
-    //             return null;
-    //         }
-    //
-    //         // Return the inventory record with the associated variant and related data
-    //         return inventoryRecord;
-    //     }),
-    //
 
     getInventoryItem: publicProcedure
         .input(z.object({ id: z.number() }))
@@ -374,65 +159,32 @@ export const inventoryRouter = createTRPCRouter({
             return inventoryRecord;
         }),
 
-    // getInventoryItem: publicProcedure
-    //     .input(z.object({ id: z.number() })) // Using zod for validation
-    //     .query(async ({ input }) => {
-    //         return db.inventory.findUnique({
-    //             where: { inventory_id: input.id },
-    //             include: {
-    //                 variant: {
-    //                     include: {
-    //                         item: {
-    //                             include: {
-    //                                 brand: true,
-    //                                 category: true,
-    //                             },
-    //                         },
-    //                         StockLevel: true,
-    //                         BatchVariant: {
-    //                             include: {
-    //                                 batch: {
-    //                                     include: {
-    //                                         batchVariants: {
-    //                                             include: {
-    //                                                 SupplierUnit: {
-    //                                                     include: {
-    //                                                         supplier: {
-    //                                                             include: {
-    //                                                                 Personal_Details: true,
-    //                                                             },
-    //                                                         },
-    //                                                         unit: true,
-    //                                                         ConversionRate: {
-    //                                                             select: {
-    //                                                                 conversion_rate: true,
-    //                                                                 fromUnit: {
-    //                                                                     select: {
-    //                                                                         name: true,
-    //                                                                     },
-    //                                                                 },
-    //                                                                 toUnit: {
-    //                                                                     select: {
-    //                                                                         name: true,
-    //                                                                     },
-    //                                                                 },
-    //                                                             },
-    //                                                         },
-    //                                                     },
-    //                                                 },
-    //                                             },
-    //                                         },
-    //                                     },
-    //                                 },
-    //                             },
-    //                         },
-    //                     },
-    //                 },
-    //             },
-    //         });
-    //     }),
 
 
+    // listAllData: publicProcedure.query(async () => {
+    //     try {
+    //         const [brands, categories, units, items] = await Promise.all([
+    //             db.brand.findMany(),
+    //             db.category.findMany(),
+    //             db.unit.findMany(),
+    //             db.item.findMany({ include: { variants: true } }),
+    //         ]);
+    //
+    //         const variants = items.flatMap((item) =>
+    //             item.variants.map((variant) => ({
+    //                 variant_id: variant.variant_id,
+    //                 name: variant.name,
+    //                 item_id: item.item_id,
+    //                 description: item.description,
+    //             })),
+    //         );
+    //
+    //         return { brands, categories, units, items, variants };
+    //     } catch (error) {
+    //         console.error("Error listing all data:", error);
+    //         throw new Error("Failed to retrieve data.");
+    //     }
+    // }),
 
     listAllData: publicProcedure.query(async () => {
         try {
@@ -440,15 +192,23 @@ export const inventoryRouter = createTRPCRouter({
                 db.brand.findMany(),
                 db.category.findMany(),
                 db.unit.findMany(),
-                db.item.findMany({ include: { variants: true } }),
+                db.item.findMany({
+                    include: {
+                        brand: true,
+                        category: true,
+                        variants: {
+                            include: {
+                                StockLevel: true,
+                            },
+                        },
+                    },
+                }),
             ]);
 
             const variants = items.flatMap((item) =>
                 item.variants.map((variant) => ({
-                    variant_id: variant.variant_id,
-                    name: variant.name,
-                    item_id: item.item_id,
-                    description: item.description,
+                    ...variant,
+                    StockLevel: variant.StockLevel,
                 })),
             );
 
@@ -458,6 +218,7 @@ export const inventoryRouter = createTRPCRouter({
             throw new Error("Failed to retrieve data.");
         }
     }),
+
 
     getItemId: publicProcedure.query(async () => {
         try {
@@ -541,6 +302,37 @@ export const inventoryRouter = createTRPCRouter({
             return updatedItem;
         }),
 
+    updateVariant: publicProcedure
+        .input(
+            z.object({
+                variantId: z.number(),
+                name: z.string(),
+                lowStock: z.number(),
+                veryLowStock: z.number(),
+            }),
+        )
+        .mutation(async ({ input }) => {
+            const { variantId, name, lowStock, veryLowStock } = input;
+            // Update variant name
+            const updatedVariant = await db.variant.update({
+                where: { variant_id: variantId },
+                data: { name },
+            });
+            // Update or create stock level
+            await db.stockLevel.upsert({
+                where: { variant_id: variantId },
+                update: {
+                    low_stock: lowStock,
+                    very_low_stock: veryLowStock,
+                },
+                create: {
+                    variant_id: variantId,
+                    low_stock: lowStock,
+                    very_low_stock: veryLowStock,
+                },
+            });
+            return updatedVariant;
+        }),
 
     createVariant: publicProcedure
         .input(

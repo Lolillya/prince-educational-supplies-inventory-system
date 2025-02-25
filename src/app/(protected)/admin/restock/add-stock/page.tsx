@@ -121,13 +121,19 @@ const InvoiceAddStock = () => {
 
   const totalStock = (inventoryId: number) => {
     const stockValue = Number(stock[inventoryId] || 0);
-    return stockValue;
+    const itemStockUnits = stockUnits[inventoryId] || [];
+
+    // Skip the first row when reducing
+    return itemStockUnits.slice(1).reduce((acc, unit) => {
+      const unitStock = Number(unit.stock || 0);
+      return acc + unitStock;
+    }, stockValue);
   };
 
-
-  const overAllTotalStock = selectedItems.reduce((sum, item) => {
-    return sum + totalStock(item.inventory_id);
-  }, 0);
+  const overAllTotalStock = selectedItems.reduce(
+      (sum, item) => sum + totalStock(item.inventory_id),
+      0
+  );
 
 
   const getConversionData = (inventoryId: number) => {
@@ -463,13 +469,13 @@ const InvoiceAddStock = () => {
 
         <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
           <span>TOTAL: {overAllTotalStock}</span>
-          <Button
-              size={"lg"}
-              className="bg-green py-8 text-sm font-bold text-white"
-              onClick={logData} // Trigger the log function
-          >
-            Show Logs
-          </Button>
+          {/*<Button*/}
+          {/*    size={"lg"}*/}
+          {/*    className="bg-green py-8 text-sm font-bold text-white"*/}
+          {/*    onClick={logData} // Trigger the log function*/}
+          {/*>*/}
+          {/*  Show Logs*/}
+          {/*</Button>*/}
 
             <Dialog>
               <DialogTrigger asChild>

@@ -366,7 +366,7 @@ export const restockRouter = createTRPCRouter({
                             unit_id: unit.unit_id,
                             price: stockUnit.price,
                             quantity_per_unit: stockUnit.stock,
-                            total_quantity: item.totalStock, // Store total stock per variant for the supplier unit
+                            total_quantity: stockUnit.stock,
                         },
                     });
 

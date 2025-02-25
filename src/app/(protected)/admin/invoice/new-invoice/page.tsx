@@ -221,7 +221,7 @@ const NewInvoice = () => {
   };
 
   const handleSelectItem = (item: InventoryItem) => {
-    if (selectedItems.length >= 10) {
+    if (selectedItems.length >= 5) {
       toast({
         title: "Error",
         description: "Cannot add more than 5 items.",
@@ -229,14 +229,22 @@ const NewInvoice = () => {
       });
       return;
     }
+
     if (
-      !selectedItems.some(
+      selectedItems.some(
         (selected) => selected.inventory_id === item.inventory_id,
       )
     ) {
-      setSelectedItems([...selectedItems, item]);
-      setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" }));
+      toast({
+        title: "Warning",
+        description: "Item already added.",
+        variant: "destructive",
+      });
+      return;
     }
+
+    setSelectedItems([...selectedItems, item]);
+    setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" }));
     setSearchTerm("");
   };
 
@@ -443,8 +451,15 @@ const NewInvoice = () => {
         <Dialog>
           <DialogTrigger asChild>
             <Button
-              size={"lg"}
-              className="bg-green py-8 text-sm font-bold text-white"
+              size="lg"
+              className="bg-green py-8 text-sm font-bold text-white hover:cursor-pointer"
+              disabled={
+                selectedItems.length === 0 ||
+                Object.keys(activeCards).length === 0 ||
+                Object.values(activeCards).some(
+                  (card) => card.quantity === 0 || card.unitPrice === 0,
+                )
+              }
             >
               Confirm Invoice
             </Button>

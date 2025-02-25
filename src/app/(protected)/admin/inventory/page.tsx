@@ -206,6 +206,7 @@ const InventoryPage = () => {
                     category={selectedRecord.variant.item.category.name}
                     notes={selectedRecord.variant.item.description}
                     batchVariants={selectedRecord.variant.BatchVariant}
+                    onVerifyPassword={handleVerifyPassword}
                   />
                 </div>
               </ScrollArea>

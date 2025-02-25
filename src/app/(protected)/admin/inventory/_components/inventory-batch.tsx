@@ -1,8 +1,8 @@
 import { TooltipContent } from '@radix-ui/react-tooltip'
-import { ArrowLeft, ArrowUpRight, Box, Hash } from 'lucide-react'
+import {AlertCircle, ArrowLeft, ArrowUpRight, Box, Hash} from 'lucide-react'
 import { Poppins } from 'next/font/google'
 import Link from 'next/link'
-import { useState } from 'react'
+import React, { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { Input } from '~/components/ui/input'
@@ -54,6 +54,7 @@ interface InventoryBatchProps {
 	restockData?: any;
 	batchVariants: BatchVariant[];
 	selectedVariantId: number;
+    onVerifyPassword: (password: string) => Promise<boolean>;
 }
 
 
@@ -63,7 +64,7 @@ interface Unit {
 	quantity_per_unit: number;
 }
 
-const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProps) => {
+const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword }: InventoryBatchProps) => {
 
 	const router = useRouter();
 	const [isEditing, setIsEditing] = useState(false);
@@ -73,6 +74,10 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
 	const [showAllBatches, setShowAllBatches] = useState(false);
     const shouldShowMore = batchVariants.length > 2;
 	const visibleBatches = showAllBatches ? batchVariants : batchVariants.slice(0, 2);
+    const [isPasswordDialogOpen, setIsPasswordDialogOpen] = useState(false);
+    const [password, setPassword] = useState("");
+    const [passwordError, setPasswordError] = useState<string | null>(null);
+    const [isPasswordVerified, setIsPasswordVerified] = useState(false);
 
 	const selectedBatch = selectedBatchNumber
 		? batchVariants[selectedBatchNumber - 1]
@@ -97,7 +102,33 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
 	console.log("Stock Quantity:", stockQuantity);
 	console.log("Unit Price:", unitPrice);
 
-	const handleEdit = () => {
+    const handlePasswordVerification = async (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+
+        if (!password) {
+            setPasswordError("Please enter your password to confirm.");
+            return;
+        }
+
+        try {
+            const isValid = await onVerifyPassword(password);
+            if (!isValid) {
+                setPasswordError("Incorrect password.");
+                return;
+            }
+
+            setPasswordError(null);
+            setIsPasswordVerified(true);
+            setIsPasswordDialogOpen(false);
+            router.push(`/admin/inventory/edit-batch/${selectedVariantId}`);
+        } catch (error) {
+            setPasswordError("Failed to verify password. Please try again.");
+        }
+    };
+
+
+    const handleEdit = () => {
 		setIsEditing((prev) => !prev);
 		setShowWarning(false);
 	};
@@ -116,11 +147,6 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
 	const handleShowMore = () => {
 		setShowAllBatches((prev) => !prev);
 	};
-
-	const handleEditBatch = (id: number) => {
-		router.push(`/admin/inventory/edit-batch/${id}`);
-	};
-
 	return (
     <div className="rounded-lg bg-white/60 p-5 text-slate-400">
       <div className="flex items-center justify-between">
@@ -140,23 +166,29 @@ const InventoryBatch = ({ batchVariants, selectedVariantId }: InventoryBatchProp
 
             <div className="flex flex-col gap-1">
               <Label className="text-textGray">Password</Label>
-              <Input
-                placeholder="Enter Password"
-                className="p-6 placeholder:text-textGray"
-              />
+                <Input
+                    className="bg-slate-100 text-slate-700 shadow-none"
+                    placeholder="Password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => {
+                        setPassword(e.target.value);
+                        setPasswordError(null);
+                    }}
+                />
             </div>
+
+              {passwordError && (
+                  <div className="flex items-center gap-2 mt-1">
+                      <AlertCircle className="text-rose-500 w-5 h-5" />
+                      <p className="text-rose-500">{passwordError}</p>
+                  </div>
+              )}
             <div className="flex justify-center gap-3">
-              <Button
-                size={"lg"}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  if (selectedVariantId) {
-                    handleEditBatch(selectedVariantId);
-                  } else {
-                    // console.error("No item selected to continue.");
-                  }
-                }}
-              >
+                <Button
+                    size={"lg"}
+                    onClick={handlePasswordVerification}
+                >
                 Continue
               </Button>
             </div>

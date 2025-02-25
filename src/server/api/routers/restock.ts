@@ -403,7 +403,7 @@ export const restockRouter = createTRPCRouter({
                             inventory_id: inventory.inventory_id,
                         },
                         data: {
-                            quantity: inventory.quantity + item.stockValue, // Increment current quantity by stockValue
+                            quantity: inventory.quantity + item.totalStock, // Increment current quantity by stockValue
                         },
                     });
                 } else {
@@ -411,7 +411,7 @@ export const restockRouter = createTRPCRouter({
                     await db.inventory.create({
                         data: {
                             variant_id: item.variant_id,
-                            quantity: item.stockValue, // Set initial stock value as the stockValue
+                            quantity: item.totalStock, // Set initial stock value as the stockValue
                         },
                     });
                 }

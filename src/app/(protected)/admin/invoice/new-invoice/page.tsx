@@ -41,6 +41,7 @@ type InventoryItem = {
     variant_id: number;
     BatchVariant: Array<{
       batch_variant_id: number;
+      quantity: number;
       batch: {
         quantity: number;
       };

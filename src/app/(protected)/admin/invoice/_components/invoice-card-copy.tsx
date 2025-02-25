@@ -46,7 +46,7 @@ type InvoiceCardProps = {
     };
     SupplierUnit: Array<{
       price: number;
-      quantity_per_unit: number;
+      total_quantity: number;
       unit_id: number;
       unit: {
         name: string;
@@ -77,7 +77,7 @@ type InvoiceCardProps = {
 
 type SupplierUnit = {
   price: number;
-  quantity_per_unit: number;
+  total_quantity: number;
   unit_id: number;
   unit: {
     name: string;
@@ -116,6 +116,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   );
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
   const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
+
+  console.log(BatchVariant);
 
   const handleSelectBatch = (index: number, supplierUnits: any[]) => {
     setCheckedState((prev) => ({
@@ -253,7 +255,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
                               <TableCell># {unit.unit.name}</TableCell>
-                              <TableCell>{unit.quantity_per_unit}</TableCell>
+                              <TableCell>{unit.total_quantity}</TableCell>
                               <TableCell className="text-right">
                                 ₱ {unit.price.toFixed(2)}
                               </TableCell>
@@ -307,6 +309,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       placeholder="Enter Quantity"
                       value={unitQuantity}
                       onChange={(e) => setUnitQuantity(Number(e.target.value))}
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(
+                          /[^0-9]/g,
+                          "",
+                        );
+                      }}
                     />
                   </div>
                   <Select
@@ -330,7 +338,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             value={JSON.stringify({
                               name: unit.unit.name,
                               id: unit.unit.unit_id,
-                              quantity: unit.quantity_per_unit,
+                              quantity: unit.total_quantity,
                               batch: index + 1,
                             })}
                           >
@@ -353,12 +361,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       }
                       onValueChange={(value) => setPrice(Number(value))}
                       value={price.toString()}
+                      // defaultValue={price.toFixed(2).toString()}
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Pricing" />
                       </SelectTrigger>
                       <SelectContent>
-                        {selectedBatches?.flatMap((batch, batchIndex) =>
+                        {/* {selectedBatches?.flatMap((batch, batchIndex) =>
                           batch.supplierUnits
                             .filter(
                               (unit) =>
@@ -367,7 +376,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             .map((ywa, ywaIndex) => (
                               <SelectItem
                                 key={`${batchIndex}-${ywa.unit.unit_id}-${ywaIndex}`}
-                                value={`${ywa.price.toFixed(2)}|Batch#${batchIndex + 1}`}
+                                value={`${ywa.price.toFixed(2)}`}
                               >
                                 <div className="pointer-events-none flex w-full items-center justify-center gap-10">
                                   <Label>{ywa.price.toFixed(2)}</Label>
@@ -375,7 +384,28 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 </div>
                               </SelectItem>
                             )),
+                        )} */}
+
+                        {selectedBatches.map((batch, batchIndex) =>
+                          batch.supplierUnits
+                            .filter(
+                              (unit) =>
+                                unit.unit.name === selectedUnit.unitName,
+                            )
+                            .map((supplier, supplierIndex) => (
+                              <SelectItem
+                                key={supplierIndex}
+                                value={supplier.price.toString()}
+                              >
+                                <div className="pointer-events-none flex w-full items-center justify-center gap-10">
+                                  <Label>{supplier.price.toFixed(2)}</Label>
+                                  <Label className="text-textGray">{`Batch #${batchIndex + 1}`}</Label>
+                                </div>
+                              </SelectItem>
+                            )),
                         )}
+
+                        {/* {selectedBatches.map((batch) => console.log(batch))} */}
                       </SelectContent>
                     </Select>
                   ) : (
@@ -395,7 +425,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       }}
                     />
                   )}
-
                   <Select
                     value={supplier}
                     onValueChange={(value) => setSupplier(value)}
@@ -462,18 +491,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <Label className="font-bold">Total </Label>
         <Input className="shadow-none" disabled value={totalPrice.toFixed(2)} />
       </div>
-      {/* <p className="text-gray-400 mt-4 text-sm">
-        Insufficient stock from Batch 1!
-        <br />
-        <span className="text-orange-400">
-          <Link href={"#"}>Choose a different batch</Link>
-        </span>
-        &nbsp; or &nbsp;
-        <span className="text-orange-400">
-          <Link href={"#"}>auto restock</Link>
-        </span>
-      </p> */}
-      {/* <p className="mt-4">Total: P{totalPrice}</p> */}
     </div>
   );
 };

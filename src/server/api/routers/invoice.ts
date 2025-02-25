@@ -43,6 +43,7 @@ export const invoiceRouter = createTRPCRouter({
             BatchVariant: {
               select: {
                 batch_variant_id: true,
+                quantity: true,
                 batch: {
                   select: {
                     quantity: true,
@@ -51,7 +52,7 @@ export const invoiceRouter = createTRPCRouter({
                 SupplierUnit: {
                   select: {
                     price: true,
-                    quantity_per_unit: true,
+                    total_quantity: true,
                     unit_id: true,
                     unit: {
                       select: {

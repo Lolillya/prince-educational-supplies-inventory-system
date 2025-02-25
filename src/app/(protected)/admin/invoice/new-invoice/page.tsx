@@ -510,21 +510,6 @@ const NewInvoice = () => {
                   </TableRow>
                 </TableHeader>
                 <TableBody>
-                  {/* {selectedItems.map((item) => (
-                    <TableRow key={item.inventory_id}>
-                      <TableCell>
-                        {item.variant.item.name} -{" "}
-                        {item.variant.item.brand.name} - {item.variant.name}
-                      </TableCell>
-                      <TableCell>change this</TableCell>
-                      <TableCell>change this</TableCell>
-                      <TableCell className="text-right">
-                        P change this
-                      </TableCell>
-                      <TableCell>change this</TableCell>
-                      <TableCell>change this</TableCell>
-                    </TableRow>
-                  ))} */}
                   {Object.entries(activeCards).map((item) => (
                     <TableRow key={item[0]}>
                       <TableCell>
@@ -554,6 +539,7 @@ const NewInvoice = () => {
                     className="bg-green px-7 font-bold"
                     size={"lg"}
                     onClick={handleSaveInvoice}
+                    disabled={!selectedSupplier}
                   >
                     Save
                   </Button>

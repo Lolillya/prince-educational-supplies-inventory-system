@@ -1,4 +1,4 @@
-import React, { SyntheticEvent, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -77,7 +77,7 @@ type InvoiceCardProps = {
 
 type SupplierUnit = {
   price: number;
-  total_quantity: number;
+  quantity_per_unit: number;
   unit_id: number;
   unit: {
     name: string;
@@ -361,7 +361,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           batch.supplierUnits.map((unit) => ({
                             name: unit.unit.name,
                             id: unit.unit.unit_id,
-                            quantity: unit.total_quantity,
+                            quantity: unit.quantity_per_unit,
                             batch: index + 1,
                           })),
                         )
@@ -418,12 +418,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 key={`${batchIndex}-${supplierIndex}`} // Ensure unique keys
                                 value={JSON.stringify({
                                   price: supplier.price,
-                                  batch: batchIndex + 1,
+                                  batch: batch.index,
                                 })}
                               >
                                 <div className="pointer-events-none flex w-full items-center justify-center gap-10">
                                   <Label>{supplier.price.toFixed(2)}</Label>
-                                  <Label className="text-textGray">{`Batch #${batchIndex + 1}`}</Label>
+                                  <Label className="text-textGray">{`Batch #${batch.index + 1}`}</Label>
                                 </div>
                               </SelectItem>
                             )),

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, X } from "lucide-react";
+import { Plus, UnfoldVertical, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
   Accordion,
@@ -117,6 +117,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
   );
+  const [batchAccordion, setBatchAccordion] = useState<string | undefined>(
+    undefined,
+  );
+  const [openPopover, setOpenPopover] = useState(false);
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
   const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
 
@@ -140,6 +144,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   };
 
   console.log(selectedBatches);
+
+  const handleContinue = () => {
+    setOpenPopover(false);
+    setBatchAccordion("item-1");
+  };
 
   const calculateTotal = () => {
     const total =
@@ -225,18 +234,32 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <X className="hover:cursor-pointer" onClick={() => onRemove(id)} />
       </div>
 
-      <Popover>
+      <Popover open={openPopover} onOpenChange={setOpenPopover}>
         <PopoverTrigger asChild>
           <div
             className="mr-2 flex h-10 w-full items-center justify-between rounded-md bg-white p-1"
             onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
-            <Label className="text-textGray">Add Batch</Label>
+            <div className="flex items-center gap-1">
+              {selectedBatches.length === 0 ? (
+                <Label className="text-textGray">Add Batch</Label>
+              ) : (
+                selectedBatches.map((batch) => (
+                  <Label
+                    key={batch.index}
+                    className="rounded-lg bg-green/30 p-2 text-textGray"
+                  >
+                    Batch {batch.index + 1}
+                  </Label>
+                ))
+              )}
+            </div>
             <div className="flex items-center justify-center rounded-lg bg-gray p-1 transition-all duration-300 hover:scale-110">
               <Plus />
             </div>
           </div>
         </PopoverTrigger>
+
         <PopoverContent className="max-h-[40rem] w-[35rem] overflow-auto">
           <div className="flex flex-col gap-4">
             {BatchVariant.map((variant, index) => {
@@ -314,12 +337,21 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <AccordionContent></AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button variant={"default"}>Continue</Button>
+            <Button variant={"default"} onClick={handleContinue}>
+              Continue
+            </Button>
           </div>
         </PopoverContent>
       </Popover>
 
-      <Accordion type="single" collapsible>
+      <Accordion
+        type="single"
+        collapsible
+        value={batchAccordion}
+        onValueChange={(value) =>
+          setBatchAccordion(value === "item-1" ? value : undefined)
+        }
+      >
         <AccordionItem value="item-1">
           <AccordionTrigger className="flex justify-center hover:no-underline"></AccordionTrigger>
           <AccordionContent>

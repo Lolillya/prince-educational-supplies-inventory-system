@@ -41,6 +41,7 @@ type InventoryItem = {
     variant_id: number;
     BatchVariant: Array<{
       batch_variant_id: number;
+      quantity: number;
       batch: {
         quantity: number;
       };
@@ -427,14 +428,6 @@ const NewInvoice = () => {
             </div>
             <Select
               value={discountType}
-              // disabled={
-              //   !(
-              //     unitQuantity !== 0 &&
-              //     selectedUnit.unitName !== "" &&
-              //     price !== 0 &&
-              //     supplier !== ""
-              //   )
-              // }
               onValueChange={(value) => setDiscountType(value)}
             >
               <SelectTrigger className="rounded-l-none">
@@ -541,7 +534,7 @@ const NewInvoice = () => {
               </Table>
               <div className="bottom-0 flex w-full justify-end">
                 <div className="flex items-center gap-3">
-                  <span>TOTAL: P{grandTotal.toFixed(2).toString()}</span>
+                  <span>TOTAL: ₱ {grandTotal.toFixed(2).toString()}</span>
                   <Button
                     className="bg-green px-7 font-bold"
                     size={"lg"}

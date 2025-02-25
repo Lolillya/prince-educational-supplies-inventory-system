@@ -43,6 +43,7 @@ export const invoiceRouter = createTRPCRouter({
             BatchVariant: {
               select: {
                 batch_variant_id: true,
+                quantity: true,
                 batch: {
                   select: {
                     quantity: true,

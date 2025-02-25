@@ -1,4 +1,4 @@
-import React, { SyntheticEvent, useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -101,14 +101,17 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   updateCardDetails,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
-  const [price, setPrice] = useState<number>(0);
+  const [price, setPrice] = useState({
+    price: 0,
+    batch: 0,
+  });
   const [totalPrice, setTotalPrice] = useState<number>(0);
   const [supplier, setSupplier] = useState("Supplier");
   const [selectedUnit, setSelectedUnit] = useState({
     unitName: "",
     unit_id: 0,
-    quantity: 0,
   });
+  const [selectedUnitQuantity, setSelectedUnitQuantity] = useState<number>(0);
   const [discount, setDiscount] = useState("");
   const [discountType, setDiscountType] = useState("%");
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
@@ -116,6 +119,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   );
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
   const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
+
+  const handlePriceInput = (price: number, batch: number) => {
+    setPrice({ price, batch });
+  };
 
   const handleSelectBatch = (index: number, supplierUnits: any[]) => {
     setCheckedState((prev) => ({
@@ -132,26 +139,50 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     });
   };
 
+  console.log(selectedBatches);
+
   const calculateTotal = () => {
     const total =
       discountType === "%"
-        ? unitQuantity * price * (1 - Number(discount) / 100)
-        : unitQuantity * price - Number(discount);
+        ? unitQuantity * price.price * (1 - Number(discount) / 100)
+        : unitQuantity * price.price - Number(discount);
 
     setTotalPrice(total);
   };
 
-  const handleSelectUnit = (
-    unit: string,
-    unit_id: number,
-    quantity: number,
-  ) => {
+  const handleSelectUnitQuantity = () => {
+    console.log("Selected Batches:", selectedBatches);
+
+    // Calculate the total quantity
+    const total = selectedBatches.reduce((acc, batch) => {
+      return (
+        acc +
+        batch.supplierUnits.reduce((sum, supplier) => {
+          if (selectedUnit.unit_id === supplier.unit_id) {
+            console.log("Matching Supplier:", supplier); // ✅ Log supplier details
+            return sum + supplier.quantity_per_unit;
+          }
+          return sum;
+        }, 0)
+      );
+    }, 0);
+
+    // Update state once
+    setSelectedUnitQuantity(total);
+
+    console.log("Total Quantity:", total); // ✅ Log final total
+  };
+
+  const handleSelectUnit = (unit: string, unit_id: number) => {
     setSelectedUnit({
       unitName: unit,
       unit_id: unit_id,
-      quantity: quantity,
     });
   };
+
+  useEffect(() => {
+    handleSelectUnitQuantity();
+  }, [selectedUnit]);
 
   useEffect(() => {
     calculateTotal();
@@ -161,7 +192,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     updateCardDetails(
       id,
       totalPrice,
-      price,
+      price.price,
       unitQuantity,
       Number(discount),
       discountType,
@@ -255,11 +286,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               <TableCell># {unit.unit.name}</TableCell>
                               <TableCell>{unit.quantity_per_unit}</TableCell>
                               <TableCell className="text-right">
-                                P {unit.price.toFixed(2)}
+                                ₱ {unit.price.toFixed(2)}
                               </TableCell>
-                              {/* <TableCell>
-                                <Button variant="link">Out to office</Button>
-                              </TableCell> */}
                             </TableRow>
                           ))}
                         </TableBody>
@@ -302,7 +330,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <div className="relative flex w-full flex-col justify-center">
                     {selectedUnit && (
                       <Label className="absolute mr-3 self-end text-right text-textGray">
-                        available: {selectedUnit.quantity}
+                        available: {selectedUnitQuantity}
                       </Label>
                     )}
                     <Input
@@ -310,36 +338,49 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       placeholder="Enter Quantity"
                       value={unitQuantity}
                       onChange={(e) => setUnitQuantity(Number(e.target.value))}
+                      onInput={(e) => {
+                        e.currentTarget.value = e.currentTarget.value.replace(
+                          /[^0-9]/g,
+                          "",
+                        );
+                      }}
                     />
                   </div>
                   <Select
                     onValueChange={(value) => {
                       const selectedUnit = JSON.parse(value);
-                      handleSelectUnit(
-                        selectedUnit.name,
-                        selectedUnit.id,
-                        selectedUnit.quantity,
-                      );
+                      handleSelectUnit(selectedUnit.name, selectedUnit.id);
                     }}
                   >
-                    <SelectTrigger className="rounded-l-none">
+                    <SelectTrigger className="w-full rounded-l-none">
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedBatches?.map((batch) =>
-                        batch.supplierUnits.map((unit) => (
+                      {selectedBatches
+                        ?.flatMap((batch, index) =>
+                          batch.supplierUnits.map((unit) => ({
+                            name: unit.unit.name,
+                            id: unit.unit.unit_id,
+                            quantity: unit.quantity_per_unit,
+                            batch: index + 1,
+                          })),
+                        )
+                        .filter(
+                          (unit, index, self) =>
+                            self.findIndex(
+                              (u) =>
+                                u.name.toLowerCase() ===
+                                unit.name.toLowerCase(),
+                            ) === index,
+                        )
+                        .map((uniqueUnit) => (
                           <SelectItem
-                            key={`${batch.index}-${unit.unit.unit_id}`}
-                            value={JSON.stringify({
-                              name: unit.unit.name,
-                              id: unit.unit.unit_id,
-                              quantity: unit.quantity_per_unit,
-                            })}
+                            key={uniqueUnit.id}
+                            value={JSON.stringify(uniqueUnit)}
                           >
-                            {unit.unit.name}
+                            <Label>{uniqueUnit.name}</Label>
                           </SelectItem>
-                        )),
-                      )}
+                        ))}
                     </SelectContent>
                   </Select>
                 </div>
@@ -353,25 +394,37 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       disabled={
                         !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                       }
-                      onValueChange={(value) => setPrice(Number(value))}
-                      value={price.toString()}
+                      onValueChange={(value) => {
+                        const selectedPrice = JSON.parse(value); // Parse the selected value
+                        handlePriceInput(
+                          selectedPrice.price,
+                          selectedPrice.batch,
+                        );
+                      }}
+                      value={JSON.stringify(price)} // Ensure the selected value matches one of the SelectItem values
                     >
                       <SelectTrigger>
                         <SelectValue placeholder="Select Pricing" />
                       </SelectTrigger>
                       <SelectContent>
-                        {selectedBatches?.flatMap((batch, batchIndex) =>
+                        {selectedBatches.map((batch, batchIndex) =>
                           batch.supplierUnits
                             .filter(
                               (unit) =>
                                 unit.unit.name === selectedUnit.unitName,
                             )
-                            .map((ywa, ywaIndex) => (
+                            .map((supplier, supplierIndex) => (
                               <SelectItem
-                                key={`${batchIndex}-${ywa.unit.unit_id}-${ywaIndex}`}
-                                value={ywa.price.toString()}
+                                key={`${batchIndex}-${supplierIndex}`} // Ensure unique keys
+                                value={JSON.stringify({
+                                  price: supplier.price,
+                                  batch: batch.index,
+                                })}
                               >
-                                {ywa.price.toFixed(2).toString()}
+                                <div className="pointer-events-none flex w-full items-center justify-center gap-10">
+                                  <Label>{supplier.price.toFixed(2)}</Label>
+                                  <Label className="text-textGray">{`Batch #${batch.index + 1}`}</Label>
+                                </div>
                               </SelectItem>
                             )),
                         )}
@@ -381,20 +434,22 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     <Input
                       className="rounded-r-none border shadow-none"
                       placeholder="Select Pricing"
-                      value={price.toFixed(2).toString()}
+                      value={price.price === 0 ? "" : price.price.toString()} // Ensure empty string for default
                       disabled={
                         !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                       }
-                      onChange={(e) => setPrice(Number(e.target.value))}
-                      onInput={(e) => {
-                        e.currentTarget.value = e.currentTarget.value.replace(
-                          /[^0-9]/g,
+                      onChange={(e) => {
+                        const numericValue = e.target.value.replace(
+                          /[^0-9.]/g,
                           "",
-                        );
+                        ); // Allow numbers & decimal
+                        setPrice({
+                          price: numericValue ? Number(numericValue) : 0,
+                          batch: 0,
+                        });
                       }}
                     />
                   )}
-
                   <Select
                     value={supplier}
                     onValueChange={(value) => setSupplier(value)}
@@ -424,7 +479,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       !(
                         unitQuantity !== 0 &&
                         selectedUnit.unitName !== "" &&
-                        price !== 0 &&
+                        price.price !== 0 &&
                         supplier !== ""
                       )
                     }
@@ -436,7 +491,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       !(
                         unitQuantity !== 0 &&
                         selectedUnit.unitName !== "" &&
-                        price !== 0 &&
+                        price.price !== 0 &&
                         supplier !== ""
                       )
                     }
@@ -461,18 +516,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         <Label className="font-bold">Total </Label>
         <Input className="shadow-none" disabled value={totalPrice.toFixed(2)} />
       </div>
-      {/* <p className="text-gray-400 mt-4 text-sm">
-        Insufficient stock from Batch 1!
-        <br />
-        <span className="text-orange-400">
-          <Link href={"#"}>Choose a different batch</Link>
-        </span>
-        &nbsp; or &nbsp;
-        <span className="text-orange-400">
-          <Link href={"#"}>auto restock</Link>
-        </span>
-      </p> */}
-      {/* <p className="mt-4">Total: P{totalPrice}</p> */}
     </div>
   );
 };

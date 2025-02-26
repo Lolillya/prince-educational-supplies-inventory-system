@@ -123,6 +123,42 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [openPopover, setOpenPopover] = useState(false);
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
   const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
+  const [batchBasis, setBatchBasis] = useState<SupplierBatch | undefined>(
+    undefined,
+  );
+
+  const getBatchColor = (
+    supplierUnits: {
+      price: number;
+      quantity_per_unit: number;
+      unit_id: number;
+      unit: {
+        name: string;
+        unit_id: number;
+      };
+    }[],
+  ) => {
+    if (!batchBasis) return "bg-yellow/30";
+
+    const batchBasisUnitIds = batchBasis.supplierUnits.map(
+      (unit) => unit.unit_id,
+    );
+    const currentBatchUnitIds = supplierUnits.map((unit) => unit.unit_id);
+
+    const hasExactSameOrder =
+      batchBasisUnitIds.length === currentBatchUnitIds.length &&
+      batchBasisUnitIds.every((id, index) => id === currentBatchUnitIds[index]);
+
+    const hasAtLeastOneSameUnit = currentBatchUnitIds.some((id) =>
+      batchBasisUnitIds.includes(id),
+    );
+
+    const hasPartialMatch = hasAtLeastOneSameUnit && !hasExactSameOrder;
+
+    if (hasExactSameOrder) return "bg-green/50";
+    if (hasPartialMatch) return "bg-yellow-300";
+    return "bg-red/80";
+  };
 
   const handlePriceInput = (price: number, batch: number) => {
     setPrice({ price, batch });
@@ -135,15 +171,22 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     }));
 
     setSelectedBatches((prev) => {
-      if (prev.some((batch) => batch.index === index)) {
-        return prev.filter((batch) => batch.index !== index);
-      } else {
-        return [...prev, { index, supplierUnits }];
+      const isAlreadySelected = prev.some((batch) => batch.index === index);
+      const updatedBatches = isAlreadySelected
+        ? prev.filter((batch) => batch.index !== index)
+        : [...prev, { index, supplierUnits }];
+
+      if (!batchBasis && updatedBatches.length > 0) {
+        setBatchBasis(updatedBatches[0]);
       }
+
+      if (updatedBatches.length === 0) {
+        setBatchBasis(undefined);
+      }
+
+      return updatedBatches;
     });
   };
-
-  console.log(selectedBatches);
 
   const handleContinue = () => {
     setOpenPopover(false);
@@ -247,9 +290,23 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 selectedBatches.map((batch) => (
                   <Label
                     key={batch.index}
-                    className="rounded-lg bg-green/30 p-2 text-textGray"
+                    className="flex content-center items-center gap-2 rounded-lg bg-green/30 p-2"
                   >
                     Batch {batch.index + 1}
+                    <X
+                      size={15}
+                      className="transition-all duration-200 hover:scale-110 hover:cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent unintended popover close
+                        setSelectedBatches((prev) =>
+                          prev.filter((b) => b.index !== batch.index),
+                        );
+                        setCheckedState((prev) => ({
+                          ...prev,
+                          [batch.index]: false, // Uncheck the checkbox when removed
+                        }));
+                      }}
+                    />
                   </Label>
                 ))
               )}
@@ -288,7 +345,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               handleSelectBatch(index, variant.SupplierUnit)
                             }
                           />
-                          <Label className="">Batch {index + 1}</Label>
+                          <div
+                            className={`h-3 w-3 rounded-full ${
+                              batchBasis
+                                ? getBatchColor(variant.SupplierUnit)
+                                : "bg-gray-300"
+                            }`}
+                          ></div>
+                          <Label>Batch {index + 1}</Label>
                         </div>
                       </div>
                     </AccordionTrigger>

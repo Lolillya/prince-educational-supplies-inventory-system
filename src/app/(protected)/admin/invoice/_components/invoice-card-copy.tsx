@@ -344,6 +344,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             onChange={() =>
                               handleSelectBatch(index, variant.SupplierUnit)
                             }
+                            disabled={
+                              getBatchColor(variant.SupplierUnit) ===
+                              "bg-red/80"
+                            }
                           />
                           <div
                             className={`h-3 w-3 rounded-full ${

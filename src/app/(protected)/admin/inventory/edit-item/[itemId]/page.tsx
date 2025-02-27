@@ -7,17 +7,17 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Dialog } from "~/components/ui/dialog-transparent";
-import { Label } from "~/components/ui/label";
-import {ArrowLeft, ArrowRight, Plus, X} from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { Textarea } from "~/components/ui/textarea";
-import { Input } from "~/components/ui/input";
-import { api } from "~/trpc/react";
+import {Dialog} from "~/components/ui/dialog-transparent";
+import {Label} from "~/components/ui/label";
+import {ArrowLeft, Plus, X} from "lucide-react";
+import {Button} from "~/components/ui/button";
+import {Textarea} from "~/components/ui/textarea";
+import {Input} from "~/components/ui/input";
+import {api} from "~/trpc/react";
 import {Card, CardContent} from "~/components/ui/card";
 import {useParams, useRouter} from "next/navigation";
-import { useMutation, useQuery } from "@tanstack/react-query";
-import {LoadingSpinner} from "~/components/loading";  // assuming you're using react-query or your custom API hooks
+import {useSession} from "next-auth/react";
+import {useMutation, useQuery} from "@tanstack/react-query";
 
 type Item = {
   variant: {
@@ -31,9 +31,14 @@ type Item = {
   };
 };
 
+
 const EditItem = () => {
   const router = useRouter();
+  const utils = api.useUtils();
+  const session = useSession();
   const { itemId } = useParams();
+  const itemIdAsNumber = Number(itemId);
+
   const [isOpen, setIsOpen] = useState(false);
   const [isDialogCancelOpen, setIsDialogCancelOpen] = useState(false);
   const [isDialogSaveOpen, setIsDialogSaveOpen] = useState(false);
@@ -46,15 +51,10 @@ const EditItem = () => {
     variant: false,
   });
 
-  const itemIdAsNumber = Number(itemId);
-
-
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
-
   const [itemSearch, setItemSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
-
 
   const [item, setItem] = useState("");
   const [brand, setBrand] = useState("");
@@ -77,138 +77,37 @@ const EditItem = () => {
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedVariants, setSelectedVariants] = useState([]);
 
-  const {data: data} = api.inventory.listAllData.useQuery();
+
+  const {data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem} =
+      api.inventory.getItemId.useQuery();
 
 
-  const { data: itemData } = api.inventory.getInventoryItem.useQuery(
-      { id: Number(itemId) },
-      {
-        onSuccess: (data) => {
-          console.log("Fetched Item Data:", data);
-
-          if (data && Array.isArray(data) && data.length > 0) {
-            // Iterate over the variants array
-            data.forEach((variantData) => {
-              console.log("Variant ID:", variantData?.variant_id || "No variant ID");
-              console.log("Variant Name:", variantData?.name || "No variant name");
-              console.log("Low Stock:", variantData?.StockLevel?.low_stock || "No low stock");
-              console.log("Very Low Stock:", variantData?.StockLevel?.very_low_stock || "No very low stock");
-
-              const item = variantData?.item;
-              console.log("Item ID:", item?.item_id || "No item ID");
-              console.log("Item Name:", item?.name || "No item name");
-              console.log("Brand ID:", item?.brand?.brand_id || "No brand ID");
-              console.log("Brand Name:", item?.brand?.name || "No brand name");
-              console.log("Category ID:", item?.category?.category_id || "No category ID");
-              console.log("Category Name:", item?.category?.name || "No category name");
-              console.log("Item Description:", item?.description || "No description");
-
-              // Set state for item and variants
-              setItem(item?.name || "Unknown Item");
-              setBrand(item?.brand?.name || "Unknown Brand");
-              setCategory(item?.category?.name || "Unknown Category");
-              setItemDescription(item?.description || "No Description");
-
-              // Update the cards with variant details
-              setCards((prevCards) => [
-                ...prevCards,
-                {
-                  id: variantData.variant_id,
-                  variant: variantData?.name || "Unknown Variant",
-                  lowStock: variantData?.StockLevel?.low_stock || 0,
-                  veryLowStock: variantData?.StockLevel?.very_low_stock || 0,
-                },
-              ]);
-            });
-          } else {
-            console.log("No variants found for this item.");
-          }
-        },
-        onError: (error) => {
-          console.error("Error Fetching Item Data:", error);
-        },
-      }
-  );
-
-  useEffect(() => {
-    if (itemData && Array.isArray(itemData) && itemData.length > 0) {
-      // Assuming you want to set the first variant's item details
-      const firstVariant = itemData[0].item;
-
-      setItem(firstVariant?.name || "Unknown Item");
-      setBrand(firstVariant?.brand?.name || "Unknown Brand");
-      setCategory(firstVariant?.category?.name || "Unknown Category");
-      setItemDescription(firstVariant?.description || "No Description");
-
-      // Update the cards with variant details
-      setCards(
-          itemData.map((variantData) => ({
-            id: variantData.variant_id,
-            variant: variantData?.name || "Unknown Variant",
-            lowStock: variantData?.StockLevel?.low_stock || 0,
-            veryLowStock: variantData?.StockLevel?.very_low_stock || 0,
-          }))
-      );
-    } else {
-      console.log("No variants found for this item.");
-    }
-  }, [itemData]);
-
-
-  useEffect(() => {
-    if (itemData && Array.isArray(itemData)) {
-      itemData.forEach((variantData) => {
-        console.log("Variant ID:", variantData?.variant_id || "No variant ID");
-        console.log("Variant Name:", variantData?.name || "No variant name");
-        console.log("Low Stock:", variantData?.StockLevel?.low_stock || "No low stock");
-        console.log("Very Low Stock:", variantData?.StockLevel?.very_low_stock || "No very low stock");
-
-        const item = variantData?.item;
-        console.log("Item ID:", item?.item_id || "No item ID");
-        console.log("Item Name:", item?.name || "No item name");
-        console.log("Brand ID:", item?.brand?.brand_id || "No brand ID");
-        console.log("Brand Name:", item?.brand?.name || "No brand name");
-        console.log("Category ID:", item?.category?.category_id || "No category ID");
-        console.log("Category Name:", item?.category?.name || "No category name");
-        console.log("Item Description:", item?.description || "No description");
-
-        setItem(item?.name || "Unknown Item");
-        setBrand(item?.brand?.name || "Unknown Brand");
-        setCategory(item?.category?.name || "Unknown Category");
-        setItemDescription(item?.description || "No Description");
-      });
-    } else {
-      console.log("No variants found for this item.");
-    }
-  }, [itemData]);
-
-
-
-
-
-
-
-
-  const { mutateAsync: createItem, Loading, Error } = api.inventory.createItem.useMutation();
+  const {data: data, isLoading, isError} = api.inventory.listAllData.useQuery();
+  const {mutateAsync: createItem, Loading, Error} = api.inventory.createItem.useMutation();
 // Use mutations outside the handleSave function to avoid invalid hook calls.
-  const { mutateAsync: createBrandMutation } = api.inventory.createBrand.useMutation();
-  const { mutateAsync: createCategoryMutation } = api.inventory.createCategory.useMutation();
-  const { mutateAsync: createItemMutation } = api.inventory.createItem.useMutation();
-  const { mutateAsync: createVariantMutation } = api.inventory.createVariant.useMutation();
-  const { mutateAsync: createStockLevelMutation } = api.inventory.createStockLevel.useMutation();
-  const { mutateAsync: createInventoryMutation } = api.inventory.createInventory.useMutation();
+  const {mutateAsync: createBrandMutation} = api.inventory.createBrand.useMutation();
+  const {mutateAsync: createCategoryMutation} = api.inventory.createCategory.useMutation();
+  const {mutateAsync: createItemMutation} = api.inventory.createItem.useMutation();
+  const {mutateAsync: createVariantMutation} = api.inventory.createVariant.useMutation();
+  const {mutateAsync: createStockLevelMutation} = api.inventory.createStockLevel.useMutation();
+  const {mutateAsync: createInventoryMutation} = api.inventory.createInventory.useMutation();
+  const {mutateAsync: updateItemMutation} = api.inventory.updateItem.useMutation();
 
-
-  const { mutateAsync: updateItemMutation } = api.inventory.updateItem.useMutation();
-  // const { mutateAsync: editItemMutation, isLoading: isEditing } = api.inventory.editItem.useMutation();
   // const [cards, setCards] = useState([{ id: Date.now() }]);
-  const { mutateAsync: editItemMutation, isLoading, isError, isEditing } = api.inventory.editItem.useMutation();
-  // const { mutateAsync: editBrandMutation } = api.inventory.editBrand.useMutation();
-  // const { mutateAsync: editCategoryMutation } = api.inventory.editCategory.useMutation();
-  const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+  // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+  const [cards, setCards] = useState([{
+    id: undefined,
+    variant: "",
+    lowStock: 0,
+    veryLowStock: 0,
+    isExisting: false
+  }]);
+
   const [isSaving, setIsSaving] = useState(false);
-  const [lowStock, setLowStock] = useState(0);  // Default 0 value
-  const [veryLowStock, setVeryLowStock] = useState(0); // Default 0 value
+
+  const [lowStock, setLowStock] = useState(0);
+  const [veryLowStock, setVeryLowStock] = useState(0);
+
 
   // Memoized states
   const brands = useMemo(() => data?.brands ?? [], [data]);
@@ -216,6 +115,45 @@ const EditItem = () => {
   const units = useMemo(() => data?.units ?? [], [data]);
   const items = useMemo(() => data?.items ?? [], [data]);
   const variants = useMemo(() => data?.variants ?? [], [data]);
+
+  // In EditItem component
+  const { data: existingItemData, isLoading: isLoadingExisting } = api.inventory.getInventoryItem.useQuery(
+      { id: itemIdAsNumber },
+      { enabled: !!itemId }
+  );
+
+  useEffect(() => {
+    if (existingItemData?.variant?.item) {
+      const item = existingItemData.variant.item;
+
+      // Use optional chaining and null coalescing
+      setItem(item.name ?? "");
+      setBrand(item.brand?.name ?? "");
+      setCategory(item.category?.name ?? "");
+      setItemDescription(item.description ?? "");
+
+      // Set selected items
+      setSelectedItem(item);
+      setSelectedBrand(item.brand ?? null);
+      setSelectedCategory(item.category ?? null);
+
+
+      // Set variants
+      const variants = (item.variants || []).map(v => ({
+        id: v.variant_id,
+        variant: v.name || "",
+        lowStock: v.StockLevel?.low_stock || 0,
+        veryLowStock: v.StockLevel?.very_low_stock || 0
+      }));
+
+      setCards(variants.length > 0 ? variants : [{
+        id: Date.now(),
+        variant: "",
+        lowStock: 0,
+        veryLowStock: 0
+      }]);
+    }
+  }, [existingItemData]);
 
   useEffect(() => {
     if (item) {
@@ -239,10 +177,10 @@ const EditItem = () => {
               itemName.toLowerCase().includes(itemSearch.toLowerCase())
           )
       );
-      setDropdownVisible((prev) => ({ ...prev, item: true }));
+      setDropdownVisible((prev) => ({...prev, item: true}));
     } else {
       setFilteredItems([]);
-      setDropdownVisible((prev) => ({ ...prev, item: false }));
+      setDropdownVisible((prev) => ({...prev, item: false}));
     }
   }, [itemSearch, itemOptions]);
 
@@ -253,10 +191,10 @@ const EditItem = () => {
               brandName.toLowerCase().includes(brandSearch.toLowerCase())
           )
       );
-      setDropdownVisible((prev) => ({ ...prev, brand: true }));
+      setDropdownVisible((prev) => ({...prev, brand: true}));
     } else {
       setFilteredBrands([]);
-      setDropdownVisible((prev) => ({ ...prev, brand: false }));
+      setDropdownVisible((prev) => ({...prev, brand: false}));
     }
   }, [brandSearch, brandOptions]);
 
@@ -267,13 +205,58 @@ const EditItem = () => {
               categoryName.toLowerCase().includes(categorySearch.toLowerCase())
           )
       );
-      setDropdownVisible((prev) => ({ ...prev, category: true }));
+      setDropdownVisible((prev) => ({...prev, category: true}));
     } else {
       setFilteredCategories([]);
-      setDropdownVisible((prev) => ({ ...prev, category: false }));
+      setDropdownVisible((prev) => ({...prev, category: false}));
     }
   }, [categorySearch, categoryOptions]);
 
+  useEffect(() => {
+    const currentBrand = selectedBrand?.name ?? brandSearch;
+    const currentCategory = selectedCategory?.name ?? categorySearch;
+
+    if (item && currentBrand && currentCategory) {
+      const matchingItem = items.find(
+          i => i.name === item &&
+              i.brand?.name === currentBrand &&
+              i.category?.name === currentCategory
+      );
+
+      if (matchingItem) {
+        const variants = matchingItem.variants.map(v => ({
+          id: v.variant_id,
+          variant: v.name,
+          lowStock: v.StockLevel?.low_stock || 0,
+          veryLowStock: v.StockLevel?.very_low_stock || 0,
+          isExisting: true
+        }));
+        setCards(variants.length > 0 ? variants : [{
+          id: Date.now(),
+          variant: "",
+          lowStock: 0,
+          veryLowStock: 0,
+          isExisting: false
+        }]);
+      } else {
+        setCards([{
+          id: Date.now(),
+          variant: "",
+          lowStock: 0,
+          veryLowStock: 0,
+          isExisting: false
+        }]);
+      }
+    } else {
+      setCards([{
+        id: Date.now(),
+        variant: "",
+        lowStock: 0,
+        veryLowStock: 0,
+        isExisting: false
+      }]);
+    }
+  }, [item, brandSearch, selectedBrand, categorySearch, selectedCategory, items]);
   const handleSelect = (type: string, name: string) => {
     switch (type) {
       case "item":
@@ -282,7 +265,7 @@ const EditItem = () => {
         }
         const selectedItem = items.find(item => item.name === name);
         if (selectedItem) {
-          setSelectedItem(selectedItem);
+          setSelectedItem(selectedItem); // Set the full object
           setItemDescription(selectedItem.description || '');
           console.log("Selected Item:", selectedItem);
         }
@@ -312,14 +295,12 @@ const EditItem = () => {
       default:
         break;
     }
-
     if (type === "item") setItemSearch("");
     else if (type === "category") setCategorySearch("");
     else if (type === "brand") setBrandSearch("");
 
-    setDropdownVisible((prev) => ({ ...prev, [type]: false }));
+    setDropdownVisible((prev) => ({...prev, [type]: false}));
   };
-
 
 
   const handleSearchItem = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -351,7 +332,8 @@ const EditItem = () => {
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, field: string) => {
     let filteredOptions = [];
-    let setHighlightedIndexFn = (index: number) => {};
+    let setHighlightedIndexFn = (index: number) => {
+    };
 
     switch (field) {
       case "item":
@@ -387,145 +369,150 @@ const EditItem = () => {
     }
   };
 
+  // const handleAddCard = () => {
+  //     setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+  // }
   const handleAddCard = () => {
-    setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
+    setCards([...cards, {
+      tempId: Date.now(),
+      id: undefined,
+      variant: "",
+      lowStock: 0,
+      veryLowStock: 0,
+      isExisting: false
+    }]);
   };
 
-  const { mutateAsync: deleteItemMutation } = api.inventory.deleteItem.useMutation();
-
-  // const handleDeleteCard = (id) => {
-  //   setCards(cards.filter(card => card.id !== id));
-  // };
-
-  const { mutateAsync: deleteVariantMutation } = api.inventory.deleteVariant.useMutation();
-
-  const handleDeleteCard = async (variantId) => {
-    try {
-      // Call the delete mutation
-      const response = await deleteVariantMutation({ variantId });
-
-      console.log("Variant and all related records deleted successfully:", response);
-
-      // Show success message
-      setDialogMessage("Variant and all related records deleted successfully.");
-      setIsDialogCancelOpen(false);
-
-      // Update the UI by removing the deleted variant from the state
-      setCards(cards.filter(card => card.id !== variantId));
-    } catch (error) {
-      console.error("Error deleting variant:", error);
-
-      // Show error message
-      setDialogMessage("Failed to delete variant. Please try again.");
-    }
+  const handleDeleteCard = (tempId) => {
+    setCards(cards.filter(card => card.tempId !== tempId));
   };
 
 
-  const handleDelete = () => {
+  const clear = () => {
     setIsDialogCancelOpen(true);
   };
 
-  const handleConfirmDelete = async () => {
-    try {
-      // Call the delete mutation with the correct inventoryId
-      const response = await deleteItemMutation({ inventoryId: itemIdAsNumber });
-
-      console.log("Item and all related records deleted successfully:", response);
-
-      // Show success message
-      setDialogMessage("Item and all related records deleted successfully.");
-      setIsDialogCancelOpen(false);
-
-      // Redirect or update UI as needed
-      router.push("/inventory"); // Redirect to inventory list or another page
-    } catch (error) {
-      console.error("Error deleting item:", error);
-
-      // Show error message
-      setDialogMessage("Failed to delete item. Please try again.");
-    }
-  };
-
-
-  const handleCancelDelete = () => {
+  const handleConfirmClear = () => {
+    setItem("");
+    setBrand("");
+    setCategory("");
+    setVariant("");
+    setItemDescription("");
+    setItemSearch("");
+    setBrandSearch("");
+    setCategorySearch("");
+    setDropdownVisible({
+      item: false,
+      brand: false,
+      category: false,
+      variant: false,
+    });
+    setCards([{
+      id: Date.now(),
+      variant: "",
+      lowStock: 0,
+      veryLowStock: 0,
+      isExisting: false
+    }]);
     setIsDialogCancelOpen(false);
   };
 
+  const handleCancelClear = () => {
+    setIsDialogCancelOpen(false);
+  };
+
+  const {mutateAsync: updateVariantMutation} = api.inventory.updateVariant.useMutation();
+  const { mutateAsync: editItemMutation, isEditLoading, isEditError, isEditing } = api.inventory.editItem.useMutation();
 
   const handleSave = async () => {
-    const updatedItem = itemSearch || item;
-    const updatedBrand = brandSearch || brand;
-    const updatedCategory = categorySearch || category;
+    const hasAtLeastOneVariant = cards.some(card => card.variant.trim() !== "");
 
-    // Construct the payload
-    const payload = {
-      inventoryId: itemIdAsNumber,
-      name: updatedItem,
-      brand: updatedBrand,
-      category: updatedCategory,
-      description: itemDescription,
-      variants: cards.map((card) => ({
-        id: card.id,
-        name: card.variant,
-        lowStock: card.lowStock,
-        veryLowStock: card.veryLowStock,
-      })),
-    };
+    if (!hasAtLeastOneVariant) {
+      setDialogMessage("Please fill out at least one variant row.");
+      setIsDialogSaveOpen(true);
+      return;
+    }
+
+    // Collect all validation errors
+    const errors = [];
+
+    for (let i = 0; i < cards.length; i++) {
+      const card = cards[i];
+      if (card.variant.trim() !== "") {
+        if (!card.lowStock || card.lowStock <= 0) {
+          errors.push(`Low Stock value for variant "${card.variant}" must be greater than 0.`);
+        }
+        if (!card.veryLowStock || card.veryLowStock <= 0) {
+          errors.push(`Very Low Stock value for variant "${card.variant}" must be greater than 0.`);
+        }
+      } else if (card.lowStock !== 0 || card.veryLowStock !== 0) {
+        errors.push(`Variant row ${i + 1} has stock values but no variant name. Fill out the variant name or clear the stock values.`);
+      }
+    }
+
+    if (errors.length > 0) {
+      setDialogMessage(errors.join("\n"));
+      setIsDialogSaveOpen(true);
+      return;
+    }
+
+    if ((!itemSearch && !selectedItem) || (!brandSearch && !selectedBrand) || (!categorySearch && !selectedCategory) || !itemDescription) {
+      setDialogMessage("Please fill out all required fields.");
+      setIsDialogSaveOpen(true);
+      return;
+    }
+
+    setIsSaving(true);
 
     try {
+      // Include ALL variants in the payload, not just new ones
+      const validCards = cards.map(({ tempId, ...rest }) => rest);
+
+      const payload = {
+        inventoryId: itemIdAsNumber,
+        name: itemSearch || item,
+        brand: brandSearch || brand,
+        category: categorySearch || category,
+        description: itemDescription,
+        inventoryClerk: session.data?.user.id ?? "",
+        variants: validCards.map(card => ({
+          id: card.id || undefined, // Undefined for new variants
+          name: card.variant,
+          lowStock: card.lowStock,
+          veryLowStock: card.veryLowStock
+        })),
+      };
+
       const response = await editItemMutation(payload);
-      console.log("Item updated successfully:", response);
+
+      if (response.error) {
+        throw new Error(response.error.message);
+      }
+
+      setDialogMessage("Item updated successfully!");
+      setIsDialogSaveOpen(true);
+
+      utils.inventory.listInventory.invalidate();
+      setTimeout(() => {
+        router.push("/admin/inventory");
+      }, 2000);
+
     } catch (error) {
-      console.error("Error updating item:", error);
+      console.error("Error saving item:", error);
+      setDialogMessage("Failed to update item.");
+      setIsDialogSaveOpen(true);
+    } finally {
+      setIsSaving(false);
     }
   };
 
 
-  // it return different variant_id value error creating new variant on edit-item
-  // const handleSave = async () => {
-  //   const updatedItem = itemSearch || item;
-  //   const updatedBrand = brandSearch || brand;
-  //   const updatedCategory = categorySearch || category;
-  //
-  //   // Construct the payload for mutation
-  //   const payload = {
-  //     inventoryId: itemIdAsNumber,
-  //     name: updatedItem,
-  //     brand: updatedBrand,
-  //     category: updatedCategory,
-  //     description: itemDescription,
-  //     variants: cards.map((card) => ({
-  //       id: card.id || undefined, // Ensure id is omitted or undefined for new variants
-  //       name: card.variant,
-  //       lowStock: card.lowStock,
-  //       veryLowStock: card.veryLowStock,
-  //     })),
-  //   };
-  //
-  //   console.log("Payload being sent to mutation:", payload); // Log the payload before sending
-  //
-  //   try {
-  //     const response = await editItemMutation(payload);
-  //     console.log("Item updated successfully:", response);
-  //   } catch (error) {
-  //     console.error("Error updating item:", error);
-  //   }
-  // };
 
+  let content = null;
   if (isLoading) {
-    return (
-        <section className="flex h-screen w-full items-center justify-center">
-          <LoadingSpinner />
-        </section>
-    );
-  }
-
-  if (isError) {
-    return (
-        <section className="flex h-screen w-full items-center justify-center">
-          <span>Error fetching data...</span>
-        </section>
-    );
+    content = <p>Loading...</p>;
+  } else if (isError) {
+    content = <p>Error loading units</p>;
   }
 
   return (
@@ -587,7 +574,7 @@ const EditItem = () => {
               </DialogContent>
             </Dialog>
             <span className="font-bold">EDIT ITEM</span>
-            <span className="ml-3 text-sm font-light text-textGray">#{itemIdAsNumber}</span>
+            <span className="ml-3 text-sm font-light text-textGray">#{itemId}</span>
           </div>
         </div>
         <div className="flex flex-col gap-10 p-10">
@@ -603,7 +590,7 @@ const EditItem = () => {
                       if (/^[a-zA-Z ]*$/.test(value)) {
                         handleSearchItem(e);
                       }
-                      console.log(`Item Search Updated: ${value}`); // Log item search changes
+                      console.log(`Item Search Updated: ${value}`);
                     }}
                     className="bg-white text-black placeholder-slate-500"
                     onFocus={() => setDropdownVisible((prev) => ({...prev, item: true}))}
@@ -643,7 +630,7 @@ const EditItem = () => {
                       if (/^[a-zA-Z ]*$/.test(value)) {
                         handleSearchBrand(e);
                       }
-                      console.log(`Brand Search Updated: ${value}`); // Log brand search changes
+                      console.log(`Brand Search Updated: ${value}`);
                     }}
                     className="bg-white text-black placeholder-slate-500"
                     onFocus={() => setDropdownVisible((prev) => ({...prev, brand: true}))}
@@ -683,7 +670,7 @@ const EditItem = () => {
                       if (/^[a-zA-Z ]*$/.test(value)) {
                         handleSearchCategory(e);
                       }
-                      console.log(`Category Search Updated: ${value}`); // Log category search changes
+                      console.log(`Category Search Updated: ${value}`);
                     }}
                     className="bg-white text-black placeholder-slate-500"
                     onFocus={() => setDropdownVisible((prev) => ({...prev, category: true}))}
@@ -722,7 +709,7 @@ const EditItem = () => {
                 value={itemDescription}
                 onChange={(e) => {
                   setItemDescription(e.target.value);
-                  console.log(`Item Description Updated: ${e.target.value}`); // Log item description changes
+                  console.log(`Item Description Updated: ${e.target.value}`);
                 }}
             />
           </div>
@@ -730,17 +717,17 @@ const EditItem = () => {
           <div className="flex flex-col gap-3">
             <Label>Variants *</Label>
             {cards.map((card, index) => (
-                <Card key={card.id} className="w-full bg-[#F0F1F4] p-3">
+                <Card key={card.id || index} className="w-full bg-[#F0F1F4] p-3">
                   <CardContent className="m-0 flex flex-row items-center justify-between gap-3 p-0">
                     <div className="relative flex w-full items-center">
                       <Input
                           placeholder="Variant"
                           value={card.variant}
                           onChange={(e) => {
-                            const updatedCards = [...cards];
-                            updatedCards[index].variant = e.target.value;
-                            setCards(updatedCards);
-                            console.log(`Variant Updated: ${e.target.value}`); // Log the variant change
+                              const updatedCards = [...cards];
+                              updatedCards[index].variant = e.target.value;
+                              setCards(updatedCards);
+                              console.log(`Variant Updated: ${e.target.value}`);
                           }}
                           className="bg-white text-black placeholder-slate-500"
                       />
@@ -750,10 +737,10 @@ const EditItem = () => {
                       <Input
                           value={card.lowStock || ""}
                           onChange={(e) => {
-                            const updatedCards = [...cards];
-                            updatedCards[index].lowStock = e.target.value ? Number(e.target.value) : 0; // Ensure it's a number
-                            setCards(updatedCards);
-                            console.log(`Low Stock for Variant '${card.variant}': ${e.target.value}`); // Log low stock change
+                              const updatedCards = [...cards];
+                              updatedCards[index].lowStock = e.target.value ? Number(e.target.value) : 0;
+                              setCards(updatedCards);
+                              console.log(`Low Stock for Variant '${card.variant}': ${e.target.value}`);
                           }}
                           className="flex-1 rounded-lg bg-white p-5"
                           placeholder="Low Stock"
@@ -764,74 +751,71 @@ const EditItem = () => {
                       <Input
                           value={card.veryLowStock || ""}
                           onChange={(e) => {
-                            const updatedCards = [...cards];
-                            updatedCards[index].veryLowStock = e.target.value ? Number(e.target.value) : 0; // Ensure it's a number
-                            setCards(updatedCards);
-                            console.log(`Very Low Stock for Variant '${card.variant}': ${e.target.value}`); // Log very low stock change
+                              const updatedCards = [...cards];
+                              updatedCards[index].veryLowStock = e.target.value ? Number(e.target.value) : 0;
+                              setCards(updatedCards);
+                              console.log(`Very Low Stock for Variant '${card.variant}': ${e.target.value}`);
                           }}
                           className="flex-1 rounded-lg bg-white p-5"
                           placeholder="Very Low Stock"
                       />
                     </div>
                     <div className="flex items-center">
-
                       <div className="relative ml-auto flex w-full items-center">
-                        <X
-                            size={15}
-                            className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
-                            onClick={() => handleDeleteCard(card.id)}
-                        />
+                        {!card.isExisting && (
+                            <X
+                                size={15}
+                                className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
+                                onClick={() => handleDeleteCard(card.tempId)}
+                            />
+                        )}
                       </div>
 
-                      {/*temporary disable adding new variant card*/}
-                      {/*<div className="relative ml-auto flex w-full items-center">*/}
-                      {/*  {index === cards.length - 1 ? (*/}
-                      {/*      <Plus*/}
-                      {/*          size={15}*/}
-                      {/*          className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"*/}
-                      {/*          onClick={handleAddCard}*/}
-                      {/*      />*/}
-                      {/*  ) :*/}
-                      {/*      (*/}
-                      {/*      <X*/}
-                      {/*          size={15}*/}
-                      {/*          className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"*/}
-                      {/*          onClick={() => handleDeleteCard(card.id)}*/}
-                      {/*      />*/}
-                      {/*  )}*/}
-                      {/*</div>*/}
                     </div>
                   </CardContent>
                 </Card>
             ))}
+            <div className="mt-4">
+              <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleAddCard}
+              >
+                <Plus className="mr-2 h-4 w-4"/>
+                Add Variant
+              </Button>
+            </div>
+
             <div
                 className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
               <Button
                   className="border-2 border-gray-300 bg-gray p-7 text-lg font-bold text-gray-700 hover:bg-red"
-                  onClick={handleDelete}
+                  onClick={clear}
               >
-                Delete
+                Clear
               </Button>
 
               {/* Confirmation dialog triggered by the "Clear" button */}
               <Dialog open={isDialogCancelOpen} onOpenChange={(open) => setIsDialogCancelOpen(open)}>
-                <DialogContent className="w-full max-w-lg p-10 flex flex-col gap-6 bg-white rounded-lg shadow-lg">
-                  <DialogTitle className="text-center text-xl font-semibold">Delete All Records</DialogTitle>
+                <DialogContent
+                    className="w-full max-w-lg p-10 flex flex-col gap-6 bg-white rounded-lg shadow-lg">
+                  <DialogTitle className="text-center text-xl font-semibold">Clear All
+                    Fields</DialogTitle>
                   <DialogHeader className="text-center text-lg">
-                    Are you sure you want to delete all the records? This action cannot be undone.
+                    Are you sure you want to clear all the fields? This action cannot be undone.
                   </DialogHeader>
 
                   <div className="flex justify-center gap-4">
                     <Button
                         className="border-2 border-gray-300 bg-gray-300 p-4 text-lg font-bold text-black hover:bg-textGray"
-                        onClick={handleCancelDelete}
+                        onClick={handleCancelClear}
                     >
                       Cancel
                     </Button>
 
                     <Button
                         className="border-2 border-red-500 bg-red-500 p-4 text-lg font-bold text-black hover:bg-red"
-                        onClick={handleConfirmDelete}
+                        onClick={handleConfirmClear}
                     >
                       Confirm
                     </Button>
@@ -850,34 +834,6 @@ const EditItem = () => {
           </div>
         </div>
       </section>
-  );
-};
-
-const AddVariant = ({ onAdd }: { onAdd: () => void }) => {
-  return (
-      <div className="mt-2 flex items-center">
-        <div className="grid grid-cols-5 gap-3 pr-4 hover:cursor-default">
-          <div className="flex flex-col items-start gap-1">
-            <Input placeholder="Stock" disabled />
-          </div>
-          <div className="flex flex-col items-start gap-1">
-            <Input placeholder="Price" disabled />
-          </div>
-          <div className="flex flex-col items-start gap-1">
-            <div className="flex items-center gap-2">
-              <Input placeholder="Unit" disabled />
-              <ArrowRight className="text-gray-400 h-5 w-5" />
-            </div>
-          </div>
-          <div className="col-span-2 flex flex-col items-start gap-1">
-            <div className="flex items-center">
-              <Input placeholder="to" className="rounded-r-none" disabled />
-              <Input placeholder="Units" className="rounded-l-none" disabled />
-            </div>
-          </div>
-        </div>
-        <Plus className="h-5 w-5 hover:cursor-pointer" onClick={onAdd} />
-      </div>
   );
 };
 

@@ -104,15 +104,18 @@ export const inventoryRouter = createTRPCRouter({
     }),
 
     getInventoryItem: publicProcedure
-        .input(z.object({ id: z.number() }))
+        .input(z.object({ id: z.number() })) // Using inventory_number as input
         .query(async ({ input }) => {
+            // Find the inventory record based on inventory_number
             const inventoryRecord = await db.inventory.findUnique({
-                where: { inventory_id: input.id },
+                where: { inventory_number: input.id },
                 include: {
                     variant: {
                         include: {
                             item: {
                                 include: {
+                                    brand: true,
+                                    category: true,
                                     variants: true,
                                 },
                             },
@@ -133,7 +136,7 @@ export const inventoryRouter = createTRPCRouter({
                                                             unit: true,
                                                             ConversionRate: {
                                                                 select: {
-                                                                    conversion_id: true, // Include conversion_id
+                                                                    conversion_id: true,
                                                                     conversion_rate: true,
                                                                     fromUnit: true,
                                                                     toUnit: true,
@@ -152,12 +155,13 @@ export const inventoryRouter = createTRPCRouter({
                 },
             });
 
-            if (!inventoryRecord || !inventoryRecord.variant) {
+            if (!inventoryRecord) {
                 return null;
             }
 
             return inventoryRecord;
         }),
+
 
 
 
@@ -398,97 +402,144 @@ export const inventoryRouter = createTRPCRouter({
     editItem: publicProcedure
         .input(
             z.object({
-                inventoryId: z.number(),
+                inventoryId: z.number(), // This is actually inventory_number now
                 name: z.string(),
                 brand: z.string(),
                 category: z.string(),
                 description: z.string().optional(),
                 variants: z.array(
                     z.object({
-                        id: z.number(),
+                        id: z.number().optional(), // Variant ID
                         name: z.string(),
-                        lowStock: z.number(),
-                        veryLowStock: z.number(),
+                        lowStock: z.number().min(1, "Low Stock must be greater than 0."),
+                        veryLowStock: z.number().min(1, "Very Low Stock must be greater than 0."),
                     })
                 ),
+                inventoryClerk: z.string(),
             })
         )
         .mutation(async ({ input }) => {
-            const { inventoryId, name, brand, category, description, variants } = input;
+            const { inventoryId, name, brand, category, description, variants, inventoryClerk } = input;
 
-            const variant = await prisma.variant.findUnique({
-                where: { variant_id: inventoryId },
+            // Fetch inventory using inventory_number
+            const inventoryRecord = await db.inventory.findUnique({
+                where: { inventory_number: inventoryId },
                 include: {
-                    item: {
+                    variant: {
                         include: {
-                            brand: true,
-                            category: true,
+                            item: {
+                                include: {
+                                    brand: true,
+                                    category: true,
+                                    variants: true,
+                                },
+                            },
                         },
                     },
                 },
             });
 
-            if (!variant) {
-                throw new Error("Variant not found");
+            if (!inventoryRecord?.variant?.item) {
+                throw new Error("Item not found");
             }
 
-            const itemId = variant.item.item_id;
-            const currentBrand = variant.item.brand;
-            const currentCategory = variant.item.category;
+            // Extract variant and item
+            const variant = inventoryRecord.variant;
+            const item = variant.item;
 
-            // Update Brand if necessary
-            const updatedBrand = currentBrand.name !== brand ? await prisma.brand.update({
-                where: { brand_id: currentBrand.brand_id },
+            // Update brand name
+            const updatedBrand = await db.brand.update({
+                where: { brand_id: item.brand.brand_id },
                 data: { name: brand },
-            }) : currentBrand;
+            });
 
-            // Update Category if necessary
-            const updatedCategory = currentCategory.name !== category ? await prisma.category.update({
-                where: { category_id: currentCategory.category_id },
+            // Update category name
+            const updatedCategory = await db.category.update({
+                where: { category_id: item.category.category_id },
                 data: { name: category },
-            }) : currentCategory;
+            });
 
-            // Update Item
-            const updatedItem = await prisma.item.update({
-                where: { item_id: itemId },
+            // Update item details
+            const updatedItem = await db.item.update({
+                where: { item_id: item.item_id },
                 data: {
                     name,
                     description,
                     brand_id: updatedBrand.brand_id,
                     category_id: updatedCategory.category_id,
                 },
-                include: {
-                    brand: true,
-                    category: true,
-                },
             });
 
-            // Update Variants
             const updatedVariants = await Promise.all(
-                variants.map((variantData) =>
-                    prisma.variant.update({
-                        where: { variant_id: variantData.id },
+                variants.map(async (variantData) => {
+                    if (variantData.id) {
+                        // Check if the variant exists before updating
+                        const existingVariant = await db.variant.findUnique({
+                            where: { variant_id: variantData.id },
+                            include: { StockLevel: true },
+                        });
+
+                        if (!existingVariant) {
+                            throw new Error(`Variant with ID ${variantData.id} not found`);
+                        }
+
+                        // Update the existing variant
+                        await db.variant.update({
+                            where: { variant_id: variantData.id },
+                            data: { name: variantData.name },
+                        });
+
+                        // Ensure stock level is updated properly
+                        await db.stockLevel.upsert({
+                            where: { variant_id: variantData.id }, // Use existing variant ID
+                            update: {
+                                low_stock: variantData.lowStock,
+                                very_low_stock: variantData.veryLowStock,
+                            },
+                            create: {
+                                variant_id: variantData.id,
+                                low_stock: variantData.lowStock,
+                                very_low_stock: variantData.veryLowStock,
+                            },
+                        });
+
+                        return variantData.id;
+                    }
+
+                    // Create new variant
+                    const newVariant = await db.variant.create({
                         data: {
                             name: variantData.name,
-                            StockLevel: {
-                                upsert: {
-                                    create: {
-                                        low_stock: variantData.lowStock,
-                                        very_low_stock: variantData.veryLowStock,
-                                    },
-                                    update: {
-                                        low_stock: variantData.lowStock,
-                                        very_low_stock: variantData.veryLowStock,
-                                    },
-                                },
-                            },
+                            item_id: updatedItem.item_id,
                         },
-                    })
-                )
+                    });
+
+                    // Create stock level entry
+                    await db.stockLevel.create({
+                        data: {
+                            variant_id: newVariant.variant_id,
+                            low_stock: variantData.lowStock,
+                            very_low_stock: variantData.veryLowStock,
+                        },
+                    });
+
+            // Create new inventory record
+                    await db.inventory.create({
+                        data: {
+                            variant_id: newVariant.variant_id,
+                            quantity: 0,
+                            inventory_clerk: inventoryClerk,
+                            inventory_number: Math.floor(1000000 + Math.random() * 9000000),
+                        },
+                    });
+
+                    return newVariant.variant_id;
+                })
             );
 
             return { updatedItem, updatedVariants };
         }),
+
 
     deleteItem: publicProcedure
         .input(

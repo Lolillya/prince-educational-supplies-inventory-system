@@ -1,13 +1,17 @@
-import { Box, Boxes, Tag } from 'lucide-react';
+import {Box, Boxes, Hash, Pencil, Tag} from 'lucide-react';
 import { Separator } from '~/components/ui/separator';
 import RecordInfo from '../../_components/record-info';
 import RecordNotes from '../../_components/record-notes';
 import EditRecord from './edit-record';
 import InventoryBatch from './inventory-batch';
 import {BatchVariant} from "@prisma/client";
+import { useRouter } from "next/navigation"
+import Edit from '../../_components/edit'
+import React from "react";
 
 type SelectedItemProps = {
 	id: string;
+	inventoryNumber: string;
 	variant: string;
 	item: string;
 	brand: string;
@@ -27,9 +31,16 @@ const SelectedItem = ({
 	stockLevel,
 	notes,
 	batchVariants,
-	onVerifyPassword
+	onVerifyPassword,
+	inventoryNumber,
 }:
 	SelectedItemProps) => {
+	const router = useRouter();
+
+	const handleEditItem = () => {
+		router.push(`/admin/inventory/edit-item/${inventoryNumber}`);
+	};
+
 	return (
 		<div className='flex flex-col w-full p-5'>
 			<div className="flex items-center justify-between">
@@ -69,18 +80,23 @@ const SelectedItem = ({
 							</p>
 						</div>
 					</div>
-					<p className='text-slate-400 text-sm'>
-						{id}
+					<p className="text-slate-400 text-sm flex items-center gap-1">
+						<Hash className="h-4 w-4"/>
+						{inventoryNumber}
 					</p>
+
 				</div>
-				<EditRecord />
+				{/*<EditRecord />*/}
+				<div className='hover:cursor-pointer' onClick={handleEditItem}>
+					<Edit className='text-gray-500'/>
+				</div>
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+			<Separator className='h-[1px] bg-slate-300 mt-5'/>
 
 			<div className="flex flex-col gap-3 mt-5">
-				<RecordInfo icon={Box} recordType={'Item'} info={item} />
-				<RecordInfo icon={Tag} recordType={'Brand'} info={brand} />
+				<RecordInfo icon={Box} recordType={'Item'} info={item}/>
+				<RecordInfo icon={Tag} recordType={'Brand'} info={brand}/>
 				<RecordInfo icon={Boxes} recordType={'Category'} info={category} />
 				<RecordNotes notes={notes} />
 			</div>

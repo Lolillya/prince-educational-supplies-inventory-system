@@ -82,7 +82,7 @@ const EmployeesPage = () => {
           <Filter />
         </div>
         <Button
-          onClick={() => router.push("/admin/suppliers/new-supplier")}
+          onClick={() => router.push("/admin/employees/new-employee")}
           className="bg-green hover:bg-green/80">
           <Plus strokeWidth={3} /> New Employee
         </Button>
@@ -111,7 +111,7 @@ const EmployeesPage = () => {
                 </div>
               </ScrollArea>
             ) : (
-              <NoRecordsMessage records={'employees'} link={'/admin/suppliers/new-employee'} item={'employee'} />
+              <NoRecordsMessage records={'employees'} link={'/admin/employees/new-employee'} item={'employee'} />
             )}
           </div>
         </div>

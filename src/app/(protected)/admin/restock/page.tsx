@@ -77,6 +77,7 @@ const RestockPage = () => {
       >
         <div className="flex items-center justify-between px-20">
           <div className="flex items-center gap-3">
+            {/*//Searchbar*/}
             <SearchBar
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}

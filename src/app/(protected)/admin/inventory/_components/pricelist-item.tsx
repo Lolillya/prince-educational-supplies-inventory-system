@@ -10,6 +10,8 @@ interface PriceListItemProps {
 }
 
 const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
+	const [price, setPrice] = React.useState('0.00');
+
 	return (
 		<div className='p-4 rounded-lg bg-slate-100'>
 			<div className="flex items-center justify-between">
@@ -45,7 +47,8 @@ const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
 							<span className='text-slate-400 text-sm'>₱</span>
 							<Input
 								className='w-20 p-0 h-auto shadow-none bg-transparent text-slate-500 rounded-none'
-								value='0.00'
+								value={price}
+								onChange={(e) => setPrice(e.target.value)}
 							/>
 						</div>
 					</div>

@@ -93,9 +93,9 @@ const PriceList = () => {
 				<ScrollArea className="h-64">
 					{selectedItems.length > 0 ? (
 						<div className="flex flex-col gap-2">
-							{selectedItems.map((item) => (
+							{selectedItems.map((item, index) => (
 								<PriceListItem
-									key={`${item.variant.item.id}-${item.variant.id}-${item.id}`}
+									key={index}
 									item={item}
 									onRemove={() => {
 										setSelectedItems(prev => prev.filter(i => i.id !== item.id));

@@ -14,6 +14,14 @@ interface PriceListSearchProps {
 const PriceListSearch = ({ filteredItems, onItemSelect }: PriceListSearchProps) => {
 	const [isFocused, setIsFocused] = React.useState(false);
 	const [searchTerm, setSearchTerm] = React.useState('');
+	const inputRef = React.useRef<HTMLInputElement>(null);
+
+	const handleItemClick = (item: Inventory) => {
+		onItemSelect?.(item);
+		setIsFocused(false);
+		setSearchTerm('');
+		inputRef.current?.blur(); // Remove focus from input
+	};
 
 	const filteredResults = filteredItems?.filter((item) => {
 		const searchLower = searchTerm.toLowerCase();
@@ -31,6 +39,7 @@ const PriceListSearch = ({ filteredItems, onItemSelect }: PriceListSearchProps) 
 			<div className='flex w-full items-center rounded-lg bg-slate-100 px-3 focus-within:outline focus-within:outline-2 focus-within:outline-slate-200'>
 				<Search className="text-slate-500" />
 				<Input
+					ref={inputRef}
 					placeholder={'Search...'}
 					className="w-full bg-transparent text-slate-700 shadow-none"
 					onFocus={() => setIsFocused(true)}
@@ -46,9 +55,12 @@ const PriceListSearch = ({ filteredItems, onItemSelect }: PriceListSearchProps) 
 						{filteredResults && filteredResults.length > 0 ? (
 							filteredResults.map((item) => (
 								<div
-									key={item.variant.id}
+									key={item.variant.variant_id}
 									className='text-slate-600 text-sm hover:bg-slate-200 rounded-lg px-4 py-2 cursor-pointer'
-									onClick={() => onItemSelect?.(item)}
+									onMouseDown={(e) => {
+										e.preventDefault();
+										handleItemClick(item);
+									}}
 								>
 									{item.variant.item.name} - {item.variant.item.brand.name}
 									{item.variant.name && ` - ${item.variant.name}`}

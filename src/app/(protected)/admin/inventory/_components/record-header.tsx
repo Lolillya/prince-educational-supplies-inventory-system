@@ -1,9 +1,10 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import MoreOptions from '../../_components/more-options';
 import { handleExport as exportInventory } from '~/lib/utils/exportMaserList';
 import { handleExport as exportStockList } from '~/lib/utils/exportStockList';
 import { toast } from 'sonner';
 import type { InventoryItem } from '~/types/inventory';
+import PriceList from './pricelist';
 
 interface RecordHeaderProps {
 	record: string;
@@ -62,54 +63,41 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 				<DropdownMenuTrigger className='flex justify-center items-center'>
 					<MoreOptions className='!h-[1px] mr-1' />
 				</DropdownMenuTrigger>
-				<DropdownMenuContent>
-					<DropdownMenuLabel
-						className='text-sm font-normal text-slate-500'
-					>
-						Export Masterlist
-					</DropdownMenuLabel>
+				<DropdownMenuContent className='w-48'>
 					<DropdownMenuItem
 						onClick={handleExport}
 						className="hover:!bg-slate-200 focus:!bg-slate-200"
 					>
-						All variants
+						Export Masterlist
 					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuLabel
-						className='text-sm font-normal text-slate-500'
-					>
-						Export Pricelist
-					</DropdownMenuLabel>
-					<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-						Include out-of-stock
-					</DropdownMenuItem>
-					<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-						Exclude out-of-stock
-					</DropdownMenuItem>
-					<DropdownMenuSeparator />
-					<DropdownMenuLabel
-						className='text-sm font-normal text-slate-500'
-					>
-						Export Stocklist
-					</DropdownMenuLabel>
-					<DropdownMenuItem
-						onClick={() => handleStockListExport(true, false)}
-						className="hover:!bg-slate-200 focus:!bg-slate-200"
-					>
-						Include out-of-stock
-					</DropdownMenuItem>
-					<DropdownMenuItem
-						onClick={() => handleStockListExport(false, false)}
-						className="hover:!bg-slate-200 focus:!bg-slate-200"
-					>
-						Exclude out-of-stock
-					</DropdownMenuItem>
-					<DropdownMenuItem
-						onClick={() => handleStockListExport(true, true)}
-						className="hover:!bg-slate-200 focus:!bg-slate-200"
-					>
-						Only out-of-stock
-					</DropdownMenuItem>
+					<PriceList />
+					<DropdownMenuSub>
+						<DropdownMenuSubTrigger className="hover:!bg-slate-200 focus:!bg-slate-200">
+							Export Stocklist
+						</DropdownMenuSubTrigger>
+						<DropdownMenuPortal>
+							<DropdownMenuSubContent>
+								<DropdownMenuItem
+									onClick={() => handleStockListExport(true, false)}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+								>
+									Include out-of-stock
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => handleStockListExport(false, false)}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+								>
+									Exclude out-of-stock
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => handleStockListExport(true, true)}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+								>
+									Only out-of-stock
+								</DropdownMenuItem>
+							</DropdownMenuSubContent>
+						</DropdownMenuPortal>
+					</DropdownMenuSub>
 					<DropdownMenuSeparator />
 					<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
 						Clear list

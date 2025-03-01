@@ -15,7 +15,7 @@ import RecordHeader from "./_components/record-header"
 import SelectedItem from "./_components/selected-item"
 import RecordItem from "./_components/record-item"
 import { useSession } from "next-auth/react";
-import { Toaster } from "sonner"
+import { Toaster } from "~/components/ui/sonner"
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[];

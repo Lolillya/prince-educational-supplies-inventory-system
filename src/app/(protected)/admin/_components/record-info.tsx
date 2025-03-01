@@ -20,7 +20,7 @@ const RecordInfo = ({ recordType, info, icon: Icon }: RecordInfoProps) => {
 			<div className="flex flex-col gap-1">
 				<p
 					className={info ? "text-slate-600" : "text-slate-300"}
-					style={recordType === "Location" ? { whiteSpace: "pre-wrap" } : undefined}
+					style={recordType === "Location" || recordType === "Representative" ? { whiteSpace: "pre-wrap" } : undefined}
 				>
 					{displayInfo}
 				</p>

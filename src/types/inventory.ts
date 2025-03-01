@@ -29,21 +29,19 @@ interface SupplierUnit {
   unit: Unit;
 }
 
-interface BatchVariantWithSupplierUnit {
-  batch_variant_id: number;
-  variant_id: number;
-  quantity: number;
+interface BatchVariantWithSupplierUnit extends PrismaBatchVariant {
+  batch: {
+    batch_id: number;
+    batch_number: string;
+  };
   SupplierUnit?: SupplierUnit[];
 }
 
-interface BatchWithVariants {
-  batch_id: number;
-  batch_number: string;
-  batchVariants: BatchVariantWithSupplierUnit[];
-}
-
-interface BatchVariant extends PrismaBatchVariant {
-  batch: BatchWithVariants;
+interface BatchVariant extends BatchVariantWithSupplierUnit {
+  batch: {
+    batch_id: number;
+    batch_number: string;
+  };
 }
 
 export interface Variant {

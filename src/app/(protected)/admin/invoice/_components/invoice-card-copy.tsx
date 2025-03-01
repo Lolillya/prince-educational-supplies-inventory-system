@@ -372,15 +372,24 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         <TableHeader>
                           <TableRow>
                             <TableHead>Unit</TableHead>
-                            <TableHead>Conversion</TableHead>
-                            <TableHead>Quantity</TableHead>
+                            <TableHead className="text-right">
+                              Quantity
+                            </TableHead>
                             <TableHead className="text-right">Price</TableHead>
+                            <TableHead>Conversion</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {variant.SupplierUnit.map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
+
+                              <TableCell className="text-right">
+                                {unit.quantity_per_unit}
+                              </TableCell>
+                              <TableCell className="text-right">
+                                ₱ {unit.price.toFixed(2)}
+                              </TableCell>
                               <TableCell className="flex items-center gap-1">
                                 {unit.unit.name !== "Pieces" && (
                                   <>
@@ -388,10 +397,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                     {unit.ConversionRate[0]?.toUnit.name}
                                   </>
                                 )}
-                              </TableCell>
-                              <TableCell>{unit.quantity_per_unit}</TableCell>
-                              <TableCell className="text-right">
-                                ₱ {unit.price.toFixed(2)}
                               </TableCell>
                             </TableRow>
                           ))}

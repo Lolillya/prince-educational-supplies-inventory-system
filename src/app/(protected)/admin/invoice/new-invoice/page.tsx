@@ -53,6 +53,11 @@ type InventoryItem = {
           name: string;
           unit_id: number;
         };
+        ConversionRate: {
+          toUnit: {
+            name: string;
+          };
+        }[];
       }>;
     }>;
     item: {

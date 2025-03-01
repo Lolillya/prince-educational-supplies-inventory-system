@@ -6,6 +6,8 @@ import RecordNotes from '../../_components/record-notes';
 import AccountRecovery from './account-recovery';
 import EditRecord from './edit-record';
 import EmployeeActivity from './employee-activity';
+import Edit from '../../_components/edit'
+import { useRouter } from 'next/navigation'
 
 type SelectedEmployeeProps = {
 	id: string;
@@ -26,6 +28,13 @@ const SelectedEmployee = ({
 	notes,
 	activityData,
 }: SelectedEmployeeProps) => {
+	const router = useRouter();
+
+	const handleEditEmployee = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		router.push(`/admin/employees/edit-employee/${id}`);
+	};
+
 	return (
 		<div className='flex flex-col w-full p-5'>
 			<div className="flex items-center justify-between">
@@ -50,10 +59,12 @@ const SelectedEmployee = ({
 						</p>
 					</div>
 				</div>
-				<EditRecord />
+				<div onClick={handleEditEmployee} className="cursor-pointer">
+					<Edit />
+				</div>
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+			<Separator className='h-[1px] bg-slate-300 mt-5'/>
 
 			<div className="flex flex-col gap-3 mt-5">
 				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />

@@ -53,6 +53,7 @@ type InvoiceCardProps = {
         unit_id: number;
       };
       ConversionRate: {
+        conversion_rate: number;
         toUnit: {
           name: string;
         };
@@ -394,6 +395,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 {unit.unit.name !== "Pieces" && (
                                   <>
                                     <MoveRight size={15} />{" "}
+                                    {unit.ConversionRate[0]?.conversion_rate}{" "}
                                     {unit.ConversionRate[0]?.toUnit.name}
                                   </>
                                 )}

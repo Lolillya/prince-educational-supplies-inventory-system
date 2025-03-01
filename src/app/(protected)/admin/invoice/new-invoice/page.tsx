@@ -54,6 +54,7 @@ type InventoryItem = {
           unit_id: number;
         };
         ConversionRate: {
+          conversion_rate: number;
           toUnit: {
             name: string;
           };
@@ -183,9 +184,13 @@ const NewInvoice = () => {
     setGrandTotal(total);
   };
 
-  const handleSaveInvoice = () => {
+  const handleSaveInvoice = async () => {
     if (!selectedItems || !activeCards) {
-      alert("Select an item to save invoice!");
+      toast({
+        title: "Warning",
+        description: "Select an item to save the invoice!",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -207,7 +212,31 @@ const NewInvoice = () => {
         unit_id: item[1].selectedUnit.unit_id,
       })),
     };
-    createInvoice(invoiceData);
+
+    try {
+      await createInvoice(invoiceData);
+      toast({
+        title: "Success",
+        description: "Invoice created successfully!",
+        variant: "default",
+      });
+    } catch (error: unknown) {
+      let errorMessage = "An unexpected error occurred.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as { message?: string }).message ?? errorMessage;
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveBatch = (id: number) => {
@@ -261,10 +290,6 @@ const NewInvoice = () => {
 
     setGrandTotal(total);
   };
-
-  // useEffect(() => {
-  //   calculateGrandTotalDiscount();
-  // }, [discount]);
 
   useEffect(() => {
     calculateGrandTotal();

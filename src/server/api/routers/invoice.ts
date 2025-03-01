@@ -62,6 +62,7 @@ export const invoiceRouter = createTRPCRouter({
                     },
                     ConversionRate: {
                       select: {
+                        conversion_rate: true,
                         toUnit: {
                           select: {
                             name: true,
@@ -182,9 +183,32 @@ export const invoiceRouter = createTRPCRouter({
       const { invoice, lineItems } = input;
 
       const result = await ctx.db.$transaction(async (prisma) => {
+        // Step 1: Validate stock availability
+        for (const item of lineItems) {
+          const supplierUnit = await prisma.supplierUnit.findFirst({
+            where: {
+              batchVariant: { variant_id: item.variant_id },
+              unit_id: item.unit_id,
+            },
+          });
+
+          if (!supplierUnit) {
+            throw new Error(
+              `Supplier unit not found for variant ID: ${item.variant_id}`,
+            );
+          }
+
+          // Ensure there is enough stock
+          if (supplierUnit.total_quantity < item.quantity) {
+            throw new Error(
+              `Insufficient stock for variant ID: ${item.variant_id}. Available: ${supplierUnit.total_quantity}, Required: ${item.quantity}`,
+            );
+          }
+        }
+
+        // Step 2: Create Invoice
         const createdInvoice = await prisma.invoice.create({
           data: {
-            // invoice_number: invoice.invoice_number,
             customer_id: invoice.customer_id,
             invoice_clerk: invoice.invoice_clerk,
             total_amount: invoice.total_amount,
@@ -194,12 +218,21 @@ export const invoiceRouter = createTRPCRouter({
           },
         });
 
-        console.log(createdInvoice);
         const invoiceId = createdInvoice.invoice_id;
 
+        // Step 3: Create Line Items & Deduct Stock
         const createdLineItems = await Promise.all(
-          lineItems.map((item) =>
-            prisma.line_Item.create({
+          lineItems.map(async (item) => {
+            // Deduct stock
+            await prisma.supplierUnit.updateMany({
+              where: {
+                batchVariant: { variant_id: item.variant_id },
+                unit_id: item.unit_id,
+              },
+              data: { quantity_per_unit: { decrement: item.quantity } },
+            });
+
+            return prisma.line_Item.create({
               data: {
                 invoice_id: invoiceId,
                 variant_id: item.variant_id,
@@ -208,8 +241,8 @@ export const invoiceRouter = createTRPCRouter({
                 total_price: item.total_price,
                 unit_id: item.unit_id,
               },
-            }),
-          ),
+            });
+          }),
         );
 
         return { createdInvoice, createdLineItems };

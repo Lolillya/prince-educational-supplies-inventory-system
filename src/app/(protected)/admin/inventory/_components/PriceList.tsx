@@ -95,10 +95,10 @@ const PriceList = () => {
 						<div className="flex flex-col gap-2">
 							{selectedItems.map((item, index) => (
 								<PriceListItem
-									key={index}
+									key={`${item.variant.id}-${index}`}
 									item={item}
 									onRemove={() => {
-										setSelectedItems(prev => prev.filter(i => i.id !== item.id));
+										setSelectedItems(prev => prev.filter((_, i) => i !== index));
 									}}
 								/>
 							))}

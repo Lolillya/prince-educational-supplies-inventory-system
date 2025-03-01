@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, UnfoldVertical, X } from "lucide-react";
+import { MoveRight, Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
   Accordion,
@@ -52,6 +52,11 @@ type InvoiceCardProps = {
         name: string;
         unit_id: number;
       };
+      ConversionRate: {
+        toUnit: {
+          name: string;
+        };
+      }[];
     }>;
   }>;
 
@@ -159,6 +164,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     if (hasPartialMatch) return "bg-yellow-300";
     return "bg-red/80";
   };
+
+  console.log(BatchVariant);
 
   const handlePriceInput = (price: number, batch: number) => {
     setPrice({ price, batch });
@@ -374,7 +381,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           {variant.SupplierUnit.map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
-                              <TableCell># {unit.unit.name}</TableCell>
+                              <TableCell className="flex items-center gap-1">
+                                {unit.unit.name !== "Pieces" && (
+                                  <>
+                                    <MoveRight size={15} />{" "}
+                                    {unit.ConversionRate[0]?.toUnit.name}
+                                  </>
+                                )}
+                              </TableCell>
                               <TableCell>{unit.quantity_per_unit}</TableCell>
                               <TableCell className="text-right">
                                 ₱ {unit.price.toFixed(2)}

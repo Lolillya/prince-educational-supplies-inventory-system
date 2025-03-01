@@ -60,6 +60,15 @@ export const invoiceRouter = createTRPCRouter({
                         unit_id: true,
                       },
                     },
+                    ConversionRate: {
+                      select: {
+                        toUnit: {
+                          select: {
+                            name: true,
+                          },
+                        },
+                      },
+                    },
                   },
                 },
               },

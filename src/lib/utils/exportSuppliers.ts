@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { Supplier } from "~/types/suppliers";
+import type { Supplier } from "~/types/suppliers";
 
 interface ExportProps {
   suppliers: Supplier[];
@@ -8,7 +8,7 @@ interface ExportProps {
 
 export const handleExport = ({ suppliers }: ExportProps): boolean => {
   if (!suppliers || suppliers.length === 0) {
-    return false; // Indicate failure
+    return false;
   }
 
   const doc = new jsPDF();
@@ -18,7 +18,7 @@ export const handleExport = ({ suppliers }: ExportProps): boolean => {
   const tableColumns = ["Company", "Representative", "Contact", "Email"];
   const tableRows: any[] = [];
 
-  suppliers.forEach((supplier) => {
+  for (const supplier of suppliers) {
     const rowData = [
       supplier.Personal_Details.company ?? "N/A",
       `${supplier.Personal_Details.first_name ?? ""} ${supplier.Personal_Details.last_name ?? ""}`.trim() ||
@@ -27,7 +27,7 @@ export const handleExport = ({ suppliers }: ExportProps): boolean => {
       supplier.Personal_Details.email ?? "N/A",
     ];
     tableRows.push(rowData);
-  });
+  }
 
   doc.autoTable({
     head: [tableColumns],

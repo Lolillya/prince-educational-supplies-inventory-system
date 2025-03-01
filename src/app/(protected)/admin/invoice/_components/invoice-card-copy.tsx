@@ -603,6 +603,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       )
                     }
                     onChange={(e) => setDiscount(e.target.value)}
+                    onInput={(e) => {
+                      e.currentTarget.value = e.currentTarget.value.replace(
+                        /[^0-9]/g,
+                        "",
+                      );
+                    }}
                   />
                   <Select
                     value={discountType}

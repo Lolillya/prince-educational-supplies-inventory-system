@@ -429,7 +429,6 @@ const NewInvoice = () => {
                 className="rounded-r-none border font-light shadow-none placeholder:font-light"
                 placeholder="Discount"
                 value={discount.toString()}
-                type="number"
                 onChange={(e) => setDiscount(Number(e.target.value))}
                 onInput={(e) => {
                   e.currentTarget.value = e.currentTarget.value.replace(

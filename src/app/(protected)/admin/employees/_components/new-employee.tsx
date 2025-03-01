@@ -128,8 +128,6 @@ const NewEmployeeState = ({ id }: { id: string }) => {
         }));
     };
 
-    if (isLoading) return <div>Loading...</div>;
-    if (isError) return <div>Error fetching data...</div>;
     if (isLoading)
         return (
             <section className="flex h-screen w-full items-center justify-center">

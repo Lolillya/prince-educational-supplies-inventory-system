@@ -56,9 +56,6 @@ const SelectedEmployee = ({
 			<Separator className='h-[1px] bg-slate-300 mt-5' />
 
 			<div className="flex flex-col gap-3 mt-5">
-				<RecordInfo icon={IdCard} recordType={'Position'} info={'Manager'}
-				//TODO: reflect position data
-				/>
 				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
 				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
 				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />

@@ -341,7 +341,7 @@ const InvoiceAddStock = () => {
   if (isLoading || isLoadingBatch) {
     return (
       <section className="flex h-screen w-full items-center justify-center">
-        <span>Loading...</span>
+        <LoadingSpinner />
       </section>
     );
   }

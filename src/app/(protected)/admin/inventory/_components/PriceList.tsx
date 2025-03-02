@@ -17,12 +17,19 @@ const poppins = Poppins({
 	weight: ["400", "700"],
 });
 
+interface ItemState {
+	selectedBatchId?: string;
+	selectedUnitName?: string;
+	price: string;
+}
+
 const PriceList = () => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [showWarning, setShowWarning] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [searchTerm, setSearchTerm] = useState('');
 	const [selectedItems, setSelectedItems] = useState<RouterOutputs['inventory']['listInventory']>([]);
+	const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
 
 	const { data: inventoryData } = api.inventory.listInventory.useQuery();
 
@@ -51,7 +58,34 @@ const PriceList = () => {
 
 	const handleItemSelect = (item: RouterOutputs['inventory']['listInventory'][0]) => {
 		setSelectedItems(prev => [...prev, item]);
-		console.log('Item selected:', item);
+	};
+
+	const handleItemStateChange = (index: number, newState: ItemState) => {
+		const itemKey = `${selectedItems[index].variant.id}-${index}`;
+		setItemStates(prev => ({
+			...prev,
+			[itemKey]: newState
+		}));
+	};
+
+	const handleItemRemove = (index: number) => {
+		// First, remove the item from selectedItems
+		setSelectedItems(prev => {
+			const newItems = prev.filter((_, i) => i !== index);
+			
+			// Then update itemStates to match the new indexes
+			const newStates: Record<string, ItemState> = {};
+			newItems.forEach((item, i) => {
+				const oldKey = `${item.variant.id}-${i + (i >= index ? 1 : 0)}`;
+				const newKey = `${item.variant.id}-${i}`;
+				if (itemStates[oldKey]) {
+					newStates[newKey] = itemStates[oldKey];
+				}
+			});
+			setItemStates(newStates);
+			
+			return newItems;
+		});
 	};
 
 	return (
@@ -93,15 +127,18 @@ const PriceList = () => {
 				<ScrollArea className="h-64">
 					{selectedItems.length > 0 ? (
 						<div className="flex flex-col gap-2">
-							{selectedItems.map((item, index) => (
-								<PriceListItem
-									key={`${item.variant.id}-${index}`}
-									item={item}
-									onRemove={() => {
-										setSelectedItems(prev => prev.filter((_, i) => i !== index));
-									}}
-								/>
-							))}
+							{selectedItems.map((item, index) => {
+								const itemKey = `${item.variant.id}-${index}`;
+								return (
+									<PriceListItem
+										key={itemKey}
+										item={item}
+										state={itemStates[itemKey]}
+										onStateChange={(newState) => handleItemStateChange(index, newState)}
+										onRemove={() => handleItemRemove(index)}
+									/>
+								);
+							})}
 						</div>
 					) : (
 						<div className="flex items-center justify-center h-64 flex-col gap-6">

@@ -38,11 +38,17 @@ interface BatchVariant {
 }
 
 interface PriceListItemProps {
-	item: RouterOutputs['inventory']['listInventory'][0]
-	onRemove: () => void
+	item: RouterOutputs['inventory']['listInventory'][0];
+	state: {
+		selectedBatchId?: string;
+		selectedUnitName?: string;
+		price: string;
+	};
+	onStateChange: (newState: { selectedBatchId?: string; selectedUnitName?: string; price: string }) => void;
+	onRemove: () => void;
 }
 
-const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
+const PriceListItem = ({ item, state, onStateChange, onRemove }: PriceListItemProps) => {
 	console.log('Full item data:', item);
 
 	// Get batchVariants from the variant using BatchVariant
@@ -55,8 +61,6 @@ const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
 		const supplierUnits = batchVariant.batch?.batchVariants
 			?.find(bv => bv.batch_variant_id === batchVariant.batch_variant_id)
 			?.SupplierUnit || [];
-
-		console.log('SupplierUnits for this batch:', supplierUnits);
 
 		return {
 			id: batchVariant.batch_variant_id,
@@ -71,22 +75,51 @@ const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
 
 	console.log('Final batches array:', batches);
 
-	const [selectedBatch, setSelectedBatch] = React.useState(batches[0]); // Default to first batch
-	const [selectedUnit, setSelectedUnit] = React.useState(batches[0]?.prices[0]); // Default to first unit
-	const [price, setPrice] = React.useState(batches[0]?.prices[0]?.price || '0.00');
+	// Find the currently selected batch
+	const selectedBatch = state?.selectedBatchId
+		? batches.find(b => b.id === state.selectedBatchId)
+		: undefined;
+
+	// Initialize state if not already set
+	React.useEffect(() => {
+		if (!state?.selectedBatchId && batches.length > 0) {
+			const initialBatch = batches[0];
+			if (initialBatch && initialBatch.prices.length > 0) {
+				const initialUnit = initialBatch.prices[0];
+				if (initialUnit) {
+					onStateChange({
+						selectedBatchId: initialBatch.id,
+						selectedUnitName: initialUnit.unit,
+						price: initialUnit.price
+					});
+				}
+			}
+		}
+	}, [batches, state?.selectedBatchId, onStateChange]);
 
 	const handleBatchChange = (batchId: string) => {
-		const newBatch = batches.find(b => b.id === batchId) || batches[0];
-		setSelectedBatch(newBatch);
-		setSelectedUnit(newBatch.prices[0]); // Reset to first unit of new batch
-		setPrice(newBatch.prices[0]?.price || '0.00');
+		const newBatch = batches.find(b => b.id === batchId);
+		if (newBatch && newBatch.prices.length > 0) {
+			const newUnit = newBatch.prices[0];
+			if (newUnit) {
+				onStateChange({
+					selectedBatchId: batchId,
+					selectedUnitName: newUnit.unit,
+					price: newUnit.price
+				});
+			}
+		}
 	};
 
 	const handleUnitChange = (unitName: string) => {
+		if (!selectedBatch) return;
 		const newUnit = selectedBatch.prices.find(p => p.unit === unitName);
 		if (newUnit) {
-			setSelectedUnit(newUnit);
-			setPrice(newUnit.price);
+			onStateChange({
+				...state,
+				selectedUnitName: unitName,
+				price: newUnit.price
+			});
 		}
 	};
 
@@ -100,7 +133,7 @@ const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
 					</p>
 					<div className='flex items-center gap-4'>
 						<Select
-							value={selectedBatch?.id}
+							value={state?.selectedBatchId}
 							onValueChange={handleBatchChange}
 						>
 							<SelectTrigger className='p-0 w-[70px] border-none h-auto bg-transparent text-slate-500'>
@@ -116,7 +149,7 @@ const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
 						</Select>
 
 						<Select
-							value={selectedUnit?.unit}
+							value={state?.selectedUnitName}
 							onValueChange={handleUnitChange}
 						>
 							<SelectTrigger className="p-0 w-28 border-none h-auto bg-transparent text-slate-500">
@@ -136,20 +169,25 @@ const PriceListItem = ({ item, onRemove }: PriceListItemProps) => {
 							<span className='text-slate-400 text-sm'>₱</span>
 							<Input
 								className='w-20 p-0 h-auto shadow-none bg-transparent text-slate-500 rounded-none'
-								value={price}
+								value={state?.price || '0.00'}
 								onChange={(e) => {
 									const value = e.target.value;
-									// Only allow numbers and a single decimal point
 									if (value === '' || /^[0-9]+(\.[0-9]*)?$/.test(value)) {
-										setPrice(value);
+										onStateChange({
+											...state,
+											price: value
+										});
 									}
 								}}
 								type="number"
 								step="0.01"
 								min="0"
 								onBlur={() => {
-									if (price === '') {
-										setPrice(selectedUnit?.price || '0');
+									if (!state?.price) {
+										onStateChange({
+											...state,
+											price: '0.00'
+										});
 									}
 								}}
 							/>

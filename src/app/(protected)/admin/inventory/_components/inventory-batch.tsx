@@ -351,36 +351,26 @@ const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword, in
                 {/*	</div>*/}
                 {/*</ScrollArea>*/}
                 {/* Inside DialogContent -> ScrollArea */}
-				  <ScrollArea className="h-52">
-					  <div className="flex flex-col gap-4">
-						  {selectedBatch?.batch?.batchVariants
-							  ?.find((bv) => bv.batch_variant_id === selectedBatch.batch_variant_id)
-							  ?.SupplierUnit?.map((supplierUnit) =>
-								  supplierUnit.ConversionRate?.map((conversion) => {
-									  const convertedStock =
-										  (selectedBatch?.quantity || 0) *
-										  (supplierUnit.quantity_per_unit || 0) *
-										  (conversion.conversion_rate || 0);
-
-									  const convertedPrice =
-										  (supplierUnit.price || 0) / (conversion.conversion_rate || 1);
-
-									  return (
-										  <BatchLineItem
-											  key={`${supplierUnit.supplier_unit_id}-${conversion.conversion_id}`} // Unique key
-											  isEditing={isEditing}
-											  conversionQty={conversion.conversion_rate}
-											  conversionUnit={conversion.toUnit?.name}
-											  stock={convertedStock}
-											  price={convertedPrice}
-											  mainUnit={supplierUnit.unit?.name || 'N/A'}
-										  />
-									  );
-								  }),
-							  )}
-						  {isEditing && <AddBatchLine />}
-					  </div>
-				  </ScrollArea>
+                  <ScrollArea className="h-52">
+                      <div className="flex flex-col gap-4">
+                          {selectedBatch?.batch?.batchVariants
+                              ?.find((bv) => bv.batch_variant_id === selectedBatch.batch_variant_id)
+                              ?.SupplierUnit?.map((supplierUnit) =>
+                                  supplierUnit.ConversionRate?.map((conversion) => (
+                                      <BatchLineItem
+                                          key={`${supplierUnit.supplier_unit_id}-${conversion.conversion_id}`} // Unique key
+                                          isEditing={isEditing}
+                                          conversionQty={conversion.conversion_rate || 'N/A'}
+                                          conversionUnit={conversion.toUnit?.name || 'N/A'}
+                                          stock={typeof supplierUnit.quantity_per_unit === 'number' ? supplierUnit.quantity_per_unit : 'N/A'}
+                                          price={typeof supplierUnit.price === 'number' ? supplierUnit.price : 'N/A'}
+                                          mainUnit={supplierUnit.unit?.name || 'N/A'}
+                                      />
+                                  ))
+                              )}
+                          {isEditing && <AddBatchLine />}
+                      </div>
+                  </ScrollArea>
               </div>
 
               <Separator orientation="horizontal" className="h-[2px]" />

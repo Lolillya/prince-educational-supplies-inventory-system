@@ -188,20 +188,20 @@ export const invoiceRouter = createTRPCRouter({
 
       console.log(lineItems);
 
-      const result = await ctx.db.$transaction(async (prisma) => {
+      const result = await ctx.db.$transaction(async () => {
         // Step 1: Create Invoice
-        // const createdInvoice = await prisma.invoice.create({
-        //   data: {
-        //     customer_id: invoice.customer_id,
-        //     invoice_clerk: invoice.invoice_clerk,
-        //     total_amount: invoice.total_amount,
-        //     discount: invoice.discount,
-        //     status: invoice.status,
-        //     payment_term_id: invoice.payment_term_id,
-        //   },
-        // });
+        const createdInvoice = await ctx.db.invoice.create({
+          data: {
+            customer_id: invoice.customer_id,
+            invoice_clerk: invoice.invoice_clerk,
+            total_amount: invoice.total_amount,
+            discount: invoice.discount,
+            status: invoice.status,
+            payment_term_id: invoice.payment_term_id,
+          },
+        });
 
-        // const invoiceId = createdInvoice.invoice_id;
+        const invoiceId = createdInvoice.invoice_id;
 
         // Step 2: Process each Line Item
         const createdLineItems = await Promise.all(
@@ -246,7 +246,7 @@ export const invoiceRouter = createTRPCRouter({
             console.log("SupplierUnitList:", supplierUnitList);
             console.log("ConversionList:", conversionList);
 
-            // while (remainingQty > 0) {
+            // STEP 4: check unit quantity if sufficient
             while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
               if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
                 // Deduct from the current unit
@@ -287,29 +287,38 @@ export const invoiceRouter = createTRPCRouter({
                 );
 
                 // Deduct from the higher unit
-                // await ctx.db.supplierUnit.update({
-                //   where: { supplier_unit_id: higherUnit.supplier_unit_id },
-                //   data: {
-                //     quantity_per_unit: { decrement: higherUnitQtyToDeduct },
-                //   },
-                // });
+                await ctx.db.supplierUnit.update({
+                  where: { supplier_unit_id: higherUnit.supplier_unit_id },
+                  data: {
+                    quantity_per_unit: { decrement: higherUnitQtyToDeduct },
+                  },
+                });
 
                 // Update invoiceItemQty after conversion
                 supplierUnit.quantity_per_unit += conversion.conversion_rate;
-                // invoiceItemQty =
-                //   supplierUnit.quantity_per_unit +
-                //   higherUnitQtyToDeduct * conversion.conversion_rate -
-                //   invoiceItemQty;
+
                 console.log("UpdatedQuantity:", supplierUnit.quantity_per_unit);
               }
               console.log(
                 `Remaining quantity after conversion: ${supplierUnit.quantity_per_unit - invoiceItemQty}`,
               );
             }
+
+            // Step 5: Create Line Item
+            return ctx.db.line_Item.create({
+              data: {
+                invoice_id: invoiceId,
+                variant_id: item.variant_id,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.total_price,
+                unit_id: unitId,
+              },
+            });
           }),
         );
 
-        // return { createdInvoice, createdLineItems };
+        return { createdInvoice, createdLineItems };
       });
 
       return result;

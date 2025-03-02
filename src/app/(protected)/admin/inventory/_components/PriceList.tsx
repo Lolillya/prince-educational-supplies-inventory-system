@@ -11,6 +11,9 @@ import { Input } from '~/components/ui/input';
 import { api } from '~/trpc/react';
 import PriceListSearch from './pricelist-search';
 import type { RouterOutputs } from '~/trpc/shared';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
+import { format } from 'date-fns';
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -88,6 +91,60 @@ const PriceList = () => {
 		});
 	};
 
+	const handleExport = () => {
+		const doc = new jsPDF();
+
+		// Add title
+		doc.setFontSize(12);
+		doc.text('Inventory Price List', 14, 15);
+
+		// Add generation date
+		const generationDate = new Date().toLocaleDateString();
+		doc.setFontSize(10);
+		doc.text(`Generated on: ${generationDate}`, 14, 22);
+
+		// Prepare table data
+		const tableData = selectedItems.map((item, index) => {
+			const itemKey = `${item.variant.id}-${index}`;
+			const state = itemStates[itemKey];
+			const description = [
+				item.variant.item.name,
+				item.variant.item.brand.name,
+				item.variant.name
+			].filter(Boolean).join(' - ');
+
+			const unit = state?.selectedUnitName === 'unit' ? 'N/A' : (state?.selectedUnitName || 'N/A');
+			const price = state?.price ? `P${parseFloat(state.price).toFixed(2)}` : 'N/A';
+
+			return [description, unit, price];
+		});
+
+		// Add table
+		autoTable(doc, {
+			head: [['Description', 'Unit', 'SRP']],
+			body: tableData,
+			startY: 30,
+			theme: 'grid',
+			styles: { 
+				fontSize: 10, 
+				cellPadding: 2 
+			},
+			headStyles: { 
+				fillColor: [200, 200, 200], 
+				textColor: 0 
+			},
+			columnStyles: {
+				0: { cellWidth: 100 },
+				1: { cellWidth: 40 },
+				2: { cellWidth: 30 },
+			},
+		});
+
+		// Save the PDF
+		const date = new Date().toLocaleDateString().replace(/\//g, '-');
+		doc.save(`Inventory_PriceList_${date}.pdf`);
+	};
+
 	return (
 		<Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
 			<DialogTrigger asChild>
@@ -124,7 +181,7 @@ const PriceList = () => {
 					onItemSelect={handleItemSelect}
 				/>
 
-				<ScrollArea className="h-64">
+				<ScrollArea className="h-80">
 					{selectedItems.length > 0 ? (
 						<div className="flex flex-col gap-2">
 							{selectedItems.map((item, index) => {
@@ -141,7 +198,7 @@ const PriceList = () => {
 							})}
 						</div>
 					) : (
-						<div className="flex items-center justify-center h-64 flex-col gap-6">
+						<div className="flex items-center justify-center h-80 flex-col gap-4">
 							<Search className="text-slate-400" size={60} />
 							<p className="text-slate-400">Search an item to get started.</p>
 						</div>
@@ -157,6 +214,7 @@ const PriceList = () => {
 					</DialogClose>
 					<Button
 						className="bg-green hover:bg-green/80"
+						onClick={handleExport}
 					>
 						<Download className='w-6 h-6' strokeWidth={2.5} />
 						Export Pricelist

@@ -169,7 +169,7 @@ const PriceListItem = ({ item, state, onStateChange, onRemove }: PriceListItemPr
 							<span className='text-slate-400 text-sm'>₱</span>
 							<Input
 								className='w-20 p-0 h-auto shadow-none bg-transparent text-slate-500 rounded-none'
-								value={state?.price || '0.00'}
+								value={state?.price || '0'}
 								onChange={(e) => {
 									const value = e.target.value;
 									if (value === '' || /^[0-9]+(\.[0-9]*)?$/.test(value)) {
@@ -186,7 +186,7 @@ const PriceListItem = ({ item, state, onStateChange, onRemove }: PriceListItemPr
 									if (!state?.price) {
 										onStateChange({
 											...state,
-											price: '0.00'
+											price: '0'
 										});
 									}
 								}}

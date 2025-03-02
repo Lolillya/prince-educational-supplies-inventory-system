@@ -51,7 +51,7 @@ const PriceListSearch = ({ filteredItems, onItemSelect }: PriceListSearchProps) 
 
 			{isFocused && (
 				<div className='absolute w-full rounded-lg p-2 bg-slate-100 z-50 mt-2 border-4 border-slate-200/50'>
-					<ScrollArea className='h-44'>
+					<ScrollArea className='h-36'>
 						{filteredResults && filteredResults.length > 0 ? (
 							filteredResults.map((item) => (
 								<div

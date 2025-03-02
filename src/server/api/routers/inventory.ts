@@ -1,8 +1,8 @@
 // ~/server/api/inventory.ts
 
-import { z } from "zod";
-import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
-import { db } from "~/server/db";
+import {z} from "zod";
+import {createTRPCRouter, publicProcedure} from "~/server/api/trpc";
+import {db} from "~/server/db";
 
 
 const normalizeInput = (value: any) =>
@@ -84,6 +84,11 @@ export const inventoryRouter = createTRPCRouter({
                                                                         name: true,
                                                                     },
                                                                 },
+                                                                supplierUnit: {
+                                                                    select: {
+                                                                        price: true,
+                                                                    },
+                                                                }, // Include price
                                                             },
                                                         },
                                                     },
@@ -143,6 +148,7 @@ export const inventoryRouter = createTRPCRouter({
                                                                 },
                                                             },
                                                         },
+                                                        orderBy: { supplier_unit_id: 'asc' }, // Ordering SupplierUnit
                                                     },
                                                 },
                                             },
@@ -161,34 +167,6 @@ export const inventoryRouter = createTRPCRouter({
 
             return inventoryRecord;
         }),
-
-
-
-
-    // listAllData: publicProcedure.query(async () => {
-    //     try {
-    //         const [brands, categories, units, items] = await Promise.all([
-    //             db.brand.findMany(),
-    //             db.category.findMany(),
-    //             db.unit.findMany(),
-    //             db.item.findMany({ include: { variants: true } }),
-    //         ]);
-    //
-    //         const variants = items.flatMap((item) =>
-    //             item.variants.map((variant) => ({
-    //                 variant_id: variant.variant_id,
-    //                 name: variant.name,
-    //                 item_id: item.item_id,
-    //                 description: item.description,
-    //             })),
-    //         );
-    //
-    //         return { brands, categories, units, items, variants };
-    //     } catch (error) {
-    //         console.error("Error listing all data:", error);
-    //         throw new Error("Failed to retrieve data.");
-    //     }
-    // }),
 
     listAllData: publicProcedure.query(async () => {
         try {
@@ -216,7 +194,7 @@ export const inventoryRouter = createTRPCRouter({
                 })),
             );
 
-            return { brands, categories, units, items, variants };
+            return {brands, categories, units, items, variants};
         } catch (error) {
             console.error("Error listing all data:", error);
             throw new Error("Failed to retrieve data.");
@@ -227,8 +205,8 @@ export const inventoryRouter = createTRPCRouter({
     getItemId: publicProcedure.query(async () => {
         try {
             const lastItem = await db.inventory.findFirst({
-                orderBy: { inventory_id: "desc" },
-                select: { inventory_id: true },
+                orderBy: {inventory_id: "desc"},
+                select: {inventory_id: true},
             });
 
             const nextItemId = lastItem ? lastItem.inventory_id + 1 : 1;
@@ -240,19 +218,19 @@ export const inventoryRouter = createTRPCRouter({
     }),
 
     createBrand: publicProcedure
-        .input(z.object({ name: z.string() }))
-        .mutation(async ({ input }) => {
+        .input(z.object({name: z.string()}))
+        .mutation(async ({input}) => {
             const brand = await db.brand.create({
-                data: { name: input.name },
+                data: {name: input.name},
             });
             return brand;
         }),
 
     createCategory: publicProcedure
-        .input(z.object({ name: z.string() }))
-        .mutation(async ({ input }) => {
+        .input(z.object({name: z.string()}))
+        .mutation(async ({input}) => {
             const category = await db.category.create({
-                data: { name: input.name },
+                data: {name: input.name},
             });
             return category;
         }),
@@ -266,7 +244,7 @@ export const inventoryRouter = createTRPCRouter({
                 description: z.string(),
             })
         )
-        .mutation(async ({ input }) => {
+        .mutation(async ({input}) => {
             const item = await db.item.create({
                 data: {
                     name: input.name,
@@ -288,8 +266,8 @@ export const inventoryRouter = createTRPCRouter({
                 description: z.string().optional(),
             })
         )
-        .mutation(async ({ input }) => {
-            const { item_id, name, brand_id, category_id, description } = input;
+        .mutation(async ({input}) => {
+            const {item_id, name, brand_id, category_id, description} = input;
 
             const updatedItem = await db.item.update({
                 where: {
@@ -315,16 +293,16 @@ export const inventoryRouter = createTRPCRouter({
                 veryLowStock: z.number(),
             }),
         )
-        .mutation(async ({ input }) => {
-            const { variantId, name, lowStock, veryLowStock } = input;
+        .mutation(async ({input}) => {
+            const {variantId, name, lowStock, veryLowStock} = input;
             // Update variant name
             const updatedVariant = await db.variant.update({
-                where: { variant_id: variantId },
-                data: { name },
+                where: {variant_id: variantId},
+                data: {name},
             });
             // Update or create stock level
             await db.stockLevel.upsert({
-                where: { variant_id: variantId },
+                where: {variant_id: variantId},
                 update: {
                     low_stock: lowStock,
                     very_low_stock: veryLowStock,
@@ -345,8 +323,8 @@ export const inventoryRouter = createTRPCRouter({
                 name: z.string(),
             })
         )
-        .mutation(async ({ input }) => {
-            const { item_id, name } = input;
+        .mutation(async ({input}) => {
+            const {item_id, name} = input;
 
             // Create a new variant for the given item
             const variant = await db.variant.create({
@@ -367,7 +345,7 @@ export const inventoryRouter = createTRPCRouter({
                 very_low_stock: z.number().min(1, "Very Low Stock must be greater than 0."),
             })
         )
-        .mutation(async ({ input }) => {
+        .mutation(async ({input}) => {
             const stockLevel = await db.stockLevel.create({
                 data: {
                     variant_id: input.variant_id,
@@ -387,7 +365,7 @@ export const inventoryRouter = createTRPCRouter({
                 inventory_number: z.number(), // Ensure this matches the schema
             })
         )
-        .mutation(async ({ input }) => {
+        .mutation(async ({input}) => {
             const inventory = await db.inventory.create({
                 data: {
                     variant_id: input.variant_id,
@@ -418,12 +396,12 @@ export const inventoryRouter = createTRPCRouter({
                 inventoryClerk: z.string(),
             })
         )
-        .mutation(async ({ input }) => {
-            const { inventoryId, name, brand, category, description, variants, inventoryClerk } = input;
+        .mutation(async ({input}) => {
+            const {inventoryId, name, brand, category, description, variants, inventoryClerk} = input;
 
             // Fetch inventory using inventory_number
             const inventoryRecord = await db.inventory.findUnique({
-                where: { inventory_number: inventoryId },
+                where: {inventory_number: inventoryId},
                 include: {
                     variant: {
                         include: {
@@ -449,19 +427,19 @@ export const inventoryRouter = createTRPCRouter({
 
             // Update brand name
             const updatedBrand = await db.brand.update({
-                where: { brand_id: item.brand.brand_id },
-                data: { name: brand },
+                where: {brand_id: item.brand.brand_id},
+                data: {name: brand},
             });
 
             // Update category name
             const updatedCategory = await db.category.update({
-                where: { category_id: item.category.category_id },
-                data: { name: category },
+                where: {category_id: item.category.category_id},
+                data: {name: category},
             });
 
             // Update item details
             const updatedItem = await db.item.update({
-                where: { item_id: item.item_id },
+                where: {item_id: item.item_id},
                 data: {
                     name,
                     description,
@@ -475,8 +453,8 @@ export const inventoryRouter = createTRPCRouter({
                     if (variantData.id) {
                         // Check if the variant exists before updating
                         const existingVariant = await db.variant.findUnique({
-                            where: { variant_id: variantData.id },
-                            include: { StockLevel: true },
+                            where: {variant_id: variantData.id},
+                            include: {StockLevel: true},
                         });
 
                         if (!existingVariant) {
@@ -485,13 +463,13 @@ export const inventoryRouter = createTRPCRouter({
 
                         // Update the existing variant
                         await db.variant.update({
-                            where: { variant_id: variantData.id },
-                            data: { name: variantData.name },
+                            where: {variant_id: variantData.id},
+                            data: {name: variantData.name},
                         });
 
                         // Ensure stock level is updated properly
                         await db.stockLevel.upsert({
-                            where: { variant_id: variantData.id }, // Use existing variant ID
+                            where: {variant_id: variantData.id}, // Use existing variant ID
                             update: {
                                 low_stock: variantData.lowStock,
                                 very_low_stock: variantData.veryLowStock,
@@ -523,7 +501,7 @@ export const inventoryRouter = createTRPCRouter({
                         },
                     });
 
-            // Create new inventory record
+                    // Create new inventory record
                     await db.inventory.create({
                         data: {
                             variant_id: newVariant.variant_id,
@@ -537,7 +515,7 @@ export const inventoryRouter = createTRPCRouter({
                 })
             );
 
-            return { updatedItem, updatedVariants };
+            return {updatedItem, updatedVariants};
         }),
 
 
@@ -547,12 +525,12 @@ export const inventoryRouter = createTRPCRouter({
                 inventoryId: z.number(),
             })
         )
-        .mutation(async ({ input }) => {
-            const { inventoryId } = input;
+        .mutation(async ({input}) => {
+            const {inventoryId} = input;
 
             // Fetch the variant associated with the inventoryId
             const variant = await prisma.variant.findUnique({
-                where: { variant_id: inventoryId },
+                where: {variant_id: inventoryId},
                 include: {
                     item: true, // Include the related item to access its ID
                 },
@@ -570,10 +548,10 @@ export const inventoryRouter = createTRPCRouter({
 
             // Delete the Item and rely on cascading deletes for related records
             await prisma.item.delete({
-                where: { item_id: itemId },
+                where: {item_id: itemId},
             });
 
-            return { message: "Item and all related records deleted successfully." };
+            return {message: "Item and all related records deleted successfully."};
         }),
 
     deleteVariant: publicProcedure
@@ -582,15 +560,15 @@ export const inventoryRouter = createTRPCRouter({
                 variantId: z.number(),
             })
         )
-        .mutation(async ({ input }) => {
-            const { variantId } = input;
+        .mutation(async ({input}) => {
+            const {variantId} = input;
 
             // Delete the Variant; related records will be deleted due to cascading deletes
             await prisma.variant.delete({
-                where: { variant_id: variantId },
+                where: {variant_id: variantId},
             });
 
-            return { message: "Variant and all related records deleted successfully." };
+            return {message: "Variant and all related records deleted successfully."};
         }),
 
     verifyPassword: publicProcedure
@@ -600,12 +578,12 @@ export const inventoryRouter = createTRPCRouter({
                 password: z.string(), // Password input by the user
             })
         )
-        .mutation(async ({ input }) => {
-            const { personalDetailsId, password } = input;
+        .mutation(async ({input}) => {
+            const {personalDetailsId, password} = input;
 
             // Fetch the authentication record for the user
             const authRecord = await prisma.authentication.findUnique({
-                where: { personal_details_id: personalDetailsId },
+                where: {personal_details_id: personalDetailsId},
             });
 
             if (!authRecord) {
@@ -617,141 +595,154 @@ export const inventoryRouter = createTRPCRouter({
                 throw new Error("Incorrect password.");
             }
 
-            return { success: true, message: "Password verified." };
+            return {success: true, message: "Password verified."};
         }),
 
-    // it return different variant_id value error creating new variant on edit-item
-    // editItem: publicProcedure
-    //     .input(
-    //         z.object({
-    //             inventoryId: z.number(),
-    //             name: z.string(),
-    //             brand: z.string(),
-    //             category: z.string(),
-    //             description: z.string().optional(),
-    //             variants: z.array(
-    //                 z.object({
-    //                     id: z.number().optional(), // Optional, will be set only when updating
-    //                     name: z.string(),
-    //                     lowStock: z.number(),
-    //                     veryLowStock: z.number(),
-    //                 })
-    //             ),
-    //         })
-    //     )
-    //     .mutation(async ({ input }) => {
-    //         const { inventoryId, name, brand, category, description, variants } = input;
-    //
-    //         console.log("Input received:", input); // Log the input for inspection
-    //
-    //         const variant = await prisma.variant.findUnique({
-    //             where: { variant_id: inventoryId },
-    //             include: {
-    //                 item: {
-    //                     include: {
-    //                         brand: true,
-    //                         category: true,
-    //                     },
-    //                 },
-    //             },
-    //         });
-    //
-    //         if (!variant) {
-    //             throw new Error("Variant not found");
-    //         }
-    //
-    //         const itemId = variant.item.item_id;
-    //         const currentBrand = variant.item.brand;
-    //         const currentCategory = variant.item.category;
-    //
-    //         // Log the item and its current brand/category for debugging
-    //         console.log("Found item:", variant.item);
-    //         console.log("Current brand:", currentBrand);
-    //         console.log("Current category:", currentCategory);
-    //
-    //         // Update Brand if necessary
-    //         const updatedBrand = currentBrand.name !== brand ? await prisma.brand.update({
-    //             where: { brand_id: currentBrand.brand_id },
-    //             data: { name: brand },
-    //         }) : currentBrand;
-    //
-    //         // Update Category if necessary
-    //         const updatedCategory = currentCategory.name !== category ? await prisma.category.update({
-    //             where: { category_id: currentCategory.category_id },
-    //             data: { name: category },
-    //         }) : currentCategory;
-    //
-    //         // Update Item
-    //         const updatedItem = await prisma.item.update({
-    //             where: { item_id: itemId },
-    //             data: {
-    //                 name,
-    //                 description,
-    //                 brand_id: updatedBrand.brand_id,
-    //                 category_id: updatedCategory.category_id,
-    //             },
-    //             include: {
-    //                 brand: true,
-    //                 category: true,
-    //             },
-    //         });
-    //
-    //         // Log the updated item
-    //         console.log("Updated item:", updatedItem);
-    //
-    //         // Separate logic for creating and updating variants
-    //         const updatedVariants = await Promise.all(
-    //             variants.map(async (variantData) => {
-    //                 console.log("Processing variant data:", variantData); // Log the variant data
-    //
-    //                 let variantRecord;
-    //
-    //                 if (variantData.id) {
-    //                     // Update existing variant
-    //                     console.log("Updating existing variant with ID:", variantData.id); // Log the ID being used for update
-    //                     variantRecord = await prisma.variant.update({
-    //                         where: { variant_id: variantData.id },
-    //                         data: {
-    //                             name: variantData.name,
-    //                             StockLevel: {
-    //                                 upsert: {
-    //                                     create: {
-    //                                         low_stock: variantData.lowStock,
-    //                                         very_low_stock: variantData.veryLowStock,
-    //                                     },
-    //                                     update: {
-    //                                         low_stock: variantData.lowStock,
-    //                                         very_low_stock: variantData.veryLowStock,
-    //                                     },
-    //                                 },
-    //                             },
-    //                         },
-    //                     });
-    //                 } else {
-    //                     // Create new variant (do not pass id)
-    //                     console.log("Creating new variant:", variantData.name); // Log new variant creation
-    //                     variantRecord = await prisma.variant.create({
-    //                         data: {
-    //                             name: variantData.name,
-    //                             item_id: itemId,
-    //                             StockLevel: {
-    //                                 create: {
-    //                                     low_stock: variantData.lowStock,
-    //                                     very_low_stock: variantData.veryLowStock,
-    //                                 },
-    //                             },
-    //                         },
-    //                     });
-    //                 }
-    //
-    //                 return variantRecord;
-    //             })
-    //         );
-    //
-    //         console.log("Updated variants:", updatedVariants); // Log updated variants after processing
-    //         return { updatedItem, updatedVariants };
-    //     }),
+    // ~/server/api/inventory.ts
+    updateSupplierUnits: publicProcedure
+        .input(
+            z.object({
+                batchVariantId: z.number(),
+                units: z.array(
+                    z.object({
+                        operation: z.enum(["create", "update", "delete"]),
+                        supplierUnitId: z.number().optional(),
+                        data: z.object({
+                            stock: z.string().transform(Number),
+                            price: z.string().transform(Number),
+                            unit: z.string(),
+                            conversionQty: z.string().transform(v => v ? Number(v) : null),
+                            conversionUnit: z.string(),
+                            supplierId: z.string()
+                        }),
+                    })
+                ),
+            })
+        )
+        .mutation(async ({ input }) => {
+            const { batchVariantId, units } = input;
 
+            return await db.$transaction(async (prisma) => {
+                const results = [];
+                const BATCH_SIZE = 10;
+
+                for (let i = 0; i < units.length; i += BATCH_SIZE) {
+                    const batch = units.slice(i, i + BATCH_SIZE);
+
+                    await Promise.all(batch.map(async (unit) => {
+                        try {
+                            switch (unit.operation) {
+                                case "create":
+                                    const newUnit = await prisma.supplierUnit.create({
+                                        data: {
+                                            batchVariant: {
+                                                connect: {
+                                                    batch_variant_id: batchVariantId
+                                                }
+                                            },
+                                            supplier: {
+                                                connect: {
+                                                    id: unit.data.supplierId
+                                                }
+                                            },
+                                            quantity_per_unit: Number(unit.data.stock),
+                                            total_quantity: Number(unit.data.stock),
+                                            price: Number(unit.data.price),
+                                            unit: {
+                                                connect: {
+                                                    name: unit.data.unit
+                                                }
+                                            },
+                                            ConversionRate: unit.data.conversionQty && unit.data.conversionUnit ? {
+                                                create: {
+                                                    conversion_rate: Number(unit.data.conversionQty),
+                                                    fromUnit: {
+                                                        connect: {
+                                                            name: unit.data.unit
+                                                        }
+                                                    },
+                                                    toUnit: {
+                                                        connect: {
+                                                            name: unit.data.conversionUnit
+                                                        }
+                                                    }
+                                                }
+                                            } : undefined,
+                                        },
+                                        include: {
+                                            ConversionRate: true
+                                        }
+                                    });
+                                    results.push(newUnit);
+                                    break;
+
+                                case "update":
+                                    // Get existing conversion rate
+                                    const existingConversion = await prisma.conversionRate.findFirst({
+                                        where: {
+                                            supplier_unit_id: unit.supplierUnitId
+                                        }
+                                    });
+
+                                    const updateData = {
+                                        quantity_per_unit: Number(unit.data.stock),
+                                        price: Number(unit.data.price),
+                                        unit: {
+                                            connect: {
+                                                name: unit.data.unit
+                                            }
+                                        },
+                                        ConversionRate: unit.data.conversionQty && unit.data.conversionUnit ? {
+                                            upsert: {
+                                                where: { conversion_id: existingConversion?.conversion_id ?? -1 },
+                                                create: {
+                                                    conversion_rate: Number(unit.data.conversionQty),
+                                                    fromUnit: { connect: { name: unit.data.unit } },
+                                                    toUnit: { connect: { name: unit.data.conversionUnit } }
+                                                },
+                                                update: {
+                                                    conversion_rate: Number(unit.data.conversionQty),
+                                                    toUnit: { connect: { name: unit.data.conversionUnit } }
+                                                }
+                                            }
+                                        } : {
+                                            deleteMany: { supplier_unit_id: unit.supplierUnitId }
+                                        }
+                                    };
+
+                                    const updatedUnit = await prisma.supplierUnit.update({
+                                        where: { supplier_unit_id: unit.supplierUnitId },
+                                        data: updateData,
+                                        include: { ConversionRate: true }
+                                    });
+                                    results.push(updatedUnit);
+                                    break;
+
+
+                                case "delete":
+                                    if (unit.supplierUnitId) {
+                                        await prisma.conversionRate.deleteMany({
+                                            where: { supplier_unit_id: unit.supplierUnitId },
+                                        });
+                                        const deletedUnit = await prisma.supplierUnit.delete({
+                                            where: { supplier_unit_id: unit.supplierUnitId },
+                                        });
+                                        results.push(deletedUnit);
+                                    }
+                                    break;
+                            }
+                        } catch (error) {
+                            console.error(`Error processing unit:`, unit);
+                            throw error;
+                        }
+                    }));
+                }
+                return results;
+            }, {
+                maxWait: 30000,
+                timeout: 30000
+            });
+        }),
 });
 
 export default inventoryRouter;

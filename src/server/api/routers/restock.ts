@@ -537,6 +537,7 @@ export const restockRouter = createTRPCRouter({
                             from: rate.fromUnit.name,
                             count: rate.conversion_rate,
                             to: rate.toUnit.name,
+                            price: supplierUnit.price,
                         }))
                     );
 
@@ -545,6 +546,7 @@ export const restockRouter = createTRPCRouter({
                         item: batchVariant.variant.item.name,
                         brand: batchVariant.variant.item.brand.name,
                         quantity: batchVariant.quantity,
+                        price: batchVariant.SupplierUnit[0]?.price,
                         mainUnit: batchVariant.SupplierUnit[0]?.unit.name || "Unknown",
                         unitConversion: unitConversions,
                     };

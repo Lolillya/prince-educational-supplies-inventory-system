@@ -110,6 +110,7 @@ const SelectedItem = ({
 					batchVariants={batchVariants}
 					selectedVariantId={Number(id)}
 					onVerifyPassword={onVerifyPassword}
+					inventoryNumber={inventoryNumber}
 				/>
 			</div>
 

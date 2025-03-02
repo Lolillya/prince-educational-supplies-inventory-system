@@ -223,7 +223,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
             setShowSuccessDialog(true);  // Show success dialog
         } catch (error) {
             console.error("Error deleting supplier:", error);
-            setErrorMessage("Failed to delete supplier. Please try again.");
+            setErrorMessage("Failed to delete customer. Please try again.");
             setShowErrorDialog(true);  // Show error dialog
         }
     };
@@ -436,7 +436,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
                             onClick={() => setShowDeleteDialog(true)}
                             className="bg-red p-7 text-lg font-bold"
                         >
-                            Delete Supplier
+                            Delete Customer
                         </Button>
                     </DialogTrigger>
 

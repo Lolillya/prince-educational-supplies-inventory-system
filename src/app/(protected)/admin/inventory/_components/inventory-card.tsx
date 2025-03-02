@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, {useState, useEffect, useMemo, forwardRef, useImperativeHandle} from "react";
 import { Separator } from "~/components/ui/separator";
 import {
     Accordion,
@@ -32,14 +32,28 @@ type InventoryCardProps = {
     onStockChange: (newStock: number) => void;
 };
 
-const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange }: InventoryCardProps) => {
-    // Get the batch_variant_id of the current batchVariant
+// Add this interface at the top
+export interface InventoryCardRef {
+    getStockData: () => {
+        batchVariantId: number;
+        currentUnits: (StockUnitData & { supplierUnitId?: number; supplierId?: string })[];
+        originalUnits: (StockUnitData & { supplierUnitId?: number; supplierId?: string })[];
+    };
+}
+
+// Modify component declaration to use forwardRef
+const InventoryCard = forwardRef<InventoryCardRef, InventoryCardProps>(
+    ({ batch, units, item, onRemove }, ref) => {
+        // Get the batch_variant_id of the current batchVariant
     const batchVariantId = batch?.batch_variant_id;
 
     // Access the supplierUnits from the nested structure and filter by batch_variant_id
-    const supplierUnits = batch?.batch?.batchVariants
-        ?.flatMap(b => b.SupplierUnit)
-        .filter(supplierUnit => supplierUnit.batch_variant_id === batchVariantId) || [];
+    const supplierUnits = useMemo(() =>
+            batch?.batch?.batchVariants?.flatMap(b =>
+                b.SupplierUnit?.filter(su => su.batch_variant_id === batch.batch_variant_id) || []
+            ) || [],
+        [batch]
+    );
 
     // Use the first supplierUnit as the main supplier unit
     const mainSupplierUnits = supplierUnits.length > 0 ? [supplierUnits[0]] : [];
@@ -48,20 +62,12 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
     const [detailedStockUnits, setDetailedStockUnits] = useState<StockUnitData[]>(() =>
         supplierUnits.map((unit) => ({
             stock: unit.quantity_per_unit,
-            price: Number(unit.price).toFixed(2),
+            price: unit.price % 1 === 0 ? unit.price.toString() : unit.price.toFixed(2),
             unit: unit.unit?.name,
             conversionQty: unit.ConversionRate?.[0]?.conversion_rate || "",
             conversionUnit: unit.ConversionRate?.[0]?.toUnit?.name || "",
         }))
     );
-
-    // // Log the batchVariant and supplierUnits for debugging
-    // useEffect(() => {
-    //     console.log("Batch Variant:", batch);
-    //     console.log("Supplier Units in Batch Variant:", supplierUnits);
-    // }, [batch, supplierUnits]);
-
-
 
     const [stock, setStock] = useState("");
     const [price, setPrice] = useState("");
@@ -72,11 +78,34 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
 
-    useEffect(() => {
+
+        const [originalData] = useState<StockUnitData[]>(() =>
+            supplierUnits.map((unit) => ({
+                supplierUnitId: unit.supplier_unit_id, // Add this
+                supplierId: unit.supplier_id, // Add supplier ID from existing data
+                stock: unit.quantity_per_unit.toString(),
+                price: unit.price.toFixed(2),
+                unit: unit.unit?.name || "",
+                conversionQty: unit.ConversionRate?.[0]?.conversion_rate?.toString() || "",
+                conversionUnit: unit.ConversionRate?.[0]?.toUnit?.name || ""
+            }))
+        );
+
+        // Update the ref exposure
+        useImperativeHandle(ref, () => ({
+            getStockData: () => ({
+                batchVariantId: batch.batch_variant_id,
+                currentUnits: detailedStockUnits,
+                originalUnits: originalData
+            })
+        }));
+
+
+        useEffect(() => {
         if (batch && batch.supplierUnits) {
             const details = batch.supplierUnits.map((unit) => ({
                 stock: unit.quantity_per_unit,
-                price: Number(unit.price).toFixed(2),
+                price: unit.price % 1 === 0 ? unit.price.toString() : unit.price.toFixed(2),
                 unit: unit.unit?.name,
                 conversionQty: unit.ConversionRate?.[0]?.conversion_rate || "",
                 conversionUnit: unit.ConversionRate?.[0]?.toUnit.name || "",
@@ -86,18 +115,26 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
     }, [batch]);
 
     useEffect(() => {
-        if (detailedStockUnits.length > 0) {
+        // Initialize main inputs only once when detailedStockUnits is first loaded
+        if (detailedStockUnits.length > 0 && !stock && !price && !unit) {
             setStock(detailedStockUnits[0].stock);
             setPrice(detailedStockUnits[0].price);
             setUnit(detailedStockUnits[0].unit);
         }
-    }, [detailedStockUnits]);
+    }, [detailedStockUnits]); // Only run when detailedStockUnits changes
+
 
     useEffect(() => {
         if (detailedStockUnits.length === 0) {
             addStockUnit();
         }
     }, []);
+
+    // Calculate used units including all units and conversion units from detailedStockUnits
+    const usedUnits = useMemo(
+        () => detailedStockUnits.flatMap(u => [u.unit, u.conversionUnit]).filter(Boolean),
+        [detailedStockUnits]
+    );
 
 
     useEffect(() => {
@@ -107,53 +144,66 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
         }
     }, [units]);
 
+    // In the InventoryCard component
+// Update first row when main inputs change (with condition)
+    useEffect(() => {
+        if (detailedStockUnits.length > 0) {
+            const firstUnit = detailedStockUnits[0];
+            if (firstUnit.stock !== stock || firstUnit.price !== price) {
+                const updatedUnits = [...detailedStockUnits];
+                updatedUnits[0] = {
+                    ...firstUnit,
+                    stock: stock,
+                    price: price
+                };
+                setDetailedStockUnits(updatedUnits);
+            }
+        }
+    }, [stock, price]); // Only run when stock/price change
 
     useEffect(() => {
-        // Filter units based on the search term
         if (searchTerm) {
-            setFilteredUnits(
-                unitOptions.filter((unitName) =>
-                    unitName.toLowerCase().includes(searchTerm.toLowerCase())
-                )
-            );
+            const filtered = unitOptions
+                .filter((name) => !usedUnits.includes(name))
+                .filter((name) =>
+                    name.toLowerCase().includes(searchTerm.toLowerCase())
+                );
+            setFilteredUnits(filtered);
             setDropdownVisible(true);
         } else {
             setFilteredUnits([]);
             setDropdownVisible(false);
         }
-    }, [searchTerm, unitOptions]);
+    }, [searchTerm, unitOptions, usedUnits]);
 
+    // In the logging useEffect
     // useEffect(() => {
     //     console.log("Detailed Stock Units Updated:", detailedStockUnits);
-    //     // Log additional details like batch/batchVariant ID, supplierUnit ID, and conversionRate ID
     //     detailedStockUnits.forEach((unit, index) => {
+    //         // Find the matching supplier unit by index and conversion details
+    //         const supplierUnit = batch?.batch?.batchVariants
+    //             ?.flatMap(bv => bv.SupplierUnit)
+    //             ?.find(su =>
+    //                 su.batch_variant_id === batchVariantId &&
+    //                 su.quantity_per_unit === Number(unit.stock) &&
+    //                 su.price === Number(unit.price) &&
+    //                 su.unit?.name === unit.unit
+    //             );
+    //
+    //         const conversionRate = supplierUnit?.ConversionRate?.[0];
+    //
     //         console.log(`Row ${index + 1}:`, {
     //             batchId: batch?.batch_id,
-    //             batchVariantId: batch?.batch?.batchVariants?.[0]?.batch_variant_id,
-    //             supplierUnitId: batch?.supplierUnits?.[index]?.supplier_unit_id,
-    //             conversionRateId: batch?.supplierUnits?.[index]?.ConversionRate?.[0]?.conversion_rate_id,
+    //             batchVariantId: batchVariantId,
+    //             supplierUnitId: supplierUnit?.supplier_unit_id || "Not saved yet",
+    //             conversionRateId: conversionRate?.conversion_id || "Not saved yet",
+    //             conversionRate: conversionRate?.conversion_rate || "N/A",
+    //             fromUnit: conversionRate?.fromUnit?.name || "N/A",
+    //             toUnit: conversionRate?.toUnit?.name || "N/A",
     //             ...unit,
     //         });
     //     });
-    // }, [detailedStockUnits]);
-    useEffect(() => {
-        console.log("Detailed Stock Units Updated:", detailedStockUnits);
-        detailedStockUnits.forEach((unit, index) => {
-            const supplierUnit = batch?.batch?.batchVariants?.[0]?.SupplierUnit?.[index];
-            const conversionRate = supplierUnit?.ConversionRate?.[0];
-
-            console.log(`Row ${index + 1}:`, {
-                batchId: batch?.batch_id,
-                batchVariantId: batch?.batch?.batchVariants?.[0]?.batch_variant_id,
-                supplierUnitId: supplierUnit?.supplier_unit_id, // Access supplier_unit_id
-                conversionRateId: conversionRate?.conversion_id, // Access conversion_id
-                conversionRate: conversionRate?.conversion_rate, // Access conversion_rate
-                fromUnit: conversionRate?.fromUnit?.name, // Access fromUnit name
-                toUnit: conversionRate?.toUnit?.name, // Access toUnit name
-                ...unit,
-            });
-        });
-    }, [detailedStockUnits, batch]);
+    // }, [detailedStockUnits, batch, batchVariantId]);
 
     const handleSelectUnit = (unitName: string) => {
         setUnit(unitName);
@@ -189,172 +239,106 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
     };
 
     const addStockUnit = () => {
-        if (detailedStockUnits.length > 0) {
-            // Get the last stock unit for calculations
-            const lastUnit = detailedStockUnits[detailedStockUnits.length - 1];
-            const conversionQty = parseFloat(lastUnit.conversionQty || "0");
-            const currentStock = parseFloat(lastUnit.stock || "0");
-            const currentPrice = parseFloat(lastUnit.price || "0");
-
-            if (
-                conversionQty > 0 &&
-                !isNaN(conversionQty) &&
-                currentStock > 0 &&
-                !isNaN(currentStock) &&
-                currentPrice > 0 &&
-                !isNaN(currentPrice)
-            ) {
-                // Calculate stock and price for the next unit
-                const newUnit: StockUnitData = {
-                    stock: (currentStock * conversionQty).toString(),
-                    price: (currentPrice / conversionQty).toFixed(2),
-                    unit: "", // New unit is empty initially
-                    conversionQty: "",
-                    conversionUnit: "",
-                };
-                setDetailedStockUnits([...detailedStockUnits, newUnit]);
-            } else {
-                // Add a blank unit if calculations cannot be performed
-                const blankUnit: StockUnitData = {
-                    stock: "",
-                    price: "",
-                    unit: "",
-                    conversionQty: "",
-                    conversionUnit: "",
-                };
-                setDetailedStockUnits([...detailedStockUnits, blankUnit]);
-            }
-        } else {
-            // For the first unit, inherit the top-level stock and price
-            const initialUnit: StockUnitData = {
-                stock,
-                price,
-                unit,
-                conversionQty: "",
-                conversionUnit: "",
-            };
-            setDetailedStockUnits([initialUnit]);
-        }
+        const lastUnit = detailedStockUnits[detailedStockUnits.length - 1];
+        const newUnit: StockUnitData = {
+            stock: "",
+            price: "",
+            unit: lastUnit?.conversionUnit || "", // Inherit previous conversion unit
+            conversionQty: "",
+            conversionUnit: "",
+        };
+        setDetailedStockUnits([...detailedStockUnits, newUnit]);
     };
 
-    const removeStockUnit = (index: number) => {
-        // Remove the selected row
-        const updatedUnits = detailedStockUnits.filter((_, i) => i !== index);
+        const removeStockUnit = (index: number) => {
+            const updatedUnits = [...detailedStockUnits];
+            const removedUnit = updatedUnits[index];
 
-        // Recalculate stock and price for rows after the removed one
-        for (let i = index; i < updatedUnits.length; i++) {
-            if (i === 0) {
-                // First row inherits the top-level stock and price
-                updatedUnits[i].stock = stock;
-                updatedUnits[i].price = price;
-            } else {
-                // Recalculate based on the previous row
-                const prevUnit = updatedUnits[i - 1];
-                const conversionQty = parseFloat(prevUnit.conversionQty || "0");
-                const prevStock = parseFloat(prevUnit.stock || "0");
-                const prevPrice = parseFloat(prevUnit.price || "0");
+            // Remove the target unit
+            updatedUnits.splice(index, 1);
 
-                if (
-                    prevStock > 0 &&
-                    !isNaN(prevStock) &&
-                    conversionQty > 0 &&
-                    !isNaN(conversionQty) &&
-                    prevPrice > 0 &&
-                    !isNaN(prevPrice)
-                ) {
-                    updatedUnits[i].stock = (prevStock * conversionQty).toString();
-                    updatedUnits[i].price = (prevPrice / conversionQty).toFixed(2);
+            // Update previous unit's conversion if needed
+            if (index > 0) {
+                const prevIndex = index - 1;
+
+                // If there's a next unit after removal
+                if (prevIndex < updatedUnits.length - 1) {
+                    updatedUnits[prevIndex] = {
+                        ...updatedUnits[prevIndex],
+                        conversionUnit: updatedUnits[prevIndex + 1].unit,
+                        conversionQty: updatedUnits[prevIndex + 1].conversionQty
+                    };
                 } else {
-                    // Reset if calculations can't be performed
-                    updatedUnits[i].stock = "";
-                    updatedUnits[i].price = "";
+                    // If no next unit, clear conversion
+                    updatedUnits[prevIndex] = {
+                        ...updatedUnits[prevIndex],
+                        conversionUnit: "",
+                        conversionQty: ""
+                    };
                 }
             }
-        }
 
-        setDetailedStockUnits(updatedUnits);
-    };
+            // Update following units' base unit
+            if (index < updatedUnits.length) {
+                updatedUnits.forEach((unit, i) => {
+                    if (i >= index && i > 0) {
+                        updatedUnits[i].unit = updatedUnits[i - 1].conversionUnit;
+                    }
+                });
+            }
 
+            setDetailedStockUnits(updatedUnits);
+        };
 
     const updateStockUnit = (
         index: number,
         field: keyof StockUnitData,
         value: string
     ) => {
-        // Update the specific field of the current unit
-        const updatedUnits = detailedStockUnits.map((unit, i) =>
-            i === index ? { ...unit, [field]: value } : unit
-        );
+        let updatedUnits = [...detailedStockUnits];
 
-        // If the field being updated is "conversionUnit", cascade the change to the immediate next row
-        if (field === "conversionUnit") {
-            // Only update the immediate next row if it exists
-            if (index + 1 < updatedUnits.length) {
-                const nextUnit = updatedUnits[index + 1];
+        // Update the current unit
+        updatedUnits[index] = {
+            ...updatedUnits[index],
+            [field]: value
+        };
 
-                // Update the next row's unit to the new conversionUnit value
-                nextUnit.unit = value; // Always update the unit for the immediate next row
+        // Handle conversion unit inheritance
+        if (field === "conversionUnit" && index + 1 < updatedUnits.length) {
+            updatedUnits[index + 1].unit = value;
+        }
+
+        // Check if we should add a new row
+        if ((field === "conversionQty" || field === "conversionUnit") &&
+            index === updatedUnits.length - 1) {
+            const currentUnit = updatedUnits[index];
+
+            if (currentUnit.conversionQty.trim() !== "" &&
+                currentUnit.conversionUnit.trim() !== "") {
+                // Add new row with inherited unit
+                updatedUnits.push({
+                    stock: "",
+                    price: "",
+                    unit: currentUnit.conversionUnit,
+                    conversionQty: "",
+                    conversionUnit: ""
+                });
             }
         }
 
-        // Check if the reset condition is triggered (conversionQty, conversionUnit, stock, or price is cleared)
-        const isResetRequired =
-            (field === "conversionQty" && (!value || value.trim() === "")) ||
-            (field === "conversionUnit" && (!value || value.trim() === "")) ||
-            (field === "stock" && (!value || value.trim() === "")) ||
-            (field === "price" && (!value || value.trim() === ""));
-
-        // If reset is required, clear all rows below the current row
-        if (isResetRequired) {
-            for (let i = index + 1; i < updatedUnits.length; i++) {
-                updatedUnits[i].stock = "";
-                updatedUnits[i].price = "";
+        // Sync with top-level inputs
+        if (index === 0) {
+            if (field === "stock" && updatedUnits[0].stock !== stock) {
+                setStock(value);
             }
-            setDetailedStockUnits(updatedUnits);
-            return; // Exit early since no further calculations are needed
-        }
-
-        // Apply cascading logic for stock and price, starting with the next row
-        for (let i = 0; i < updatedUnits.length - 1; i++) {
-            const currentUnit = updatedUnits[i]; // Current row
-            const nextUnit = updatedUnits[i + 1]; // Next row
-
-            // Parse relevant fields
-            const conversionQty =
-                i === index && field === "conversionQty"
-                    ? parseFloat(value || "")
-                    : parseFloat(currentUnit.conversionQty || "");
-
-            const currentStock = parseFloat(currentUnit.stock || "");
-            const currentPrice = parseFloat(currentUnit.price || "");
-
-            // **NEW CHECK**: Skip calculations if "conversionUnit" or "stock" is empty
-            if (!currentUnit.conversionUnit || currentUnit.conversionUnit.trim() === "") {
-                nextUnit.stock = "";
-                nextUnit.price = "";
-                continue;
-            }
-
-            if (!currentStock || isNaN(currentStock) || !currentPrice || isNaN(currentPrice)) {
-                nextUnit.stock = "";
-                nextUnit.price = "";
-                continue;
-            }
-
-            // Perform calculations for the NEXT row
-            if (conversionQty && conversionQty > 0 && !isNaN(conversionQty)) {
-                // nextUnit.stock = (currentStock * conversionQty).toString();
-                // nextUnit.price = (currentPrice / conversionQty).toFixed(2);
-                nextUnit.stock = "";
-                nextUnit.price = "";
-            } else {
-                nextUnit.stock = "";
-                nextUnit.price = "";
+            if (field === "price" && updatedUnits[0].price !== price) {
+                setPrice(value);
             }
         }
 
         setDetailedStockUnits(updatedUnits);
     };
+
 
     return (
         <div className="border-gray-200 h-auto w-full rounded-xl border px-4 pt-4 shadow-sm">
@@ -388,13 +372,13 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
                                                 <Label className="text-left">Stock</Label>
                                                 <Input
                                                     placeholder="000"
-                                                    defaultValue={Number(supplierUnit.quantity_per_unit).toFixed(2)}
-                                                    //value={stock}
+                                                    value={stock}
                                                     onChange={(e) => {
                                                         const value = e.target.value;
-                                                        if (/^\d*$/.test(value)) { // Allow only numeric input
-                                                            setStock(value); // Notify parent of changes
-                                                            updateStockUnit(0, "stock", value); // Propagate changes
+                                                        if (/^\d*$/.test(value)) {
+                                                            setStock(value);
+                                                            // Update first row in detailed units
+                                                            updateStockUnit(0, "stock", value);
                                                         }
                                                     }}
                                                 />
@@ -403,17 +387,16 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
                                                 <Label className="text-left">Price</Label>
                                                 <Input
                                                     placeholder="0000.00"
-                                                    defaultValue={Number(supplierUnit.price).toFixed(2)}
-                                                    //value={price}
+                                                    value={price}
                                                     onChange={(e) => {
                                                         const value = e.target.value;
-                                                        if (/^\d*\.?\d*$/.test(value)) { // Allow digits and optional decimal
+                                                        if (/^\d*\.?\d*$/.test(value)) {
                                                             setPrice(value);
-                                                            updateStockUnit(0, "price", value); // Propagate changes
+                                                            // Update first row in detailed units
+                                                            updateStockUnit(0, "price", value);
                                                         }
                                                     }}
                                                 />
-
                                             </div>
                                             <div className="relative flex flex-col items-start gap-1">
                                                 <Label className="text-left">Unit</Label>
@@ -471,6 +454,7 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
                                     key={index}
                                     unitData={unitData}
                                     unitOptions={unitOptions}
+                                    usedUnits={usedUnits}
                                     inheritedUnit={index === 0 ? unit : undefined} // Pass top "Unit" value to the first StockUnit
                                     inheritedStock={index === 0 ? stock : undefined} // Pass stock from the parent for the first layer
                                     inheritedPrice={index === 0 ? price : undefined} // Pass price from the parent for the first layer
@@ -512,7 +496,10 @@ const InventoryCard = ({ batch, units, item, onRemove, stockValue, onStockChange
         </div>
     )
         ;
-};
+},
+
+);
+
 
 type StockUnitData = {
     stock: string;
@@ -526,12 +513,14 @@ const StockUnit = ({
                        unitData,
                        unitOptions,
                        previousUnits,
+                       usedUnits,
                        onRemove,
                        onUpdate,
                    }: {
     unitData: StockUnitData;
     unitOptions: string[];
     previousUnits?: string;
+    usedUnits: string[];
     onRemove: () => void;
     onUpdate: (field: keyof StockUnitData, value: string) => void;
 }) => {
@@ -547,6 +536,16 @@ const StockUnit = ({
     const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
     const [searchTerm, setSearchTerm] = useState("");
 
+
+// In the StockUnit component
+    useEffect(() => {
+        // Only update if values actually changed
+        if (unitData.stock !== stock) setStock(unitData.stock);
+        if (unitData.price !== price) setPrice(unitData.price);
+        if (unitData.conversionQty !== conversionQty) setConversionQty(unitData.conversionQty);
+        if (unitData.conversionUnit !== conversionUnit) setConversionUnit(unitData.conversionUnit);
+    }, [unitData]); // Still watch unitData, but only update when values differ
+
     // Update local state and propagate changes to the parent
     const handleStockChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -556,8 +555,24 @@ const StockUnit = ({
 
     const handlePriceChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
-        setPrice(value);
-        onUpdate("price", value); // Propagate changes to the parent
+        if (/^\d*\.?\d{0,2}$/.test(value)) {
+            setPrice(value);
+            onUpdate("price", value);
+        }
+    };
+
+    const handlePriceBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+        const value = e.target.value;
+        if (value === '') return;
+
+        const numberValue = parseFloat(value);
+        if (!isNaN(numberValue)) {
+            const formattedValue = numberValue % 1 === 0
+                ? numberValue.toString()
+                : numberValue.toFixed(2);
+            setPrice(formattedValue);
+            onUpdate("price", formattedValue);
+        }
     };
 
     const handleConversionQtyChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -567,6 +582,9 @@ const StockUnit = ({
     };
 
     const handleSelectUnit = (selectedUnit: string) => {
+        if (usedUnits.includes(selectedUnit) && selectedUnit !== unitData.conversionUnit) {
+            return; // Prevent selecting duplicate units
+        }
         setConversionUnit(selectedUnit);
         setSearchTerm("");
         setDropdownVisible(false);
@@ -597,20 +615,25 @@ const StockUnit = ({
         }
     };
 
-    // Filter units based on the search term
     useEffect(() => {
         if (searchTerm) {
             setFilteredUnits(
-                unitOptions.filter((unitName) =>
-                    unitName.toLowerCase().includes(searchTerm.toLowerCase())
-                )
+                unitOptions
+                    .filter(unit =>
+                        !usedUnits.includes(unit) ||
+                        unit === unitData.conversionUnit
+                    )
+                    .filter(unitName =>
+                        unitName.toLowerCase().includes(searchTerm.toLowerCase())
+                    )
             );
             setDropdownVisible(true);
         } else {
             setFilteredUnits([]);
             setDropdownVisible(false);
         }
-    }, [searchTerm, unitOptions]);
+    }, [searchTerm, unitOptions, usedUnits, unitData.conversionUnit]);
+
 
     return (
         <div className="mt-2 flex items-center">
@@ -630,6 +653,7 @@ const StockUnit = ({
                         placeholder="0000.00"
                         value={price}
                         onChange={handlePriceChange}
+                        onBlur={handlePriceBlur}
                     />
                 </div>
 
@@ -686,6 +710,7 @@ const StockUnit = ({
     );
 };
 
+
 const AddStockUnit = ({ onAdd }: { onAdd: () => void }) => {
     return (
         <div className="mt-2 flex items-center">
@@ -714,7 +739,5 @@ const AddStockUnit = ({ onAdd }: { onAdd: () => void }) => {
     );
 };
 
+
 export default InventoryCard;
-
-
-

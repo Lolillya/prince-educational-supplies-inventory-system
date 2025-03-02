@@ -55,6 +55,7 @@ interface InventoryBatchProps {
 	batchVariants: BatchVariant[];
 	selectedVariantId: number;
     onVerifyPassword: (password: string) => Promise<boolean>;
+    inventoryNumber: string;
 }
 
 
@@ -64,7 +65,7 @@ interface Unit {
 	quantity_per_unit: number;
 }
 
-const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword }: InventoryBatchProps) => {
+const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword, inventoryNumber }: InventoryBatchProps) => {
 
 	const router = useRouter();
 	const [isEditing, setIsEditing] = useState(false);
@@ -121,7 +122,7 @@ const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword }: 
             setPasswordError(null);
             setIsPasswordVerified(true);
             setIsPasswordDialogOpen(false);
-            router.push(`/admin/inventory/edit-batch/${selectedVariantId}`);
+            router.push(`/admin/inventory/edit-batch/${inventoryNumber}`);
         } catch (error) {
             setPasswordError("Failed to verify password. Please try again.");
         }

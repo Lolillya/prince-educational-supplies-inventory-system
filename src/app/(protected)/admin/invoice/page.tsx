@@ -172,8 +172,16 @@ const InvoicePage = () => {
 
     // Footer
     doc.setFont("helvetica", "bold");
-    doc.text("*** TOTAL ***", margin, finalY + 10);
-    doc.text(`${grandTotal}.00`, pageWidth - margin - 50, finalY + 10);
+    const totalText = "*** TOTAL ***";
+    const totalAmount = `${grandTotal}.00`;
+
+// Get text width to calculate exact positioning
+    const totalTextWidth = doc.getTextWidth(totalText);
+    const totalAmountWidth = doc.getTextWidth(totalAmount);
+
+// Align total text and amount together without gap
+    doc.text(totalText, pageWidth - margin - totalAmountWidth - totalTextWidth - 30, finalY + 10);
+    doc.text(totalAmount, pageWidth - margin - totalAmountWidth - 25 , finalY + 10);
 
     doc.setFont("helvetica", "normal");
     doc.text(
@@ -181,11 +189,12 @@ const InvoicePage = () => {
         margin,
         finalY + 20
     );
-    doc.line(margin, finalY + 25, margin + 70, finalY + 25);
+    doc.line(margin, finalY + 40, margin + 70, finalY + 40);
     doc.setFontSize(8);
-    doc.text("PRINT NAME AND SIGN ABOVE NAME", margin, finalY + 30);
+    doc.text("PRINT NAME AND SIGN ABOVE NAME", margin, finalY + 45);
 
     doc.save(`invoice_${invoice_number}.pdf`);
+
   };
 
 

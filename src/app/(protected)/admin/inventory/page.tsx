@@ -1,6 +1,6 @@
 'use client'
 
-import { Batch, BatchVariant } from "@prisma/client"
+import type { Batch, BatchVariant } from "@prisma/client"
 import { Plus } from "lucide-react"
 import { useRouter } from "next/navigation"
 import { useState } from "react"
@@ -15,6 +15,7 @@ import RecordHeader from "./_components/record-header"
 import SelectedItem from "./_components/selected-item"
 import RecordItem from "./_components/record-item"
 import { useSession } from "next-auth/react";
+import { Toaster } from "~/components/ui/sonner"
 
 interface InventoryItemInfoProps {
   inventoryItems: InventoryItem[];
@@ -161,7 +162,11 @@ const InventoryPage = () => {
       </div>
       <div className="mt-8 flex gap-3 flex-grow">
         <div className="flex flex-col gap-3 w-3/5 flex-grow">
-          <RecordHeader record="Inventory" number={filteredInventory?.length ?? 0} />
+          <RecordHeader
+            record="Inventory"
+            number={filteredInventory?.length ?? 0}
+            data={filteredInventory ?? []}
+          />
           <div className="flex flex-grow rounded-lg h-full overflow-hidden">
             {(filteredInventory?.length ?? 0) > 0 ? (
               <ScrollArea className="w-full h-full">
@@ -216,6 +221,7 @@ const InventoryPage = () => {
           </div>
         </div>
       </div>
+      <Toaster />
     </section>
   );
 };

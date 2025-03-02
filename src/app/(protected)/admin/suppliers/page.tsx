@@ -125,7 +125,15 @@ const SuppliersPage = () => {
                   <SelectedSupplier
                     id={selectedRecord.Personal_Details_Id}
                     company={selectedRecord.Personal_Details.company}
-                    representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
+                    representative={
+                      // `${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`
+                      [
+                        selectedRecord.Personal_Details.first_name,
+                        selectedRecord.Personal_Details.last_name,  
+                      ]
+                        .filter((line) => line)
+                        .join(" ")
+                    }
                     contact={selectedRecord.Personal_Details.contact}
                     email={selectedRecord.Personal_Details.email}
                     location={

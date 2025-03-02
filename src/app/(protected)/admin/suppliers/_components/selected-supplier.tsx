@@ -69,7 +69,7 @@ const SelectedSupplier = ({
 				<RecordNotes notes={notes} />
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+			<Separator className='h-[1px] bg-slate-300w mt-5' />
 
 			<div className='mt-5'>
 

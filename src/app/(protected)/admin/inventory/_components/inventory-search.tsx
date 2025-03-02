@@ -17,7 +17,7 @@ import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
 import { useState } from "react";
 import { Separator } from "~/components/ui/separator";
 import MasterList from "~/app/(protected)/admin/inventory/_components/MasterList";
-import PriceList from "~/app/(protected)/admin/inventory/_components/PriceList";
+import PriceList from "~/app/(protected)/admin/inventory/_components/price-list";
 import StockList from "~/app/(protected)/admin/inventory/_components/StockList";
 
 const InventorySearchAndButtonRouter = () => {

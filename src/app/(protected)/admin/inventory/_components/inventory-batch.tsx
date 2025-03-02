@@ -500,7 +500,8 @@ const InventoryBatchCard = ({
 										from={unit.fromUnit?.name || 'N/A'}
 										count={unit.conversion_rate}
 										to={unit.toUnit?.name || 'N/A'}
-									/>
+                                        price={unit.supplierUnit?.price} // Access price here
+                                    />
 								))}
 							</HoverCardContent>
 						</HoverCard>

@@ -59,14 +59,14 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 											</HoverCardTrigger>
 											<HoverCardContent className="shadow-none flex flex-col gap-3">
 												{item.unitConversion.map((unit, index) => (
-													<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to} />
+													<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to}  price={unit.price} />
 												))}
 											</HoverCardContent>
 										</HoverCard>
 									</TableCell>
 									{isEditing ? (
 										<>
-											<TableCell>500.00</TableCell>
+											<TableCell>₱{(item.price ?? 0).toFixed(2)}</TableCell>
 											<TableCell className="rounded-r-xl w-20">
 												<Popover>
 													<PopoverTrigger>
@@ -86,7 +86,7 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 																<Label className="text-slate-400">Price</Label>
 																<Input
 																	className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-																	defaultValue={500.00}
+																	defaultValue={item.price ?? 0}
 																/>
 															</div>
 														</div>
@@ -109,7 +109,7 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 											</TableCell>
 										</>
 									) : (
-										<TableCell className="rounded-r-xl">500.00</TableCell>
+										<TableCell className="rounded-r-xl">₱{(item.price ?? 0).toFixed(2)}</TableCell>
 									)}
 								</TableRow>
 							))

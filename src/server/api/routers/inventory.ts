@@ -84,6 +84,11 @@ export const inventoryRouter = createTRPCRouter({
                                                                         name: true,
                                                                     },
                                                                 },
+                                                                supplierUnit: {
+                                                                    select: {
+                                                                        price: true,
+                                                                    },
+                                                                }, // Include price
                                                             },
                                                         },
                                                     },

@@ -28,6 +28,7 @@ export type RestockProps = {
     item: string;
     brand: string;
     quantity: number;
+    price: number;
     mainUnit: string;
     unitConversion: {
       from: string;

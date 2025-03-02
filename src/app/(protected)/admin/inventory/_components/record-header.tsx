@@ -70,7 +70,18 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 					>
 						Export Masterlist
 					</DropdownMenuItem>
-					<PriceList />
+					<DropdownMenuSub>
+						<DropdownMenuSubTrigger className="hover:!bg-slate-200 focus:!bg-slate-200">
+							Export Pricelist
+						</DropdownMenuSubTrigger>
+						<DropdownMenuPortal>
+							<DropdownMenuSubContent>
+								<PriceList method='include-all'/>
+								<PriceList method='exclude-out-of-stock'/>
+								<PriceList method='manual-selection'/>
+							</DropdownMenuSubContent>
+						</DropdownMenuPortal>
+					</DropdownMenuSub>
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger className="hover:!bg-slate-200 focus:!bg-slate-200">
 							Export Stocklist

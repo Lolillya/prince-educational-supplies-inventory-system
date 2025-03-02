@@ -1,5 +1,5 @@
 import { Poppins } from 'next/font/google';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { DropdownMenuItem } from '~/components/ui/dropdown-menu'
@@ -14,6 +14,7 @@ import type { RouterOutputs } from '~/trpc/shared';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -26,7 +27,11 @@ interface ItemState {
 	price: string;
 }
 
-const PriceList = () => {
+interface PriceListProps {
+	method?: 'include-all' | 'exclude-out-of-stock' | 'manual-selection';
+}
+
+const PriceList = ({ method = 'manual-selection' }: PriceListProps) => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [showWarning, setShowWarning] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -35,6 +40,25 @@ const PriceList = () => {
 	const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
 
 	const { data: inventoryData } = api.inventory.listInventory.useQuery();
+
+	// If method is not manual-selection, auto-populate items
+	useEffect(() => {
+		if (method !== 'manual-selection' && inventoryData) {
+			const itemsToAdd = method === 'include-all'
+				? inventoryData
+				: inventoryData.filter(item => {
+					const totalQuantity = item.variant.BatchVariant?.reduce(
+						(sum, bv) => sum + (bv.quantity || 0),
+						0
+					) || 0;
+					return totalQuantity > 0;
+				});
+			setSelectedItems(itemsToAdd);
+		}
+	}, [method, inventoryData]);
+
+	// Only show search and manual selection UI for manual-selection method
+	const showManualSelection = method === 'manual-selection';
 
 	const filteredItems = inventoryData?.filter((item) => {
 		const searchLower = searchTerm.toLowerCase();
@@ -75,7 +99,7 @@ const PriceList = () => {
 		// First, remove the item from selectedItems
 		setSelectedItems(prev => {
 			const newItems = prev.filter((_, i) => i !== index);
-			
+
 			// Then update itemStates to match the new indexes
 			const newStates: Record<string, ItemState> = {};
 			newItems.forEach((item, i) => {
@@ -86,63 +110,80 @@ const PriceList = () => {
 				}
 			});
 			setItemStates(newStates);
-			
+
 			return newItems;
 		});
 	};
 
 	const handleExport = () => {
-		const doc = new jsPDF();
+		if (!selectedItems || selectedItems.length === 0) {
+			toast('❌ No items selected to export.');
+			return;
+		}
 
-		// Add title
-		doc.setFontSize(12);
-		doc.text('Inventory Price List', 14, 15);
+		try {
+			const doc = new jsPDF();
 
-		// Add generation date
-		const generationDate = new Date().toLocaleDateString();
-		doc.setFontSize(10);
-		doc.text(`Generated on: ${generationDate}`, 14, 22);
+			// Add title
+			doc.setFontSize(12);
+			doc.text('Inventory Price List', 14, 15);
 
-		// Prepare table data
-		const tableData = selectedItems.map((item, index) => {
-			const itemKey = `${item.variant.id}-${index}`;
-			const state = itemStates[itemKey];
-			const description = [
-				item.variant.item.name,
-				item.variant.item.brand.name,
-				item.variant.name
-			].filter(Boolean).join(' - ');
+			// Add generation date
+			const generationDate = new Date().toLocaleDateString();
+			doc.setFontSize(10);
+			doc.text(`Generated on: ${generationDate}`, 14, 22);
 
-			const unit = state?.selectedUnitName === 'unit' ? 'N/A' : (state?.selectedUnitName || 'N/A');
-			const price = state?.price ? `P${parseFloat(state.price).toFixed(2)}` : 'N/A';
+			// Prepare table data
+			const tableData = selectedItems.map((item, index) => {
+				const itemKey = `${item.variant.id}-${index}`;
+				const state = itemStates[itemKey];
+				const description = [
+					item.variant.item.name,
+					item.variant.item.brand.name,
+					item.variant.name
+				].filter(Boolean).join(' - ');
 
-			return [description, unit, price];
-		});
+				const unit = state?.selectedUnitName === 'unit' ? 'N/A' : (state?.selectedUnitName || 'N/A');
+				const price = state?.price ? `P${parseFloat(state.price).toFixed(2)}` : 'N/A';
 
-		// Add table
-		autoTable(doc, {
-			head: [['Description', 'Unit', 'SRP']],
-			body: tableData,
-			startY: 30,
-			theme: 'grid',
-			styles: { 
-				fontSize: 10, 
-				cellPadding: 2 
-			},
-			headStyles: { 
-				fillColor: [200, 200, 200], 
-				textColor: 0 
-			},
-			columnStyles: {
-				0: { cellWidth: 100 },
-				1: { cellWidth: 40 },
-				2: { cellWidth: 30 },
-			},
-		});
+				return [description, unit, price];
+			});
 
-		// Save the PDF
-		const date = new Date().toLocaleDateString().replace(/\//g, '-');
-		doc.save(`Inventory_PriceList_${date}.pdf`);
+			// Add table
+			autoTable(doc, {
+				head: [['Description', 'Unit', 'SRP']],
+				body: tableData,
+				startY: 30,
+				theme: 'grid',
+				styles: {
+					fontSize: 10,
+					cellPadding: 2
+				},
+				headStyles: {
+					fillColor: [200, 200, 200],
+					textColor: 0
+				},
+				columnStyles: {
+					0: { cellWidth: 100 },
+					1: { cellWidth: 40 },
+					2: { cellWidth: 30 },
+				},
+			});
+
+			// Save the PDF
+			const date = new Date().toLocaleDateString().replace(/\//g, '-');
+			doc.save(`Inventory_PriceList_${date}.pdf`);
+
+			toast('🎉 Your file has been exported successfully!', {
+				description: 'Check your downloads folder.',
+			});
+
+			// Close the dialog after successful export
+			setIsDialogOpen(false);
+		} catch (error) {
+			console.error('Error exporting price list:', error);
+			toast('❌ Failed to export price list.');
+		}
 	};
 
 	return (
@@ -154,7 +195,9 @@ const PriceList = () => {
 						e.preventDefault();
 					}}
 				>
-					Export Pricelist
+					{method === 'include-all' ? 'Include out-of-stock' :
+						method === 'exclude-out-of-stock' ? 'Exclude out-of-stock' :
+							'Manual selection'}
 				</DropdownMenuItem>
 			</DialogTrigger>
 			<DialogContent
@@ -168,20 +211,23 @@ const PriceList = () => {
 						</DialogTitle>
 						<div className="flex items-center gap-3 text-slate-400">
 							<DialogDescription className="text-sm tracking-wide">
-								Customize your price list by selecting specific items to include in your export.
+								You can choose batch, unit, and customize prices as needed.
 							</DialogDescription>
 						</div>
 					</div>
 				</DialogHeader>
 
-				<Separator orientation="horizontal" className="h-[2px]" />
+				{showManualSelection && (
+					<>
+						<Separator orientation="horizontal" className="h-[2px]" />
+						<PriceListSearch
+							filteredItems={filteredItems}
+							onItemSelect={handleItemSelect}
+						/>
+					</>
+				)}
 
-				<PriceListSearch
-					filteredItems={filteredItems}
-					onItemSelect={handleItemSelect}
-				/>
-
-				<ScrollArea className="h-80">
+				<ScrollArea className="h-96">
 					{selectedItems.length > 0 ? (
 						<div className="flex flex-col gap-2">
 							{selectedItems.map((item, index) => {
@@ -198,7 +244,7 @@ const PriceList = () => {
 							})}
 						</div>
 					) : (
-						<div className="flex items-center justify-center h-80 flex-col gap-4">
+						<div className="flex items-center justify-center h-96 flex-col gap-4">
 							<Search className="text-slate-400" size={60} />
 							<p className="text-slate-400">Search an item to get started.</p>
 						</div>

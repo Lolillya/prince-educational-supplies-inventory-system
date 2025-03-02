@@ -188,18 +188,18 @@ export const invoiceRouter = createTRPCRouter({
 
       const result = await ctx.db.$transaction(async (prisma) => {
         // Step 1: Create Invoice
-        const createdInvoice = await prisma.invoice.create({
-          data: {
-            customer_id: invoice.customer_id,
-            invoice_clerk: invoice.invoice_clerk,
-            total_amount: invoice.total_amount,
-            discount: invoice.discount,
-            status: invoice.status,
-            payment_term_id: invoice.payment_term_id,
-          },
-        });
+        // const createdInvoice = await prisma.invoice.create({
+        //   data: {
+        //     customer_id: invoice.customer_id,
+        //     invoice_clerk: invoice.invoice_clerk,
+        //     total_amount: invoice.total_amount,
+        //     discount: invoice.discount,
+        //     status: invoice.status,
+        //     payment_term_id: invoice.payment_term_id,
+        //   },
+        // });
 
-        const invoiceId = createdInvoice.invoice_id;
+        // const invoiceId = createdInvoice.invoice_id;
 
         // Step 2: Process each Line Item
         const createdLineItems = await Promise.all(
@@ -233,95 +233,97 @@ export const invoiceRouter = createTRPCRouter({
               });
             } else {
               // Step 4: Not enough stock in the lowest unit (unit_id = 1 -> pieces)
-              if (supplierUnit.unit_id === 1) {
-                console.log(
-                  "Not enough stock in pieces. Checking higher units...",
+
+              console.log(
+                "Not enough stock in pieces. Checking higher units...",
+              );
+
+              // Reverse conversion: to_unit_id → from_unit_id
+              const conversion = await prisma.conversionRate.findFirst({
+                where: {
+                  to_unit_id: supplierUnit.unit_id, // From pieces -> higher unit
+                },
+              });
+
+              console.log("Conversion:", conversion);
+
+              if (!conversion) {
+                throw new Error(
+                  `Insufficient stock and no reverse conversion found for unit ID: ${unitId}`,
                 );
-
-                // Reverse conversion: to_unit_id → from_unit_id
-                const conversion = await prisma.conversionRate.findFirst({
-                  where: {
-                    to_unit_id: supplierUnit.unit_id, // From pieces -> higher unit
-                  },
-                });
-
-                console.log("Conversion:", conversion);
-
-                if (!conversion) {
-                  throw new Error(
-                    `Insufficient stock and no reverse conversion found for unit ID: ${unitId}`,
-                  );
-                }
-
-                // Find the higher unit supplier
-                const higherUnit = await prisma.supplierUnit.findFirst({
-                  where: {
-                    batchVariant: { variant_id: item.variant_id },
-                    unit_id: conversion.from_unit_id, // Higher unit
-                  },
-                });
-
-                if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
-                  throw new Error(
-                    `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
-                  );
-                }
-
-                // Calculate how many higher units need to be deducted
-                const higherUnitQtyToDeduct = Math.ceil(
-                  remainingQty / conversion.conversion_rate,
-                );
-
-                console.log(
-                  `Converting ${remainingQty} pieces -> ${higherUnitQtyToDeduct} higher unit(s)`,
-                );
-
-                // Deduct from the higher unit's `quantity_per_unit`
-                await prisma.supplierUnit.update({
-                  where: { supplier_unit_id: higherUnit.supplier_unit_id },
-                  data: {
-                    quantity_per_unit: { decrement: higherUnitQtyToDeduct },
-                  },
-                });
-
-                // Calculate remaining quantity in the current unit (pieces)
-                console.log(
-                  `Remaining pieces before conversion: ${remainingQty}`,
-                );
-                remainingQty =
-                  supplierUnit.quantity_per_unit +
-                  conversion.conversion_rate -
-                  remainingQty;
-
-                console.log(
-                  `Remaining pieces after conversion: ${remainingQty}`,
-                );
-
-                // Deduct remaining pieces if any
-                if (remainingQty > 0) {
-                  await prisma.supplierUnit.update({
-                    where: { supplier_unit_id: supplierUnit.supplier_unit_id },
-                    data: { quantity_per_unit: remainingQty },
-                  });
-                }
               }
+
+              // Find the higher unit supplier
+              const higherUnit = await prisma.supplierUnit.findFirst({
+                where: {
+                  batchVariant: { variant_id: item.variant_id },
+                  unit_id: conversion.from_unit_id, // Higher unit
+                },
+              });
+
+              if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
+                throw new Error(
+                  `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
+                );
+              }
+
+              // Calculate how many higher units need to be deducted
+
+              console.log(
+                `Converting ${remainingQty} pieces -> ${1} higher unit(s)`,
+              );
+
+              while (supplierUnit.quantity_per_unit - remainingQty < 0) {
+                // Deduct from the higher unit's `quantity_per_unit`
+                // await prisma.supplierUnit.update({
+                //   where: { supplier_unit_id: higherUnit.supplier_unit_id },
+                //   data: {
+                //     quantity_per_unit: { decrement: 1 },
+                //   },
+                // });
+
+                supplierUnit.quantity_per_unit += conversion.conversion_rate;
+
+                console.log(
+                  "SupplierUnit quantity:",
+                  supplierUnit.quantity_per_unit,
+                );
+              }
+
+              // Calculate remaining quantity in the current unit (pieces)
+              console.log(
+                `Remaining pieces before conversion: ${remainingQty}`,
+              );
+              supplierUnit.quantity_per_unit -= remainingQty;
+
+              console.log(
+                `Remaining pieces after conversion: ${supplierUnit.quantity_per_unit}`,
+              );
+
+              // Deduct remaining pieces if any
+              // if (remainingQty > 0) {
+              //   await prisma.supplierUnit.update({
+              //     where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+              //     data: { quantity_per_unit: remainingQty },
+              //   });
+              // }
             }
 
             // Step 5: Create Line Item
-            return prisma.line_Item.create({
-              data: {
-                invoice_id: invoiceId,
-                variant_id: item.variant_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price,
-                total_price: item.total_price,
-                unit_id: unitId,
-              },
-            });
+            // return prisma.line_Item.create({
+            //   data: {
+            //     invoice_id: invoiceId,
+            //     variant_id: item.variant_id,
+            //     quantity: item.quantity,
+            //     unit_price: item.unit_price,
+            //     total_price: item.total_price,
+            //     unit_id: unitId,
+            //   },
+            // });
           }),
         );
 
-        return { createdInvoice, createdLineItems };
+        // return { createdInvoice, createdLineItems };
       });
 
       return result;

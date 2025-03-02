@@ -127,7 +127,7 @@ const NewInvoice = () => {
   const { data: nextInvoiceId, isLoading: loadingInvoiceId } =
     api.invoice.getInvoiceId.useQuery();
 
-  const { mutateAsync: createInvoice } =
+  const { mutateAsync: createInvoice, isPending: isInvoicePending } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
   console.log(activeCards);

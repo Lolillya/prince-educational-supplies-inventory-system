@@ -10,6 +10,7 @@ import Filter from "../_components/filter";
 import SearchBar from "../_components/search-bar";
 import RestockRecord from "./_components/restock-record";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { LoadingSpinner } from "~/components/loading";
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -47,6 +48,13 @@ const RestockPage = () => {
     isLoading,
     error,
   } = api.restock.getRestockData.useQuery();
+
+  if (isLoading)
+    return (
+        <section className="flex h-screen w-full items-center justify-center">
+          <LoadingSpinner />
+        </section>
+    );
 
   const handleViewAll = (batch: RestockProps) => {
     console.log("Selected Batch:", batch);

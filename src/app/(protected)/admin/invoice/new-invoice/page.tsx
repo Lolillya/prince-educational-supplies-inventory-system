@@ -53,6 +53,12 @@ type InventoryItem = {
           name: string;
           unit_id: number;
         };
+        ConversionRate: {
+          conversion_rate: number;
+          toUnit: {
+            name: string;
+          };
+        }[];
       }>;
     }>;
     item: {
@@ -94,6 +100,7 @@ const NewInvoice = () => {
         selectedUnit: {
           unitName: string;
           unit_id: number;
+          supplier_unit_id: number;
         };
         itemName: string;
         brandName: string;
@@ -123,6 +130,8 @@ const NewInvoice = () => {
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
+  console.log(activeCards);
+
   const updateCardDetails = (
     id: number,
     totalPrice: number,
@@ -133,6 +142,7 @@ const NewInvoice = () => {
     selectedUnit: {
       unitName: string;
       unit_id: number;
+      supplier_unit_id: number;
     },
     itemName: string,
     brandName: string,
@@ -174,13 +184,16 @@ const NewInvoice = () => {
     // Ensure total is not negative
     total = Math.max(0, total);
 
-    console.log(total);
     setGrandTotal(total);
   };
 
-  const handleSaveInvoice = () => {
+  const handleSaveInvoice = async () => {
     if (!selectedItems || !activeCards) {
-      alert("Select an item to save invoice!");
+      toast({
+        title: "Warning",
+        description: "Select an item to save the invoice!",
+        variant: "destructive",
+      });
       return;
     }
 
@@ -195,6 +208,7 @@ const NewInvoice = () => {
         payment_term_id: 1,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
+        supplier_unit_id: item[1].selectedUnit.supplier_unit_id,
         variant_id: item[1].variant_id,
         quantity: item[1].quantity,
         unit_price: item[1].unitPrice,
@@ -202,7 +216,33 @@ const NewInvoice = () => {
         unit_id: item[1].selectedUnit.unit_id,
       })),
     };
-    createInvoice(invoiceData);
+
+    console.log("InvoiceData:", invoiceData);
+
+    try {
+      await createInvoice(invoiceData);
+      toast({
+        title: "Success",
+        description: "Invoice created successfully!",
+        variant: "default",
+      });
+    } catch (error: unknown) {
+      let errorMessage = "An unexpected error occurred.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as { message?: string }).message ?? errorMessage;
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleRemoveBatch = (id: number) => {
@@ -247,19 +287,6 @@ const NewInvoice = () => {
     setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" }));
     setSearchTerm("");
   };
-
-  const calculateGrandTotalDiscount = () => {
-    const total =
-      discountType === "%"
-        ? grandTotal * (1 - Number(discount) / 100)
-        : grandTotal - Number(discount);
-
-    setGrandTotal(total);
-  };
-
-  // useEffect(() => {
-  //   calculateGrandTotalDiscount();
-  // }, [discount]);
 
   useEffect(() => {
     calculateGrandTotal();
@@ -424,7 +451,6 @@ const NewInvoice = () => {
                 className="rounded-r-none border font-light shadow-none placeholder:font-light"
                 placeholder="Discount"
                 value={discount.toString()}
-                type="number"
                 onChange={(e) => setDiscount(Number(e.target.value))}
                 onInput={(e) => {
                   e.currentTarget.value = e.currentTarget.value.replace(

@@ -12,6 +12,7 @@ const invoiceSchema = z.object({
 });
 
 const LineItemSchema = z.object({
+  supplier_unit_id: z.number(),
   variant_id: z.number(),
   quantity: z.number(),
   unit_price: z.number(),
@@ -51,6 +52,7 @@ export const invoiceRouter = createTRPCRouter({
                 },
                 SupplierUnit: {
                   select: {
+                    supplier_unit_id: true,
                     price: true,
                     quantity_per_unit: true,
                     unit_id: true,
@@ -58,6 +60,16 @@ export const invoiceRouter = createTRPCRouter({
                       select: {
                         name: true,
                         unit_id: true,
+                      },
+                    },
+                    ConversionRate: {
+                      select: {
+                        conversion_rate: true,
+                        toUnit: {
+                          select: {
+                            name: true,
+                          },
+                        },
                       },
                     },
                   },
@@ -165,17 +177,19 @@ export const invoiceRouter = createTRPCRouter({
   createInvoiceWithLineItems: publicProcedure
     .input(
       z.object({
-        invoice: invoiceSchema, // Schema for invoice input
-        lineItems: z.array(LineItemSchema), // Schema for line items
+        invoice: invoiceSchema,
+        lineItems: z.array(LineItemSchema),
       }),
     )
     .mutation(async ({ input, ctx }) => {
       const { invoice, lineItems } = input;
 
+      console.log(lineItems);
+
       const result = await ctx.db.$transaction(async (prisma) => {
+        // Step 1: Create Invoice
         const createdInvoice = await prisma.invoice.create({
           data: {
-            // invoice_number: invoice.invoice_number,
             customer_id: invoice.customer_id,
             invoice_clerk: invoice.invoice_clerk,
             total_amount: invoice.total_amount,
@@ -185,22 +199,126 @@ export const invoiceRouter = createTRPCRouter({
           },
         });
 
-        console.log(createdInvoice);
         const invoiceId = createdInvoice.invoice_id;
 
+        // Step 2: Process each Line Item
         const createdLineItems = await Promise.all(
-          lineItems.map((item) =>
-            prisma.line_Item.create({
+          lineItems.map(async (item) => {
+            let remainingQty = item.quantity;
+            let unitId = item.unit_id;
+            let supplier_unit_id = item.supplier_unit_id;
+
+            // Step 3: Fetch the SupplierUnit for the selected unit
+            const supplierUnit = await prisma.supplierUnit.findFirst({
+              where: {
+                supplier_unit_id: supplier_unit_id,
+                unit_id: unitId,
+              },
+            });
+
+            if (!supplierUnit) {
+              throw new Error(
+                `Supplier unit not found for variant ID: ${item.variant_id}`,
+              );
+            }
+
+            console.log("Selected Item:", item);
+            console.log("Supplier Unit Found:", supplierUnit);
+
+            if (supplierUnit.quantity_per_unit >= remainingQty) {
+              // Deduct directly if enough stock is available in the requested unit
+              await prisma.supplierUnit.update({
+                where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+                data: { quantity_per_unit: { decrement: remainingQty } },
+              });
+            } else {
+              // Step 4: Not enough stock in the lowest unit (unit_id = 1 -> pieces)
+              if (supplierUnit.unit_id === 1) {
+                console.log(
+                  "Not enough stock in pieces. Checking higher units...",
+                );
+
+                // Reverse conversion: to_unit_id → from_unit_id
+                const conversion = await prisma.conversionRate.findFirst({
+                  where: {
+                    to_unit_id: supplierUnit.unit_id, // From pieces -> higher unit
+                  },
+                });
+
+                console.log("Conversion:", conversion);
+
+                if (!conversion) {
+                  throw new Error(
+                    `Insufficient stock and no reverse conversion found for unit ID: ${unitId}`,
+                  );
+                }
+
+                // Find the higher unit supplier
+                const higherUnit = await prisma.supplierUnit.findFirst({
+                  where: {
+                    batchVariant: { variant_id: item.variant_id },
+                    unit_id: conversion.from_unit_id, // Higher unit
+                  },
+                });
+
+                if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
+                  throw new Error(
+                    `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
+                  );
+                }
+
+                // Calculate how many higher units need to be deducted
+                const higherUnitQtyToDeduct = Math.ceil(
+                  remainingQty / conversion.conversion_rate,
+                );
+
+                console.log(
+                  `Converting ${remainingQty} pieces -> ${higherUnitQtyToDeduct} higher unit(s)`,
+                );
+
+                // Deduct from the higher unit's `quantity_per_unit`
+                await prisma.supplierUnit.update({
+                  where: { supplier_unit_id: higherUnit.supplier_unit_id },
+                  data: {
+                    quantity_per_unit: { decrement: higherUnitQtyToDeduct },
+                  },
+                });
+
+                // Calculate remaining quantity in the current unit (pieces)
+                console.log(
+                  `Remaining pieces before conversion: ${remainingQty}`,
+                );
+                remainingQty =
+                  supplierUnit.quantity_per_unit +
+                  conversion.conversion_rate -
+                  remainingQty;
+
+                console.log(
+                  `Remaining pieces after conversion: ${remainingQty}`,
+                );
+
+                // Deduct remaining pieces if any
+                if (remainingQty > 0) {
+                  await prisma.supplierUnit.update({
+                    where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+                    data: { quantity_per_unit: remainingQty },
+                  });
+                }
+              }
+            }
+
+            // Step 5: Create Line Item
+            return prisma.line_Item.create({
               data: {
                 invoice_id: invoiceId,
                 variant_id: item.variant_id,
                 quantity: item.quantity,
                 unit_price: item.unit_price,
                 total_price: item.total_price,
-                unit_id: item.unit_id,
+                unit_id: unitId,
               },
-            }),
-          ),
+            });
+          }),
         );
 
         return { createdInvoice, createdLineItems };

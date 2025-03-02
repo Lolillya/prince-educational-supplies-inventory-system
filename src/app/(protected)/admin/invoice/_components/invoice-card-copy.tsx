@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Plus, UnfoldVertical, X } from "lucide-react";
+import { MoveRight, Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
   Accordion,
@@ -52,6 +52,12 @@ type InvoiceCardProps = {
         name: string;
         unit_id: number;
       };
+      ConversionRate: {
+        conversion_rate: number;
+        toUnit: {
+          name: string;
+        };
+      }[];
     }>;
   }>;
 
@@ -66,6 +72,7 @@ type InvoiceCardProps = {
     selectedUnit: {
       unitName: string;
       unit_id: number;
+      supplier_unit_id: number;
     },
     itemName: string,
     brandName: string,
@@ -77,11 +84,13 @@ type InvoiceCardProps = {
 
 type SupplierUnit = {
   price: number;
+  supplier_unit_id: number;
   quantity_per_unit: number;
   unit_id: number;
   unit: {
     name: string;
     unit_id: number;
+    supplier_unit_id: number;
   };
 };
 
@@ -110,6 +119,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [selectedUnit, setSelectedUnit] = useState({
     unitName: "",
     unit_id: 0,
+    supplier_unit_id: 0,
   });
   const [selectedUnitQuantity, setSelectedUnitQuantity] = useState<number>(0);
   const [discount, setDiscount] = useState("");
@@ -123,6 +133,42 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [openPopover, setOpenPopover] = useState(false);
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
   const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
+  const [batchBasis, setBatchBasis] = useState<SupplierBatch | undefined>(
+    undefined,
+  );
+
+  const getBatchColor = (
+    supplierUnits: {
+      price: number;
+      quantity_per_unit: number;
+      unit_id: number;
+      unit: {
+        name: string;
+        unit_id: number;
+      };
+    }[],
+  ) => {
+    if (!batchBasis) return "bg-yellow/30";
+
+    const batchBasisUnitIds = batchBasis.supplierUnits.map(
+      (unit) => unit.unit_id,
+    );
+    const currentBatchUnitIds = supplierUnits.map((unit) => unit.unit_id);
+
+    const hasExactSameOrder =
+      batchBasisUnitIds.length === currentBatchUnitIds.length &&
+      batchBasisUnitIds.every((id, index) => id === currentBatchUnitIds[index]);
+
+    const hasAtLeastOneSameUnit = currentBatchUnitIds.some((id) =>
+      batchBasisUnitIds.includes(id),
+    );
+
+    const hasPartialMatch = hasAtLeastOneSameUnit && !hasExactSameOrder;
+
+    if (hasExactSameOrder) return "bg-green/50";
+    if (hasPartialMatch) return "bg-yellow-300";
+    return "bg-red/80";
+  };
 
   const handlePriceInput = (price: number, batch: number) => {
     setPrice({ price, batch });
@@ -135,15 +181,22 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     }));
 
     setSelectedBatches((prev) => {
-      if (prev.some((batch) => batch.index === index)) {
-        return prev.filter((batch) => batch.index !== index);
-      } else {
-        return [...prev, { index, supplierUnits }];
+      const isAlreadySelected = prev.some((batch) => batch.index === index);
+      const updatedBatches = isAlreadySelected
+        ? prev.filter((batch) => batch.index !== index)
+        : [...prev, { index, supplierUnits }];
+
+      if (!batchBasis && updatedBatches.length > 0) {
+        setBatchBasis(updatedBatches[0]);
       }
+
+      if (updatedBatches.length === 0) {
+        setBatchBasis(undefined);
+      }
+
+      return updatedBatches;
     });
   };
-
-  console.log(selectedBatches);
 
   const handleContinue = () => {
     setOpenPopover(false);
@@ -159,8 +212,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
+  // console.log(selectedUnit);
+
   const handleSelectUnitQuantity = () => {
-    console.log("Selected Batches:", selectedBatches);
+    // console.log("Selected Batches:", selectedBatches);
 
     // Calculate the total quantity
     const total = selectedBatches.reduce((acc, batch) => {
@@ -168,7 +223,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         acc +
         batch.supplierUnits.reduce((sum, supplier) => {
           if (selectedUnit.unit_id === supplier.unit_id) {
-            console.log("Matching Supplier:", supplier); // ✅ Log supplier details
+            // console.log("Matching Supplier:", supplier); // ✅ Log supplier details
             return sum + supplier.quantity_per_unit;
           }
           return sum;
@@ -179,13 +234,18 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     // Update state once
     setSelectedUnitQuantity(total);
 
-    console.log("Total Quantity:", total); // ✅ Log final total
+    // console.log("Total Quantity:", total); // ✅ Log final total
   };
 
-  const handleSelectUnit = (unit: string, unit_id: number) => {
+  const handleSelectUnit = (
+    unit: string,
+    unit_id: number,
+    supplier_unit_id: number,
+  ) => {
     setSelectedUnit({
       unitName: unit,
       unit_id: unit_id,
+      supplier_unit_id,
     });
   };
 
@@ -211,6 +271,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       variant!,
       variant_id,
       selectedUnit.unit_id,
+      // selectedUnit.supplier_unit_id,
     );
   }, [
     totalPrice,
@@ -247,9 +308,23 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 selectedBatches.map((batch) => (
                   <Label
                     key={batch.index}
-                    className="rounded-lg bg-green/30 p-2 text-textGray"
+                    className="flex content-center items-center gap-2 rounded-lg bg-green/30 p-2"
                   >
                     Batch {batch.index + 1}
+                    <X
+                      size={15}
+                      className="transition-all duration-200 hover:scale-110 hover:cursor-pointer"
+                      onClick={(e) => {
+                        e.stopPropagation(); // Prevent unintended popover close
+                        setSelectedBatches((prev) =>
+                          prev.filter((b) => b.index !== batch.index),
+                        );
+                        setCheckedState((prev) => ({
+                          ...prev,
+                          [batch.index]: false, // Uncheck the checkbox when removed
+                        }));
+                      }}
+                    />
                   </Label>
                 ))
               )}
@@ -287,8 +362,19 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                             onChange={() =>
                               handleSelectBatch(index, variant.SupplierUnit)
                             }
+                            disabled={
+                              getBatchColor(variant.SupplierUnit) ===
+                              "bg-red/80"
+                            }
                           />
-                          <Label className="">Batch {index + 1}</Label>
+                          <div
+                            className={`h-3 w-3 rounded-full ${
+                              batchBasis
+                                ? getBatchColor(variant.SupplierUnit)
+                                : "bg-gray-300"
+                            }`}
+                          ></div>
+                          <Label>Batch {index + 1}</Label>
                         </div>
                       </div>
                     </AccordionTrigger>
@@ -297,19 +383,32 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         <TableHeader>
                           <TableRow>
                             <TableHead>Unit</TableHead>
-                            <TableHead>Conversion</TableHead>
-                            <TableHead>Quantity</TableHead>
+                            <TableHead className="text-right">
+                              Quantity
+                            </TableHead>
                             <TableHead className="text-right">Price</TableHead>
+                            <TableHead>Conversion</TableHead>
                           </TableRow>
                         </TableHeader>
                         <TableBody>
                           {variant.SupplierUnit.map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
-                              <TableCell># {unit.unit.name}</TableCell>
-                              <TableCell>{unit.quantity_per_unit}</TableCell>
+
+                              <TableCell className="text-right">
+                                {unit.quantity_per_unit}
+                              </TableCell>
                               <TableCell className="text-right">
                                 ₱ {unit.price.toFixed(2)}
+                              </TableCell>
+                              <TableCell className="flex items-center gap-1">
+                                {unit.unit.name !== "Pieces" && (
+                                  <>
+                                    <MoveRight size={15} />{" "}
+                                    {unit.ConversionRate[0]?.conversion_rate}{" "}
+                                    {unit.ConversionRate[0]?.toUnit.name}
+                                  </>
+                                )}
                               </TableCell>
                             </TableRow>
                           ))}
@@ -381,7 +480,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <Select
                     onValueChange={(value) => {
                       const selectedUnit = JSON.parse(value);
-                      handleSelectUnit(selectedUnit.name, selectedUnit.id);
+                      handleSelectUnit(
+                        selectedUnit.name,
+                        selectedUnit.id,
+                        selectedUnit.supplier_unit_id,
+                      );
                     }}
                   >
                     <SelectTrigger className="w-full rounded-l-none">
@@ -391,6 +494,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       {selectedBatches
                         ?.flatMap((batch, index) =>
                           batch.supplierUnits.map((unit) => ({
+                            supplier_unit_id: unit.supplier_unit_id,
                             name: unit.unit.name,
                             id: unit.unit.unit_id,
                             quantity: unit.quantity_per_unit,
@@ -516,6 +620,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       )
                     }
                     onChange={(e) => setDiscount(e.target.value)}
+                    onInput={(e) => {
+                      e.currentTarget.value = e.currentTarget.value.replace(
+                        /[^0-9]/g,
+                        "",
+                      );
+                    }}
                   />
                   <Select
                     value={discountType}

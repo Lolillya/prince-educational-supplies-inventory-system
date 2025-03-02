@@ -6,7 +6,7 @@ import Edit from '../../_components/edit'
 import RecordInfo from '../../_components/record-info'
 import RecordNotes from '../../_components/record-notes'
 import SupplierRestock from './supplier-restock'
-import EditRecord from './edit-record'
+import { useRouter } from 'next/navigation'
 
 type SelectedSupplierProps = {
 	id: string;
@@ -29,6 +29,13 @@ const SelectedSupplier = ({
 	notes,
 	restockData,
 }: SelectedSupplierProps) => {
+	const router = useRouter();
+
+	const handleEditSupplier = (e: React.MouseEvent) => {
+		e.stopPropagation();
+		router.push(`/admin/suppliers/edit-supplier/${id}`);
+	};
+
 	return (
 		<div className='flex flex-col w-full p-5'>
 			<div className="flex items-center justify-between">
@@ -47,10 +54,12 @@ const SelectedSupplier = ({
 						</p>
 					</div>
 				</div>
-				<EditRecord />
+				<div onClick={handleEditSupplier} className="cursor-pointer">
+					<Edit/>
+				</div>
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+			<Separator className='h-[1px] bg-slate-300 mt-5'/>
 
 			<div className="flex flex-col gap-3 mt-5">
 				<RecordInfo icon={User2} recordType={'Representative'} info={representative} />
@@ -60,7 +69,7 @@ const SelectedSupplier = ({
 				<RecordNotes notes={notes} />
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5' />
+			<Separator className='h-[1px] bg-slate-300w mt-5' />
 
 			<div className='mt-5'>
 

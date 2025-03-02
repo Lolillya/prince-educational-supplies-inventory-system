@@ -28,8 +28,6 @@ interface EmployeeFormState {
   country: string;
   postalCode: string;
   notes: string;
-  username: string;
-  password: string;
 }
 
 interface EmployeeFormErrors {
@@ -43,8 +41,6 @@ interface EmployeeFormErrors {
   country?: string;
   postalCode?: string;
   notes?: string;
-  username?: string;
-  password?: string;
 }
 
 const defaultEmployeeForm: EmployeeFormState = {
@@ -58,8 +54,6 @@ const defaultEmployeeForm: EmployeeFormState = {
   country: "",
   postalCode: "",
   notes: "",
-  username: "",
-  password: "",
 };
 
 const EditEmployeeState = ({ id }: { id: string }) => {
@@ -117,8 +111,6 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         country: employeeData.location?.country ?? "",
         postalCode: employeeData.location?.postal_code ?? "",
         notes: employeeData.notes ?? "",
-        username: employeeData.auth?.username ?? "", // Access from employeeData.auth
-        password: employeeData.auth?.password ?? "", // Access from employeeData.auth
       });
     }
   }, [employeeData]);
@@ -145,8 +137,6 @@ const EditEmployeeState = ({ id }: { id: string }) => {
       country,
       postalCode,
       notes,
-      username,
-      password,
     } = employeeForm;
 
     if (!firstName) {
@@ -165,22 +155,6 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         "Last Name must only contain letters and be at least 2 characters long.";
     } else if (lastName.length > 50) {
       newErrors.lastName = "Last Name must be at most 50 characters long.";
-    }
-
-    if (!username) {
-      newErrors.username = "Username is required.";
-    } else if (username.length < 4) {
-      newErrors.username = "Username must be at least 4 characters long.";
-    } else if (username.length > 50) {
-      newErrors.username = "Username must be at most 50 characters long.";
-    }
-
-    if (!password) {
-      newErrors.password = "Password is required.";
-    } else if (password.length < 8) {
-      newErrors.password = "Password must be at least 8 characters long.";
-    } else if (password.length > 50) {
-      newErrors.password = "Password must be at most 50 characters long.";
     }
 
     if (contact && !/^\d{9,15}$/.test(contact)) {
@@ -248,8 +222,6 @@ const EditEmployeeState = ({ id }: { id: string }) => {
           country: employeeForm.country,
           postalCode: employeeForm.postalCode,
           notes: employeeForm.notes,
-          username: employeeForm.username,
-          password: employeeForm.password,
         });
       } catch (error) {
         console.error("Error updating employee:", error);
@@ -270,7 +242,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
       setShowSuccessDialog(true); // Show success dialog
     } catch (error) {
       console.error("Error deleting supplier:", error);
-      setErrorMessage("Failed to delete supplier. Please try again.");
+      setErrorMessage("Failed to delete employee. Please try again.");
       setShowErrorDialog(true); // Show error dialog
     }
   };
@@ -303,7 +275,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         <div className="flex h-full w-full flex-col justify-center gap-7">
           <div className="flex flex-col gap-2">
             <Label>
-              Salesperson <span className="text-red">*</span>
+              Employee <span className="text-red">*</span>
             </Label>
             <div className="flex items-center gap-3">
               <Input
@@ -435,41 +407,6 @@ const EditEmployeeState = ({ id }: { id: string }) => {
             </div>
           </div>
 
-          <div className="flex gap-3">
-            <div className="flex w-full flex-col gap-2">
-              <Label>
-                Username <span className="text-red">*</span>
-              </Label>
-              <Input
-                name="username"
-                placeholder="Username"
-                className="p-7"
-                value={employeeForm.username}
-                onChange={handleInputChange}
-              />
-              {errors.username && (
-                <span className="text-red">{errors.username}</span>
-              )}
-            </div>
-
-            <div className="flex w-full flex-col gap-2">
-              <Label>
-                Password <span className="text-red">*</span>
-              </Label>
-              <Input
-                type="password"
-                name="password"
-                placeholder="Password"
-                className="p-7"
-                value={employeeForm.password}
-                onChange={handleInputChange}
-              />
-              {errors.password && (
-                <span className="text-red">{errors.password}</span>
-              )}
-            </div>
-          </div>
-
           <div>
             <Textarea
               name="notes"
@@ -495,7 +432,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
               onClick={() => setShowDeleteDialog(true)}
               className="bg-red p-7 text-lg font-bold"
             >
-              Delete Supplier
+              Delete Employee
             </Button>
           </DialogTrigger>
 

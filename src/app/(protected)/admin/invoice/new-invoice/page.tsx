@@ -100,6 +100,7 @@ const NewInvoice = () => {
         selectedUnit: {
           unitName: string;
           unit_id: number;
+          supplier_unit_id: number;
         };
         itemName: string;
         brandName: string;
@@ -129,6 +130,8 @@ const NewInvoice = () => {
   const { mutateAsync: createInvoice } =
     api.invoice.createInvoiceWithLineItems.useMutation();
 
+  console.log(activeCards);
+
   const updateCardDetails = (
     id: number,
     totalPrice: number,
@@ -139,6 +142,7 @@ const NewInvoice = () => {
     selectedUnit: {
       unitName: string;
       unit_id: number;
+      supplier_unit_id: number;
     },
     itemName: string,
     brandName: string,
@@ -180,7 +184,6 @@ const NewInvoice = () => {
     // Ensure total is not negative
     total = Math.max(0, total);
 
-    console.log(total);
     setGrandTotal(total);
   };
 
@@ -205,6 +208,7 @@ const NewInvoice = () => {
         payment_term_id: 1,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
+        supplier_unit_id: item[1].selectedUnit.supplier_unit_id,
         variant_id: item[1].variant_id,
         quantity: item[1].quantity,
         unit_price: item[1].unitPrice,
@@ -212,6 +216,8 @@ const NewInvoice = () => {
         unit_id: item[1].selectedUnit.unit_id,
       })),
     };
+
+    console.log("InvoiceData:", invoiceData);
 
     try {
       await createInvoice(invoiceData);
@@ -280,15 +286,6 @@ const NewInvoice = () => {
     setSelectedItems([...selectedItems, item]);
     setStockTotals((prev) => ({ ...prev, [item.inventory_id]: "" }));
     setSearchTerm("");
-  };
-
-  const calculateGrandTotalDiscount = () => {
-    const total =
-      discountType === "%"
-        ? grandTotal * (1 - Number(discount) / 100)
-        : grandTotal - Number(discount);
-
-    setGrandTotal(total);
   };
 
   useEffect(() => {

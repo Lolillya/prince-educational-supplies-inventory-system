@@ -72,6 +72,7 @@ type InvoiceCardProps = {
     selectedUnit: {
       unitName: string;
       unit_id: number;
+      supplier_unit_id: number;
     },
     itemName: string,
     brandName: string,
@@ -83,11 +84,13 @@ type InvoiceCardProps = {
 
 type SupplierUnit = {
   price: number;
+  supplier_unit_id: number;
   quantity_per_unit: number;
   unit_id: number;
   unit: {
     name: string;
     unit_id: number;
+    supplier_unit_id: number;
   };
 };
 
@@ -116,6 +119,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [selectedUnit, setSelectedUnit] = useState({
     unitName: "",
     unit_id: 0,
+    supplier_unit_id: 0,
   });
   const [selectedUnitQuantity, setSelectedUnitQuantity] = useState<number>(0);
   const [discount, setDiscount] = useState("");
@@ -166,8 +170,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     return "bg-red/80";
   };
 
-  console.log(BatchVariant);
-
   const handlePriceInput = (price: number, batch: number) => {
     setPrice({ price, batch });
   };
@@ -210,8 +212,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
+  // console.log(selectedUnit);
+
   const handleSelectUnitQuantity = () => {
-    console.log("Selected Batches:", selectedBatches);
+    // console.log("Selected Batches:", selectedBatches);
 
     // Calculate the total quantity
     const total = selectedBatches.reduce((acc, batch) => {
@@ -219,7 +223,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         acc +
         batch.supplierUnits.reduce((sum, supplier) => {
           if (selectedUnit.unit_id === supplier.unit_id) {
-            console.log("Matching Supplier:", supplier); // ✅ Log supplier details
+            // console.log("Matching Supplier:", supplier); // ✅ Log supplier details
             return sum + supplier.quantity_per_unit;
           }
           return sum;
@@ -230,13 +234,18 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     // Update state once
     setSelectedUnitQuantity(total);
 
-    console.log("Total Quantity:", total); // ✅ Log final total
+    // console.log("Total Quantity:", total); // ✅ Log final total
   };
 
-  const handleSelectUnit = (unit: string, unit_id: number) => {
+  const handleSelectUnit = (
+    unit: string,
+    unit_id: number,
+    supplier_unit_id: number,
+  ) => {
     setSelectedUnit({
       unitName: unit,
       unit_id: unit_id,
+      supplier_unit_id,
     });
   };
 
@@ -262,6 +271,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       variant!,
       variant_id,
       selectedUnit.unit_id,
+      // selectedUnit.supplier_unit_id,
     );
   }, [
     totalPrice,
@@ -470,7 +480,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                   <Select
                     onValueChange={(value) => {
                       const selectedUnit = JSON.parse(value);
-                      handleSelectUnit(selectedUnit.name, selectedUnit.id);
+                      handleSelectUnit(
+                        selectedUnit.name,
+                        selectedUnit.id,
+                        selectedUnit.supplier_unit_id,
+                      );
                     }}
                   >
                     <SelectTrigger className="w-full rounded-l-none">
@@ -480,6 +494,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       {selectedBatches
                         ?.flatMap((batch, index) =>
                           batch.supplierUnits.map((unit) => ({
+                            supplier_unit_id: unit.supplier_unit_id,
                             name: unit.unit.name,
                             id: unit.unit.unit_id,
                             quantity: unit.quantity_per_unit,

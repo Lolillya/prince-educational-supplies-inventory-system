@@ -4,7 +4,7 @@ import { handleExport as exportInventory } from '~/lib/utils/exportMaserList';
 import { handleExport as exportStockList } from '~/lib/utils/exportStockList';
 import { toast } from 'sonner';
 import type { InventoryItem } from '~/types/inventory';
-import PriceList from './pricelist';
+import PriceList from './pricelist-dialog';
 
 interface RecordHeaderProps {
 	record: string;

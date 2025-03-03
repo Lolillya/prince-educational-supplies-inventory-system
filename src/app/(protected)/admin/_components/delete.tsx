@@ -16,36 +16,59 @@ interface DeleteProps {
 	className?: string;
 	recordInfo: string | null;
 	recordType: string;
-	variantId: number;
-	onDelete: (variantId: number) => void;
+	id: string; // Changed from variantId to string ID
+	onDelete: (id: string) => void; // Updated to accept string ID
 	onVerifyPassword: (password: string) => Promise<boolean>;
+	userRole?: string;
 }
 
-const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType, variantId, onDelete, onVerifyPassword, }) => {
+const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType, id, onDelete, onVerifyPassword, userRole }) => {
 	const router = useRouter();
 	const [password, setPassword] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
 	const [isSuccess, setIsSuccess] = useState<boolean>(false);
 
 	const handleDelete = async () => {
-		if (!password) {
-			setError("Please enter your password to confirm.");
+		// Immediately check if user is ADMIN
+		if (userRole !== 'ADMIN') {
+			setError('Only ADMIN users can delete records');
 			return;
 		}
 
-		const isPasswordCorrect = await onVerifyPassword(password);
-		if (!isPasswordCorrect) {
-			setError("Incorrect password.");
+		// Check password exists
+		if (!password) {
+			setError('Please enter your password to confirm');
 			return;
 		}
 
 		try {
-			 onDelete(variantId);
+			// Verify password first
+			const isPasswordCorrect = await onVerifyPassword(password);
+			if (!isPasswordCorrect) {
+				setError('Incorrect password');
+				return;
+			}
+
+			// Proceed with deletion
+			await onDelete(id);
 			setIsSuccess(true);
+
+			// Clear any existing errors on success
+			setError(null);
+
 		} catch (error) {
-			setError("Failed to delete the record.");
+			// Handle specific error messages from server
+			const errorMessage = error instanceof Error
+				? error.message
+				: 'Failed to delete record';
+
+			setError(errorMessage);
+
+			// Clear success state if there was an error
+			setIsSuccess(false);
 		}
 	};
+
 	return (
 		<Dialog>
 			<DialogTrigger asChild>
@@ -79,10 +102,7 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType, vari
 						<Separator orientation="horizontal" className="h-[2px]" />
 						<div className="flex justify-end">
 							<DialogClose asChild>
-								<Button
-									className="bg-green hover:bg-green/80"
-									onClick={() => router.push("/admin/inventory")}
-								>
+								<Button className="bg-green hover:bg-green/80">
 									Close
 								</Button>
 							</DialogClose>

@@ -12,9 +12,12 @@ type RecordItemProps = {
 	onClick: () => void;
 	isSelected: boolean;
 	recordType: string;
+	onDelete: (id: string) => void; // Add onDelete prop
+	onVerifyPassword: (password: string) => Promise<boolean>;
+	userRole?: string;
 }
 
-const RecordItem: React.FC<RecordItemProps> = ({ id, emoji, name, onClick, isSelected, recordType }) => {
+const RecordItem: React.FC<RecordItemProps> = ({ id, emoji, name, onClick, isSelected, recordType,  onDelete, onVerifyPassword, userRole }) => {
 	return (
 		<>
 			<div
@@ -37,7 +40,14 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, emoji, name, onClick, isSel
 						</div>
 					</div>
 					<div className='flex items-center gap-2'>
-						<Delete recordInfo={name} recordType={recordType} />
+						<Delete
+							recordInfo={name}
+							recordType={recordType}
+							id={id}
+							onDelete={onDelete}
+							onVerifyPassword={onVerifyPassword}
+							userRole={userRole}
+						/>
 					</div>
 				</div>
 			</div>

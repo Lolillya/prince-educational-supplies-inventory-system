@@ -14,6 +14,7 @@ import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedEmployee from './_components/selected-employee'
 import { Toaster } from '~/components/ui/sonner'
+import {useSession} from "next-auth/react";
 
 interface Employee {
   id: string;
@@ -50,6 +51,46 @@ const EmployeesPage = () => {
   const [selectedRecord, setSelectedRecord] = useState<Employee | null>(null);
 
   const { data: employeeData } = api.employees.list.useQuery();
+
+
+
+  const utils = api.useUtils();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
+
+  const verifyPasswordMutation = api.employees.verifyPassword.useMutation();
+  const handleVerifyPassword = async (password: string) => {
+    if (!personalDetailsId) return false;
+
+    try {
+      const result = await verifyPasswordMutation.mutateAsync({
+        personalDetailsId,
+        password,
+      });
+      return result.success;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const deleteEmployeeMutation = api.employees.delete.useMutation({
+    onSuccess: () => {
+      utils.employees.list.invalidate();
+      setSelectedRecord(null);
+    },
+    onError: (error) => {
+      console.error("Error deleting employee:", error.message);
+    },
+  });
+
+  const checkAdminRole = () => {
+    if (userRole !== 'ADMIN') {
+      alert('Only ADMIN users can delete employees');
+      return false;
+    }
+    return true;
+  };
 
   // const { data: activityData } = api.restock.getActivityData.useQuery(); 
   // TODO: fetch employee activity data: restocks, invoices, edits, deletes...
@@ -108,6 +149,12 @@ const EmployeesPage = () => {
                       onClick={() => setSelectedRecord(employee)}
                       isSelected={selectedRecord?.Personal_Details_Id === employee.Personal_Details_Id}
                       recordType={'Employees'}
+                      onVerifyPassword={handleVerifyPassword}
+                      onDelete={(id) => {
+                        if (!checkAdminRole()) return;
+                        deleteEmployeeMutation.mutate({ id });
+                      }}
+                      userRole={userRole}
                     />
                   ))}
                 </div>

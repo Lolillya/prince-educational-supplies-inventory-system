@@ -305,6 +305,31 @@ export const employeeRouter = createTRPCRouter({
 
             return { success: true };
         }),
+
+    verifyPassword: publicProcedure
+        .input(
+            z.object({
+                personalDetailsId: z.string(),
+                password: z.string(),
+            })
+        )
+        .mutation(async ({ input }) => {
+            const { personalDetailsId, password } = input;
+
+            const authRecord = await prisma.authentication.findUnique({
+                where: { personal_details_id: personalDetailsId },
+            });
+
+            if (!authRecord) {
+                return { success: false, message: "User not found" };
+            }
+
+            if (authRecord.password !== password) {
+                return { success: false, message: "Incorrect password" };
+            }
+
+            return { success: true, message: "Password verified" };
+        }),
 });
 
 

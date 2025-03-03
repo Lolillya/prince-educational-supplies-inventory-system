@@ -19,6 +19,7 @@ interface Employee {
   id: string;
   Personal_Details_Id: string;
   role_Id: number;
+  emoji: string;
   Personal_Details: PersonalDetails;
 }
 
@@ -103,6 +104,7 @@ const EmployeesPage = () => {
                       key={employee.Personal_Details_Id}
                       name={employee.Personal_Details.first_name + ' ' + employee.Personal_Details.last_name}
                       id={employee.Personal_Details_Id}
+                      emoji={employee.emoji}
                       onClick={() => setSelectedRecord(employee)}
                       isSelected={selectedRecord?.Personal_Details_Id === employee.Personal_Details_Id}
                       recordType={'Employees'}
@@ -125,6 +127,8 @@ const EmployeesPage = () => {
                 <div className="flex flex-col w-full h-40">
                   <SelectedEmployee
                     id={selectedRecord.Personal_Details_Id}
+                    role_Id={selectedRecord.role_Id}
+                    emoji={selectedRecord.emoji}
                     name={selectedRecord.Personal_Details.first_name + ' ' + selectedRecord.Personal_Details.last_name}
                     contact={selectedRecord.Personal_Details.contact}
                     email={selectedRecord.Personal_Details.email}

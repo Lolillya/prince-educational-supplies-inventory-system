@@ -337,6 +337,22 @@ export const invoiceRouter = createTRPCRouter({
                   },
                 });
 
+              const allZeroQuantity =
+                (await ctx.db.supplierUnit.count({
+                  where: {
+                    batch_variant_id: supplierUnit.batch_variant_id,
+                    quantity_per_unit: { gt: 0 }, // Check if any supplierUnit has quantity > 0
+                  },
+                })) === 0;
+
+              console.log(allZeroQuantity);
+
+              if (allZeroQuantity) {
+                await ctx.db.batchVariant.delete({
+                  where: { batch_variant_id: supplierUnit.batch_variant_id },
+                });
+              }
+
               // Step 5: Create Line Item
               return ctx.db.line_Item.create({
                 data: {

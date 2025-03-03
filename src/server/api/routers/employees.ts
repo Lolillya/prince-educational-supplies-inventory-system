@@ -2,7 +2,6 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
-// Updated schema
 const employeeInputSchema = z.object({
     company: z.string().optional(), // Business name is now optional
     firstName: z.string().min(1, "First name is required"), // First name is required
@@ -32,12 +31,44 @@ const employeeInputSchema = z.object({
         .optional()
         .refine((val) => !val || /^\d{4}$/.test(val), "Postal code must be 4 digits"),
     notes: z.string().optional(),
+    isAdmin: z.boolean().default(false),
+});
+
+const employeeUpdateInputSchema = z.object({
+    company: z.string().optional(), // Business name is now optional
+    firstName: z.string().min(1, "First name is required"), // First name is required
+    lastName: z.string().min(1, "Last name is required"),  // Last name is required
+    contact: z
+        .string()
+        .optional()
+        .refine(
+            (val) => !val || /^\d{1,15}$/.test(val),
+            "Contact must only contain numbers and be up to 15 digits"
+        ),
+    email: z
+        .string()
+        .optional()
+        .refine(
+            (val) => !val || /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val),
+            "Invalid email format"
+        ),
+    addressLine: z.string().optional(),
+    city: z.string().optional(),
+    region: z.string().optional(),
+    country: z.string().optional(),
+    postalCode: z
+        .string()
+        .optional()
+        .refine((val) => !val || /^\d{4}$/.test(val), "Postal code must be 4 digits"),
+    notes: z.string().optional(),
+    isAdmin: z.boolean().default(false),
 });
 
 export const employeeRouter = createTRPCRouter({
     list: publicProcedure.query(async () => {
         const employees = await db.user_Role.findMany({
-            where: { role_Id: 2 },
+            // where: { role_Id: 2 },
+            where: { role_Id: { in: [1, 2] } },
             include: {
                 Personal_Details: {
                     include: { location: true, auth: true },
@@ -56,6 +87,7 @@ export const employeeRouter = createTRPCRouter({
                 include: {
                     location: true,
                     auth: true,
+                    User_Role: true,
                 },
             });
             return employeeData ?? null; // If not found, return null
@@ -122,7 +154,8 @@ export const employeeRouter = createTRPCRouter({
             await db.user_Role.create({
                 data: {
                     Personal_Details_Id: personalDetails.personal_details_id,
-                    role_Id: 2, // Assuming 2 is the role ID for "Employee"
+                    role_Id: input.isAdmin ? 1 : 2, // 1 = ADMIN, 2 = EMPLOYEE
+                    emoji: input.isAdmin ? '👑' : '👤',
                 },
             });
 
@@ -131,8 +164,9 @@ export const employeeRouter = createTRPCRouter({
 
     update: publicProcedure
         .input(
-            employeeInputSchema.extend({
+            employeeUpdateInputSchema.extend({
                 id: z.string().uuid("Invalid employee ID format"),
+                isAdmin: z.boolean().default(false),
             })
         )
         .mutation(async ({ input }) => {
@@ -141,8 +175,6 @@ export const employeeRouter = createTRPCRouter({
                 company,
                 firstName,
                 lastName,
-                username,
-                password,
                 contact,
                 email,
                 addressLine,
@@ -206,16 +238,25 @@ export const employeeRouter = createTRPCRouter({
                 },
             });
 
-            // Update authentication details (e.g., username and password)
-            if (username || password) {
-                await db.authentication.update({
-                    where: { personal_details_id: id },
-                    data: {
-                        ...(username && { username }),
-                        ...(password && { password }), // Ensure password is hashed in production
-                    },
-                });
-            }
+            // Update user role
+            await db.user_Role.update({
+                where: { Personal_Details_Id: input.id },
+                data: {
+                    role_Id: input.isAdmin ? 1 : 2,
+                    emoji: input.isAdmin ? '👑' : '👤'
+                }
+            });
+
+            // // Update authentication details (e.g., username and password)
+            // if (username || password) {
+            //     await db.authentication.update({
+            //         where: { personal_details_id: id },
+            //         data: {
+            //             ...(username && { username }),
+            //             ...(password && { password }), // Ensure password is hashed in production
+            //         },
+            //     });
+            // }
 
             return { success: true };
         }),

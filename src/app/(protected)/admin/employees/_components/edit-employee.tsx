@@ -16,6 +16,7 @@ import {
   DialogDescription,
   DialogFooter,
 } from "~/components/ui/dialog";
+import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
 
 interface EmployeeFormState {
   firstName: string;
@@ -28,6 +29,7 @@ interface EmployeeFormState {
   country: string;
   postalCode: string;
   notes: string;
+  isAdmin: boolean;
 }
 
 interface EmployeeFormErrors {
@@ -54,6 +56,7 @@ const defaultEmployeeForm: EmployeeFormState = {
   country: "",
   postalCode: "",
   notes: "",
+  isAdmin: false,
 };
 
 const EditEmployeeState = ({ id }: { id: string }) => {
@@ -73,16 +76,23 @@ const EditEmployeeState = ({ id }: { id: string }) => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+
+
 
   const updateEmployee = api.employees.update.useMutation({
     onSuccess: () => {
       setSuccessMessage("Employee updated successfully!");
       setShowSuccessDialog(true); // Open success dialog after update
       refetch(); // Fetch updated data
+      setIsSaving(false);
     },
     onError: (error) => {
       setErrorMessage(`Failed to update employee: ${error.message}`);
       setShowErrorDialog(true); // Open error dialog if update fails
+      setIsSaving(false);
     },
   });
 
@@ -111,7 +121,9 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         country: employeeData.location?.country ?? "",
         postalCode: employeeData.location?.postal_code ?? "",
         notes: employeeData.notes ?? "",
+        isAdmin: employeeData.User_Role?.role_Id === 1 // 1 = ADMIN
       });
+      setIsAdmin(employeeData.User_Role?.role_Id === 1);
     }
   }, [employeeData]);
 
@@ -205,6 +217,8 @@ const EditEmployeeState = ({ id }: { id: string }) => {
   };
 
   const handleSubmit = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     const formErrors = validateForm();
     setErrors(formErrors);
 
@@ -222,12 +236,17 @@ const EditEmployeeState = ({ id }: { id: string }) => {
           country: employeeForm.country,
           postalCode: employeeForm.postalCode,
           notes: employeeForm.notes,
+          isAdmin,
         });
       } catch (error) {
         console.error("Error updating employee:", error);
         setErrorMessage("Failed to update employee. Please try again.");
         setShowErrorDialog(true); // Open error dialog if update fails
+      } finally {
+        setIsSaving(false);
       }
+    } else {
+      setIsSaving(false);
     }
   };
 
@@ -273,30 +292,43 @@ const EditEmployeeState = ({ id }: { id: string }) => {
     <div className="flex h-full flex-col gap-5 px-52">
       <form className="h-full w-full">
         <div className="flex h-full w-full flex-col justify-center gap-7">
+
+          <div className="flex w-full justify-end">
+            <div className="flex flex-col gap-2 w-[200px]"> {/* Set a fixed width */}
+              <Label>
+                Administrator Privileges
+              </Label>
+              <SwitchComponent
+                  isAllowed={isAdmin}
+                  onToggle={setIsAdmin}
+              />
+            </div>
+          </div>
+
           <div className="flex flex-col gap-2">
             <Label>
               Employee <span className="text-red">*</span>
             </Label>
             <div className="flex items-center gap-3">
               <Input
-                name="firstName"
-                placeholder="First Name"
-                className="p-7"
-                value={employeeForm.firstName}
-                onChange={handleInputChange}
+                  name="firstName"
+                  placeholder="First Name"
+                  className="p-7"
+                  value={employeeForm.firstName}
+                  onChange={handleInputChange}
               />
               {errors.firstName && (
-                <span className="text-red">{errors.firstName}</span>
+                  <span className="text-red">{errors.firstName}</span>
               )}
               <Input
-                name="lastName"
-                placeholder="Last Name"
-                className="p-7"
-                value={employeeForm.lastName}
-                onChange={handleInputChange}
+                  name="lastName"
+                  placeholder="Last Name"
+                  className="p-7"
+                  value={employeeForm.lastName}
+                  onChange={handleInputChange}
               />
               {errors.lastName && (
-                <span className="text-red">{errors.lastName}</span>
+                  <span className="text-red">{errors.lastName}</span>
               )}
             </div>
           </div>
@@ -305,25 +337,25 @@ const EditEmployeeState = ({ id }: { id: string }) => {
             <div className="flex w-full flex-col gap-2">
               <Label>Contact Number</Label>
               <Input
-                name="contact"
-                placeholder="Contact Number"
-                className="p-7"
-                value={employeeForm.contact}
-                onChange={handleInputChange}
+                  name="contact"
+                  placeholder="Contact Number"
+                  className="p-7"
+                  value={employeeForm.contact}
+                  onChange={handleInputChange}
               />
               {errors.contact && (
-                <span className="text-red">{errors.contact}</span>
+                  <span className="text-red">{errors.contact}</span>
               )}
             </div>
 
             <div className="flex w-full flex-col gap-2">
               <Label>Email</Label>
               <Input
-                name="email"
-                placeholder="Email"
-                className="p-7"
-                value={employeeForm.email}
-                onChange={handleInputChange}
+                  name="email"
+                  placeholder="Email"
+                  className="p-7"
+                  value={employeeForm.email}
+                  onChange={handleInputChange}
               />
               {errors.email && <span className="text-red">{errors.email}</span>}
             </div>
@@ -334,14 +366,14 @@ const EditEmployeeState = ({ id }: { id: string }) => {
               Address <span className="text-red"></span>
             </Label>
             <Input
-              name="addressLine"
-              placeholder="Address"
-              className="p-7"
-              value={employeeForm.addressLine}
-              onChange={handleInputChange}
+                name="addressLine"
+                placeholder="Address"
+                className="p-7"
+                value={employeeForm.addressLine}
+                onChange={handleInputChange}
             />
             {errors.addressLine && (
-              <span className="text-red">{errors.addressLine}</span>
+                <span className="text-red">{errors.addressLine}</span>
             )}
           </div>
 
@@ -351,11 +383,11 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                 City <span className="text-red"></span>
               </Label>
               <Input
-                name="city"
-                placeholder="City"
-                className="p-7"
-                value={employeeForm.city}
-                onChange={handleInputChange}
+                  name="city"
+                  placeholder="City"
+                  className="p-7"
+                  value={employeeForm.city}
+                  onChange={handleInputChange}
               />
               {errors.city && <span className="text-red">{errors.city}</span>}
             </div>
@@ -363,14 +395,14 @@ const EditEmployeeState = ({ id }: { id: string }) => {
             <div className="flex w-full flex-col gap-2">
               <Label>Region</Label>
               <Input
-                name="region"
-                placeholder="Region"
-                className="p-7"
-                value={employeeForm.region}
-                onChange={handleInputChange}
+                  name="region"
+                  placeholder="Region"
+                  className="p-7"
+                  value={employeeForm.region}
+                  onChange={handleInputChange}
               />
               {errors.region && (
-                <span className="text-red">{errors.region}</span>
+                  <span className="text-red">{errors.region}</span>
               )}
             </div>
           </div>
@@ -381,40 +413,40 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                 Country <span className="text-red"></span>
               </Label>
               <Input
-                name="country"
-                placeholder="Country"
-                className="p-7"
-                value={employeeForm.country}
-                onChange={handleInputChange}
+                  name="country"
+                  placeholder="Country"
+                  className="p-7"
+                  value={employeeForm.country}
+                  onChange={handleInputChange}
               />
               {errors.country && (
-                <span className="text-red">{errors.country}</span>
+                  <span className="text-red">{errors.country}</span>
               )}
             </div>
 
             <div className="flex w-full flex-col gap-2">
               <Label>Postal Code</Label>
               <Input
-                name="postalCode"
-                placeholder="Postal Code"
-                className="p-7"
-                value={employeeForm.postalCode}
-                onChange={handleInputChange}
+                  name="postalCode"
+                  placeholder="Postal Code"
+                  className="p-7"
+                  value={employeeForm.postalCode}
+                  onChange={handleInputChange}
               />
               {errors.postalCode && (
-                <span className="text-red">{errors.postalCode}</span>
+                  <span className="text-red">{errors.postalCode}</span>
               )}
             </div>
           </div>
 
           <div>
             <Textarea
-              name="notes"
-              placeholder="About this employee..."
-              rows={4}
-              className="resize-none bg-gray"
-              value={employeeForm.notes}
-              onChange={handleInputChange}
+                name="notes"
+                placeholder="About this employee..."
+                rows={4}
+                className="resize-none bg-gray"
+                value={employeeForm.notes}
+                onChange={handleInputChange}
             />
             {errors.notes && <span className="text-red">{errors.notes}</span>}
           </div>
@@ -429,8 +461,8 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogTrigger asChild>
             <Button
-              onClick={() => setShowDeleteDialog(true)}
-              className="bg-red p-7 text-lg font-bold"
+                onClick={() => setShowDeleteDialog(true)}
+                className="bg-red p-7 text-lg font-bold"
             >
               Delete Employee
             </Button>
@@ -495,10 +527,17 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         </Dialog>
 
         <Button
-          onClick={handleSubmit}
-          className="bg-green p-7 text-lg font-bold"
+            onClick={handleSubmit}
+            className="bg-green p-7 text-lg font-bold"
+            disabled={isSaving}
         >
-          Save
+          {isSaving ? (
+              <div className="flex items-center gap-2">
+                Saving...
+              </div>
+          ) : (
+              "Save"
+          )}
         </Button>
       </div>
     </div>

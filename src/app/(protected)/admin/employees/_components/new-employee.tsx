@@ -10,6 +10,7 @@ import { LoadingSpinner } from "~/components/loading";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
 import {DialogTitle} from "@radix-ui/react-dialog";
+import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
 
 
 
@@ -64,6 +65,8 @@ const NewEmployeeState = ({ id }: { id: string }) => {
     const router = useRouter();
     const { refetch } = api.employees.list.useQuery();
     const [dialogOpen, setDialogOpen] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
+
 
 
     const createEmployee = api.employees.create.useMutation({
@@ -243,6 +246,7 @@ const NewEmployeeState = ({ id }: { id: string }) => {
                     notes: employeeForm.notes,
                     username: employeeForm.username,
                     password: employeeForm.password,
+                    isAdmin,
                 });
             } catch (error) {
                 console.error("Error creating employee:", error);
@@ -260,6 +264,18 @@ const NewEmployeeState = ({ id }: { id: string }) => {
         <div className="flex h-full flex-col gap-5 px-52">
             <form className="h-full w-full">
                 <div className="flex h-full w-full flex-col justify-center gap-7">
+                    <div className="flex w-full justify-end">
+                        <div className="flex flex-col gap-2 w-[200px]"> {/* Set a fixed width */}
+                            <Label>
+                                Administrator Privileges
+                            </Label>
+                            <SwitchComponent
+                                isAllowed={isAdmin}
+                                onToggle={setIsAdmin}
+                            />
+                        </div>
+                    </div>
+
                     <div className="flex flex-col gap-2">
                         <Label>
                             Employee <span className="text-red">*</span>

@@ -315,7 +315,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 selectedBatches.map((batch) => (
                   <Label
                     key={batch.index}
-                    className="flex content-center items-center gap-2 rounded-lg bg-green/30 p-2"
+                    className={`flex content-center items-center gap-2 rounded-lg p-2 ${getBatchColor(batch.supplierUnits)}`}
                   >
                     Batch {batch.index + 1}
                     <X

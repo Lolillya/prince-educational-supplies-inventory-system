@@ -115,6 +115,7 @@ const NewInvoice = () => {
   const [discount, setDiscount] = useState<number>(0);
   const [discountType, setDiscountType] = useState("%");
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
+  const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
 
   const {
     data: inventoryItems,
@@ -129,8 +130,6 @@ const NewInvoice = () => {
 
   const { mutateAsync: createInvoice, isPending: isInvoicePending } =
     api.invoice.createInvoiceWithLineItems.useMutation();
-
-  console.log(activeCards);
 
   const updateCardDetails = (
     id: number,
@@ -187,6 +186,10 @@ const NewInvoice = () => {
     setGrandTotal(total);
   };
 
+  const handleAutoRestock = (checked: boolean) => {
+    setIsAutoRestock(checked);
+  };
+
   const handleSaveInvoice = async () => {
     if (!selectedItems || !activeCards) {
       toast({
@@ -206,6 +209,7 @@ const NewInvoice = () => {
         discount: 0,
         status: "PENDING",
         payment_term_id: 1,
+        isAutoRestock: isAutoRestock,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
         supplier_unit_id: item[1].selectedUnit.supplier_unit_id,
@@ -428,6 +432,8 @@ const NewInvoice = () => {
               BatchVariant={item.variant.BatchVariant}
               onRemove={handleRemoveBatch}
               updateCardDetails={updateCardDetails}
+              handleAutoRestock={handleAutoRestock}
+              isAutoRestock={isAutoRestock}
             />
           );
         })}

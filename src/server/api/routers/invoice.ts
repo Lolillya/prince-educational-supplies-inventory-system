@@ -1,5 +1,3 @@
-import { SupplierUnit } from "@prisma/client";
-import { resolve } from "path";
 import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 
@@ -11,6 +9,7 @@ const invoiceSchema = z.object({
   discount: z.number(),
   status: z.string(),
   payment_term_id: z.number(),
+  isAutoRestock: z.boolean(),
 });
 
 const LineItemSchema = z.object({
@@ -188,138 +187,192 @@ export const invoiceRouter = createTRPCRouter({
 
       console.log(lineItems);
 
-      const result = await ctx.db.$transaction(async () => {
-        // Step 1: Create Invoice
-        const createdInvoice = await ctx.db.invoice.create({
-          data: {
-            customer_id: invoice.customer_id,
-            invoice_clerk: invoice.invoice_clerk,
-            total_amount: invoice.total_amount,
-            discount: invoice.discount,
-            status: invoice.status,
-            payment_term_id: invoice.payment_term_id,
-          },
-        });
+      const result = await ctx.db.$transaction(
+        async () => {
+          // Step 1: Create Invoice
+          const createdInvoice = await ctx.db.invoice.create({
+            data: {
+              customer_id: invoice.customer_id,
+              invoice_clerk: invoice.invoice_clerk,
+              total_amount: invoice.total_amount,
+              discount: invoice.discount,
+              status: invoice.status,
+              payment_term_id: invoice.payment_term_id,
+            },
+          });
 
-        const invoiceId = createdInvoice.invoice_id;
+          const invoiceId = createdInvoice.invoice_id;
 
-        // Step 2: Process each Line Item
-        const createdLineItems = await Promise.all(
-          lineItems.map(async (item) => {
-            let invoiceItemQty = item.quantity;
-            let unitId = item.unit_id;
-            let supplier_unit_id = item.supplier_unit_id;
+          // Step 2: Process each Line Item
+          const createdLineItems = await Promise.all(
+            lineItems.map(async (item) => {
+              let invoiceItemQty = item.quantity;
+              let unitId = item.unit_id;
+              let supplier_unit_id = item.supplier_unit_id;
 
-            // Step 3: Fetch the SupplierUnit for the selected unit
-            const supplierUnit = await ctx.db.supplierUnit.findFirst({
-              where: {
-                supplier_unit_id: supplier_unit_id,
-                unit_id: unitId,
-              },
-            });
-
-            if (!supplierUnit) {
-              throw new Error(
-                `Supplier unit not found for variant ID: ${item.variant_id}`,
-              );
-            }
-
-            const supplierUnitList = await ctx.db.supplierUnit.findMany({
-              where: {
-                batch_variant_id: supplierUnit.batch_variant_id,
-              },
-              orderBy: {
-                supplier_unit_id: "desc",
-              },
-            });
-
-            const conversionList = await ctx.db.conversionRate.findMany({
-              where: {
-                supplier_unit_id: {
-                  in: supplierUnitList.map((unit) => unit.supplier_unit_id),
+              // Step 3: Fetch the SupplierUnit for the selected unit
+              const supplierUnit = await ctx.db.supplierUnit.findFirst({
+                where: {
+                  supplier_unit_id: supplier_unit_id,
+                  unit_id: unitId,
                 },
-              },
-            });
+              });
 
-            console.log("Selected Item:", item);
-            console.log("Supplier Unit Found:", supplierUnit);
-            console.log("SupplierUnitList:", supplierUnitList);
-            console.log("ConversionList:", conversionList);
+              if (!supplierUnit) {
+                throw new Error(
+                  `Supplier unit not found for variant ID: ${item.variant_id}`,
+                );
+              }
 
-            // STEP 4: check unit quantity if sufficient
-            while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
-              if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
-                // Deduct from the current unit
+              const supplierUnitList = await ctx.db.supplierUnit.findMany({
+                where: {
+                  batch_variant_id: supplierUnit.batch_variant_id,
+                },
+                orderBy: {
+                  supplier_unit_id: "desc",
+                },
+              });
+
+              const conversionList = await ctx.db.conversionRate.findMany({
+                where: {
+                  supplier_unit_id: {
+                    in: supplierUnitList.map((unit) => unit.supplier_unit_id),
+                  },
+                },
+              });
+
+              console.log("Selected Item:", item);
+              console.log("Supplier Unit Found:", supplierUnit);
+              console.log("SupplierUnitList:", supplierUnitList);
+              console.log("ConversionList:", conversionList);
+
+              console.log("AutoRestock:", invoice.isAutoRestock);
+
+              // STEP 4: check unit quantity if sufficient
+
+              if (invoice.isAutoRestock) {
                 await ctx.db.supplierUnit.update({
-                  where: { supplier_unit_id: supplierUnit.supplier_unit_id },
-                  data: { quantity_per_unit: { decrement: invoiceItemQty } },
-                });
-                invoiceItemQty = 0;
-              } else {
-                // Not enough stock in current unit, find higher unit to convert from
-                const conversion = conversionList.find(
-                  (c) => c.to_unit_id === supplierUnit.unit_id,
-                );
-
-                if (!conversion) {
-                  throw new Error(
-                    `Insufficient stock and no higher unit available for variant ID: ${item.variant_id}`,
-                  );
-                }
-
-                const higherUnit = supplierUnitList.find(
-                  (su) => su.unit_id === conversion.from_unit_id,
-                );
-
-                if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
-                  throw new Error(
-                    `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
-                  );
-                }
-
-                // Calculate how many higher units need to be deducted
-                const higherUnitQtyToDeduct = Math.ceil(
-                  invoiceItemQty / conversion.conversion_rate,
-                );
-
-                console.log(
-                  `Converting ${invoiceItemQty} ${supplierUnit.unit_id} -> ${higherUnitQtyToDeduct} ${higherUnit.unit_id}`,
-                );
-
-                // Deduct from the higher unit
-                await ctx.db.supplierUnit.update({
-                  where: { supplier_unit_id: higherUnit.supplier_unit_id },
+                  where: {
+                    supplier_unit_id: supplierUnit.supplier_unit_id,
+                    unit_id: unitId,
+                  },
                   data: {
-                    quantity_per_unit: { decrement: higherUnitQtyToDeduct },
+                    quantity_per_unit: 0,
+                  },
+                });
+              } else
+                while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
+                  if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
+                    // Deduct from the current unit
+                    await ctx.db.supplierUnit.update({
+                      where: {
+                        supplier_unit_id: supplierUnit.supplier_unit_id,
+                      },
+                      data: {
+                        quantity_per_unit: { decrement: invoiceItemQty },
+                      },
+                    });
+                    invoiceItemQty = 0;
+                  } else {
+                    // Not enough stock in current unit, find higher unit to convert from
+                    const conversion = conversionList.find(
+                      (c) => c.to_unit_id === supplierUnit.unit_id,
+                    );
+
+                    if (!conversion) {
+                      throw new Error(
+                        `Insufficient stock and no higher unit available for variant ID: ${item.variant_id}`,
+                      );
+                    }
+
+                    const higherUnit = supplierUnitList.find(
+                      (su) => su.unit_id === conversion.from_unit_id,
+                    );
+
+                    if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
+                      throw new Error(
+                        `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
+                      );
+                    }
+
+                    // Calculate how many higher units need to be deducted
+                    const higherUnitQtyToDeduct = Math.ceil(
+                      invoiceItemQty / conversion.conversion_rate,
+                    );
+
+                    console.log(
+                      `Converting ${invoiceItemQty} ${supplierUnit.unit_id} -> ${higherUnitQtyToDeduct} ${higherUnit.unit_id}`,
+                    );
+
+                    // Deduct from the higher unit
+                    await ctx.db.supplierUnit.update({
+                      where: { supplier_unit_id: higherUnit.supplier_unit_id },
+                      data: {
+                        quantity_per_unit: { decrement: 1 },
+                      },
+                    });
+
+                    // Update invoiceItemQty after conversion
+                    supplierUnit.quantity_per_unit +=
+                      conversion.conversion_rate;
+
+                    console.log(
+                      "UpdatedQuantity:",
+                      supplierUnit.quantity_per_unit,
+                    );
+                  }
+                  console.log(
+                    `Remaining quantity after conversion: ${supplierUnit.quantity_per_unit - invoiceItemQty}`,
+                  );
+                }
+              if (!invoice.isAutoRestock)
+                await ctx.db.supplierUnit.update({
+                  where: {
+                    supplier_unit_id: supplierUnit.supplier_unit_id,
+                    unit_id: unitId,
+                  },
+                  data: {
+                    quantity_per_unit:
+                      supplierUnit.quantity_per_unit - invoiceItemQty,
                   },
                 });
 
-                // Update invoiceItemQty after conversion
-                supplierUnit.quantity_per_unit += conversion.conversion_rate;
+              const allZeroQuantity =
+                (await ctx.db.supplierUnit.count({
+                  where: {
+                    batch_variant_id: supplierUnit.batch_variant_id,
+                    quantity_per_unit: { gt: 0 }, // Check if any supplierUnit has quantity > 0
+                  },
+                })) === 0;
 
-                console.log("UpdatedQuantity:", supplierUnit.quantity_per_unit);
+              console.log(allZeroQuantity);
+
+              if (allZeroQuantity) {
+                await ctx.db.batchVariant.delete({
+                  where: { batch_variant_id: supplierUnit.batch_variant_id },
+                });
               }
-              console.log(
-                `Remaining quantity after conversion: ${supplierUnit.quantity_per_unit - invoiceItemQty}`,
-              );
-            }
 
-            // Step 5: Create Line Item
-            return ctx.db.line_Item.create({
-              data: {
-                invoice_id: invoiceId,
-                variant_id: item.variant_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price,
-                total_price: item.total_price,
-                unit_id: unitId,
-              },
-            });
-          }),
-        );
+              // Step 5: Create Line Item
+              return ctx.db.line_Item.create({
+                data: {
+                  invoice_id: invoiceId,
+                  variant_id: item.variant_id,
+                  quantity: item.quantity,
+                  unit_price: item.unit_price,
+                  total_price: item.total_price,
+                  unit_id: unitId,
+                },
+              });
+            }),
+          );
 
-        return { createdInvoice, createdLineItems };
-      });
+          return { createdInvoice, createdLineItems };
+        },
+        {
+          timeout: 10_000,
+        },
+      );
 
       return result;
     }),

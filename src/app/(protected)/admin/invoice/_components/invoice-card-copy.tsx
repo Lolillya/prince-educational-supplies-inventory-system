@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MoveRight, Plus, X } from "lucide-react";
+import { Info, MoveRight, Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
   Accordion,
@@ -61,7 +61,9 @@ type InvoiceCardProps = {
     }>;
   }>;
 
+  isAutoRestock: boolean;
   onRemove: (batchNumber: number) => void;
+  handleAutoRestock: (checked: boolean) => void;
   updateCardDetails: (
     id: number,
     totalPrice: number,
@@ -108,6 +110,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   BatchVariant,
   onRemove,
   updateCardDetails,
+  handleAutoRestock,
+  isAutoRestock,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState({
@@ -135,6 +139,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [selectedBatches, setSelectedBatches] = useState<SupplierBatch[]>([]);
   const [batchBasis, setBatchBasis] = useState<SupplierBatch | undefined>(
     undefined,
+  );
+  const isAutoRestockDisabled = selectedBatches.every((batch) =>
+    batch.supplierUnits.map((supplier) => supplier.quantity_per_unit === 0),
   );
 
   const getBatchColor = (
@@ -308,7 +315,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 selectedBatches.map((batch) => (
                   <Label
                     key={batch.index}
-                    className="flex content-center items-center gap-2 rounded-lg bg-green/30 p-2"
+                    className={`flex content-center items-center gap-2 rounded-lg p-2 ${getBatchColor(batch.supplierUnits)}`}
                   >
                     Batch {batch.index + 1}
                     <X
@@ -647,6 +654,23 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       <SelectItem value="Fixed">Fixed</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="flex w-full">
+                <div className="flex w-full items-center gap-3">
+                  <Input
+                    type="checkbox"
+                    disabled={!(unitQuantity > selectedUnitQuantity)}
+                    className="h-4 w-fit"
+                    onChange={(e) => handleAutoRestock?.(e.target.checked)}
+                  />
+                  <Label className="">Auto Restock</Label>
+                  <Info
+                    size={18}
+                    className="transition-all duration-300 hover:scale-110 hover:cursor-pointer"
+                    color="gray"
+                  />
                 </div>
               </div>
             </div>

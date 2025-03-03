@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MoveRight, Plus, X } from "lucide-react";
+import { Info, MoveRight, Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
   Accordion,
@@ -61,7 +61,9 @@ type InvoiceCardProps = {
     }>;
   }>;
 
+  isAutoRestock: boolean;
   onRemove: (batchNumber: number) => void;
+  handleAutoRestock: (checked: boolean) => void;
   updateCardDetails: (
     id: number,
     totalPrice: number,
@@ -108,6 +110,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   BatchVariant,
   onRemove,
   updateCardDetails,
+  handleAutoRestock,
+  isAutoRestock,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState({
@@ -647,6 +651,23 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       <SelectItem value="Fixed">Fixed</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+              </div>
+
+              <div className="flex w-full">
+                <div className="flex w-full items-center gap-3">
+                  <Input
+                    type="checkbox"
+                    disabled={!(unitQuantity > selectedUnitQuantity)}
+                    className="h-4 w-fit"
+                    onChange={(e) => handleAutoRestock?.(e.target.checked)}
+                  />
+                  <Label className="">Auto Restock</Label>
+                  <Info
+                    size={18}
+                    className="transition-all duration-300 hover:scale-110 hover:cursor-pointer"
+                    color="gray"
+                  />
                 </div>
               </div>
             </div>

@@ -140,6 +140,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [batchBasis, setBatchBasis] = useState<SupplierBatch | undefined>(
     undefined,
   );
+  const isAutoRestockDisabled = selectedBatches.every((batch) =>
+    batch.supplierUnits.map((supplier) => supplier.quantity_per_unit === 0),
+  );
 
   const getBatchColor = (
     supplierUnits: {

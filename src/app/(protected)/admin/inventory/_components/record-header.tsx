@@ -1,10 +1,11 @@
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
+import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import MoreOptions from '../../_components/more-options';
 import { handleExport as exportMasterList } from '~/lib/utils/exportMasterList';
 import { handleExport as exportStockList } from '~/lib/utils/exportStockList';
 import { toast } from 'sonner';
 import type { InventoryItem } from '~/types/inventory';
 import PriceList from './pricelist';
+import { useState } from 'react';
 
 interface RecordHeaderProps {
 	record: string;
@@ -13,6 +14,13 @@ interface RecordHeaderProps {
 }
 
 const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
+	const [stockFilters, setStockFilters] = useState({
+		sufficient: true,
+		low: true,
+		veryLow: true,
+		noStock: true
+	});
+
 	const handleExport = (includeNoStock: boolean) => {
 		if (!data || data.length === 0) {
 			toast(`❌ No ${record.toLowerCase()} data available to export.`);
@@ -33,6 +41,25 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 		}
 	};
 
+	const handleStockListExport = () => {
+		if (!data || data.length === 0) {
+			toast(`❌ No ${record.toLowerCase()} data available to export.`);
+			return;
+		}
+
+		const success = exportStockList({
+			inventory: data,
+			stockFilters
+		});
+
+		if (success) {
+			toast('🎉 Your file has been exported successfully!', {
+				description: 'Check your downloads folder.',
+			});
+		} else {
+			toast('❌ Failed to generate export.');
+		}
+	};
 
 	return (
 		<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3 flex items-center justify-between">
@@ -73,20 +100,57 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 						</DropdownMenuSubTrigger>
 						<DropdownMenuPortal>
 							<DropdownMenuSubContent>
-								<DropdownMenuItem
+								<DropdownMenuCheckboxItem
+									checked={stockFilters.sufficient}
+									onCheckedChange={() => setStockFilters(prev => ({
+										...prev,
+										sufficient: !prev.sufficient
+									}))}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
+									onSelect={(e) => e.preventDefault()}
 								>
-									Include out-of-stock
-								</DropdownMenuItem>
-								<DropdownMenuItem
+									Sufficient stock
+								</DropdownMenuCheckboxItem>
+								<DropdownMenuCheckboxItem
+									checked={stockFilters.low}
+									onCheckedChange={() => setStockFilters(prev => ({
+										...prev,
+										low: !prev.low
+									}))}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
+									onSelect={(e) => e.preventDefault()}
 								>
-									Exclude out-of-stock
-								</DropdownMenuItem>
-								<DropdownMenuItem
+									Low stock
+								</DropdownMenuCheckboxItem>
+								<DropdownMenuCheckboxItem
+									checked={stockFilters.veryLow}
+									onCheckedChange={() => setStockFilters(prev => ({
+										...prev,
+										veryLow: !prev.veryLow
+									}))}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
+									onSelect={(e) => e.preventDefault()}
 								>
-									Only out-of-stock
+									Very low stock
+								</DropdownMenuCheckboxItem>
+								<DropdownMenuCheckboxItem
+									checked={stockFilters.noStock}
+									onCheckedChange={() => setStockFilters(prev => ({
+										...prev,
+										noStock: !prev.noStock
+									}))}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+									onSelect={(e) => e.preventDefault()}
+								>
+									No stock
+								</DropdownMenuCheckboxItem>
+								<DropdownMenuSeparator />
+								<DropdownMenuItem
+									onClick={handleStockListExport}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+									onSelect={(e) => e.preventDefault()}
+								>
+									Export Stocklist
 								</DropdownMenuItem>
 							</DropdownMenuSubContent>
 						</DropdownMenuPortal>

@@ -1,20 +1,17 @@
+import { Download, Search } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 import { useState } from 'react';
-import { Button } from '~/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
-import { DropdownMenuItem } from '~/components/ui/dropdown-menu'
-import { Separator } from '~/components/ui/separator';
-import { ScrollArea } from '~/components/ui/scroll-area';
-import { Download, Search } from 'lucide-react';
-import PriceListItem from './pricelist-item';
-import { Input } from '~/components/ui/input';
-import { api } from '~/trpc/react';
-import PriceListSearch from './pricelist-search';
-import type { RouterOutputs } from '~/trpc/shared';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
-import { format } from 'date-fns';
 import { toast } from 'sonner';
+import { Button } from '~/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog';
+import { DropdownMenuItem } from '~/components/ui/dropdown-menu';
+import { ScrollArea } from '~/components/ui/scroll-area';
+import { Separator } from '~/components/ui/separator';
+import { handleExport as exportPriceList } from '~/lib/utils/exportPriceList';
+import { api } from '~/trpc/react';
+import type { RouterOutputs } from '~/trpc/shared';
+import PriceListItem from './pricelist-item';
+import PriceListSearch from './pricelist-search';
 
 const poppins = Poppins({
 	subsets: ["latin"],
@@ -99,72 +96,16 @@ const PriceList = () => {
 		}
 
 		try {
-			const doc = new jsPDF();
+			const success = exportPriceList({ selectedItems, itemStates });
 
-			// Add title
-			doc.setFontSize(12);
-			doc.text('Inventory Price List', 14, 15);
-
-			// Add generation date
-			const generationDate = new Date().toLocaleDateString();
-			doc.setFontSize(10);
-			doc.text(`Generated on: ${generationDate}`, 14, 22);
-
-			// Prepare table data
-			const tableData = selectedItems.map((item, index) => {
-				const itemKey = `${item.variant.id}-${index}`;
-				const state = itemStates[itemKey];
-				const description = [
-					item.variant.item.name,
-					item.variant.item.brand.name,
-					item.variant.name
-				].filter(Boolean).join(' - ');
-
-				// Convert number to superscript
-				const superscriptNumber = (num: number) => {
-					const superscripts = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
-					return superscripts[num - 1] || num;
-				};
-
-				const unit = state?.selectedUnitName === 'unit'
-					? 'N/A'
-					: `${state?.selectedUnitName || 'N/A'}${superscriptNumber(index + 1)}`;
-				const price = state?.price ? `P${parseFloat(state.price).toFixed(2)}` : 'N/A';
-
-				return [description, unit, price];
-			});
-
-			// Add table
-			autoTable(doc, {
-				head: [['Description', 'Unit', 'SRP']],
-				body: tableData,
-				startY: 30,
-				theme: 'grid',
-				styles: {
-					fontSize: 10,
-					cellPadding: 2
-				},
-				headStyles: {
-					fillColor: [200, 200, 200],
-					textColor: 0
-				},
-				columnStyles: {
-					0: { cellWidth: 100 },
-					1: { cellWidth: 40 },
-					2: { cellWidth: 30 },
-				},
-			});
-
-			// Save the PDF
-			const date = new Date().toLocaleDateString().replace(/\//g, '-');
-			doc.save(`Inventory_PriceList_${date}.pdf`);
-
-			toast('🎉 Your file has been exported successfully!', {
-				description: 'Check your downloads folder.',
-			});
-
-			// Close the dialog after successful export
-			setIsDialogOpen(false);
+			if (success) {
+				toast('🎉 Your file has been exported successfully!', {
+					description: 'Check your downloads folder.',
+				});
+				setIsDialogOpen(false);
+			} else {
+				toast('❌ Failed to export price list.');
+			}
 		} catch (error) {
 			console.error('Error exporting price list:', error);
 			toast('❌ Failed to export price list.');

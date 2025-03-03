@@ -17,7 +17,7 @@ export const handleExport = ({
     }
 
     const doc = new jsPDF();
-    doc.setFontSize(16);
+    doc.setFontSize(14);
     doc.text("ITEM MASTERLIST", 14, 15);
 
     const tableColumns = ["Description", "Unit", "SRP"];

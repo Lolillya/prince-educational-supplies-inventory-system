@@ -29,6 +29,7 @@ interface EmployeeFormState {
   country: string;
   postalCode: string;
   notes: string;
+  isAdmin: boolean;
 }
 
 interface EmployeeFormErrors {
@@ -55,6 +56,7 @@ const defaultEmployeeForm: EmployeeFormState = {
   country: "",
   postalCode: "",
   notes: "",
+  isAdmin: false,
 };
 
 const EditEmployeeState = ({ id }: { id: string }) => {
@@ -74,16 +76,23 @@ const EditEmployeeState = ({ id }: { id: string }) => {
   const [showErrorDialog, setShowErrorDialog] = useState(false);
   const [successMessage, setSuccessMessage] = useState("");
   const [errorMessage, setErrorMessage] = useState("");
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+
+
+
 
   const updateEmployee = api.employees.update.useMutation({
     onSuccess: () => {
       setSuccessMessage("Employee updated successfully!");
       setShowSuccessDialog(true); // Open success dialog after update
       refetch(); // Fetch updated data
+      setIsSaving(false);
     },
     onError: (error) => {
       setErrorMessage(`Failed to update employee: ${error.message}`);
       setShowErrorDialog(true); // Open error dialog if update fails
+      setIsSaving(false);
     },
   });
 
@@ -112,7 +121,9 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         country: employeeData.location?.country ?? "",
         postalCode: employeeData.location?.postal_code ?? "",
         notes: employeeData.notes ?? "",
+        isAdmin: employeeData.User_Role?.role_Id === 1 // 1 = ADMIN
       });
+      setIsAdmin(employeeData.User_Role?.role_Id === 1);
     }
   }, [employeeData]);
 
@@ -206,6 +217,8 @@ const EditEmployeeState = ({ id }: { id: string }) => {
   };
 
   const handleSubmit = async () => {
+    if (isSaving) return;
+    setIsSaving(true);
     const formErrors = validateForm();
     setErrors(formErrors);
 
@@ -223,12 +236,17 @@ const EditEmployeeState = ({ id }: { id: string }) => {
           country: employeeForm.country,
           postalCode: employeeForm.postalCode,
           notes: employeeForm.notes,
+          isAdmin,
         });
       } catch (error) {
         console.error("Error updating employee:", error);
         setErrorMessage("Failed to update employee. Please try again.");
         setShowErrorDialog(true); // Open error dialog if update fails
+      } finally {
+        setIsSaving(false);
       }
+    } else {
+      setIsSaving(false);
     }
   };
 
@@ -280,7 +298,10 @@ const EditEmployeeState = ({ id }: { id: string }) => {
               <Label>
                 Administrator Privileges
               </Label>
-              <SwitchComponent/>
+              <SwitchComponent
+                  isAllowed={isAdmin}
+                  onToggle={setIsAdmin}
+              />
             </div>
           </div>
 
@@ -506,10 +527,17 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         </Dialog>
 
         <Button
-          onClick={handleSubmit}
-          className="bg-green p-7 text-lg font-bold"
+            onClick={handleSubmit}
+            className="bg-green p-7 text-lg font-bold"
+            disabled={isSaving}
         >
-          Save
+          {isSaving ? (
+              <div className="flex items-center gap-2">
+                Saving...
+              </div>
+          ) : (
+              "Save"
+          )}
         </Button>
       </div>
     </div>

@@ -56,7 +56,7 @@ const SelectedEmployee = ({
 							{/* //TODO: reflect admin status */}
 							<p className={`rounded-full px-2 py-[3px] text-sm tracking-wide ${
 								role_Id === 1
-									? 'bg-purple-200 text-purple-700'
+									? 'bg-rose-200 text-rose-700'
 									: 'bg-emerald-200 text-emerald-700'
 							}`}>
 								{role_Id === 1 ? 'admin' : 'employee'}

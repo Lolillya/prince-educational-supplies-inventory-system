@@ -8,12 +8,13 @@ import Delete from '../../_components/delete';
 type RecordItemProps = {
 	id: string;
 	name: string;
+	emoji: string;
 	onClick: () => void;
 	isSelected: boolean;
 	recordType: string;
 }
 
-const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected, recordType }) => {
+const RecordItem: React.FC<RecordItemProps> = ({ id, emoji, name, onClick, isSelected, recordType }) => {
 	return (
 		<>
 			<div
@@ -23,7 +24,7 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, name, onClick, isSelected, 
 					<div className='flex gap-6 items-center'>
 						<Avatar className='h-12 w-12 !rounded-lg'>
 							<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-xl">
-								👑
+								{emoji}
 							</AvatarFallback>
 						</Avatar>
 						<div className='flex flex-col gap-2'>

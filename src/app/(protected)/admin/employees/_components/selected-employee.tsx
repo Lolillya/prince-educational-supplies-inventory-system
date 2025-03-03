@@ -11,6 +11,8 @@ import { useRouter } from 'next/navigation'
 
 type SelectedEmployeeProps = {
 	id: string;
+	role_Id: number;
+	emoji: string;
 	name: string | undefined | null;
 	contact?: string | undefined | null;
 	email?: string | undefined | null;
@@ -26,6 +28,8 @@ const SelectedEmployee = ({
 	email,
 	location,
 	notes,
+	role_Id,
+	emoji,
 	activityData,
 }: SelectedEmployeeProps) => {
 	const router = useRouter();
@@ -41,7 +45,7 @@ const SelectedEmployee = ({
 				<div className='flex gap-5 items-center'>
 					<Avatar className='h-16 w-16 !rounded-lg'>
 						<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-							👑
+							{emoji}
 						</AvatarFallback>
 					</Avatar>
 					<div className='flex flex-col gap-2'>
@@ -50,8 +54,12 @@ const SelectedEmployee = ({
 								{name}
 							</p>
 							{/* //TODO: reflect admin status */}
-							<p className='bg-emerald-200 text-emerald-700 rounded-full px-2 py-[3px] text-sm tracking-wide'>
-								admin
+							<p className={`rounded-full px-2 py-[3px] text-sm tracking-wide ${
+								role_Id === 1
+									? 'bg-purple-200 text-purple-700'
+									: 'bg-emerald-200 text-emerald-700'
+							}`}>
+								{role_Id === 1 ? 'admin' : 'employee'}
 							</p>
 						</div>
 						<p className='text-slate-400 text-sm'>
@@ -60,14 +68,14 @@ const SelectedEmployee = ({
 					</div>
 				</div>
 				<div onClick={handleEditEmployee} className="cursor-pointer">
-					<Edit />
+					<Edit/>
 				</div>
 			</div>
 
 			<Separator className='h-[1px] bg-slate-300 mt-5'/>
 
 			<div className="flex flex-col gap-3 mt-5">
-				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
+			<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
 				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
 				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
 				<RecordNotes notes={notes} />

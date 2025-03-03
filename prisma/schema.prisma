@@ -45,7 +45,7 @@ model User_Role {
   id                                      String           @id @default(uuid())
   Personal_Details_Id                     String           @unique
   role_Id                                 Int
-  emoji                                   String           @default("👑")
+  emoji                                   String           @default("🄿")
   Favorite_Favorite_contact_idToUser_Role Favorite[]       @relation("Favorite_contact_idToUser_Role")
   Favorite_Favorite_user_idToUser_Role    Favorite[]       @relation("Favorite_user_idToUser_Role")
   History_Log                             History_Log[]

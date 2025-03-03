@@ -32,12 +32,14 @@ const employeeInputSchema = z.object({
         .optional()
         .refine((val) => !val || /^\d{4}$/.test(val), "Postal code must be 4 digits"),
     notes: z.string().optional(),
+    isAdmin: z.boolean().default(false),
 });
 
 export const employeeRouter = createTRPCRouter({
     list: publicProcedure.query(async () => {
         const employees = await db.user_Role.findMany({
-            where: { role_Id: 2 },
+            // where: { role_Id: 2 },
+            where: { role_Id: { in: [1, 2] } },
             include: {
                 Personal_Details: {
                     include: { location: true, auth: true },
@@ -122,7 +124,8 @@ export const employeeRouter = createTRPCRouter({
             await db.user_Role.create({
                 data: {
                     Personal_Details_Id: personalDetails.personal_details_id,
-                    role_Id: 2, // Assuming 2 is the role ID for "Employee"
+                    role_Id: input.isAdmin ? 1 : 2, // 1 = ADMIN, 2 = EMPLOYEE
+                    emoji: input.isAdmin ? '👑' : '👤',
                 },
             });
 

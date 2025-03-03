@@ -1,5 +1,5 @@
 import { Poppins } from 'next/font/google';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { DropdownMenuItem } from '~/components/ui/dropdown-menu'
@@ -27,11 +27,7 @@ interface ItemState {
 	price: string;
 }
 
-interface PriceListProps {
-	method?: 'include-all' | 'exclude-out-of-stock' | 'manual-selection';
-}
-
-const PriceList = ({ method = 'manual-selection' }: PriceListProps) => {
+const PriceList = () => {
 	const [isEditing, setIsEditing] = useState(false);
 	const [showWarning, setShowWarning] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -40,25 +36,6 @@ const PriceList = ({ method = 'manual-selection' }: PriceListProps) => {
 	const [itemStates, setItemStates] = useState<Record<string, ItemState>>({});
 
 	const { data: inventoryData } = api.inventory.listInventory.useQuery();
-
-	// If method is not manual-selection, auto-populate items
-	useEffect(() => {
-		if (method !== 'manual-selection' && inventoryData) {
-			const itemsToAdd = method === 'include-all'
-				? inventoryData
-				: inventoryData.filter(item => {
-					const totalQuantity = item.variant.BatchVariant?.reduce(
-						(sum, bv) => sum + (bv.quantity || 0),
-						0
-					) || 0;
-					return totalQuantity > 0;
-				});
-			setSelectedItems(itemsToAdd);
-		}
-	}, [method, inventoryData]);
-
-	// Only show search and manual selection UI for manual-selection method
-	const showManualSelection = method === 'manual-selection';
 
 	const filteredItems = inventoryData?.filter((item) => {
 		const searchLower = searchTerm.toLowerCase();
@@ -143,7 +120,15 @@ const PriceList = ({ method = 'manual-selection' }: PriceListProps) => {
 					item.variant.name
 				].filter(Boolean).join(' - ');
 
-				const unit = state?.selectedUnitName === 'unit' ? 'N/A' : (state?.selectedUnitName || 'N/A');
+				// Convert number to superscript
+				const superscriptNumber = (num: number) => {
+					const superscripts = ['¹', '²', '³', '⁴', '⁵', '⁶', '⁷', '⁸', '⁹'];
+					return superscripts[num - 1] || num;
+				};
+
+				const unit = state?.selectedUnitName === 'unit'
+					? 'N/A'
+					: `${state?.selectedUnitName || 'N/A'}${superscriptNumber(index + 1)}`;
 				const price = state?.price ? `P${parseFloat(state.price).toFixed(2)}` : 'N/A';
 
 				return [description, unit, price];
@@ -195,9 +180,7 @@ const PriceList = ({ method = 'manual-selection' }: PriceListProps) => {
 						e.preventDefault();
 					}}
 				>
-					{method === 'include-all' ? 'Include out-of-stock' :
-						method === 'exclude-out-of-stock' ? 'Exclude out-of-stock' :
-							'Manual selection'}
+					Export Pricelist
 				</DropdownMenuItem>
 			</DialogTrigger>
 			<DialogContent
@@ -217,15 +200,11 @@ const PriceList = ({ method = 'manual-selection' }: PriceListProps) => {
 					</div>
 				</DialogHeader>
 
-				{showManualSelection && (
-					<>
-						<Separator orientation="horizontal" className="h-[2px]" />
-						<PriceListSearch
-							filteredItems={filteredItems}
-							onItemSelect={handleItemSelect}
-						/>
-					</>
-				)}
+				<Separator orientation="horizontal" className="h-[2px]" />
+				<PriceListSearch
+					filteredItems={filteredItems}
+					onItemSelect={handleItemSelect}
+				/>
 
 				<ScrollArea className="h-96">
 					{selectedItems.length > 0 ? (

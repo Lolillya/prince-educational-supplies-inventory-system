@@ -1,10 +1,10 @@
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuPortal, DropdownMenuSeparator, DropdownMenuSub, DropdownMenuSubContent, DropdownMenuSubTrigger, DropdownMenuTrigger } from '~/components/ui/dropdown-menu';
 import MoreOptions from '../../_components/more-options';
-import { handleExport as exportInventory } from '~/lib/utils/exportMaserList';
+import { handleExport as exportMasterList } from '~/lib/utils/exportMasterList';
 import { handleExport as exportStockList } from '~/lib/utils/exportStockList';
 import { toast } from 'sonner';
 import type { InventoryItem } from '~/types/inventory';
-import PriceList from './pricelist-dialog';
+import PriceList from './pricelist';
 
 interface RecordHeaderProps {
 	record: string;
@@ -13,35 +13,15 @@ interface RecordHeaderProps {
 }
 
 const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
-
-	const handleExport = () => {
+	const handleExport = (includeNoStock: boolean) => {
 		if (!data || data.length === 0) {
 			toast(`❌ No ${record.toLowerCase()} data available to export.`);
 			return;
 		}
 
-		const success = exportInventory({ inventory: data });
-
-		if (success) {
-			toast('🎉 Your file has been exported successfully!', {
-				description: 'Check your downloads folder.',
-			});
-		} else {
-			toast(`❌ No ${record.toLowerCase()} data available to export.`);
-		}
-
-	};
-
-	const handleStockListExport = (includeOutOfStock = true, onlyOutOfStock = false) => {
-		if (!data || data.length === 0) {
-			toast(`❌ No ${record.toLowerCase()} data available to export.`);
-			return;
-		}
-
-		const success = exportStockList({
+		const success = exportMasterList({
 			inventory: data,
-			includeOutOfStock,
-			onlyOutOfStock
+			includeNoStock
 		});
 
 		if (success) {
@@ -49,9 +29,10 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 				description: 'Check your downloads folder.',
 			});
 		} else {
-			toast(`❌ No ${record.toLowerCase()} data available to export.`);
+			toast('❌ Failed to generate export.');
 		}
 	};
+
 
 	return (
 		<div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3 flex items-center justify-between">
@@ -64,24 +45,28 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 					<MoreOptions className='!h-[1px] mr-1' />
 				</DropdownMenuTrigger>
 				<DropdownMenuContent className='w-48'>
-					<DropdownMenuItem
-						onClick={handleExport}
-						className="hover:!bg-slate-200 focus:!bg-slate-200"
-					>
-						Export Masterlist
-					</DropdownMenuItem>
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger className="hover:!bg-slate-200 focus:!bg-slate-200">
-							Export Pricelist
+							Export Masterlist
 						</DropdownMenuSubTrigger>
 						<DropdownMenuPortal>
 							<DropdownMenuSubContent>
-								<PriceList method='include-all'/>
-								<PriceList method='exclude-out-of-stock'/>
-								<PriceList method='manual-selection'/>
+								<DropdownMenuItem
+									onClick={() => handleExport(true)}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+								>
+									Include no stock
+								</DropdownMenuItem>
+								<DropdownMenuItem
+									onClick={() => handleExport(false)}
+									className="hover:!bg-slate-200 focus:!bg-slate-200"
+								>
+									Exclude no stock
+								</DropdownMenuItem>
 							</DropdownMenuSubContent>
 						</DropdownMenuPortal>
 					</DropdownMenuSub>
+					<PriceList />
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger className="hover:!bg-slate-200 focus:!bg-slate-200">
 							Export Stocklist
@@ -89,19 +74,16 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 						<DropdownMenuPortal>
 							<DropdownMenuSubContent>
 								<DropdownMenuItem
-									onClick={() => handleStockListExport(true, false)}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
 								>
 									Include out-of-stock
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									onClick={() => handleStockListExport(false, false)}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
 								>
 									Exclude out-of-stock
 								</DropdownMenuItem>
 								<DropdownMenuItem
-									onClick={() => handleStockListExport(true, true)}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
 								>
 									Only out-of-stock
@@ -116,7 +98,7 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 				</DropdownMenuContent>
 			</DropdownMenu>
 		</div>
-	)
-}
+	);
+};
 
-export default RecordHeader
+export default RecordHeader;

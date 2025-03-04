@@ -141,7 +141,7 @@ const InvoicePage = () => {
     const tableRows = line_items.map((item) => [
       `${item.variant.item.name} - ${item.variant.item.brand.name} - ${item.variant.name}`,
       item.quantity.toString(),
-      `${item.unit_price.toFixed(2)}`, // Ensuring unit price is in decimal format with .00
+      `${item.unit_price.toFixed(2)}`,
       `${item.total_price}`,
     ]);
 
@@ -149,22 +149,27 @@ const InvoicePage = () => {
       head: [tableColumns],
       body: tableRows,
       startY: margin + 20,
-      theme: "grid",
+      theme: "plain", // Removes the grid lines
       margin: { top: margin, bottom: margin, left: margin, right: margin },
       styles: {
         fontSize: 10,
-        cellPadding: 2,
+        cellPadding: 1,
+        lineColor: [255, 255, 255], // Makes lines transparent (white)
+        lineWidth: 0,
+
       },
       headStyles: {
-        fillColor: [200, 200, 200],
+        fillColor: [255, 255, 255],
         textColor: 0,
+        lineWidth: 0,
+        cellPadding:5,
+        cellWidth: 6
       },
       columnStyles: {
         0: { cellWidth: 80 },
         1: { cellWidth: 30 },
         2: { cellWidth: 30 },
         3: { cellWidth: 30 },
-        4: { cellWidth: 30 },
       },
     });
 
@@ -175,13 +180,11 @@ const InvoicePage = () => {
     const totalText = "*** TOTAL ***";
     const totalAmount = `${grandTotal}.00`;
 
-// Get text width to calculate exact positioning
     const totalTextWidth = doc.getTextWidth(totalText);
     const totalAmountWidth = doc.getTextWidth(totalAmount);
 
-// Align total text and amount together without gap
     doc.text(totalText, pageWidth - margin - totalAmountWidth - totalTextWidth - 30, finalY + 10);
-    doc.text(totalAmount, pageWidth - margin - totalAmountWidth - 25 , finalY + 10);
+    doc.text(totalAmount, pageWidth - margin - totalAmountWidth - 25, finalY + 10);
 
     doc.setFont("helvetica", "normal");
     doc.text(
@@ -194,7 +197,6 @@ const InvoicePage = () => {
     doc.text("PRINT NAME AND SIGN ABOVE NAME", margin, finalY + 45);
 
     doc.save(`invoice_${invoice_number}.pdf`);
-
   };
 
 

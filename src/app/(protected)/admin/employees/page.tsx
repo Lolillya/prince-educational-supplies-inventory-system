@@ -213,6 +213,7 @@ const EmployeesPage = () => {
                     notes={selectedRecord.Personal_Details.notes}
                     auth={selectedRecord.Personal_Details.auth}
                     activityData={activityData}
+                    clerkId={selectedRecord.Personal_Details_Id}
                   />
                 </div>
               </ScrollArea>

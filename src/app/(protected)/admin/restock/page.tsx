@@ -11,6 +11,7 @@ import SearchBar from "../_components/search-bar";
 import RestockRecord from "./_components/restock-record";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { LoadingSpinner } from "~/components/loading";
+import { useSearchParams } from 'next/navigation';
 
 const poppins = Poppins({
   subsets: ["latin"],
@@ -44,11 +45,17 @@ const RestockPage = () => {
   const [selectedBatch, setSelectedBatch] = useState<RestockProps | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
 
+  const searchParams = useSearchParams();
+  const clerkId = searchParams.get('clerkId');
+
+
   const {
     data: restockData,
     isLoading,
     error,
-  } = api.restock.getRestockData.useQuery();
+  } = api.restock.getRestockData.useQuery(
+      clerkId ? { clerkId } : undefined
+  );
 
   if (isLoading)
     return (

@@ -250,17 +250,6 @@ export const employeeRouter = createTRPCRouter({
                 }
             });
 
-            // // Update authentication details (e.g., username and password)
-            // if (username || password) {
-            //     await db.authentication.update({
-            //         where: { personal_details_id: id },
-            //         data: {
-            //             ...(username && { username }),
-            //             ...(password && { password }), // Ensure password is hashed in production
-            //         },
-            //     });
-            // }
-
             return { success: true };
         }),
 

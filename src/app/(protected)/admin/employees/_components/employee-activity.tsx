@@ -16,9 +16,10 @@ interface EmployeeActivityProps {
 		restocks: any[];
 		invoices: any[];
 	};
+	clerkId: string;
 }
 
-const EmployeeActivity = ({ activityData }: EmployeeActivityProps) => {
+const EmployeeActivity = ({ activityData, clerkId }: EmployeeActivityProps) => {
 	const [showAll, setShowAll] = useState(false);
 	const [selectedTab, setSelectedTab] = useState<"restock" | "invoice">("restock");
 
@@ -33,7 +34,11 @@ const EmployeeActivity = ({ activityData }: EmployeeActivityProps) => {
 	return (
 		<div className='p-5 bg-white/60 rounded-lg text-slate-400'>
 			<div className='flex items-center justify-between'>
-				<EmployeeTabs selectedTab={selectedTab} setSelectedTab={setSelectedTab} />
+				<EmployeeTabs
+					selectedTab={selectedTab}
+					setSelectedTab={setSelectedTab}
+					clerkId={clerkId}
+				/>
 				{totalCount > 0 && (
 					<p className='text-slate-400 text-sm pr-5'>
 						{shownCount} of {totalCount}

@@ -14,6 +14,8 @@ import { LoadingSpinner } from "~/components/loading";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { useSearchParams } from 'next/navigation';
+
 
 export type InvoiceProps = {
   invoiceId: number;
@@ -73,7 +75,12 @@ declare module "jspdf" {
 const InvoicePage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
-  const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery();
+  const searchParams = useSearchParams();
+  const clerkId = searchParams.get('clerkId');
+
+  const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery(
+      clerkId ? { clerkId } : undefined
+  );
 
   const filteredInvoices = invoiceData?.filter((invoice) => {
     const invoice_number = invoice.invoice_number.toString();

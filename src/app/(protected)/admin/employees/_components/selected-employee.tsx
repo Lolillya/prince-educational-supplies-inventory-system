@@ -25,6 +25,7 @@ type SelectedEmployeeProps = {
 	auth?: {
 		username: string;
 	} | null;
+	clerkId: string;
 }
 
 const SelectedEmployee = ({
@@ -38,6 +39,7 @@ const SelectedEmployee = ({
 	emoji,
 	activityData,
 	auth,
+	clerkId,
 }: SelectedEmployeeProps) => {
 	const router = useRouter();
 
@@ -99,6 +101,7 @@ const SelectedEmployee = ({
 				{/* //TODO: reflect restock data based on selected supplier */}
 				<EmployeeActivity
 					activityData={activityData}
+					clerkId={clerkId}
 				/>
 			</div>
 		</div>

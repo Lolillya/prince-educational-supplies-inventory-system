@@ -71,7 +71,10 @@ export const employeeRouter = createTRPCRouter({
             where: { role_Id: { in: [1, 2] } },
             include: {
                 Personal_Details: {
-                    include: { location: true, auth: true },
+                    include: {
+                        location: true,
+                        auth: true
+                    },
                 },
             },
         });
@@ -259,6 +262,24 @@ export const employeeRouter = createTRPCRouter({
             // }
 
             return { success: true };
+        }),
+
+    updatePassword: publicProcedure
+        .input(z.object({
+            personalDetailsId: z.string(),
+            newPassword: z.string().min(6, "Password must be at least 6 characters"),
+        }))
+        .mutation(async ({ input }) => {
+            const { personalDetailsId, newPassword } = input;
+            try {
+                await db.authentication.update({
+                    where: { personal_details_id: personalDetailsId },
+                    data: { password: newPassword },
+                });
+                return { success: true };
+            } catch (error) {
+                throw new Error("Failed to update password");
+            }
         }),
 
     delete: publicProcedure

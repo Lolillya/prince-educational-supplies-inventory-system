@@ -34,6 +34,9 @@ interface PersonalDetails {
   notes: string | null;
   location_id: number | null;
   location: Location | null;
+  auth?: {
+    username: string;
+  } | null;
 }
 
 interface Location {
@@ -191,6 +194,7 @@ const EmployeesPage = () => {
                         .join("\n")
                     }
                     notes={selectedRecord.Personal_Details.notes}
+                    auth={selectedRecord.Personal_Details.auth}
                   />
                 </div>
               </ScrollArea>
@@ -198,7 +202,7 @@ const EmployeesPage = () => {
               <SelectRecordMessage />
             )}
           </div>
-        </div>
+        </div>SA
       </div>
       <Toaster />
     </section>

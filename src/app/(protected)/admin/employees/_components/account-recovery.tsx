@@ -1,22 +1,40 @@
 import { Poppins } from 'next/font/google';
-import React, { useState } from 'react';
+import React, {useEffect, useState} from 'react';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Separator } from '~/components/ui/separator';
+import {api} from "~/trpc/react";
 
 const poppins = Poppins({
 	subsets: ["latin"],
 	weight: ["400", "700"],
 });
 
-const AccountRecovery = () => {
+interface AccountRecoveryProps {
+	username?: string;
+	personalDetailsId?: string;
+}
+
+const AccountRecovery = ({ username, personalDetailsId }: AccountRecoveryProps) => {
 
 	const [isEditing, setIsEditing] = useState(true);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
 	const [showWarning, setShowWarning] = useState(false);
 	const [isView, setIsView] = useState(false);
+
+	const [usernameInput, setUsernameInput] = useState("");
+	const [newPassword, setNewPassword] = useState("");
+	const [confirmPassword, setConfirmPassword] = useState("");
+	const [errorMessage, setErrorMessage] = useState("");
+	const [successMessage, setSuccessMessage] = useState("");
+	const utils = api.useUtils();
+	const updatePasswordMutation = api.employees.updatePassword.useMutation({
+		onSuccess: () => {
+			utils.employees.list.invalidate();
+		},
+	});
 
 	const handleEdit = () => {
 		setIsEditing((prev) => !prev);
@@ -30,7 +48,60 @@ const AccountRecovery = () => {
 		}
 	};
 
-	return (
+	const handleSubmit = async () => {
+		setErrorMessage("");
+		setSuccessMessage("");
+
+		if (!username || !personalDetailsId) {
+			setErrorMessage("Employee data is missing");
+			return;
+		}
+
+		if (usernameInput !== username) {
+			setErrorMessage("Username does not match this employee");
+			return;
+		}
+
+		if (newPassword !== confirmPassword) {
+			setErrorMessage("Passwords do not match");
+			return;
+		}
+
+		if (newPassword.length < 6) {
+			setErrorMessage("Password must be at least 6 characters");
+			return;
+		}
+
+		try {
+			await updatePasswordMutation.mutateAsync({
+				personalDetailsId,
+				newPassword,
+			});
+			setSuccessMessage("Password updated successfully!");
+
+			// Reset form and close dialog after 1 second
+			setTimeout(() => {
+				setIsDialogOpen(false);
+				setUsernameInput("");
+				setNewPassword("");
+				setConfirmPassword("");
+			}, 1000);
+
+		} catch (error) {
+			setErrorMessage("Failed to update password. Please try again.");
+		}
+	};
+
+	// Add this effect to clear messages when dialog closes
+	useEffect(() => {
+		if (!isDialogOpen) {
+			setErrorMessage("");
+			setSuccessMessage("");
+		}
+	}, [isDialogOpen]);
+
+
+		return (
 		<Dialog
 			open={isDialogOpen}
 			onOpenChange={(open) => {
@@ -72,8 +143,9 @@ const AccountRecovery = () => {
 					<Label className="text-slate-400">Employee Username</Label>
 					<div className="flex gap-3">
 						<Input
-							className="bg-slate-100 text-slate-700 shadow-none"
-							placeholder="Username"
+							value={usernameInput}
+							onChange={(e) => setUsernameInput(e.target.value)}
+							placeholder="Enter employee username"
 						/>
 					</div>
 				</div>
@@ -82,10 +154,12 @@ const AccountRecovery = () => {
 					<Label className="text-slate-400">New Password</Label>
 					<div className="flex gap-3">
 						<Input
-							className="bg-slate-100 text-slate-700 shadow-none"
-							placeholder="New Password"
-							type='password'
+							value={newPassword}
+							onChange={(e) => setNewPassword(e.target.value)}
+							type="password"
+							placeholder="At least 6 characters"
 						/>
+
 					</div>
 				</div>
 
@@ -93,12 +167,21 @@ const AccountRecovery = () => {
 					<Label className="text-slate-400">Confirm Password</Label>
 					<div className="flex gap-3">
 						<Input
-							className="bg-slate-100 text-slate-700 shadow-none"
-							placeholder="Confirm Password"
-							type='password'
+							value={confirmPassword}
+							onChange={(e) => setConfirmPassword(e.target.value)}
+							type="password"
+							placeholder="Re-enter new password"
 						/>
 					</div>
 				</div>
+
+				{errorMessage && (
+					<p className="text-rose-500 text-sm">{errorMessage}</p>
+				)}
+
+				{successMessage && (
+					<p className="text-emerald-500 text-sm">{successMessage}</p>
+				)}
 
 				<Separator orientation="horizontal" className="h-[2px]" />
 				
@@ -117,8 +200,11 @@ const AccountRecovery = () => {
 							Cancel
 						</Button>
 					</DialogClose>
-					<Button className="bg-green hover:bg-green/80">
-						Recover Account
+					<Button
+						onClick={handleSubmit}
+						disabled={updatePasswordMutation.isPending}
+					>
+						{updatePasswordMutation.isPending ? "Updating..." : "Recover Account"}
 					</Button>
 				</div>
 			</DialogContent>

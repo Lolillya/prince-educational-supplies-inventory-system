@@ -19,6 +19,9 @@ type SelectedEmployeeProps = {
 	location?: string | undefined | null;
 	notes?: string | undefined | null;
 	activityData?: any;
+	auth?: {
+		username: string;
+	} | null;
 }
 
 const SelectedEmployee = ({
@@ -31,6 +34,7 @@ const SelectedEmployee = ({
 	role_Id,
 	emoji,
 	activityData,
+	auth,
 }: SelectedEmployeeProps) => {
 	const router = useRouter();
 
@@ -79,7 +83,10 @@ const SelectedEmployee = ({
 				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
 				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
 				<RecordNotes notes={notes} />
-				<AccountRecovery />
+				<AccountRecovery
+					username={auth?.username}
+					personalDetailsId={id}
+				/>
 			</div>
 
 			<Separator className='h-[1px] bg-slate-300 mt-5' />

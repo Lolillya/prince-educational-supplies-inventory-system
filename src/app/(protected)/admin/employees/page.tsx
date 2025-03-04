@@ -57,10 +57,27 @@ const EmployeesPage = () => {
 
 
 
+
+
   const utils = api.useUtils();
   const { data: session } = useSession();
   const userRole = session?.user?.role;
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
+
+  const { data: restockData } = api.employees.getRestockActivity.useQuery(
+      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+      { enabled: !!selectedRecord }
+  );
+
+  const { data: invoiceData } = api.employees.getInvoiceActivity.useQuery(
+      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+      { enabled: !!selectedRecord }
+  );
+
+  const activityData = {
+    restocks: restockData ?? [],
+    invoices: invoiceData ?? []
+  };
 
   const verifyPasswordMutation = api.employees.verifyPassword.useMutation();
   const handleVerifyPassword = async (password: string) => {
@@ -195,6 +212,7 @@ const EmployeesPage = () => {
                     }
                     notes={selectedRecord.Personal_Details.notes}
                     auth={selectedRecord.Personal_Details.auth}
+                    activityData={activityData}
                   />
                 </div>
               </ScrollArea>
@@ -202,7 +220,7 @@ const EmployeesPage = () => {
               <SelectRecordMessage />
             )}
           </div>
-        </div>SA
+        </div>
       </div>
       <Toaster />
     </section>

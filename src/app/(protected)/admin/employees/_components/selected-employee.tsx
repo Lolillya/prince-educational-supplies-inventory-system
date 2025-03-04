@@ -18,7 +18,10 @@ type SelectedEmployeeProps = {
 	email?: string | undefined | null;
 	location?: string | undefined | null;
 	notes?: string | undefined | null;
-	activityData?: any;
+	activityData?: {
+		restocks: any[];
+		invoices: any[];
+	};
 	auth?: {
 		username: string;
 	} | null;
@@ -94,7 +97,9 @@ const SelectedEmployee = ({
 			<div className='mt-5'>
 
 				{/* //TODO: reflect restock data based on selected supplier */}
-				<EmployeeActivity />
+				<EmployeeActivity
+					activityData={activityData}
+				/>
 			</div>
 		</div>
 	)

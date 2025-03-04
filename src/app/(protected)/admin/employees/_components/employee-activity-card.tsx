@@ -4,14 +4,26 @@ import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/comp
 
 interface EmployeeActivityCardProps {
 	type: 'restock' | 'invoice';
+	activity: {
+		id: number;
+		created_at: Date | string;
+		total?: number;
+		quantity?: number;
+	};
 }
 
-const EmployeeActivityCard = ({ type }: EmployeeActivityCardProps) => {
+const EmployeeActivityCard = ({ type, activity }: EmployeeActivityCardProps) => {
+	const formattedDate = new Date(activity.created_at).toLocaleDateString();
+	const displayId = type === 'restock' ? `RS${activity.id}` : `INV${activity.id}`;
+	const displayValue = type === 'invoice'
+		? `₱${activity.total?.toLocaleString() ?? 0}`
+		: `${activity.quantity?.toLocaleString()} items`;
+
 	// TODO: reflect restock data based on selected supplier
 	return (
 		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
 			<p className='text-slate-600 text-left'>
-				#12345678
+				{displayId}
 			</p>
 			<div className="flex items-center gap-4 text-slate-400">
 				<div className="flex items-center gap-3 text-slate-400">
@@ -21,11 +33,11 @@ const EmployeeActivityCard = ({ type }: EmployeeActivityCardProps) => {
 								<Calendar className="h-4 w-4" />
 							</TooltipTrigger>
 							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-								Recorded on 2025-01-13
+								Recorded on {formattedDate}
 							</TooltipContent>
 						</Tooltip>
 					</TooltipProvider>
-					<p className="text-sm">2025-01-13</p>
+					<p className="text-sm">{formattedDate}</p>
 				</div>
 				<Separator
 					orientation="vertical"
@@ -40,11 +52,11 @@ const EmployeeActivityCard = ({ type }: EmployeeActivityCardProps) => {
 										<PhilippinePeso className="h-4 w-4" />
 									</TooltipTrigger>
 									<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-										₱5,000 grand total
+										₱{activity.total?.toLocaleString()} grand total
 									</TooltipContent>
 								</Tooltip>
 							</TooltipProvider>
-							<p className="text-sm">5,000</p>
+							<p className="text-sm">₱{activity.total?.toLocaleString()}</p>
 						</>
 					) : type == 'restock' ? (
 						<>
@@ -54,11 +66,12 @@ const EmployeeActivityCard = ({ type }: EmployeeActivityCardProps) => {
 										<Box className="h-4 w-4" />
 									</TooltipTrigger>
 									<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-										300 total added stock
+										{/*300 total added stock*/}
+										{activity.quantity?.toLocaleString()} items restocked
 									</TooltipContent>
 								</Tooltip>
 							</TooltipProvider>
-							<p className="text-sm">300</p>
+							<p className="text-sm">{activity.quantity?.toLocaleString()}</p>
 						</>
 					) : (
 						<p className="text-sm">No information available</p>

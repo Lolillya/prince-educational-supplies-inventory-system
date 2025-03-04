@@ -16,7 +16,15 @@ const poppins = Poppins({
 	weight: ["400", "700"],
 });
 
-const RestockDialog = () => {
+interface RestockDialogProps {
+	activity: any;
+}
+
+const RestockDialog = ({ activity }: RestockDialogProps) => {
+	const totalAdded = activity.batchVariants?.reduce(
+		(sum: number, bv: any) => sum + bv.quantity, 0
+	) || 0;
+
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -52,7 +60,16 @@ const RestockDialog = () => {
 			}}
 		>
 			<DialogTrigger>
-				<EmployeeActivityCard type={'restock'} />
+				<EmployeeActivityCard
+					type="restock"
+					activity={{
+						id: activity.batch_number,
+						created_at: activity.created_at,
+						quantity: activity.batchVariants?.reduce(
+							(sum: number, bv: any) => sum + bv.quantity, 0
+						) || 0
+					}}
+				/>
 			</DialogTrigger>
 			<DialogContent
 				className="!w-full !max-w-3xl [&>button]:hidden"
@@ -62,12 +79,12 @@ const RestockDialog = () => {
 					<div className="flex items-center justify-between">
 						<div className="flex flex-col gap-2">
 							<DialogTitle className="text-xl font-normal text-slate-700">
-								#12345678 {/** Please pass real data here */}
+								Restock #{activity.batch_number}
 							</DialogTitle>
 							<div className="flex items-center gap-3 text-slate-400">
 								<Calendar className="h-4 w-4" />
 								<DialogDescription className="text-sm tracking-wide">
-									2025-01-13 {/** Please pass real data here */}
+									{new Date(activity.created_at).toLocaleDateString()}
 								</DialogDescription>
 							</div>
 						</div>

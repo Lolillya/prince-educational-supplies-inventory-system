@@ -24,7 +24,15 @@ const poppins = Poppins({
   weight: ["400", "700"],
 });
 
-const InvoiceDialog = () => {
+interface InvoiceDialogProps {
+  activity: any;
+}
+
+const InvoiceDialog = ({ activity }: InvoiceDialogProps) => {
+  const grandTotal = activity.line_items?.reduce(
+      (sum: number, li: any) => sum + li.total_price, 0
+  ) || 0;
+
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
@@ -60,7 +68,14 @@ const InvoiceDialog = () => {
       }}
     >
       <DialogTrigger>
-        <EmployeeActivityCard type={"invoice"} />
+        <EmployeeActivityCard
+            type="invoice"
+            activity={{
+              id: activity.invoice_number,
+              created_at: activity.created_at,
+              total: activity.total_amount
+            }}
+        />
       </DialogTrigger>
       <DialogContent
         className="flex max-h-[80%] !w-full !max-w-3xl flex-col [&>button]:hidden"
@@ -70,12 +85,12 @@ const InvoiceDialog = () => {
           <div className="flex items-center justify-between">
             <div className="flex h-full flex-col justify-between gap-2">
               <DialogTitle className="text-xl font-normal text-slate-700">
-                #12345678 {/** Please pass real data here */}
+                Invoice #{activity.invoice_number}
               </DialogTitle>
               <div className="flex items-center gap-3 text-slate-400">
                 <Calendar className="h-4 w-4" />
                 <DialogDescription className="text-sm tracking-wide">
-                  2025-01-13 {/** Please pass real data here */}
+                  {new Date(activity.created_at).toLocaleDateString()}
                 </DialogDescription>
               </div>
             </div>

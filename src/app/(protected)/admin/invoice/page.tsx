@@ -111,84 +111,94 @@ const InvoicePage = () => {
     );
 
   const handleExport = ({
-    line_items,
-    invoice_number,
-    customer,
-    date,
-    grandTotal,
-  }: LineItemsProp) => {
-    const doc = new jsPDF();
-    // const formatCurrency = (amount: number) =>
-    //   `₱${amount.toLocaleString("en-US", { minimumFractionDigits: 2 })}`;
-    const fomattedDate = new Date(date).toLocaleDateString("en-US", {
+                          line_items,
+                          invoice_number,
+                          customer,
+                          date,
+                          grandTotal,
+                        }: LineItemsProp) => {
+    const margin = 10.16; // 0.4 inch in mm
+    const pageWidth = 210; // A4 width in mm
+    const pageHeight = 297; // A4 height in mm
+    const doc = new jsPDF({ unit: "mm" }); // Use millimeters
+
+    const formattedDate = new Date(date).toLocaleDateString("en-US", {
       year: "2-digit",
       month: "2-digit",
       day: "2-digit",
     });
 
     doc.setFontSize(12);
-    doc.text(`Customer Code: INSERT CODE`, 14, 15);
-    doc.text(`Customer Name: ${customer}`, 14, 22);
-    doc.text(`TERM: 30`, 14, 29);
 
-    doc.text(`DR/Invoice No.: ${invoice_number}`, 160, 15);
-    doc.text(`DATE: ${fomattedDate}`, 160, 22);
+    // Header Information
+    doc.text(`Customer Name: ${customer}`, margin, margin);
+    doc.text(`TERM: 30`, margin, margin + 7);
+    doc.text(`DR/Invoice No.: ${invoice_number}`, pageWidth - margin - 50, margin);
+    doc.text(`DATE: ${formattedDate}`, pageWidth - margin - 50, margin + 7);
 
-    const tableColumns = [
-      "DESCRIPTION",
-      "QTY UNIT",
-      "UNIT PRICE",
-      "DISCOUNT",
-      "TOTAL",
-    ];
+    const tableColumns = ["DESCRIPTION", "QTY UNIT", "UNIT PRICE", "TOTAL"];
 
     const tableRows = line_items.map((item) => [
-      `${item.variant.item.brand.name} - ${item.variant.item.name} - ${item.variant.name}`,
+      `${item.variant.item.name} - ${item.variant.item.brand.name} - ${item.variant.name}`,
       item.quantity.toString(),
-      `${item.unit_price}`,
-      `${item.discount}`,
+      `${item.unit_price.toFixed(2)}`,
       `${item.total_price}`,
     ]);
 
     doc.autoTable({
       head: [tableColumns],
       body: tableRows,
-      startY: 40,
-      theme: "grid",
+      startY: margin + 20,
+      theme: "plain", // Removes the grid lines
+      margin: { top: margin, bottom: margin, left: margin, right: margin },
       styles: {
         fontSize: 10,
-        cellPadding: 2,
+        cellPadding: 1,
+        lineColor: [255, 255, 255], // Makes lines transparent (white)
+        lineWidth: 0,
+
       },
       headStyles: {
-        fillColor: [200, 200, 200],
+        fillColor: [255, 255, 255],
         textColor: 0,
+        lineWidth: 0,
+        cellPadding:5,
+        cellWidth: 6
       },
       columnStyles: {
         0: { cellWidth: 80 },
-        1: { cellWidth: 25 },
-        2: { cellWidth: 25 },
-        3: { cellWidth: 25 },
-        4: { cellWidth: 25 },
+        1: { cellWidth: 30 },
+        2: { cellWidth: 30 },
+        3: { cellWidth: 30 },
       },
     });
 
-    const finalY = (doc as any).lastAutoTable.finalY || 40;
+    const finalY = (doc as any).lastAutoTable.finalY || margin + 20;
+
+    // Footer
     doc.setFont("helvetica", "bold");
-    doc.text("*** TOTAL ***", 14, finalY + 10);
-    doc.text(`${grandTotal}.00`, 160, finalY + 10);
+    const totalText = "*** TOTAL ***";
+    const totalAmount = `${grandTotal}.00`;
+
+    const totalTextWidth = doc.getTextWidth(totalText);
+    const totalAmountWidth = doc.getTextWidth(totalAmount);
+
+    doc.text(totalText, pageWidth - margin - totalAmountWidth - totalTextWidth - 30, finalY + 10);
+    doc.text(totalAmount, pageWidth - margin - totalAmountWidth - 25, finalY + 10);
 
     doc.setFont("helvetica", "normal");
     doc.text(
-      "RECEIVED THE ABOVE GOODS IN GOOD ORDER AND CONDITION:",
-      14,
-      finalY + 20,
+        "RECEIVED THE ABOVE GOODS IN GOOD ORDER AND CONDITION:",
+        margin,
+        finalY + 20
     );
-    doc.line(14, finalY + 25, 80, finalY + 25);
+    doc.line(margin, finalY + 40, margin + 70, finalY + 40);
     doc.setFontSize(8);
-    doc.text("FRINT NAME AND SIGN ABOVE NAME", 14, finalY + 30);
+    doc.text("PRINT NAME AND SIGN ABOVE NAME", margin, finalY + 45);
 
     doc.save(`invoice_${invoice_number}.pdf`);
   };
+
 
   return (
     <section

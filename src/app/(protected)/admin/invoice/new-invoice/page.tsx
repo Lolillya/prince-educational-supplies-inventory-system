@@ -33,6 +33,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
+import { Textarea } from "~/components/ui/textarea";
 
 type InventoryItem = {
   inventory_id: number;
@@ -116,6 +117,7 @@ const NewInvoice = () => {
   const [discountType, setDiscountType] = useState("%");
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
   const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
+  const [customerNotes, setCustomerNotes] = useState<string>("");
 
   const {
     data: inventoryItems,
@@ -202,6 +204,7 @@ const NewInvoice = () => {
 
     const invoiceData = {
       invoice: {
+        customerNotes: customerNotes,
         customer_id:
           selectedSupplier?.Personal_Details.personal_details_id ?? "",
         invoice_clerk: session.data?.user.id ?? "",
@@ -564,8 +567,16 @@ const NewInvoice = () => {
                   ))}
                 </TableBody>
               </Table>
-              <div className="bottom-0 flex w-full justify-end">
-                <div className="flex items-center gap-3">
+
+              <div className="bottom-0 flex w-full flex-col justify-end gap-3">
+                <Textarea
+                  placeholder="Customer Notes"
+                  rows={4}
+                  value={customerNotes}
+                  onChange={(e) => setCustomerNotes(e.target.value)}
+                  className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline-none"
+                />
+                <div className="flex items-center justify-end gap-3">
                   <span>TOTAL: ₱ {grandTotal.toFixed(2).toString()}</span>
                   <Button
                     className="bg-green px-7 font-bold"

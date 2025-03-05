@@ -82,6 +82,8 @@ type InvoiceCardProps = {
     variant_id: number,
     unit_id: number,
   ) => void;
+  isInputFocused: string | undefined;
+  // setIsInputFocused: () => void;
 };
 
 type SupplierUnit = {
@@ -111,6 +113,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   onRemove,
   updateCardDetails,
   handleAutoRestock,
+  isInputFocused,
   isAutoRestock,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
@@ -132,7 +135,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     undefined,
   );
   const [batchAccordion, setBatchAccordion] = useState<string | undefined>(
-    undefined,
+    "item-1",
   );
   const [openPopover, setOpenPopover] = useState(false);
   const [checkedState, setCheckedState] = useState<Record<number, boolean>>({});
@@ -149,15 +152,13 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       price: number;
       quantity_per_unit: number;
       unit_id: number;
-      unit: {
-        name: string;
-        unit_id: number;
-      };
+      unit: { name: string; unit_id: number };
     }[],
+    currentBatchBasis?: SupplierBatch, // Accept batchBasis explicitly
   ) => {
-    if (!batchBasis) return "bg-yellow/30";
+    if (!currentBatchBasis) return "bg-yellow/30";
 
-    const batchBasisUnitIds = batchBasis.supplierUnits.map(
+    const batchBasisUnitIds = currentBatchBasis.supplierUnits.map(
       (unit) => unit.unit_id,
     );
     const currentBatchUnitIds = supplierUnits.map((unit) => unit.unit_id);
@@ -192,14 +193,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       const updatedBatches = isAlreadySelected
         ? prev.filter((batch) => batch.index !== index)
         : [...prev, { index, supplierUnits }];
-
-      if (!batchBasis && updatedBatches.length > 0) {
-        setBatchBasis(updatedBatches[0]);
-      }
-
-      if (updatedBatches.length === 0) {
-        setBatchBasis(undefined);
-      }
 
       return updatedBatches;
     });
@@ -255,6 +248,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       supplier_unit_id,
     });
   };
+
+  useEffect(() => {
+    if (selectedBatches.length > 0) {
+      setBatchBasis(selectedBatches[0]); // Always set the first batch as the basis
+    } else {
+      setBatchBasis(undefined);
+    }
+  }, [selectedBatches]);
 
   useEffect(() => {
     handleSelectUnitQuantity();
@@ -315,7 +316,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 selectedBatches.map((batch) => (
                   <Label
                     key={batch.index}
-                    className={`flex content-center items-center gap-2 rounded-lg p-2 ${getBatchColor(batch.supplierUnits)}`}
+                    className={`flex content-center items-center gap-2 rounded-lg p-2 ${
+                      batchBasis
+                        ? getBatchColor(batch.supplierUnits, batchBasis)
+                        : "bg-gray-300"
+                    }`}
                   >
                     Batch {batch.index + 1}
                     <X
@@ -323,9 +328,23 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       className="transition-all duration-200 hover:scale-110 hover:cursor-pointer"
                       onClick={(e) => {
                         e.stopPropagation(); // Prevent unintended popover close
-                        setSelectedBatches((prev) =>
-                          prev.filter((b) => b.index !== batch.index),
-                        );
+                        setSelectedBatches((prev) => {
+                          const updatedBatches = prev.filter(
+                            (b) => b.index !== batch.index,
+                          );
+
+                          // Update batchBasis if the removed batch was the current basis
+                          if (batchBasis?.index === batch.index) {
+                            setBatchBasis(
+                              updatedBatches.length > 0
+                                ? updatedBatches[0]
+                                : undefined,
+                            );
+                          }
+
+                          return updatedBatches;
+                        });
+
                         setCheckedState((prev) => ({
                           ...prev,
                           [batch.index]: false, // Uncheck the checkbox when removed
@@ -370,14 +389,19 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                               handleSelectBatch(index, variant.SupplierUnit)
                             }
                             disabled={
-                              getBatchColor(variant.SupplierUnit) ===
-                              "bg-red/80"
+                              getBatchColor(
+                                variant.SupplierUnit,
+                                batchBasis,
+                              ) === "bg-red/80"
                             }
                           />
                           <div
                             className={`h-3 w-3 rounded-full ${
                               batchBasis
-                                ? getBatchColor(variant.SupplierUnit)
+                                ? getBatchColor(
+                                    variant.SupplierUnit,
+                                    batchBasis,
+                                  )
                                 : "bg-gray-300"
                             }`}
                           ></div>
@@ -453,7 +477,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       <Accordion
         type="single"
         collapsible
-        value={batchAccordion}
+        value={isInputFocused}
         onValueChange={(value) =>
           setBatchAccordion(value === "item-1" ? value : undefined)
         }

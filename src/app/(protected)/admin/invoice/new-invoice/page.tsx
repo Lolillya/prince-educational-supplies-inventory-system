@@ -118,6 +118,9 @@ const NewInvoice = () => {
   const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
   const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
   const [customerNotes, setCustomerNotes] = useState<string>("");
+  const [isInputFocused, setIsInputFocused] = useState<string | undefined>(
+    undefined,
+  );
 
   const {
     data: inventoryItems,
@@ -262,6 +265,14 @@ const NewInvoice = () => {
     });
   };
 
+  const handleOnFocus = () => {
+    setIsInputFocused(undefined);
+  };
+
+  const handleOnMouseLeave = () => {
+    setIsInputFocused("item-1");
+  };
+
   const handleSelectedSupplier = (supplier: SupplierProps) => {
     setSupplierSearchTerm(supplier.Personal_Details.company ?? "");
     setSelectedSupplier(supplier);
@@ -387,6 +398,8 @@ const NewInvoice = () => {
             className="bg-gray p-5 pl-10"
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
+            onFocus={handleOnFocus}
+            onBlur={handleOnMouseLeave}
           />
           {searchTerm && filteredItems.length > 0 && (
             <div className="absolute top-full z-10 mt-2 w-full rounded-lg bg-white p-3 shadow-md">
@@ -426,6 +439,8 @@ const NewInvoice = () => {
         {selectedItems.map((item, index) => {
           return (
             <InvoiceCard
+              isInputFocused={isInputFocused}
+              // setIsInputFocused={setIsInputFocused}
               key={index}
               id={item.inventory_id}
               itemName={item.variant.item.name}

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { use, useEffect, useState } from "react";
 import { Info, MoveRight, Plus, X } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -143,9 +143,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   const [batchBasis, setBatchBasis] = useState<SupplierBatch | undefined>(
     undefined,
   );
-  const isAutoRestockDisabled = selectedBatches.every((batch) =>
-    batch.supplierUnits.map((supplier) => supplier.quantity_per_unit === 0),
-  );
+  const [isBatchAutoRestock, setIsBatchAutoRestock] = useState<boolean>(false);
 
   const getBatchColor = (
     supplierUnits: {
@@ -459,7 +457,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <AccordionTrigger>
                   <div className="flex w-full">
                     <div className="flex w-full items-center gap-3">
-                      <Input type="checkbox" className="h-4 w-fit" />
+                      <Input
+                        type="checkbox"
+                        className="h-4 w-fit"
+                        disabled={BatchVariant.length !== 0}
+                        onChange={(e) =>
+                          setIsBatchAutoRestock(e.target.checked)
+                        }
+                      />
                       <Label className="">Auto Restock</Label>
                     </div>
                   </div>
@@ -470,7 +475,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
             <Button
               variant={"default"}
               onClick={handleContinue}
-              disabled={selectedBatches.length === 0}
+              disabled={selectedBatches.length === 0 && !isBatchAutoRestock}
             >
               Continue
             </Button>
@@ -686,20 +691,22 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
               </div>
 
               <div className="flex w-full">
-                <div className="flex w-full items-center gap-3">
-                  <Input
-                    type="checkbox"
-                    disabled={!(unitQuantity > selectedUnitQuantity)}
-                    className="h-4 w-fit"
-                    onChange={(e) => handleAutoRestock?.(e.target.checked)}
-                  />
-                  <Label className="">Auto Restock</Label>
-                  <Info
-                    size={18}
-                    className="transition-all duration-300 hover:scale-110 hover:cursor-pointer"
-                    color="gray"
-                  />
-                </div>
+                {!isBatchAutoRestock && (
+                  <div className="flex w-full items-center gap-3">
+                    <Input
+                      type="checkbox"
+                      disabled={!(unitQuantity > selectedUnitQuantity)}
+                      className="h-4 w-fit"
+                      onChange={(e) => handleAutoRestock?.(e.target.checked)}
+                    />
+                    <Label className="">Auto Restock</Label>
+                    <Info
+                      size={18}
+                      className="transition-all duration-300 hover:scale-110 hover:cursor-pointer"
+                      color="gray"
+                    />
+                  </div>
+                )}
               </div>
             </div>
           </AccordionContent>

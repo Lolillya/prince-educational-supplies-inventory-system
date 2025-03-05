@@ -467,7 +467,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 <AccordionContent></AccordionContent>
               </AccordionItem>
             </Accordion>
-            <Button variant={"default"} onClick={handleContinue}>
+            <Button
+              variant={"default"}
+              onClick={handleContinue}
+              disabled={selectedBatches.length === 0}
+            >
               Continue
             </Button>
           </div>

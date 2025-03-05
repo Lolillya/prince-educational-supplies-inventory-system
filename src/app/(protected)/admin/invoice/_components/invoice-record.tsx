@@ -14,12 +14,14 @@ import ViewFullInvoice from "./view-full-invoice";
 import { InvoiceProps } from "../page";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
-  invoiceId,
+  invoice_number,
+  invoice_id,
   date,
   customer,
   invoiceClerk,
   grandTotal,
   line_items,
+  notes,
   handleExport,
 }) => {
   return (
@@ -27,7 +29,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
       <div className="flex items-center justify-between px-6">
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-3">
-            <p className="text-xl">#{invoiceId}</p>
+            <p className="text-xl">#{invoice_number}</p>
             <Pin className="h-5 w-5 rotate-45 text-amber-400" />
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center justify-center">
@@ -44,14 +46,14 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                   Pin
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                {/* <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Invoice
-                </DropdownMenuItem>
+                </DropdownMenuItem> */}
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>
                 <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Delete
+                  Void
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
@@ -108,12 +110,14 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           )}
           <div className="flex items-center gap-2">
             <ViewFullInvoice
-              invoiceId={invoiceId}
+              invoice_number={invoice_number}
+              invoice_id={invoice_id}
               date={date}
               customer={customer}
               invoiceClerk={invoiceClerk}
               grandTotal={grandTotal}
               line_items={line_items}
+              notes={notes}
               handleExport={handleExport}
             />
           </div>

@@ -22,6 +22,12 @@ const LineItemSchema = z.object({
   unit_id: z.number(),
 });
 
+const notesSchema = z.object({
+  invoice_number: z.number(),
+  invoice_id: z.number(),
+  notes: z.string(),
+});
+
 // TODO: INVOICE BACKEND CREATE FUNCTION
 
 export const invoiceRouter = createTRPCRouter({
@@ -106,9 +112,11 @@ export const invoiceRouter = createTRPCRouter({
         where: input?.clerkId ? { invoice_clerk: input.clerkId } : {},
         select: {
           invoice_number: true,
+          invoice_id: true,
           created_at: true,
           total_amount: true,
           discount: true,
+          notes: true,
           invoiceClerk: {
             select: {
               Personal_Details: {
@@ -179,6 +187,26 @@ export const invoiceRouter = createTRPCRouter({
       },
     });
   }),
+
+  saveNotes: publicProcedure
+    .input(z.object({ notes: notesSchema }))
+    .mutation(async ({ ctx, input }) => {
+      const { notes } = input;
+
+      const result = await ctx.db.$transaction(async () => {
+        await ctx.db.invoice.update({
+          where: {
+            invoice_id: notes.invoice_id,
+            invoice_number: notes.invoice_number,
+          },
+          data: {
+            notes: notes.notes,
+          },
+        });
+      });
+
+      return result;
+    }),
 
   createInvoiceWithLineItems: publicProcedure
     .input(

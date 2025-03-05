@@ -14,15 +14,16 @@ import { LoadingSpinner } from "~/components/loading";
 import jsPDF from "jspdf";
 import "jspdf-autotable";
 import { ScrollArea } from "~/components/ui/scroll-area";
-import { useSearchParams } from 'next/navigation';
-
+import { useSearchParams } from "next/navigation";
 
 export type InvoiceProps = {
-  invoiceId: number;
+  invoice_number: number;
+  invoice_id: number;
   date: Date;
   customer: string;
   invoiceClerk: string;
   grandTotal: number;
+  notes: string;
 
   line_items: {
     quantity: number;
@@ -76,10 +77,10 @@ const InvoicePage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const searchParams = useSearchParams();
-  const clerkId = searchParams.get('clerkId');
+  const clerkId = searchParams.get("clerkId");
 
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery(
-      clerkId ? { clerkId } : undefined
+    clerkId ? { clerkId } : undefined,
   );
 
   const filteredInvoices = invoiceData?.filter((invoice) => {
@@ -118,12 +119,12 @@ const InvoicePage = () => {
     );
 
   const handleExport = ({
-                          line_items,
-                          invoice_number,
-                          customer,
-                          date,
-                          grandTotal,
-                        }: LineItemsProp) => {
+    line_items,
+    invoice_number,
+    customer,
+    date,
+    grandTotal,
+  }: LineItemsProp) => {
     const margin = 10.16; // 0.4 inch in mm
     const pageWidth = 210; // A4 width in mm
     const pageHeight = 297; // A4 height in mm
@@ -140,7 +141,11 @@ const InvoicePage = () => {
     // Header Information
     doc.text(`Customer Name: ${customer}`, margin, margin);
     doc.text(`TERM: 30`, margin, margin + 7);
-    doc.text(`DR/Invoice No.: ${invoice_number}`, pageWidth - margin - 50, margin);
+    doc.text(
+      `DR/Invoice No.: ${invoice_number}`,
+      pageWidth - margin - 50,
+      margin,
+    );
     doc.text(`DATE: ${formattedDate}`, pageWidth - margin - 50, margin + 7);
 
     const tableColumns = ["DESCRIPTION", "QTY UNIT", "UNIT PRICE", "TOTAL"];
@@ -163,14 +168,13 @@ const InvoicePage = () => {
         cellPadding: 1,
         lineColor: [255, 255, 255], // Makes lines transparent (white)
         lineWidth: 0,
-
       },
       headStyles: {
         fillColor: [255, 255, 255],
         textColor: 0,
         lineWidth: 0,
-        cellPadding:5,
-        cellWidth: 6
+        cellPadding: 5,
+        cellWidth: 6,
       },
       columnStyles: {
         0: { cellWidth: 80 },
@@ -190,14 +194,22 @@ const InvoicePage = () => {
     const totalTextWidth = doc.getTextWidth(totalText);
     const totalAmountWidth = doc.getTextWidth(totalAmount);
 
-    doc.text(totalText, pageWidth - margin - totalAmountWidth - totalTextWidth - 30, finalY + 10);
-    doc.text(totalAmount, pageWidth - margin - totalAmountWidth - 25, finalY + 10);
+    doc.text(
+      totalText,
+      pageWidth - margin - totalAmountWidth - totalTextWidth - 30,
+      finalY + 10,
+    );
+    doc.text(
+      totalAmount,
+      pageWidth - margin - totalAmountWidth - 25,
+      finalY + 10,
+    );
 
     doc.setFont("helvetica", "normal");
     doc.text(
-        "RECEIVED THE ABOVE GOODS IN GOOD ORDER AND CONDITION:",
-        margin,
-        finalY + 20
+      "RECEIVED THE ABOVE GOODS IN GOOD ORDER AND CONDITION:",
+      margin,
+      finalY + 20,
     );
     doc.line(margin, finalY + 40, margin + 70, finalY + 40);
     doc.setFontSize(8);
@@ -206,12 +218,9 @@ const InvoicePage = () => {
     doc.save(`invoice_${invoice_number}.pdf`);
   };
 
-
   return (
-    <section
-      className={`flex h-auto w-full flex-col gap-3 pt-10`}
-    >
-      <div className="flex px-20 items-center justify-between">
+    <section className={`flex h-auto w-full flex-col gap-3 pt-10`}>
+      <div className="flex items-center justify-between px-20">
         <div className="flex items-center gap-3">
           <SearchBar
             value={searchTerm}
@@ -228,26 +237,28 @@ const InvoicePage = () => {
       </div>
 
       <ScrollArea className="mt-5">
-        <div className="grid grid-cols-2 px-20 gap-4 pb-10">
-        {filteredInvoices
-          ?.sort()
-          ?.reverse()
-          .map((invoice, index) => (
-            <InvoiceRecord
-              key={index}
-              invoiceId={invoice.invoice_number}
-              date={invoice.created_at}
-              customer={invoice.customer.Personal_Details.company ?? ""}
-              invoiceClerk={
-                invoice.invoiceClerk.Personal_Details.first_name +
-                " " +
-                invoice.invoiceClerk.Personal_Details.last_name
-              }
-              grandTotal={invoice.total_amount}
-              line_items={invoice.line_items}
-              handleExport={handleExport}
-            />
-          ))}
+        <div className="grid grid-cols-2 gap-4 px-20 pb-10">
+          {filteredInvoices
+            ?.sort()
+            ?.reverse()
+            .map((invoice, index) => (
+              <InvoiceRecord
+                key={index}
+                invoice_number={invoice.invoice_number}
+                invoice_id={invoice.invoice_id}
+                date={invoice.created_at}
+                customer={invoice.customer.Personal_Details.company ?? ""}
+                invoiceClerk={
+                  invoice.invoiceClerk.Personal_Details.first_name +
+                  " " +
+                  invoice.invoiceClerk.Personal_Details.last_name
+                }
+                grandTotal={invoice.total_amount}
+                line_items={invoice.line_items}
+                notes={invoice.notes ?? "No customer notes."}
+                handleExport={handleExport}
+              />
+            ))}
         </div>
       </ScrollArea>
     </section>

@@ -29,7 +29,7 @@ model Personal_Details {
   location_id         Int?
   auth                Authentication?
   Authentication_Log  Authentication_Log[]
-  location            Location?            @relation(fields: [location_id], references: [location_id])
+  location            Location?            @relation(fields: [location_id], references: [location_id], onDelete: Cascade)
   User_Role           User_Role?
   Batch               Batch[]
   Inventory           Inventory[]
@@ -55,7 +55,7 @@ model User_Role {
   Invoice                                 Invoice[]
   Pin                                     Pin[]
   SupplierUnit                            SupplierUnit[]
-  Personal_Details                        Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id])
+  Personal_Details                        Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id], onDelete: Cascade)
   Role                                    Role             @relation(fields: [role_Id], references: [role_Id])
 }
 
@@ -252,10 +252,10 @@ model Invoice {
   payment_term_id Int
   notes           String?
   user_RoleId     String?
-  customer        User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id])
+  customer        User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id], onDelete: Cascade)
   invoiceClerk    User_Role     @relation("InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
   payment_term    Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
-  User_Role       User_Role?    @relation(fields: [user_RoleId], references: [id])
+  User_Role       User_Role?    @relation(fields: [user_RoleId], references: [id], onDelete: Cascade)
   line_items      Line_Item[]
   Payment         Payment[]
   payment_logs    Payment_Log[]
@@ -273,7 +273,7 @@ model Line_Item {
   created_at   DateTime @default(now())
   discount     Int      @default(0)
   sub_total    Float?
-  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id])
+  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
   unit         Unit     @relation(fields: [unit_id], references: [unit_id])
   variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
@@ -295,7 +295,7 @@ model Payment {
   payment_method String
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
-  invoice        Invoice       @relation(fields: [invoice_id], references: [invoice_id])
+  invoice        Invoice       @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
   PaymentLog     Payment_Log[]
 }
 

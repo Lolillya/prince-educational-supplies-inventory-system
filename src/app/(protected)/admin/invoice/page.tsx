@@ -77,9 +77,11 @@ const InvoicePage = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const searchParams = useSearchParams();
   const clerkId = searchParams.get('clerkId');
+  const customerId = searchParams.get('customerId');
+
 
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery(
-      clerkId ? { clerkId } : undefined
+      clerkId ? { clerkId } : customerId ? { customerId } : undefined
   );
 
   const filteredInvoices = invoiceData?.filter((invoice) => {

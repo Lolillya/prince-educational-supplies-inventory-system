@@ -99,10 +99,16 @@ export const invoiceRouter = createTRPCRouter({
     }),
 
     getInvoice: publicProcedure
-        .input(z.object({clerkId: z.string().optional()}).optional())
-        .query(async ({ctx, input}) => {
+        .input(z.object({
+            clerkId: z.string().optional(),
+            customerId: z.string().optional()
+        }).optional())
+        .query(async ({ ctx, input }) => {
             return ctx.db.invoice.findMany({
-                where: input?.clerkId ? {invoice_clerk: input.clerkId} : {},
+                where: {
+                    ...(input?.clerkId && { invoice_clerk: input.clerkId }),
+                    ...(input?.customerId && { customer_id: input.customerId })
+                },
                 select: {
                     invoice_number: true,
                     created_at: true,

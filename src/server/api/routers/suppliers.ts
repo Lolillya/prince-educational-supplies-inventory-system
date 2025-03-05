@@ -235,4 +235,74 @@ export const supplierRouter = createTRPCRouter({
             return { success: true };
         }),
 
+    verifyPassword: publicProcedure
+        .input(
+            z.object({
+                personalDetailsId: z.string(),
+                password: z.string(),
+            })
+        )
+        .mutation(async ({ input }) => {
+            const { personalDetailsId, password } = input;
+
+            const authRecord = await prisma.authentication.findUnique({
+                where: { personal_details_id: personalDetailsId },
+            });
+
+            if (!authRecord) {
+                return { success: false, message: "User not found" };
+            }
+
+            if (authRecord.password !== password) {
+                return { success: false, message: "Incorrect password" };
+            }
+
+            return { success: true, message: "Password verified" };
+        }),
+
+    getSupplierRestocks: publicProcedure
+        .input(z.object({ supplierId: z.string() }))
+        .query(async ({ input }) => {
+            return await db.batch.findMany({
+                where: {
+                    batchVariants: {
+                        some: {
+                            SupplierUnit: {
+                                some: {
+                                    supplier_id: input.supplierId
+                                }
+                            }
+                        }
+                    }
+                },
+                include: {
+                    batchVariants: {
+                        include: {
+                            variant: {
+                                include: {
+                                    item: {
+                                        include: {
+                                            brand: true
+                                        }
+                                    }
+                                }
+                            },
+                            SupplierUnit: {
+                                include: {
+                                    unit: true,
+                                    ConversionRate: {
+                                        include: {
+                                            fromUnit: true,
+                                            toUnit: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    Personal_Details: true
+                },
+                orderBy: { created_at: "desc" }
+            });
+        }),
 });

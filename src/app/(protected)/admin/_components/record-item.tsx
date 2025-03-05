@@ -7,17 +7,25 @@ import Delete from "./delete";
 type RecordItemProps = {
   id: string;
   name: string | null;
+  emoji: string;
   onClick: () => void;
   isSelected: boolean;
   recordType: string;
+  onDelete: (id: string) => void;
+  onVerifyPassword: (password: string) => Promise<boolean>;
+  userRole?: string;
 };
 
 const RecordItem: React.FC<RecordItemProps> = ({
   id,
+  emoji,
   name,
   onClick,
   isSelected,
   recordType,
+  onDelete,
+  onVerifyPassword,
+  userRole
 }) => {
   return (
     <>
@@ -29,7 +37,7 @@ const RecordItem: React.FC<RecordItemProps> = ({
           <div className="flex items-center gap-6">
             <Avatar className="h-12 w-12 !rounded-lg">
               <AvatarFallback className="!rounded-lg bg-black text-xl text-slate-700">
-                👑
+                {emoji}
               </AvatarFallback>
             </Avatar>
             <div className="flex flex-col gap-2">
@@ -39,7 +47,14 @@ const RecordItem: React.FC<RecordItemProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <Favorite />
-            <Delete recordInfo={name} recordType={recordType} />
+            <Delete
+                recordInfo={name}
+                recordType={recordType}
+                id={id}
+                onDelete={onDelete}
+                onVerifyPassword={onVerifyPassword}
+                userRole={userRole}
+            />
           </div>
         </div>
       </div>

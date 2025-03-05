@@ -47,6 +47,7 @@ const RestockPage = () => {
 
   const searchParams = useSearchParams();
   const clerkId = searchParams.get('clerkId');
+  const supplierId = searchParams.get('supplierId');
 
 
   const {
@@ -54,8 +55,9 @@ const RestockPage = () => {
     isLoading,
     error,
   } = api.restock.getRestockData.useQuery(
-      clerkId ? { clerkId } : undefined
+      clerkId ? { clerkId } : supplierId ? { supplierId } : undefined
   );
+
 
   if (isLoading)
     return (

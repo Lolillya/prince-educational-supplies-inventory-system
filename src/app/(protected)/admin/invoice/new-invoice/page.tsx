@@ -268,10 +268,10 @@ const NewInvoice = () => {
   };
 
   const handleSelectItem = (item: InventoryItem) => {
-    if (selectedItems.length >= 5) {
+    if (selectedItems.length >= 10) {
       toast({
         title: "Error",
-        description: "Cannot add more than 5 items.",
+        description: "Cannot add more than 10 items.",
         variant: "destructive",
       });
       return;

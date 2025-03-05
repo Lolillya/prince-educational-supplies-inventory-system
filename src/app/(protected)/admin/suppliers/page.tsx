@@ -14,11 +14,13 @@ import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedSupplier from './_components/selected-supplier'
 import { Toaster } from '~/components/ui/sonner'
+import {useSession} from "next-auth/react";
 
 interface Supplier {
   id: string;
   Personal_Details_Id: string;
   role_Id: number;
+  emoji: string;
   Personal_Details: PersonalDetails;
 }
 
@@ -32,6 +34,9 @@ interface PersonalDetails {
   notes: string | null;
   location_id: number | null;
   location: Location | null;
+  auth?: {
+    username: string;
+  } | null;
 }
 
 interface Location {
@@ -50,6 +55,53 @@ const SuppliersPage = () => {
 
   const { data: supplierData } = api.suppliers.list.useQuery();
   const { data: restockData } = api.restock.getRestockData.useQuery();
+
+  const utils = api.useUtils();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
+
+  const { data: restockActivity } = api.suppliers.getRestockActivity.useQuery(
+      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+      { enabled: !!selectedRecord }
+  );
+
+  const activityData = {
+    restocks: restockActivity ?? []
+  };
+
+  const verifyPasswordMutation = api.suppliers.verifyPassword.useMutation();
+  const handleVerifyPassword = async (password: string) => {
+    if (!personalDetailsId) return false;
+
+    try {
+      const result = await verifyPasswordMutation.mutateAsync({
+        personalDetailsId,
+        password,
+      });
+      return result.success;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const deleteSupplierMutation = api.suppliers.delete.useMutation({
+    onSuccess: () => {
+      utils.suppliers.list.invalidate();
+      setSelectedRecord(null);
+    },
+    onError: (error) => {
+      console.error("Error deleting supplier:", error.message);
+    },
+  });
+
+  const checkAdminRole = () => {
+    if (userRole !== 'ADMIN') {
+      alert('Only ADMIN users can delete suppliers');
+      return false;
+    }
+    return true;
+  };
 
   const filteredSuppliers = supplierData?.filter(
     (supplier) => {
@@ -102,9 +154,16 @@ const SuppliersPage = () => {
                       key={supplier.Personal_Details_Id}
                       name={supplier.Personal_Details.company}
                       id={supplier.Personal_Details_Id}
+                      emoji={supplier.emoji}
                       onClick={() => setSelectedRecord(supplier)}
                       isSelected={selectedRecord?.Personal_Details_Id === supplier.Personal_Details_Id}
                       recordType={'Suppliers'}
+                      onVerifyPassword={handleVerifyPassword}
+                      onDelete={(id) => {
+                        if (!checkAdminRole()) return;
+                        deleteSupplierMutation.mutate({ id });
+                      }}
+                      userRole={userRole}
                     />
                   ))}
                 </div>
@@ -124,6 +183,8 @@ const SuppliersPage = () => {
                 <div className="flex flex-col w-full h-40">
                   <SelectedSupplier
                     id={selectedRecord.Personal_Details_Id}
+                    role_Id={selectedRecord.role_Id}
+                    emoji={selectedRecord.emoji}
                     company={selectedRecord.Personal_Details.company}
                     representative={
                       // `${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`
@@ -148,6 +209,9 @@ const SuppliersPage = () => {
                         .join("\n")
                     }
                     notes={selectedRecord.Personal_Details.notes}
+                    auth={selectedRecord.Personal_Details.auth}
+                    activityData={activityData}
+                    clerkId={selectedRecord.Personal_Details_Id}
 
                     // TODO: reflect restock data based on selected supplier
                     restockData={supplierRestockData}

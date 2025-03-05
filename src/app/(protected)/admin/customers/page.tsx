@@ -14,11 +14,13 @@ import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
 import { Toaster } from "~/components/ui/sonner";
+import {useSession} from "next-auth/react";
 
 interface Customer {
   id: string;
   Personal_Details_Id: string;
   role_Id: number;
+  emoji: string;
   Personal_Details: {
     location: Location | null;
     first_name: string | null;
@@ -27,6 +29,10 @@ interface Customer {
     contact: string | null;
     email: string | null;
     notes: string | null;
+    location_id: number | null;
+    auth?: {
+      username: string;
+    } | null;
   };
   customerInvoices: {
     invoice_number: number;
@@ -57,6 +63,54 @@ const CustomersPage = () => {
   const [selectedRecord, setSelectedRecord] = useState<Customer | null>(null);
 
   const { data: customerData } = api.customers.list.useQuery();
+
+
+  const utils = api.useUtils();
+  const { data: session } = useSession();
+  const userRole = session?.user?.role;
+  const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
+
+  const { data: invoiceActivity } = api.customers.getCustomerInvoices.useQuery(
+      { customerId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
+      { enabled: !!selectedRecord }
+  );
+
+  const activityCustomerData = {
+    invoices: invoiceActivity ?? []
+  };
+
+  const verifyPasswordMutation = api.customers.verifyPassword.useMutation();
+  const handleVerifyPassword = async (password: string) => {
+    if (!personalDetailsId) return false;
+
+    try {
+      const result = await verifyPasswordMutation.mutateAsync({
+        personalDetailsId,
+        password,
+      });
+      return result.success;
+    } catch (error) {
+      return false;
+    }
+  };
+
+  const deleteCustomerMutation = api.customers.delete.useMutation({
+    onSuccess: () => {
+      utils.customers.list.invalidate();
+      setSelectedRecord(null);
+    },
+    onError: (error) => {
+      console.error("Error deleting supplier:", error.message);
+    },
+  });
+
+  const checkAdminRole = () => {
+    if (userRole !== 'ADMIN') {
+      alert('Only ADMIN users can delete suppliers');
+      return false;
+    }
+    return true;
+  };
 
   const filteredCustomers = customerData?.filter((customer) => {
     const company = customer.Personal_Details.company?.toLowerCase() ?? "";
@@ -103,12 +157,19 @@ const CustomersPage = () => {
                       key={customer.Personal_Details_Id}
                       name={customer.Personal_Details.company}
                       id={customer.Personal_Details_Id}
+                      emoji={customer.emoji}
                       onClick={() => setSelectedRecord(customer)}
                       isSelected={
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
                       }
                       recordType={'Customers'}
+                      onVerifyPassword={handleVerifyPassword}
+                      onDelete={(id) => {
+                        if (!checkAdminRole()) return;
+                        deleteCustomerMutation.mutate({ id });
+                      }}
+                      userRole={userRole}
                     />
                   ))}
                 </div>
@@ -136,6 +197,8 @@ const CustomersPage = () => {
                     }
                     last_name={selectedRecord.Personal_Details.last_name ?? ""}
                     id={selectedRecord.Personal_Details_Id}
+                    role_Id={selectedRecord.role_Id}
+                    emoji={selectedRecord.emoji}
                     company={selectedRecord.Personal_Details.company ?? ""}
                     representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
                     contact={selectedRecord.Personal_Details.contact ?? ""}
@@ -151,6 +214,13 @@ const CustomersPage = () => {
                       .filter((line) => line)
                       .join("\n")}
                     notes={selectedRecord.Personal_Details.notes ?? ""}
+                    auth={selectedRecord.Personal_Details.auth}
+                      // activityData={activityData}
+
+                      // TODO: reflect restock data based on selected supplier
+                      // restockData={supplierRestockData}
+                    invoiceHistoryData={activityCustomerData}
+                    clerkId={selectedRecord.id ?? ''}
                   />
                 </div>
               </ScrollArea>

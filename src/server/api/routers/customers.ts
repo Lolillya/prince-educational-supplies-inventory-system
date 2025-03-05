@@ -225,45 +225,78 @@ export const customerRouter = createTRPCRouter({
     }),
 
   delete: publicProcedure
-    .input(z.object({ id: z.string().uuid("Invalid customer ID format") }))
-    .mutation(async ({ input }) => {
-      const { id } = input;
+      .input(z.object({ id: z.string().uuid() }))
+      .mutation(async ({ input }) => {
+        const { id } = input;
 
-      // Find the customer to delete and associated location
-      const customer = await db.personal_Details.findUnique({
-        where: { personal_details_id: id },
-        include: {
-          User_Role: true, // Check if a related User_Role exists
-        },
-      });
-
-      if (!customer) {
-        throw new Error("Customer not found");
-      }
-
-      // Delete the associated User_Role entry if it exists
-      if (customer.User_Role) {
-        await db.user_Role.delete({
-          where: { Personal_Details_Id: id },
+        // Cascade will handle related records automatically
+        await db.personal_Details.delete({
+          where: { personal_details_id: id },
+          include: {
+            User_Role: {
+              include: {
+                customerInvoices: true
+              }
+            }
+          }
         });
-      } else {
-        console.log("No associated User_Role to delete.");
-      }
 
-      // Delete the associated location if it exists
-      if (customer.location_id) {
-        await db.location.delete({
-          where: { location_id: customer.location_id },
+        return { success: true };
+      }),
+
+  verifyPassword: publicProcedure
+      .input(
+          z.object({
+            personalDetailsId: z.string(),
+            password: z.string(),
+          })
+      )
+      .mutation(async ({ input }) => {
+        const { personalDetailsId, password } = input;
+
+        const authRecord = await prisma.authentication.findUnique({
+          where: { personal_details_id: personalDetailsId },
         });
-      } else {
-        console.log("No associated location to delete.");
-      }
 
-      // Delete the customer
-      await db.personal_Details.delete({
-        where: { personal_details_id: id },
-      });
+        if (!authRecord) {
+          return { success: false, message: "User not found" };
+        }
 
-      return { success: true };
-    }),
+        if (authRecord.password !== password) {
+          return { success: false, message: "Incorrect password" };
+        }
+
+        return { success: true, message: "Password verified" };
+      }),
+
+  getCustomerInvoices: publicProcedure
+      .input(z.object({ customerId: z.string() }))
+      .query(async ({ input }) => {
+        return await db.invoice.findMany({
+          where: { customer_id: input.customerId },
+          include: {
+            line_items: {
+              include: {
+                variant: {
+                  include: {
+                    item: {
+                      include: {
+                        brand: true
+                      }
+                    }
+                  }
+                },
+                unit: true
+              }
+            },
+            Payment: true,
+            invoiceClerk: {
+              include: {
+                Personal_Details: true
+              }
+            }
+          },
+          orderBy: { created_at: "desc" }
+        });
+      }),
 });

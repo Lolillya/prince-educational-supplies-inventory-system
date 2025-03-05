@@ -52,6 +52,7 @@ const EmployeeActivity = ({ activityData, clerkId }: EmployeeActivityProps) => {
 							<RestockDialog
 								key={activity.batch_id}
 								activity={activity}
+								context="employee"
 							/>
 						) : (
 							<InvoiceDialog

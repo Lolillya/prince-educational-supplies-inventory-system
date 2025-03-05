@@ -61,8 +61,8 @@ const SuppliersPage = () => {
   const userRole = session?.user?.role;
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
-  const { data: restockActivity } = api.suppliers.getRestockActivity.useQuery(
-      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+  const { data: restockActivity } = api.suppliers.getSupplierRestocks.useQuery(
+      { supplierId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
       { enabled: !!selectedRecord }
   );
 
@@ -118,9 +118,9 @@ const SuppliersPage = () => {
   );
 
   //TODO: Change reference to ID becuase companies might have the same name
-  const supplierRestockData = selectedRecord
-    ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
-    : [];
+  // const supplierRestockData = selectedRecord
+  //   ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
+  //   : [];
 
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
@@ -210,11 +210,12 @@ const SuppliersPage = () => {
                     }
                     notes={selectedRecord.Personal_Details.notes}
                     auth={selectedRecord.Personal_Details.auth}
-                    activityData={activityData}
-                    clerkId={selectedRecord.Personal_Details_Id}
+                    // activityData={activityData}
 
                     // TODO: reflect restock data based on selected supplier
-                    restockData={supplierRestockData}
+                    // restockData={supplierRestockData}
+                    restockData={activityData}
+                    clerkId={selectedRecord.id ?? ''}
 
                   />
                 </div>

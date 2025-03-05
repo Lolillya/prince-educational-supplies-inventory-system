@@ -260,20 +260,49 @@ export const supplierRouter = createTRPCRouter({
             return { success: true, message: "Password verified" };
         }),
 
-    getRestockActivity: publicProcedure
-        .input(z.object({ clerkId: z.string() }))
+    getSupplierRestocks: publicProcedure
+        .input(z.object({ supplierId: z.string() }))
         .query(async ({ input }) => {
             return await db.batch.findMany({
-                where: { restock_clerk: input.clerkId },
-                include: {
+                where: {
                     batchVariants: {
-                        include: {
-                            variant: true,
-                            SupplierUnit: true
+                        some: {
+                            SupplierUnit: {
+                                some: {
+                                    supplier_id: input.supplierId
+                                }
+                            }
                         }
                     }
                 },
-                orderBy: { created_at: 'desc' }
+                include: {
+                    batchVariants: {
+                        include: {
+                            variant: {
+                                include: {
+                                    item: {
+                                        include: {
+                                            brand: true
+                                        }
+                                    }
+                                }
+                            },
+                            SupplierUnit: {
+                                include: {
+                                    unit: true,
+                                    ConversionRate: {
+                                        include: {
+                                            fromUnit: true,
+                                            toUnit: true
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    Personal_Details: true
+                },
+                orderBy: { created_at: "desc" }
             });
         }),
 });

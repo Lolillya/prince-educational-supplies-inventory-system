@@ -220,11 +220,33 @@ export const restockRouter = createTRPCRouter({
         }),
 
     getRestockData: publicProcedure
-        .input(z.object({clerkId: z.string().optional()}).optional())
-        .query(async ({input}) => {
+        .input(
+            z.object({
+                clerkId: z.string().optional(),
+                supplierId: z.string().optional()
+            }).optional()
+        )
+        .query(async ({ input }) => {
             try {
+                const whereClause = {
+                    OR: [
+                        ...(input?.clerkId ? [{ restock_clerk: input.clerkId }] : []),
+                        ...(input?.supplierId ? [{
+                            batchVariants: {
+                                some: {
+                                    SupplierUnit: {
+                                        some: {
+                                            supplier_id: input.supplierId
+                                        }
+                                    }
+                                }
+                            }
+                        }] : [])
+                    ]
+                };
+
                 const restocks = await db.batch.findMany({
-                    where: input?.clerkId ? {restock_clerk: input.clerkId} : {},
+                    where: input ? whereClause : {},
                     include: {
                         batchVariants: {
                             include: {

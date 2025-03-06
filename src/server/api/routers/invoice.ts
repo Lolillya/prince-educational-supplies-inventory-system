@@ -198,6 +198,15 @@ export const invoiceRouter = createTRPCRouter({
     });
   }),
 
+  getUnits: publicProcedure.query(async ({ ctx }) => {
+    return ctx.db.unit.findMany({
+      select: {
+        unit_id: true,
+        name: true,
+      },
+    });
+  }),
+
   saveNotes: publicProcedure
     .input(z.object({ notes: notesSchema }))
     .mutation(async ({ ctx, input }) => {

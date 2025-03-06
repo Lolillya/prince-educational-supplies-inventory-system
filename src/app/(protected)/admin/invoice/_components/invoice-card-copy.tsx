@@ -60,7 +60,6 @@ type InvoiceCardProps = {
       }[];
     }>;
   }>;
-
   isAutoRestock: boolean;
   onRemove: (batchNumber: number) => void;
   handleAutoRestock: (checked: boolean) => void;
@@ -83,6 +82,12 @@ type InvoiceCardProps = {
     unit_id: number,
   ) => void;
   isInputFocused: string | undefined;
+  units:
+    | Array<{
+        unit_id: number;
+        name: string;
+      }>
+    | undefined;
   // setIsInputFocused: () => void;
 };
 
@@ -115,6 +120,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   handleAutoRestock,
   isInputFocused,
   isAutoRestock,
+  units,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState({
@@ -531,32 +537,41 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {selectedBatches
-                        ?.flatMap((batch, index) =>
-                          batch.supplierUnits.map((unit) => ({
-                            supplier_unit_id: unit.supplier_unit_id,
-                            name: unit.unit.name,
-                            id: unit.unit.unit_id,
-                            quantity: unit.quantity_per_unit,
-                            batch: index + 1,
-                          })),
-                        )
-                        .filter(
-                          (unit, index, self) =>
-                            self.findIndex(
-                              (u) =>
-                                u.name.toLowerCase() ===
-                                unit.name.toLowerCase(),
-                            ) === index,
-                        )
-                        .map((uniqueUnit) => (
-                          <SelectItem
-                            key={uniqueUnit.id}
-                            value={JSON.stringify(uniqueUnit)}
-                          >
-                            <Label>{uniqueUnit.name}</Label>
-                          </SelectItem>
-                        ))}
+                      {isBatchAutoRestock
+                        ? units?.map((u) => (
+                            <SelectItem
+                              key={u.unit_id}
+                              value={JSON.stringify(u)}
+                            >
+                              <Label>{u.name}</Label>
+                            </SelectItem>
+                          ))
+                        : selectedBatches
+                            ?.flatMap((batch, index) =>
+                              batch.supplierUnits.map((unit) => ({
+                                supplier_unit_id: unit.supplier_unit_id,
+                                name: unit.unit.name,
+                                id: unit.unit.unit_id,
+                                quantity: unit.quantity_per_unit,
+                                batch: index + 1,
+                              })),
+                            )
+                            .filter(
+                              (unit, index, self) =>
+                                self.findIndex(
+                                  (u) =>
+                                    u.name.toLowerCase() ===
+                                    unit.name.toLowerCase(),
+                                ) === index,
+                            )
+                            .map((uniqueUnit) => (
+                              <SelectItem
+                                key={uniqueUnit.id}
+                                value={JSON.stringify(uniqueUnit)}
+                              >
+                                <Label>{uniqueUnit.name}</Label>
+                              </SelectItem>
+                            ))}
                     </SelectContent>
                   </Select>
                 </div>

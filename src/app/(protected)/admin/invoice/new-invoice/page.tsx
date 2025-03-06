@@ -132,9 +132,9 @@ const NewInvoice = () => {
     api.invoice.getCustomers.useQuery();
   const { data: nextInvoiceId, isLoading: loadingInvoiceId } =
     api.invoice.getInvoiceId.useQuery();
-
   const { mutateAsync: createInvoice, isPending: isInvoicePending } =
     api.invoice.createInvoiceWithLineItems.useMutation();
+  const { data: units } = api.invoice.getUnits.useQuery();
 
   const updateCardDetails = (
     id: number,
@@ -452,6 +452,7 @@ const NewInvoice = () => {
               updateCardDetails={updateCardDetails}
               handleAutoRestock={handleAutoRestock}
               isAutoRestock={isAutoRestock}
+              units={units}
             />
           );
         })}

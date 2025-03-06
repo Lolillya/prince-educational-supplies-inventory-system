@@ -25,6 +25,7 @@ model Personal_Details {
   contact             String?
   email               String?
   company             String?
+  term                Int?
   notes               String?
   location_id         Int?
   auth                Authentication?

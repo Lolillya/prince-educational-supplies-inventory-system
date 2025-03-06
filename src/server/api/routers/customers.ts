@@ -4,6 +4,7 @@ import { db } from "~/server/db";
 
 const customerInputSchema = z.object({
   company: z.string().min(1, "Company is required"),
+  term: z.number().int().min(2, "Term must be at least 2 days").optional().nullable(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   contact: z
@@ -123,6 +124,7 @@ export const customerRouter = createTRPCRouter({
       const personalDetails = await db.personal_Details.create({
         data: {
           company,
+          term: input.term,
           first_name: firstName || null,
           last_name: lastName || null,
           contact: contact || null,
@@ -212,6 +214,7 @@ export const customerRouter = createTRPCRouter({
         where: { personal_details_id: id },
         data: {
           company,
+          term: input.term,
           first_name: firstName || null,
           last_name: lastName || null,
           contact: contact || null,

@@ -1,5 +1,5 @@
 import { ArrowUpRight, Calendar, Printer } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
   Dialog,
@@ -17,23 +17,63 @@ import { Textarea } from "~/components/ui/textarea";
 import InvoiceTable from "./invoice-table";
 import { InvoiceProps } from "../page";
 import RecordExpand from "../../_components/record-expand";
+import { api } from "~/trpc/react";
+import { toast } from "~/hooks/use-toast";
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
-  invoiceId,
+  invoice_number,
+  invoice_id,
   date,
   customer,
   invoiceClerk,
   grandTotal,
   line_items,
+  notes,
   handleExport,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [showWarning, setShowWarning] = useState(false);
+  const [customerNotes, setCustomerNotes] = useState<string>(notes);
+  const [initialNotes, setInitialNotes] = useState<string>(notes);
+  const [hasChanges, setHasChanges] = useState<boolean>(false);
 
-  const handleEdit = () => {
-    setIsEditing((prev) => !prev);
-    setShowWarning(false);
+  const { mutateAsync: saveInvoice, isPending: isSavingInvoice } =
+    api.invoice.saveNotes.useMutation();
+
+  const handleSaveInvoice = async () => {
+    const invoiceData = {
+      notes: {
+        invoice_number: invoice_number,
+        invoice_id: invoice_id,
+        notes: customerNotes,
+      },
+    };
+
+    try {
+      await saveInvoice(invoiceData);
+      toast({
+        title: "Success",
+        description: "Invoice created successfully!",
+        variant: "default",
+      });
+    } catch (error: unknown) {
+      let errorMessage = "An unexpected error occurred.";
+
+      if (error instanceof Error) {
+        errorMessage = error.message;
+      } else if (typeof error === "string") {
+        errorMessage = error;
+      } else if (error && typeof error === "object" && "message" in error) {
+        errorMessage = (error as { message?: string }).message ?? errorMessage;
+      }
+
+      toast({
+        title: "Error",
+        description: errorMessage,
+        variant: "destructive",
+      });
+    }
   };
 
   const handleKeyDown = (event: React.KeyboardEvent) => {
@@ -44,6 +84,16 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
       }
     }
   };
+
+  const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const newValue = e.target.value;
+    setCustomerNotes(newValue);
+    setHasChanges(newValue !== initialNotes);
+  };
+
+  useEffect(() => {
+    setInitialNotes(customerNotes); // Set initial notes when the component mounts
+  }, []);
 
   return (
     <Dialog
@@ -75,7 +125,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
           <div className="flex items-center justify-between">
             <div className="flex h-full flex-col justify-between gap-2">
               <DialogTitle className="text-xl font-normal text-slate-700">
-                #{invoiceId}
+                #{invoice_number}
               </DialogTitle>
               <div className="flex items-center gap-3 text-slate-400">
                 <Calendar className="h-4 w-4" />
@@ -132,6 +182,8 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
         <Textarea
           className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline focus:outline-2 focus:outline-slate-200"
           placeholder="Your record notes..."
+          value={customerNotes}
+          onChange={handleChange}
         />
 
         <div className="flex items-center justify-between">
@@ -150,13 +202,19 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
           </div>
           <div className="flex items-center gap-2">
             <DialogClose asChild disabled={isEditing}>
-              <Button
-                variant={"secondary"}
-                className="text-slate-700 hover:bg-slate-200"
-                disabled={isEditing}
-              >
-                Close
-              </Button>
+              {!hasChanges ? (
+                <Button
+                  variant={"secondary"}
+                  className="text-slate-700 hover:bg-slate-200"
+                  disabled={isEditing}
+                >
+                  Close
+                </Button>
+              ) : (
+                <Button disabled={isSavingInvoice} onClick={handleSaveInvoice}>
+                  Save
+                </Button>
+              )}
             </DialogClose>
             <Button
               className="bg-green hover:bg-green/80"
@@ -164,7 +222,7 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               onClick={() =>
                 handleExport({
                   line_items,
-                  invoice_number: invoiceId.toString(),
+                  invoice_number: invoice_number.toString(),
                   customer,
                   date,
                   grandTotal: grandTotal.toString(),

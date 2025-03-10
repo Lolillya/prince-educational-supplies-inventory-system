@@ -17,6 +17,7 @@ interface CustomerFormState {
     firstName: string;
     lastName: string;
     businessName: string;
+    term: string;
     contact: string;
     email: string;
     addressLine: string;
@@ -31,6 +32,7 @@ interface CustomerFormErrors {
     firstName?: string;
     lastName?: string;
     businessName?: string;
+    term?: string;
     contact?: string;
     email?: string;
     addressLine?: string;
@@ -46,6 +48,7 @@ const defaultCustomerForm: CustomerFormState = {
     firstName: "",
     lastName: "",
     businessName: "",
+    term: "",
     contact: "",
     email: "",
     addressLine: "",
@@ -79,6 +82,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
         firstName: "",
         lastName: "",
         businessName: "",
+        term: "",
         contact: "",
         email: "",
         addressLine: "",
@@ -101,6 +105,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
                 firstName: customerData.first_name ?? "",
                 lastName: customerData.last_name ?? "",
                 businessName: customerData.company ?? "",
+                term: customerData.term ?? "",
                 contact: customerData.contact ?? "",
                 email: customerData.email ?? "",
                 addressLine: customerData.location?.address_line ?? "",
@@ -140,7 +145,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
 
     const validateForm = (): CustomerFormErrors => {
         const newErrors: CustomerFormErrors = {};
-        const { firstName, lastName, businessName, contact, email, addressLine, city, region, country, postalCode, notes } = customerForm;
+        const { firstName, lastName, businessName, term, contact, email, addressLine, city, region, country, postalCode, notes } = customerForm;
 
         if (firstName && (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/))) {
             newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
@@ -160,6 +165,15 @@ const NewCustomerState = ({ id }: { id: string }) => {
             newErrors.businessName = "Business Name must be at least 2 characters long.";
         } else if (businessName.trim().length > 100) {
             newErrors.businessName = "Company name must be at most 100 characters long.";
+        }
+
+        if (term.trim()) {
+            const termValue = parseInt(term, 10);
+            if (isNaN(termValue)) {
+                newErrors.term = "Term must be a number";
+            } else if (termValue < 2) { // Changed to reject values below 2
+                newErrors.term = "Term must be at least 2 days";
+            }
         }
 
         if (contact && !/^\d{9,15}$/.test(contact)) {
@@ -215,6 +229,9 @@ const NewCustomerState = ({ id }: { id: string }) => {
             try {
                 await createCustomer.mutateAsync({
                     company: customerForm.businessName,
+                    term: customerForm.term.trim() ?
+                        parseInt(customerForm.term, 10) :
+                        null,
                     firstName: customerForm.firstName,
                     lastName: customerForm.lastName,
                     contact: customerForm.contact,
@@ -242,21 +259,42 @@ const NewCustomerState = ({ id }: { id: string }) => {
         <div className="flex h-full flex-col gap-5 px-52">
             <form className="h-full w-full">
                 <div className="flex h-full w-full flex-col justify-center gap-7">
+
                     <div className="flex flex-col gap-2">
                         <Label>
                             Business <span className="text-red">*</span>
                         </Label>
-                        <Input
-                            name="businessName"
-                            placeholder="Business Name"
-                            className="p-7"
-                            required
-                            value={customerForm.businessName}
-                            onChange={handleInputChange}
-                        />
-                        {errors.businessName && (
-                            <span className="text-red">{errors.businessName}</span>
-                        )}
+                        <div className="flex items-center gap-3">
+                            <Input
+                                name="businessName"
+                                placeholder="Business Name"
+                                className="p-7"
+                                required
+                                value={customerForm.businessName}
+                                onChange={handleInputChange}
+                            />
+                            {errors.businessName && (
+                                <span className="text-red">{errors.businessName}</span>
+                            )}
+                            <Input
+                                name="term"
+                                type="number"
+                                min="2"
+                                placeholder="Term by Days (minimum 2 days)"
+                                className="p-7"
+                                value={customerForm.term}
+                                onChange={(e) => {
+                                    // Directly pass the value without correction
+                                    handleInputChange({
+                                        target: {
+                                            name: "term",
+                                            value: e.target.value
+                                        }
+                                    } as any);
+                                }}
+                            />
+                            {errors.term && <span className="text-red">{errors.term}</span>}
+                        </div>
                     </div>
 
                     <div className="flex flex-col gap-2">
@@ -420,8 +458,16 @@ const NewCustomerState = ({ id }: { id: string }) => {
                 <Button onClick={handleClear} className="bg-green p-7 text-lg font-bold">
                     Clear
                 </Button>
-                <Button onClick={handleSubmit} className="bg-green p-7 text-lg font-bold">
-                    Save
+                <Button
+                    onClick={handleSubmit}
+                    className="bg-green p-7 text-lg font-bold"
+                    disabled={createCustomer.isPending}
+                >
+                    {createCustomer.isPending ? (
+                        "Saving..."
+                    ) : (
+                        "Save"
+                    )}
                 </Button>
             </div>
 

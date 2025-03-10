@@ -1,7 +1,11 @@
 import CustomerRouter from "../../_components/customer-router";
 import EditCustomerState from "../../_components/edit-customer";
 
-const EditCustomer = ({ params }: { params: { id: string } }) => {
+interface Props {
+  params: { id: string };
+}
+
+const EditCustomer = ({ params }: Props) => {
   const id = params.id;
   return (
     <section className="flex h-screen w-screen flex-col gap-3 p-10">

@@ -1,3 +1,5 @@
+"use client";
+
 import CustomerRouter from "../../_components/customer-router";
 import EditCustomerState from "../../_components/edit-customer";
 

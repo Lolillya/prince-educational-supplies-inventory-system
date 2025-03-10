@@ -1,39 +1,47 @@
-import EmojiPicker, { Emoji } from 'emoji-picker-react';
-import { useState } from 'react';
-import { Avatar, AvatarFallback } from '~/components/ui/avatar';
-import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
+import EmojiPicker, {
+  Emoji,
+  EmojiStyle,
+  SuggestionMode,
+} from "emoji-picker-react"; // ✅ Import SuggestionMode
+import { useState } from "react";
+import { Avatar, AvatarFallback } from "~/components/ui/avatar";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "~/components/ui/popover";
 
 interface EmojiPopoverProps {
-	isEditing: boolean;
+  isEditing: boolean;
 }
 
-const EmojiPopover = ({ isEditing } : EmojiPopoverProps) => {
-	const [emoji, setEmoji] = useState({ emoji: '👑' });
+const EmojiPopover = ({ isEditing }: EmojiPopoverProps) => {
+  const [emoji, setEmoji] = useState({ emoji: "👑" });
 
-	return (
-		<div>
-			<Popover>
-				<PopoverTrigger disabled={!isEditing}>
-					<Avatar className='h-16 w-16 !rounded-lg'>
-						<AvatarFallback className='bg-black text-slate-700 !rounded-lg text-3xl hover:text-4xl transition-all duration-300'>
-							{emoji.emoji}
-						</AvatarFallback>
-					</Avatar>
-				</PopoverTrigger>
-				<PopoverContent className='w-auto p-0 shadow-none border-none'>
-					<EmojiPicker
-						emojiStyle='native'
-						skinTonesDisabled
-						suggestedEmojisMode='recent'
-						previewConfig={{ showPreview: false }}
-						onEmojiClick={(e) => {
-							setEmoji(e)
-						}}
-					/>
-				</PopoverContent>
-			</Popover>
-		</div>
-	);
+  return (
+    <div>
+      <Popover>
+        <PopoverTrigger disabled={!isEditing}>
+          <Avatar className="h-16 w-16 !rounded-lg">
+            <AvatarFallback className="!rounded-lg bg-black text-3xl text-slate-700 transition-all duration-300 hover:text-4xl">
+              {emoji.emoji}
+            </AvatarFallback>
+          </Avatar>
+        </PopoverTrigger>
+        <PopoverContent className="w-auto border-none p-0 shadow-none">
+          <EmojiPicker
+            emojiStyle={EmojiStyle.NATIVE}
+            skinTonesDisabled
+            suggestedEmojisMode={SuggestionMode.RECENT}
+            previewConfig={{ showPreview: false }}
+            onEmojiClick={(e) => {
+              setEmoji(e);
+            }}
+          />
+        </PopoverContent>
+      </Popover>
+    </div>
+  );
 };
 
 export default EmojiPopover;

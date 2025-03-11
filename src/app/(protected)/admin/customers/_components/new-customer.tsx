@@ -141,85 +141,85 @@ const NewCustomerState = ({ id }: { id: string }) => {
             </section>
         );
 
-    const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
+    // const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
-    const validateForm = (): CustomerFormErrors => {
-        const newErrors: CustomerFormErrors = {};
-        const { firstName, lastName, businessName, term, contact, email, addressLine, city, region, country, postalCode, notes } = customerForm;
+    // const validateForm = (): CustomerFormErrors => {
+    //     const newErrors: CustomerFormErrors = {};
+    //     const { firstName, lastName, businessName, term, contact, email, addressLine, city, region, country, postalCode, notes } = customerForm;
 
-        if (firstName && (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName)))) {
-            newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
-        } else if (firstName && firstName.length > 50) {
-            newErrors.firstName = "First Name must be at most 50 characters long.";
-        }
+    //     if (firstName && (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName)))) {
+    //         newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
+    //     } else if (firstName && firstName.length > 50) {
+    //         newErrors.firstName = "First Name must be at most 50 characters long.";
+    //     }
 
-        if (lastName && (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName)))) {
-            newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
-        } else if (lastName && lastName.length > 50) {
-            newErrors.lastName = "Last Name must be at most 50 characters long.";
-        }
+    //     if (lastName && (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName)))) {
+    //         newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
+    //     } else if (lastName && lastName.length > 50) {
+    //         newErrors.lastName = "Last Name must be at most 50 characters long.";
+    //     }
 
-        if (!businessName) {
-            newErrors.businessName = "Business Name is required.";
-        } else if (businessName.trim().length < 2) {
-            newErrors.businessName = "Business Name must be at least 2 characters long.";
-        } else if (businessName.trim().length > 100) {
-            newErrors.businessName = "Company name must be at most 100 characters long.";
-        }
+    //     if (!businessName) {
+    //         newErrors.businessName = "Business Name is required.";
+    //     } else if (businessName.trim().length < 2) {
+    //         newErrors.businessName = "Business Name must be at least 2 characters long.";
+    //     } else if (businessName.trim().length > 100) {
+    //         newErrors.businessName = "Company name must be at most 100 characters long.";
+    //     }
 
-        if (term.trim()) {
-            const termValue = parseInt(term, 10);
-            if (isNaN(termValue)) {
-                newErrors.term = "Term must be a number";
-            } else if (termValue < 2) { // Changed to reject values below 2
-                newErrors.term = "Term must be at least 2 days";
-            }
-        }
+    //     if (term.trim()) {
+    //         const termValue = parseInt(term, 10);
+    //         if (isNaN(termValue)) {
+    //             newErrors.term = "Term must be a number";
+    //         } else if (termValue < 2) { // Changed to reject values below 2
+    //             newErrors.term = "Term must be at least 2 days";
+    //         }
+    //     }
 
-        if (contact && !/^\d{9,15}$/.test(contact)) {
-            newErrors.contact = "Contact must be numeric and between 9-15 digits long.";
-        }
+    //     if (contact && !/^\d{9,15}$/.test(contact)) {
+    //         newErrors.contact = "Contact must be numeric and between 9-15 digits long.";
+    //     }
 
-        if (email && !isValidEmail(email)) {
-            newErrors.email = "Invalid email address format.";
-        }
+    //     if (email && !isValidEmail(email)) {
+    //         newErrors.email = "Invalid email address format.";
+    //     }
 
-        if (notes && notes.trim().length < 5) {
-            newErrors.notes = "Notes must be at least 5 characters long.";
-        } else if (notes && notes.trim().length > 500) {
-            newErrors.notes = "Notes must be at most 500 characters long.";
-        }
+    //     if (notes && notes.trim().length < 5) {
+    //         newErrors.notes = "Notes must be at least 5 characters long.";
+    //     } else if (notes && notes.trim().length > 500) {
+    //         newErrors.notes = "Notes must be at most 500 characters long.";
+    //     }
 
-        if (addressLine && addressLine.trim().length < 5) {
-            newErrors.addressLine = "Address must be at least 5 characters long.";
-        } else if (addressLine && addressLine.trim().length > 100) {
-            newErrors.addressLine = "Address Line must be at most 100 characters long.";
-        }
+    //     if (addressLine && addressLine.trim().length < 5) {
+    //         newErrors.addressLine = "Address must be at least 5 characters long.";
+    //     } else if (addressLine && addressLine.trim().length > 100) {
+    //         newErrors.addressLine = "Address Line must be at most 100 characters long.";
+    //     }
 
-        if (city && city.trim().length < 2) {
-            newErrors.city = "City must be at least 2 characters long.";
-        } else if (city && city.trim().length > 50) {
-            newErrors.city = "City must be at most 50 characters long.";
-        }
+    //     if (city && city.trim().length < 2) {
+    //         newErrors.city = "City must be at least 2 characters long.";
+    //     } else if (city && city.trim().length > 50) {
+    //         newErrors.city = "City must be at most 50 characters long.";
+    //     }
 
-        if (region && region.trim().length < 2) {
-            newErrors.region = "Region must be at least 2 characters long.";
-        } else if (region && region.trim().length > 50) {
-            newErrors.region = "Region must be at most 50 characters long.";
-        }
+    //     if (region && region.trim().length < 2) {
+    //         newErrors.region = "Region must be at least 2 characters long.";
+    //     } else if (region && region.trim().length > 50) {
+    //         newErrors.region = "Region must be at most 50 characters long.";
+    //     }
 
-        if (country && country.trim().length < 2) {
-            newErrors.country = "Country must be at least 2 characters long.";
-        } else if (country && country.trim().length > 50) {
-            newErrors.country = "Country must be at most 50 characters long.";
-        }
+    //     if (country && country.trim().length < 2) {
+    //         newErrors.country = "Country must be at least 2 characters long.";
+    //     } else if (country && country.trim().length > 50) {
+    //         newErrors.country = "Country must be at most 50 characters long.";
+    //     }
 
-        if (postalCode && !/^\d{4}$/.test(postalCode)) {
-            newErrors.postalCode = "Postal code must be 4 digits.";
-        }
+    //     if (postalCode && !/^\d{4}$/.test(postalCode)) {
+    //         newErrors.postalCode = "Postal code must be 4 digits.";
+    //     }
 
-        return newErrors;
-    };
+    //     return newErrors;
+    // };
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault();

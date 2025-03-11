@@ -27,7 +27,6 @@ interface ClearListProps {
 }
 
 const ClearList: React.FC<ClearListProps> = ({
-	className,
 	recordType,
 }) => {
 	return (

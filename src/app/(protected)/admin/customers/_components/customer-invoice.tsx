@@ -2,8 +2,10 @@ import {
     ArrowUpRight,
     IdCard,
     PhilippinePeso
+    // Calendar,
+    // Printer
 } from "lucide-react";
-import { Poppins } from "next/font/google";
+// import { Poppins } from "next/font/google";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
@@ -17,10 +19,10 @@ import {
 
 import InvoiceDialog from "~/app/(protected)/admin/employees/_components/invoice-dialog";
 
-const poppins = Poppins({
-    subsets: ["latin"],
-    weight: ["400", "700"],
-});
+// const poppins = Poppins({
+//     subsets: ["latin"],
+//     weight: ["400", "700"],
+// });
 
 interface CustomerInvoiceProps {
     invoiceData: {
@@ -42,8 +44,8 @@ interface CustomerInvoiceProps {
 
 export default function CustomerInvoice({
     invoiceData,
-    first_name,
-    last_name,
+    // first_name,
+    // last_name,
     customerId,
 }: CustomerInvoiceProps) {
     const router = useRouter();
@@ -52,24 +54,24 @@ export default function CustomerInvoice({
     const totalCount = invoiceData.length;
     const shownCount = displayedData.length;
 
-    const [isEditing, setIsEditing] = useState(false);
-    const [isDialogOpen, setIsDialogOpen] = useState(false);
-    const [showWarning, setShowWarning] = useState(false);
+    // const [isEditing, setIsEditing] = useState(false);
+    // const [isDialogOpen, setIsDialogOpen] = useState(false);
+    // const [showWarning, setShowWarning] = useState(false);
 
     const handleInvoiceDoubleClick = () => {
         router.push(`/admin/invoice?customerId=${customerId}`);
     };
-    const handleEdit = () => {
-        setIsEditing((prev) => !prev);
-        setShowWarning(false);
-    };
+    // const handleEdit = () => {
+    //     setIsEditing((prev) => !prev);
+    //     setShowWarning(false);
+    // };
 
-    const handleKeyDown = (event: React.KeyboardEvent) => {
-        if (event.key === "Escape" && isEditing) {
-            setShowWarning(true);
-            event.preventDefault();
-        }
-    };
+    // const handleKeyDown = (event: React.KeyboardEvent) => {
+    //     if (event.key === "Escape" && isEditing) {
+    //         setShowWarning(true);
+    //         event.preventDefault();
+    //     }
+    // };
 
     return (
         <div className="rounded-lg bg-white/60 p-5 text-slate-400">
@@ -427,12 +429,10 @@ export default function CustomerInvoice({
 }
 
 const CustomerRestockCard = ({ invoiceData }: CustomerInvoiceProps) => {
-    // TODO: reflect restock data based on selected supplier
-
-    return invoiceData.map((invoice, index) => (
+    return invoiceData.map((invoice) => (
         <div
             className="flex cursor-pointer flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:bg-slate-200/50"
-            key={index}
+            key={invoice.invoice_number}
         >
             <p className="text-left text-slate-600">#{invoice.invoice_number}</p>
             <div className="flex flex-grow items-center gap-3 overflow-hidden">

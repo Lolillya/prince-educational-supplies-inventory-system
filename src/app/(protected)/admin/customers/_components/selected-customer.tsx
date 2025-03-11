@@ -55,11 +55,11 @@ const SelectedCustomer = ({
   location,
   notes,
   invoiceData,
-  auth,
-  invoiceHistoryData,
-  clerkId,
+  // auth,
+  // invoiceHistoryData,
+  // clerkId,
 }: SelectedCustomerProps) => {
-  const [sum, setSum] = useState<number>();
+  // const [sum, setSum] = useState<number>();
   const router = useRouter();
 
   const handleEditCustomer = (e: React.MouseEvent) => {

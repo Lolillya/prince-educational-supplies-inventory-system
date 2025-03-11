@@ -1,12 +1,11 @@
-import {AlertCircle, CheckCircle, Trash2} from "lucide-react";
+import { AlertCircle, CheckCircle, Trash2 } from "lucide-react";
 import { Poppins } from "next/font/google";
-import React, {useState} from "react";
+import React, { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
-import { useRouter } from "next/navigation"
 const poppins = Poppins({
 	subsets: ["latin"],
 	weight: ["400", "700"],
@@ -23,7 +22,6 @@ interface DeleteProps {
 }
 
 const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType, id, onDelete, onVerifyPassword, userRole }) => {
-	const router = useRouter();
 	const [password, setPassword] = useState<string>("");
 	const [error, setError] = useState<string | null>(null);
 	const [isSuccess, setIsSuccess] = useState<boolean>(false);

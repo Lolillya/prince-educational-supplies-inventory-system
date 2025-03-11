@@ -1,4 +1,3 @@
-
 import React from 'react'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Separator } from '~/components/ui/separator'
@@ -18,7 +17,7 @@ type RecordItemProps = {
 	onVerifyPassword: (password: string) => Promise<boolean>;
 }
 
-const RecordItem: React.FC<RecordItemProps> = ({ id, inventoryNumber, name, stockLevel, onClick, isSelected, recordType, variantId, onDelete, onVerifyPassword,  }) => {
+const RecordItem: React.FC<RecordItemProps> = ({ id, inventoryNumber, name, stockLevel, onClick, isSelected, recordType, variantId, onDelete, onVerifyPassword, }) => {
 	return (
 		<>
 			<div
@@ -46,8 +45,8 @@ const RecordItem: React.FC<RecordItemProps> = ({ id, inventoryNumber, name, stoc
 						<Delete
 							recordInfo={name}
 							recordType={recordType}
-							variantId={variantId}
-							onDelete={onDelete}
+							id={variantId.toString()}
+							onDelete={(id) => onDelete(parseInt(id))}
 							onVerifyPassword={onVerifyPassword}
 						/>
 					</div>

@@ -70,22 +70,22 @@ const SelectedSupplier = ({
 					</div>
 				</div>
 				<div onClick={handleEditSupplier} className="cursor-pointer">
-					<Edit/>
+					<Edit />
 				</div>
 			</div>
 
 
-			<Separator className='h-[1px] bg-slate-300 mt-5'/>
+			<Separator className='h-[1px] bg-slate-300 mt-5' />
 
 			<div className="flex flex-col gap-3 mt-5">
-				<RecordInfo icon={User2} recordType={'Representative'} info={representative}/>
-				<RecordInfo icon={Phone} recordType={'Contact'} info={contact}/>
-				<RecordInfo icon={Mail} recordType={'Email'} info={email}/>
-				<RecordInfo icon={MapPin} recordType={'Location'} info={location}/>
-				<RecordNotes notes={notes}/>
+				<RecordInfo icon={User2} recordType={'Representative'} info={representative} />
+				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
+				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
+				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
+				<RecordNotes notes={notes} />
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300w mt-5'/>
+			<Separator className='h-[1px] bg-slate-300w mt-5' />
 
 			<div className='mt-5'>
 

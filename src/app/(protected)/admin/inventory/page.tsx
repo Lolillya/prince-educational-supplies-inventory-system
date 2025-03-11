@@ -22,8 +22,8 @@ interface InventoryPageProps {
   // Add any page-specific props here
 }
 
-// Add a type for the API response
-type APIInventoryResponse = Awaited<ReturnType<typeof api.inventory.listInventory.useQuery>['data']>;
+// Define the API response type
+type APIInventoryResponse = NonNullable<Awaited<ReturnType<typeof api.inventory.listInventory.useQuery>['data']>>;
 
 const InventoryPage = () => {
   const router = useRouter();
@@ -105,7 +105,7 @@ const InventoryPage = () => {
     const search = searchTerm.toLowerCase();
 
     return item.includes(search) || id.toString().includes(search);
-  }) ?? []) satisfies APIInventoryResponse;
+  }) ?? []) as unknown as InventoryItem[];
 
   return (
     <section className="flex min-h-screen flex-col px-20 py-10 text-base">
@@ -129,7 +129,7 @@ const InventoryPage = () => {
           <RecordHeader
             record="Inventory"
             number={filteredInventory?.length ?? 0}
-            data={filteredInventory}
+            data={filteredInventory as any}
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredInventory?.length ?? 0) > 0 ? (

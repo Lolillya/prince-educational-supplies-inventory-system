@@ -14,26 +14,29 @@ import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
 import { Toaster } from "~/components/ui/sonner";
-import {useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
+
+interface PersonalDetails {
+  personal_details_id: string;
+  location_id: number;
+  contact: string | null;
+  email: string | null;
+  notes: string | null;
+  location: Location | null;
+  first_name: string | null;
+  last_name: string | null;
+  company: string | null;
+  auth?: {
+    username: string;
+  } | null;
+}
 
 interface Customer {
   id: string;
   Personal_Details_Id: string;
   role_Id: number;
   emoji: string;
-  Personal_Details: {
-    location: Location | null;
-    first_name: string | null;
-    last_name: string | null;
-    company: string | null;
-    contact: string | null;
-    email: string | null;
-    notes: string | null;
-    location_id: number | null;
-    auth?: {
-      username: string;
-    } | null;
-  };
+  Personal_Details: PersonalDetails;
   customerInvoices: {
     invoice_number: number;
     created_at: Date;
@@ -71,8 +74,8 @@ const CustomersPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: invoiceActivity } = api.customers.getCustomerInvoices.useQuery(
-      { customerId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
-      { enabled: !!selectedRecord }
+    { customerId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
+    { enabled: !!selectedRecord }
   );
 
   const activityCustomerData = {
@@ -146,7 +149,14 @@ const CustomersPage = () => {
           <RecordHeader
             record="Customers"
             number={filteredCustomers?.length ?? 0}
-            data={filteredCustomers ?? []}          
+            data={filteredCustomers?.map(customer => ({
+              ...customer,
+              Personal_Details: {
+                ...customer.Personal_Details,
+                personal_details_id: customer.Personal_Details_Id,
+                location_id: customer.Personal_Details.location?.location_id ?? 0,
+              }
+            })) ?? []}
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredCustomers?.length ?? 0) > 0 ? (
@@ -158,7 +168,7 @@ const CustomersPage = () => {
                       name={customer.Personal_Details.company}
                       id={customer.Personal_Details_Id}
                       emoji={customer.emoji}
-                      onClick={() => setSelectedRecord(customer)}
+                      onClick={() => setSelectedRecord(customer as Customer)}
                       isSelected={
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
@@ -215,10 +225,10 @@ const CustomersPage = () => {
                       .join("\n")}
                     notes={selectedRecord.Personal_Details.notes ?? ""}
                     auth={selectedRecord.Personal_Details.auth}
-                      // activityData={activityData}
+                    // activityData={activityData}
 
-                      // TODO: reflect restock data based on selected supplier
-                      // restockData={supplierRestockData}
+                    // TODO: reflect restock data based on selected supplier
+                    // restockData={supplierRestockData}
                     invoiceHistoryData={activityCustomerData}
                     clerkId={selectedRecord.id ?? ''}
                   />

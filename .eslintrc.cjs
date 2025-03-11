@@ -37,6 +37,14 @@ const config = {
         }
       }
     ]
-  }
+  },
+  "ignorePatterns": [
+    ".config/*",
+    "node_modules/*",
+    ".next/*",
+    "build/*",
+    "dist/*"
+  ]
 }
+
 module.exports = config;

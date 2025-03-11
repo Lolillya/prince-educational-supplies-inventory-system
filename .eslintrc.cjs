@@ -22,22 +22,9 @@ const config = {
         "fixStyle": "inline-type-imports"
       }
     ],
-    "@typescript-eslint/no-unused-vars": [
-      "warn",
-      {
-        "argsIgnorePattern": "^_",
-        "varsIgnorePattern": "^_"
-      }
-    ],
+    "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/require-await": "off",
-    "@typescript-eslint/no-misused-promises": [
-      "error",
-      {
-        "checksVoidReturn": {
-          "attributes": false
-        }
-      }
-    ],
+    "@typescript-eslint/no-misused-promises": "warn",
     "@typescript-eslint/prefer-nullish-coalescing": "off",
     "@typescript-eslint/no-unsafe-assignment": "off",
     "@typescript-eslint/no-unsafe-member-access": "off",
@@ -47,14 +34,15 @@ const config = {
     "react/no-unescaped-entities": "off",
     "@typescript-eslint/no-empty-interface": "off",
     "@typescript-eslint/consistent-indexed-object-style": "off",
-    "@typescript-eslint/no-floating-promises": "off",
-    "@typescript-eslint/await-thenable": "off",
-    "@typescript-eslint/no-explicit-any": "off",
-    "@typescript-eslint/no-redundant-type-constituents": "off",
-    "@typescript-eslint/no-empty-function": "off",
-    "@typescript-eslint/restrict-template-expressions": "off",
-    "@typescript-eslint/no-empty-object-type": "off",
-    "react-hooks/exhaustive-deps": "warn"
+    "@typescript-eslint/no-floating-promises": "warn",
+    "@typescript-eslint/await-thenable": "warn",
+    "@typescript-eslint/no-explicit-any": "warn",
+    "@typescript-eslint/no-redundant-type-constituents": "warn",
+    "@typescript-eslint/no-empty-function": "warn",
+    "@typescript-eslint/restrict-template-expressions": "warn",
+    "@typescript-eslint/no-empty-object-type": "warn",
+    "react-hooks/exhaustive-deps": "warn",
+    "@typescript-eslint/no-unused-expressions": "warn"
   },
   "ignorePatterns": [
     ".config/*",

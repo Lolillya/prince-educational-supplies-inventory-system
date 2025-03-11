@@ -1,5 +1,5 @@
 import * as React from "react";
-import {useState, useEffect, useRef} from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   Command,
   CommandEmpty,
@@ -14,8 +14,8 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
-import {Button} from "~/components/ui/button";
-import {_} from "react-hook-form/dist/__typetest__/__fixtures__";
+import { Button } from "~/components/ui/button";
+
 type Status = {
   value: string;
   label: string;
@@ -120,7 +120,7 @@ export const ComboBoxSearchable: React.FC<ComboBoxSearchableProps> = ({
   const confirmDeleteStatus = () => {
     if (statusToDelete) {
       setStatuses((prevStatuses) =>
-          prevStatuses.filter((status) => status.value !== statusToDelete.value)
+        prevStatuses.filter((status) => status.value !== statusToDelete.value)
       );
 
       if (onDelete) onDelete(statusToDelete);
@@ -155,24 +155,24 @@ export const ComboBoxSearchable: React.FC<ComboBoxSearchableProps> = ({
           <DialogTitle className="text-center">Add New Record</DialogTitle>
           <DialogHeader>
             <div className="flex w-full justify-center text-center text-lg">
-            <span>
-              Are you sure you want to add "<strong>{query}</strong>" as a new record?
-            </span>
+              <span>
+                Are you sure you want to add "<strong>{query}</strong>" as a new record?
+              </span>
             </div>
           </DialogHeader>
 
           <div className="flex w-full items-center justify-center gap-3 mt-4">
             <Button
-                size={"lg"}
-                className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-textGray"
-                onClick={() => setIsDialogOpen(false)}
+              size={"lg"}
+              className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-textGray"
+              onClick={() => setIsDialogOpen(false)}
             >
               Cancel
             </Button>
             <Button
-                size={"lg"}
-                className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-green"
-                onClick={confirmAddStatus}
+              size={"lg"}
+              className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-green"
+              onClick={confirmAddStatus}
             >
               Confirm
             </Button>
@@ -185,24 +185,24 @@ export const ComboBoxSearchable: React.FC<ComboBoxSearchableProps> = ({
           <DialogTitle className="text-center">Delete Record</DialogTitle>
           <DialogHeader>
             <div className="flex w-full justify-center text-center text-lg">
-            <span>
-              Are you sure you want to delete "<strong>{statusToDelete?.label}</strong>"?
-            </span>
+              <span>
+                Are you sure you want to delete "<strong>{statusToDelete?.label}</strong>"?
+              </span>
             </div>
           </DialogHeader>
 
           <div className="flex w-full items-center justify-center gap-3 mt-4">
             <Button
-                size={"lg"}
-                className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-textGray"
-                onClick={() => setIsDeleteDialogOpen(false)} // Cancel deletion
+              size={"lg"}
+              className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-textGray"
+              onClick={() => setIsDeleteDialogOpen(false)} // Cancel deletion
             >
               Cancel
             </Button>
             <Button
-                size={"lg"}
-                className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-red"
-                onClick={confirmDeleteStatus} // Confirm deletion
+              size={"lg"}
+              className="border-2 border-gray-300 bg-white p-3 text-gray-700 hover:bg-red"
+              onClick={confirmDeleteStatus} // Confirm deletion
             >
               Delete
             </Button>

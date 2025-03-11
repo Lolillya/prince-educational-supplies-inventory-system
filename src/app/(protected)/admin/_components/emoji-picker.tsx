@@ -1,5 +1,4 @@
 import EmojiPicker, {
-  Emoji,
   EmojiStyle,
   SuggestionMode,
 } from "emoji-picker-react"; // ✅ Import SuggestionMode

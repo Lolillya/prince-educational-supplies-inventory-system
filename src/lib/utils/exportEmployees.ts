@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import { Employee } from "~/types/employees";
+import { type Employee } from "~/types/employees";
 
 interface ExportProps {
   employees: Employee[];

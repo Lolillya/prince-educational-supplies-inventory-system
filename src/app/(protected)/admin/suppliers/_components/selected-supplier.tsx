@@ -1,4 +1,5 @@
 import { Mail, MapPin, Phone, User2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React from 'react'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Separator } from '~/components/ui/separator'
@@ -6,7 +7,6 @@ import Edit from '../../_components/edit'
 import RecordInfo from '../../_components/record-info'
 import RecordNotes from '../../_components/record-notes'
 import SupplierRestock from './supplier-restock'
-import { useRouter } from 'next/navigation'
 
 type SelectedSupplierProps = {
 	id: string;
@@ -22,6 +22,9 @@ type SelectedSupplierProps = {
 		restocks: any[];
 	};
 	clerkId: string;
+	auth: {
+		// Add appropriate type properties here
+	} | null | undefined;
 }
 
 const SelectedSupplier = ({
@@ -70,22 +73,22 @@ const SelectedSupplier = ({
 					</div>
 				</div>
 				<div onClick={handleEditSupplier} className="cursor-pointer">
-					<Edit/>
+					<Edit />
 				</div>
 			</div>
 
 
-			<Separator className='h-[1px] bg-slate-300 mt-5'/>
+			<Separator className='h-[1px] bg-slate-300 mt-5' />
 
 			<div className="flex flex-col gap-3 mt-5">
-				<RecordInfo icon={User2} recordType={'Representative'} info={representative}/>
-				<RecordInfo icon={Phone} recordType={'Contact'} info={contact}/>
-				<RecordInfo icon={Mail} recordType={'Email'} info={email}/>
-				<RecordInfo icon={MapPin} recordType={'Location'} info={location}/>
-				<RecordNotes notes={notes}/>
+				<RecordInfo icon={User2} recordType={'Representative'} info={representative} />
+				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
+				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
+				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
+				<RecordNotes notes={notes} />
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300w mt-5'/>
+			<Separator className='h-[1px] bg-slate-300w mt-5' />
 
 			<div className='mt-5'>
 

@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
-import {DialogTitle} from "@radix-ui/react-dialog";
+import React, { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 
 
@@ -60,7 +60,7 @@ const defaultCustomerForm: CustomerFormState = {
 };
 
 const NewCustomerState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<CustomerFormErrors>({});
     const router = useRouter();
     const { refetch } = api.customers.list.useQuery();
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,7 +105,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
                 firstName: customerData.first_name ?? "",
                 lastName: customerData.last_name ?? "",
                 businessName: customerData.company ?? "",
-                term: customerData.term ?? "",
+                term: customerData.term?.toString() ?? "",
                 contact: customerData.contact ?? "",
                 email: customerData.email ?? "",
                 addressLine: customerData.location?.address_line ?? "",
@@ -141,111 +141,109 @@ const NewCustomerState = ({ id }: { id: string }) => {
             </section>
         );
 
-    const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
+    // const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
 
-    const validateForm = (): CustomerFormErrors => {
-        const newErrors: CustomerFormErrors = {};
-        const { firstName, lastName, businessName, term, contact, email, addressLine, city, region, country, postalCode, notes } = customerForm;
+    // const validateForm = (): CustomerFormErrors => {
+    //     const newErrors: CustomerFormErrors = {};
+    //     const { firstName, lastName, businessName, term, contact, email, addressLine, city, region, country, postalCode, notes } = customerForm;
 
-        if (firstName && (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/))) {
-            newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
-        } else if (firstName && firstName.length > 50) {
-            newErrors.firstName = "First Name must be at most 50 characters long.";
-        }
+    //     if (firstName && (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName)))) {
+    //         newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
+    //     } else if (firstName && firstName.length > 50) {
+    //         newErrors.firstName = "First Name must be at most 50 characters long.";
+    //     }
 
-        if (lastName && (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/))) {
-            newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
-        } else if (lastName && lastName.length > 50) {
-            newErrors.lastName = "Last Name must be at most 50 characters long.";
-        }
+    //     if (lastName && (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName)))) {
+    //         newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
+    //     } else if (lastName && lastName.length > 50) {
+    //         newErrors.lastName = "Last Name must be at most 50 characters long.";
+    //     }
 
-        if (!businessName) {
-            newErrors.businessName = "Business Name is required.";
-        } else if (businessName.trim().length < 2) {
-            newErrors.businessName = "Business Name must be at least 2 characters long.";
-        } else if (businessName.trim().length > 100) {
-            newErrors.businessName = "Company name must be at most 100 characters long.";
-        }
+    //     if (!businessName) {
+    //         newErrors.businessName = "Business Name is required.";
+    //     } else if (businessName.trim().length < 2) {
+    //         newErrors.businessName = "Business Name must be at least 2 characters long.";
+    //     } else if (businessName.trim().length > 100) {
+    //         newErrors.businessName = "Company name must be at most 100 characters long.";
+    //     }
 
-        if (term.trim()) {
-            const termValue = parseInt(term, 10);
-            if (isNaN(termValue)) {
-                newErrors.term = "Term must be a number";
-            } else if (termValue < 2) { // Changed to reject values below 2
-                newErrors.term = "Term must be at least 2 days";
-            }
-        }
+    //     if (term.trim()) {
+    //         const termValue = parseInt(term, 10);
+    //         if (isNaN(termValue)) {
+    //             newErrors.term = "Term must be a number";
+    //         } else if (termValue < 2) { // Changed to reject values below 2
+    //             newErrors.term = "Term must be at least 2 days";
+    //         }
+    //     }
 
-        if (contact && !/^\d{9,15}$/.test(contact)) {
-            newErrors.contact = "Contact must be numeric and between 9-15 digits long.";
-        }
+    //     if (contact && !/^\d{9,15}$/.test(contact)) {
+    //         newErrors.contact = "Contact must be numeric and between 9-15 digits long.";
+    //     }
 
-        if (email && !isValidEmail(email)) {
-            newErrors.email = "Invalid email address format.";
-        }
+    //     if (email && !isValidEmail(email)) {
+    //         newErrors.email = "Invalid email address format.";
+    //     }
 
-        if (notes && notes.trim().length < 5) {
-            newErrors.notes = "Notes must be at least 5 characters long.";
-        } else if (notes && notes.trim().length > 500) {
-            newErrors.notes = "Notes must be at most 500 characters long.";
-        }
+    //     if (notes && notes.trim().length < 5) {
+    //         newErrors.notes = "Notes must be at least 5 characters long.";
+    //     } else if (notes && notes.trim().length > 500) {
+    //         newErrors.notes = "Notes must be at most 500 characters long.";
+    //     }
 
-        if (addressLine && addressLine.trim().length < 5) {
-            newErrors.addressLine = "Address must be at least 5 characters long.";
-        } else if (addressLine && addressLine.trim().length > 100) {
-            newErrors.addressLine = "Address Line must be at most 100 characters long.";
-        }
+    //     if (addressLine && addressLine.trim().length < 5) {
+    //         newErrors.addressLine = "Address must be at least 5 characters long.";
+    //     } else if (addressLine && addressLine.trim().length > 100) {
+    //         newErrors.addressLine = "Address Line must be at most 100 characters long.";
+    //     }
 
-        if (city && city.trim().length < 2) {
-            newErrors.city = "City must be at least 2 characters long.";
-        } else if (city && city.trim().length > 50) {
-            newErrors.city = "City must be at most 50 characters long.";
-        }
+    //     if (city && city.trim().length < 2) {
+    //         newErrors.city = "City must be at least 2 characters long.";
+    //     } else if (city && city.trim().length > 50) {
+    //         newErrors.city = "City must be at most 50 characters long.";
+    //     }
 
-        if (region && region.trim().length < 2) {
-            newErrors.region = "Region must be at least 2 characters long.";
-        } else if (region && region.trim().length > 50) {
-            newErrors.region = "Region must be at most 50 characters long.";
-        }
+    //     if (region && region.trim().length < 2) {
+    //         newErrors.region = "Region must be at least 2 characters long.";
+    //     } else if (region && region.trim().length > 50) {
+    //         newErrors.region = "Region must be at most 50 characters long.";
+    //     }
 
-        if (country && country.trim().length < 2) {
-            newErrors.country = "Country must be at least 2 characters long.";
-        } else if (country && country.trim().length > 50) {
-            newErrors.country = "Country must be at most 50 characters long.";
-        }
+    //     if (country && country.trim().length < 2) {
+    //         newErrors.country = "Country must be at least 2 characters long.";
+    //     } else if (country && country.trim().length > 50) {
+    //         newErrors.country = "Country must be at most 50 characters long.";
+    //     }
 
-        if (postalCode && !/^\d{4}$/.test(postalCode)) {
-            newErrors.postalCode = "Postal code must be 4 digits.";
-        }
+    //     if (postalCode && !/^\d{4}$/.test(postalCode)) {
+    //         newErrors.postalCode = "Postal code must be 4 digits.";
+    //     }
 
-        return newErrors;
-    };
+    //     return newErrors;
+    // };
 
-    const handleSubmit = async () => {
-        const formErrors = validateForm();
-        setErrors(formErrors);
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        try {
+            await createCustomer.mutateAsync({
+                company: customerForm.businessName,
+                term: customerForm.term.trim() ?
+                    parseInt(customerForm.term, 10) :
+                    null,
+                firstName: customerForm.firstName,
+                lastName: customerForm.lastName,
+                contact: customerForm.contact,
+                email: customerForm.email,
+                addressLine: customerForm.addressLine,
+                city: customerForm.city,
+                region: customerForm.region,
+                country: customerForm.country,
+                postalCode: customerForm.postalCode,
+                notes: customerForm.notes,
+            });
 
-        if (Object.keys(formErrors).length === 0) {
-            try {
-                await createCustomer.mutateAsync({
-                    company: customerForm.businessName,
-                    term: customerForm.term.trim() ?
-                        parseInt(customerForm.term, 10) :
-                        null,
-                    firstName: customerForm.firstName,
-                    lastName: customerForm.lastName,
-                    contact: customerForm.contact,
-                    email: customerForm.email,
-                    addressLine: customerForm.addressLine,
-                    city: customerForm.city,
-                    region: customerForm.region,
-                    country: customerForm.country,
-                    postalCode: customerForm.postalCode,
-                    notes: customerForm.notes,
-                });
-            } catch (error) {
-                console.error("Error creating customer:", error);
-            }
+            await router.push("/admin/customers");
+        } catch (error) {
+            console.error("Failed to create customer:", error);
         }
     };
 
@@ -319,8 +317,8 @@ const NewCustomerState = ({ id }: { id: string }) => {
                                 value={customerForm.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastname && (
-                                <span className="text-red">{errors.lastname}</span>
+                            {errors.lastName && (
+                                <span className="text-red">{errors.lastName}</span>
                             )}
                         </div>
                     </div>
@@ -459,7 +457,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
                     Clear
                 </Button>
                 <Button
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(new Event('submit') as any)}
                     className="bg-green p-7 text-lg font-bold"
                     disabled={createCustomer.isPending}
                 >

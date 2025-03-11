@@ -1,18 +1,15 @@
-import { Calendar, Printer } from 'lucide-react';
-import React, { useState } from 'react';
-import { Button } from '~/components/ui/button';
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog';
-import { Separator } from '~/components/ui/separator';
-import RecordEditor from '../../_components/record-editor';
-import RecordExpand from '../../_components/record-expand';
-import PayablesInfo from './payables-info';
-import { Avatar, AvatarFallback } from '~/components/ui/avatar';
+import { Printer } from 'lucide-react';
 import { Poppins } from 'next/font/google';
-import MoreOptions from '../../_components/more-options';
-import UnpaidInvoice from './unpaid-invoice';
+import { useState } from 'react';
+import { Avatar, AvatarFallback } from '~/components/ui/avatar';
+import { Button } from '~/components/ui/button';
+import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog';
 import { ScrollArea } from '~/components/ui/scroll-area';
-import PaymentRecord from './payment-record';
+import { Separator } from '~/components/ui/separator';
+import PayablesInfo from './payables-info';
 import PayablesTabs from './payables-tabs';
+import PaymentRecord from './payment-record';
+import UnpaidInvoice from './unpaid-invoice';
 
 const poppins = Poppins({
 	subsets: ["latin"],

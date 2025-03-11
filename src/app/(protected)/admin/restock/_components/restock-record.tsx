@@ -1,6 +1,5 @@
-import { ArrowRight, Calendar, Pin, Truck } from "lucide-react";
+import { Calendar, Pin, Truck } from "lucide-react";
 import React from "react";
-import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +9,9 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
+import { type RestockProps } from "../page";
 import RestockItem from "./restock-item";
 import ViewFullRestock from "./view-full-restock";
-import { RestockProps } from "../page";
 
 const RestockRecord: React.FC<RestockProps> = ({
   restockId,
@@ -98,7 +97,12 @@ const RestockRecord: React.FC<RestockProps> = ({
               brand={item.brand}
               quantity={item.quantity}
               mainUnit={item.mainUnit}
-              unitConversion={item.unitConversion}
+              unitConversion={item.unitConversion.map(conv => ({
+                from: conv.from,
+                count: conv.count,
+                to: conv.to,
+                price: conv.price ?? 0 // Use nullish coalescing for price
+              }))}
             />
           );
         })}
@@ -125,7 +129,7 @@ const RestockRecord: React.FC<RestockProps> = ({
               orientation="vertical"
               className="h-6 w-[2px] bg-slate-200"
             /> */}
-            
+
           </div>
         </div>
       </div>

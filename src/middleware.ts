@@ -89,7 +89,7 @@ function getRoleInfo(role: string | undefined) {
   };
 
   return (
-    roleInfo[role as keyof typeof roleInfo] || {
+    roleInfo[role!] || {
       redirect: DEFAULT_EMPLOYEE_REDIRECT,
       routes: ["/admin/dashboard"],
     }

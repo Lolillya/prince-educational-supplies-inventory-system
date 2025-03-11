@@ -1,16 +1,25 @@
 "use client";
 
-import React, {useEffect, useRef, useState} from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { Separator } from "~/components/ui/separator";
-import InventoryCard, {InventoryCardRef} from "../../_components/inventory-card";
-import { api } from "~/trpc/react";
-import { useParams } from "next/navigation";
-import { Button } from "~/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { LoadingSpinner } from "~/components/loading";
-import {Dialog} from "~/components/ui/dialog-transparent";
-import {DialogContent, DialogHeader, DialogTitle} from "~/components/ui/dialog";
+import { Button } from "~/components/ui/button";
+import { DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
+import { Dialog } from "~/components/ui/dialog-transparent";
+import { Separator } from "~/components/ui/separator";
+import { api } from "~/trpc/react";
+import InventoryCard, { type InventoryCardRef } from "../../_components/inventory-card";
+
+interface StockUnitData {
+    stock: string;
+    price: string;
+    unit: string;
+    conversionQty: string;
+    conversionUnit: string;
+    supplierUnitId?: number;
+    supplierId?: string;
+}
 
 interface InventoryItemInfoProps {
     inventoryItems: InventoryItem[];
@@ -59,8 +68,8 @@ interface SupplierUnit {
 }
 
 interface BatchVariant {
-    batch_variant_id: number;
-    batch_id: number;
+    batch_variant_id: string;
+    batch_id: string;
     supplierUnits: SupplierUnit[];
 }
 
@@ -95,9 +104,7 @@ const EditBatch = () => {
 
 
     const inventoryCardRefs = useRef<Record<number, InventoryCardRef>>({});
-    const [cardsData, setCardsData] = useState<{
-        [key: number]: StockUnitData[];
-    }>({});
+    const [cardsData, setCardsData] = useState<Record<number, StockUnitData[]>>({});
 
     const [itemData, setItemData] = useState<InventoryItem | null>(null);
     const [units, setUnits] = useState<Unit[]>([]);
@@ -147,8 +154,43 @@ const EditBatch = () => {
 
                 // Step 4: Handle the result
                 if (matchedBatchVariant) {
-                    console.log("Matched BatchVariant for Variant:", matchedVariant);
-                    setItemData(matchedVariant); // Set the matching variant in the state
+                    console.log("Full inventory response:", JSON.stringify(inventoryDataResponse, null, 2));
+                    console.log("Matched BatchVariant:", JSON.stringify(matchedBatchVariant, null, 2));
+                    const variant: Variant = {
+                        variant_id: matchedVariant.variant_id,
+                        item_id: matchedVariant.item_id,
+                        name: matchedVariant.name,
+                        description: matchedVariant.description || undefined,
+                        BatchVariant: [{
+                            batch_variant_id: String(matchedBatchVariant.batch_variant_id),
+                            batch_id: String(matchedBatchVariant.batch_id),
+                            supplierUnits: (matchedBatchVariant.batch.batchVariants?.[0]?.SupplierUnit || []).map(su => ({
+                                supplier_unit_id: Number(su.supplier_unit_id),
+                                quantity_per_unit: su.quantity_per_unit,
+                                price: su.price,
+                                unit: su.unit || { unit_id: 0, name: '' },
+                                ConversionRate: (su.ConversionRate || []).map(cr => ({
+                                    conversion_rate: String(cr.conversion_rate),
+                                    fromUnit: cr.fromUnit || { name: '' },
+                                    toUnit: cr.toUnit || { name: '' }
+                                })),
+                                supplier: {
+                                    supplier_id: 0,
+                                    Personal_Details: {
+                                        first_name: '',
+                                        last_name: ''
+                                    }
+                                }
+                            }))
+                        }],
+                        item: matchedVariant.item
+                    };
+                    setItemData({
+                        inventory_id: inventoryIdAsNumber,
+                        variant_id: variant.variant_id,
+                        quantity: 0,
+                        variant
+                    });
                 } else {
                     console.log("No matching batch variant found.");
                     setItemData(null); // Handle case when no batch variant is found
@@ -208,18 +250,24 @@ const EditBatch = () => {
 
                 // Get supplier ID from first existing unit or original data
                 const baseSupplierId = cardData.originalUnits[0]?.supplierId ||
-                    itemData.BatchVariant[0]?.SupplierUnit[0]?.supplier_id;
+                    itemData.variant.BatchVariant[0]?.supplierUnits[0]?.supplier.supplier_id;
 
                 if (!baseSupplierId) {
                     throw new Error("Could not determine supplier for this batch");
                 }
 
                 const unitsToUpdate = cardData.currentUnits.map((currentUnit, index) => {
-                    const originalUnit = cardData.originalUnits[index];
+                    const originalUnit = cardData.originalUnits[index] || {
+                        stock: '0',
+                        price: '0',
+                        unit: '',
+                        conversionQty: '0',
+                        conversionUnit: ''
+                    };
                     const status = getChangeStatus(currentUnit, originalUnit, index);
 
                     // Validation checks
-                    if (isNaN(currentUnit.stock) || currentUnit.stock < 0) {
+                    if (isNaN(Number(currentUnit.stock)) || Number(currentUnit.stock) < 0) {
                         throw new Error("Stock must be a positive number.");
                     }
                     if (!/^\d*\.?\d+$/.test(currentUnit.price)) {
@@ -228,7 +276,7 @@ const EditBatch = () => {
                     if (!/^[a-zA-Z\s]+$/.test(currentUnit.unit)) {
                         throw new Error("Unit must contain only letters and spaces.");
                     }
-                    if (currentUnit.conversionQty && (isNaN(currentUnit.conversionQty) || currentUnit.conversionQty < 0)) {
+                    if (currentUnit.conversionQty && (isNaN(Number(currentUnit.conversionQty)) || Number(currentUnit.conversionQty) < 0)) {
                         throw new Error("Conversion quantity must be a positive number.");
                     }
                     if (
@@ -242,17 +290,17 @@ const EditBatch = () => {
                     }
 
                     return {
-                        operation: status === "new" ? "create"
-                            : status === "removed" ? "delete"
-                                : "update",
+                        operation: status === "new" ? "create" as const
+                            : status === "removed" ? "delete" as const
+                                : "update" as const,
                         supplierUnitId: originalUnit?.supplierUnitId,
                         data: {
-                            stock: currentUnit.stock.toString(),
-                            price: currentUnit.price.toString(),
+                            stock: currentUnit.stock,
+                            price: currentUnit.price,
                             unit: currentUnit.unit,
-                            conversionQty: currentUnit.conversionQty ? currentUnit.conversionQty.toString() : "",
-                            conversionUnit: currentUnit.conversionUnit || "",
-                            supplierId: currentUnit.supplierId || originalUnit?.supplierId || baseSupplierId
+                            conversionQty: currentUnit.conversionQty,
+                            conversionUnit: currentUnit.conversionUnit,
+                            supplierId: currentUnit.supplierId || baseSupplierId.toString()
                         }
                     };
                 });
@@ -263,9 +311,16 @@ const EditBatch = () => {
                     const removedUnits = cardData.originalUnits
                         .slice(-removedCount)
                         .map(unit => ({
-                            operation: "delete",
+                            operation: "delete" as const,
                             supplierUnitId: unit.supplierUnitId,
-                            data: unit
+                            data: {
+                                stock: unit.stock,
+                                price: unit.price,
+                                unit: unit.unit,
+                                conversionQty: unit.conversionQty,
+                                conversionUnit: unit.conversionUnit,
+                                supplierId: unit.supplierId || baseSupplierId.toString()
+                            }
                         }));
                     unitsToUpdate.push(...removedUnits);
                 }
@@ -345,65 +400,68 @@ const EditBatch = () => {
                     </DialogContent>
                 </Dialog>
             </div>
-                <div className="flex items-center gap-2">
-                    <ArrowLeft
-                        size={25}
-                        color="#FF7B7B"
-                        className="transition-all duration-300 hover:scale-125 hover:cursor-pointer"
-                        onClick={() => router.push("/admin/inventory")}
-                    />
-                    <span className="font-bold">
-                    {itemData?.item?.name || "N/A"} -{" "}
-                        {itemData?.name || "N/A"} -{" "}
-                        {itemData?.item?.brand?.name || "N/A"}
+            <div className="flex items-center gap-2">
+                <ArrowLeft
+                    size={25}
+                    color="#FF7B7B"
+                    className="transition-all duration-300 hover:scale-125 hover:cursor-pointer"
+                    onClick={() => router.push("/admin/inventory")}
+                />
+                <span className="font-bold">
+                    {itemData?.variant.item.name || "N/A"} -{" "}
+                    {itemData?.variant.name || "N/A"} -{" "}
+                    {itemData?.variant.item.brand.name || "N/A"}
                 </span>
-                    <span className="text-gray-400 ml-3 text-sm font-light">{batchId}</span>
-                </div>
+                <span className="text-gray-400 ml-3 text-sm font-light">{batchId}</span>
+            </div>
 
-                <Separator orientation="horizontal"/>
-                <div className="grid grid-cols-2 gap-4">
-                    {itemData?.BatchVariant && itemData.BatchVariant.length > 0 ? (
-                        itemData.BatchVariant.map((batchVariant) => {
-                            // console.log("Batch Variant: ", batchVariant);  // Log the structure of batchVariant here
-                            // console.log("Supplier Units in Batch Variant: ", batchVariant?.batch?.batchVariants?.flatMap(b => b.SupplierUnit));
-                            // console.log("Batch Variant: ", batchVariant);  // Check the structure here
-                            return (
-                                <InventoryCard
-                                    key={batchVariant.batch_variant_id}
-                                    ref={(el) => {
-                                        if (el) {
-                                            inventoryCardRefs.current[batchVariant.batch_variant_id] = el;
-                                        }
-                                    }}
-                                    batch={batchVariant}  // Ensure this contains valid supplierUnits data
-                                    units={units}
-                                    item={itemData}
-                                />
+            <Separator orientation="horizontal" />
+            <div className="grid grid-cols-2 gap-4">
+                {itemData?.variant.BatchVariant && itemData.variant.BatchVariant.length > 0 ? (
+                    itemData.variant.BatchVariant.map((batchVariant: BatchVariant, index: number) => {
+                        // console.log("Batch Variant: ", batchVariant);  // Log the structure of batchVariant here
+                        // console.log("Supplier Units in Batch Variant: ", batchVariant?.batch?.batchVariants?.flatMap(b => b.SupplierUnit));
+                        // console.log("Batch Variant: ", batchVariant);  // Check the structure here
+                        return (
+                            <InventoryCard
+                                key={index}
+                                ref={(el) => {
+                                    if (el) {
+                                        inventoryCardRefs.current[index] = el;
+                                    }
+                                }}
+                                batch={batchVariant}
+                                units={units}
+                                item={itemData}
+                                onRemove={() => {
+                                    // Since this is an edit page, we don't need to implement removal
+                                    // But we need to provide the handler to satisfy the type
+                                }}
+                            />
+                        );
+                    })
+                ) : (
+                    <div className="py-10 text-center">
+                        <p className="text-gray-500 text-lg font-semibold">
+                            No batch variants available
+                        </p>
+                    </div>
+                )}
+            </div>
 
-                            );
-                        })
-                    ) : (
-                        <div className="py-10 text-center">
-                            <p className="text-gray-500 text-lg font-semibold">
-                                No batch variants available
-                            </p>
-                        </div>
-                    )}
-                </div>
-
-                <div
-                    className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
-                    <Button
-                        size={"lg"}
-                        onClick={handleSaveChanges}
-                        className="bg-green py-8 text-sm font-bold"
-                        disabled={isSaving} // Disable button while saving
-                    >
-                        {isSaving ? "Saving..." : "Save Changes"}
-                    </Button>
-                </div>
+            <div
+                className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
+                <Button
+                    size={"lg"}
+                    onClick={handleSaveChanges}
+                    className="bg-green py-8 text-sm font-bold"
+                    disabled={isSaving} // Disable button while saving
+                >
+                    {isSaving ? "Saving..." : "Save Changes"}
+                </Button>
+            </div>
         </section>
-);
+    );
 };
 
 export default EditBatch;

@@ -1,9 +1,7 @@
+import { ListFilter, Search } from "lucide-react";
 import { Poppins } from "next/font/google";
-import { Search, ListFilter } from "lucide-react";
 
 import { Button } from "~/components/ui/button";
-import { api } from "~/trpc/server";
-import Image from "next/image";
 
 const poppins = Poppins({
   subsets: ["latin"],

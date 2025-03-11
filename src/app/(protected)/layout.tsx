@@ -1,6 +1,6 @@
 import { SessionProvider } from "next-auth/react";
 import { Poppins } from "next/font/google";
-import { ReactNode } from "react";
+import { type ReactNode } from "react";
 import { auth } from "~/auth";
 import Sidebar from "~/components/sidebar";
 

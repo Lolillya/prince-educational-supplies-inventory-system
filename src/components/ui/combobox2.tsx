@@ -92,7 +92,7 @@ export const ComboBoxSearchableWithCheckbox: React.FC<
                 if (onSelectionChange) {
                     onSelectionChange(
                         Array.from(newSelectedStatuses).map(
-                            (value) => statuses.find((s) => s.value === value) as Status,
+                            (value) => statuses.find((s) => s.value === value)!,
                         ),
                     );
                 }

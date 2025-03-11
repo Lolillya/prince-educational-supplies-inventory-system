@@ -1,5 +1,6 @@
 import { X } from "lucide-react";
 import React from "react";
+import { Input } from "~/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -7,7 +8,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "~/components/ui/select";
-import { Input } from "~/components/ui/input";
 // import type { RouterOutputs } from '~/trpc/shared'
 import type { RouterOutputs } from "~/trpc/react";
 
@@ -19,7 +19,11 @@ interface BatchPrice {
 interface Batch {
   id: string;
   name: string;
-  prices: BatchPrice[];
+  prices: {
+    unit: string;
+    price: string;
+    quantity: number;
+  }[];
 }
 
 interface BatchVariant {
@@ -79,8 +83,8 @@ const PriceListItem = ({
         (bv) => bv.batch_variant_id === batchVariant.batch_variant_id,
       )?.SupplierUnit || [];
 
-    return {
-      id: batchVariant.batch_variant_id,
+    const batch: Batch = {
+      id: batchVariant.batch_variant_id.toString(),
       name: `Batch ${batchVariant.batch.batch_number}`,
       prices: supplierUnits.map((unit) => ({
         unit: unit.unit?.name || "N/A",
@@ -88,6 +92,8 @@ const PriceListItem = ({
         quantity: unit.quantity_per_unit,
       })),
     };
+
+    return batch;
   });
 
   console.log("Final batches array:", batches);

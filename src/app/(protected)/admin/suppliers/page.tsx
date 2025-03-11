@@ -1,10 +1,12 @@
 "use client"
 
 import { Plus } from 'lucide-react'
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { ScrollArea } from '~/components/ui/scroll-area'
+import { Toaster } from '~/components/ui/sonner'
 import { api } from "~/trpc/react"
 import Filter from '../_components/filter'
 import NoRecordsMessage from '../_components/no-records-message'
@@ -13,8 +15,6 @@ import RecordItem from '../_components/record-item'
 import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedSupplier from './_components/selected-supplier'
-import { Toaster } from '~/components/ui/sonner'
-import {useSession} from "next-auth/react";
 
 interface Supplier {
   id: string;
@@ -62,8 +62,8 @@ const SuppliersPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: restockActivity } = api.suppliers.getSupplierRestocks.useQuery(
-      { supplierId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
-      { enabled: !!selectedRecord }
+    { supplierId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
+    { enabled: !!selectedRecord }
   );
 
   const activityData = {
@@ -122,6 +122,16 @@ const SuppliersPage = () => {
   //   ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
   //   : [];
 
+  const handleDelete = async (id: string) => {
+    if (!checkAdminRole()) return;
+    try {
+      await deleteSupplierMutation.mutateAsync({ id });
+      void router.refresh();
+    } catch (error) {
+      console.error("Failed to delete supplier:", error);
+    }
+  };
+
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
       <div className="flex justify-between items-center">
@@ -161,7 +171,7 @@ const SuppliersPage = () => {
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
                         if (!checkAdminRole()) return;
-                        deleteSupplierMutation.mutate({ id });
+                        handleDelete(id);
                       }}
                       userRole={userRole}
                     />
@@ -190,7 +200,7 @@ const SuppliersPage = () => {
                       // `${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`
                       [
                         selectedRecord.Personal_Details.first_name,
-                        selectedRecord.Personal_Details.last_name,  
+                        selectedRecord.Personal_Details.last_name,
                       ]
                         .filter((line) => line)
                         .join(" ")

@@ -326,7 +326,7 @@ export const employeeRouter = createTRPCRouter({
         .mutation(async ({ input }) => {
             const { personalDetailsId, password } = input;
 
-            const authRecord = await prisma.authentication.findUnique({
+            const authRecord = await db.authentication.findUnique({
                 where: { personal_details_id: personalDetailsId },
             });
 

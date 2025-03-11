@@ -1,10 +1,8 @@
 "use client";
 
-import { Poppins } from "next/font/google";
-import SupplierRouter from "../_components/supplier-router";
-import NewSupplierState from "../_components/new-supplier";
-import { api } from "~/trpc/react";
 import { useState } from "react";
+import NewSupplierState from "../_components/new-supplier";
+import SupplierRouter from "../_components/supplier-router";
 
 type SupplierData = {
   businessName: string;

@@ -1,18 +1,18 @@
 import { Badge } from "~/components/ui/badge";
 
+import { Pencil } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Card } from "~/components/ui/card";
 import {
   Dialog,
   DialogContent,
   DialogTitle,
   DialogTrigger,
 } from "~/components/ui/dialog";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
 import InventorySearchAndButtonRouter from "../_components/inventory-search";
-import { Card } from "~/components/ui/card";
-import { Pencil } from "lucide-react";
 
 const InventorySupply = () => {
   return (

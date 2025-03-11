@@ -1,11 +1,11 @@
 import { Poppins } from 'next/font/google';
-import React, {useEffect, useState} from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button } from '~/components/ui/button';
 import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Separator } from '~/components/ui/separator';
-import {api} from "~/trpc/react";
+import { api } from "~/trpc/react";
 
 const poppins = Poppins({
 	subsets: ["latin"],

@@ -1,5 +1,5 @@
-import { X } from 'lucide-react'
-import React from 'react'
+import { X } from 'lucide-react';
+import React from 'react';
 
 interface Notifications {
 	date: string;

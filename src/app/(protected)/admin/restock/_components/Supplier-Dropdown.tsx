@@ -1,10 +1,20 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
 
-const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) => {
+interface Supplier {
+    id: string;
+    company: string | null;
+}
+
+interface SupplierDropdownProps {
+    suppliers: Supplier[];
+    selectedSupplier: Supplier | null;
+    setSelectedSupplier: (supplier: Supplier) => void;
+}
+
+const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }: SupplierDropdownProps) => {
     const [searchTerm, setSearchTerm] = useState("");
-    const [filteredSuppliers, setFilteredSuppliers] = useState([]);
+    const [filteredSuppliers, setFilteredSuppliers] = useState<Supplier[]>([]);
     const [dropdownVisible, setDropdownVisible] = useState(false);
     const [highlightedIndex, setHighlightedIndex] = useState(-1);
 
@@ -23,7 +33,7 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) 
     }, [searchTerm, suppliers]);
 
 
-    const handleKeyDown = (e) => {
+    const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === "ArrowDown") {
             setHighlightedIndex((prevIndex) =>
                 prevIndex < filteredSuppliers.length - 1 ? prevIndex + 1 : prevIndex
@@ -34,7 +44,10 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) 
             );
         } else if (e.key === "Enter" && highlightedIndex >= 0) {
             e.preventDefault(); // Prevent default form submission
-            handleSelectSupplier(filteredSuppliers[highlightedIndex].company);
+            const selectedSupplier = filteredSuppliers[highlightedIndex];
+            if (selectedSupplier) {
+                handleSelectSupplier(selectedSupplier);
+            }
             setDropdownVisible(false); // Ensure dropdown is hidden
         } else if (e.key === "Escape") {
             setDropdownVisible(false); // Close dropdown on Escape
@@ -47,19 +60,16 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) 
     //     setDropdownVisible(false); // Immediately hide the dropdown
     //     setHighlightedIndex(-1); // Reset index
     // };
-    const handleSelectSupplier = (supplier) => {
+    const handleSelectSupplier = (supplier: Supplier) => {
         // Set both the supplier id and company name
-        setSelectedSupplier({
-            id: supplier.id, // Set supplier ID
-            name: supplier.company, // Set company name
-        });
-        setSearchTerm(supplier.company); // Display selected supplier name
+        setSelectedSupplier(supplier);
+        setSearchTerm(supplier.company || ""); // Display selected supplier name
         setDropdownVisible(false); // Immediately hide the dropdown
         setHighlightedIndex(-1); // Reset index
     };
 
 
-    const handleSearchChange = (e) => {
+    const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         setSearchTerm(e.target.value);
         if (e.target.value.trim() === "") {
             setDropdownVisible(false); // Hide dropdown when input is cleared
@@ -112,9 +122,8 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }) 
                         <div
                             key={supplier.id}
                             // key={supplier.company}
-                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                                highlightedIndex === index ? "bg-emerald-200" : ""
-                            }`}
+                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                }`}
                             onMouseDown={() => handleSelectSupplier(supplier)} // Prevent blur on click
                         >
                             {supplier.company}

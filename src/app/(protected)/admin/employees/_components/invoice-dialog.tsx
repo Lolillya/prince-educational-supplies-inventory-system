@@ -25,12 +25,26 @@ const poppins = Poppins({
 });
 
 interface InvoiceDialogProps {
+  invoice: {
+    invoice_number: number;
+    created_at: Date;
+    total_amount: number;
+    invoiceClerk: {
+      Personal_Details: {
+        first_name: string;
+        last_name: string;
+        company: string;
+      };
+    };
+  };
+  id: string;
   activity: any;
+  context: string;
 }
 
 const InvoiceDialog = ({ activity }: InvoiceDialogProps) => {
   const grandTotal = activity.line_items?.reduce(
-      (sum: number, li: any) => sum + li.total_price, 0
+    (sum: number, li: any) => sum + li.total_price, 0
   ) || 0;
 
   const [isEditing, setIsEditing] = useState(false);
@@ -69,12 +83,12 @@ const InvoiceDialog = ({ activity }: InvoiceDialogProps) => {
     >
       <DialogTrigger>
         <EmployeeActivityCard
-            type="invoice"
-            activity={{
-              id: activity.invoice_number,
-              created_at: activity.created_at,
-              total: activity.total_amount
-            }}
+          type="invoice"
+          activity={{
+            id: activity.invoice_number,
+            created_at: activity.created_at,
+            total: activity.total_amount
+          }}
         />
       </DialogTrigger>
       <DialogContent

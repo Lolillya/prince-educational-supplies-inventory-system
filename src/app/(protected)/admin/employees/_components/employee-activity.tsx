@@ -1,10 +1,8 @@
-import { ArrowUpRight } from 'lucide-react'
-import Link from 'next/link'
-import { Separator } from '~/components/ui/separator'
-import RestockDialog from './restock-dialog'
-import InvoiceDialog from './invoice-dialog';
-import EmployeeTabs from './employee-tabs';
 import { useState } from 'react';
+import { Separator } from '~/components/ui/separator';
+import EmployeeTabs from './employee-tabs';
+import InvoiceDialog from './invoice-dialog';
+import RestockDialog from './restock-dialog';
 
 interface EmployeeActivityProps {
 	restockId: number;
@@ -51,6 +49,8 @@ const EmployeeActivity = ({ activityData, clerkId }: EmployeeActivityProps) => {
 						selectedTab === "restock" ? (
 							<RestockDialog
 								key={activity.batch_id}
+								restock={activity}
+								clerkId={clerkId}
 								activity={activity}
 								context="employee"
 							/>
@@ -58,6 +58,9 @@ const EmployeeActivity = ({ activityData, clerkId }: EmployeeActivityProps) => {
 							<InvoiceDialog
 								key={activity.invoice_id}
 								activity={activity}
+								invoice={activity.invoice}
+								id={activity.invoice_id}
+								context="employee"
 							/>
 						)
 					))}

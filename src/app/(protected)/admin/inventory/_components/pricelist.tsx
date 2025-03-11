@@ -76,7 +76,10 @@ const PriceList = () => {
   };
 
   const handleItemStateChange = (index: number, newState: ItemState) => {
-    const itemKey = `${selectedItems[index].variant.id}-${index}`;
+    const item = selectedItems[index];
+    if (!item) return;  // Guard against undefined item
+
+    const itemKey = `${item.variant_id.toString()}-${index}`;  // Access variant_id directly
     setItemStates((prev) => ({
       ...prev,
       [itemKey]: newState,
@@ -84,15 +87,13 @@ const PriceList = () => {
   };
 
   const handleItemRemove = (index: number) => {
-    // First, remove the item from selectedItems
     setSelectedItems((prev) => {
       const newItems = prev.filter((_, i) => i !== index);
 
-      // Then update itemStates to match the new indexes
       const newStates: Record<string, ItemState> = {};
       newItems.forEach((item, i) => {
-        const oldKey = `${item.variant.id}-${i + (i >= index ? 1 : 0)}`;
-        const newKey = `${item.variant.id}-${i}`;
+        const oldKey = `${item.variant_id}-${i + (i >= index ? 1 : 0)}`;
+        const newKey = `${item.variant_id}-${i}`;
         if (itemStates[oldKey]) {
           newStates[newKey] = itemStates[oldKey];
         }
@@ -165,15 +166,18 @@ const PriceList = () => {
           {selectedItems.length > 0 ? (
             <div className="flex flex-col gap-2">
               {selectedItems.map((item, index) => {
-                const itemKey = `${item.variant.id}-${index}`;
+                const itemKey = `${item.variant_id.toString()}-${index}`;
+                const defaultState: ItemState = {
+                  selectedBatchId: undefined,
+                  selectedUnitName: undefined,
+                  price: "0"
+                };
                 return (
                   <PriceListItem
                     key={itemKey}
                     item={item}
-                    state={itemStates[itemKey]}
-                    onStateChange={(newState) =>
-                      handleItemStateChange(index, newState)
-                    }
+                    state={itemStates[itemKey] || defaultState}
+                    onStateChange={(newState) => handleItemStateChange(index, newState)}
                     onRemove={() => handleItemRemove(index)}
                   />
                 );

@@ -1,20 +1,20 @@
 "use client"
 
 import { Plus } from 'lucide-react'
+import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useState } from 'react'
 import { Button } from '~/components/ui/button'
 import { ScrollArea } from '~/components/ui/scroll-area'
+import { Toaster } from '~/components/ui/sonner'
 import { api } from "~/trpc/react"
 import Filter from '../_components/filter'
 import NoRecordsMessage from '../_components/no-records-message'
 import RecordHeader from '../_components/record-header'
-import RecordItem from './_components/record-item'
 import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
+import RecordItem from './_components/record-item'
 import SelectedEmployee from './_components/selected-employee'
-import { Toaster } from '~/components/ui/sonner'
-import {useSession} from "next-auth/react";
 
 interface Employee {
   id: string;
@@ -65,13 +65,13 @@ const EmployeesPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: restockData } = api.employees.getRestockActivity.useQuery(
-      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+    { enabled: !!selectedRecord }
   );
 
   const { data: invoiceData } = api.employees.getInvoiceActivity.useQuery(
-      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+    { enabled: !!selectedRecord }
   );
 
   const activityData = {
@@ -129,6 +129,16 @@ const EmployeesPage = () => {
     );
   });
 
+  const handleDelete = async (id: string) => {
+    if (!checkAdminRole()) return;
+    try {
+      await deleteEmployeeMutation.mutateAsync({ id });
+      void router.refresh();
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
+    }
+  };
+
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
       <div className="flex justify-between items-center">
@@ -149,7 +159,7 @@ const EmployeesPage = () => {
         <div className="flex flex-col gap-3 w-3/5 flex-grow">
           <RecordHeader
             record="Employees"
-            number={filteredEmployees?.length ?? 0} 
+            number={filteredEmployees?.length ?? 0}
             data={filteredEmployees ?? []}
           />
           <div className="flex flex-grow rounded-lg h-full overflow-hidden">
@@ -167,8 +177,7 @@ const EmployeesPage = () => {
                       recordType={'Employees'}
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
-                        if (!checkAdminRole()) return;
-                        deleteEmployeeMutation.mutate({ id });
+                        handleDelete(id);
                       }}
                       userRole={userRole}
                     />

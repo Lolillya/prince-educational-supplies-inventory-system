@@ -1,5 +1,4 @@
 import { ArrowUpRight, PhilippinePeso } from 'lucide-react';
-import Link from 'next/link';
 
 interface PayablesInfoProps {
 	sum: number | 0;

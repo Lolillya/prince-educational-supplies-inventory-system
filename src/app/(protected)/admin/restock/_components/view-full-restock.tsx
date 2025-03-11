@@ -104,7 +104,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
             <Input
               className="bg-slate-100 text-slate-700 shadow-none"
               disabled={!isEditing}
-              value={supplier}
+              value={supplier ?? ''}
             />
           </div>
           <div className="flex w-1/2 flex-col gap-2">

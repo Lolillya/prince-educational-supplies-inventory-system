@@ -1,24 +1,19 @@
 "use client";
 
-import { Search, ListFilter, FileDown, X } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
+import { FileDown, ListFilter, Search } from "lucide-react";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogContent, DialogTitle } from "~/components/ui/dialog";
-import { Label } from "~/components/ui/label";
-import { Input } from "~/components/ui/input";
-import { Select, SelectTrigger } from "~/components/ui/select";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { Dialog } from "~/components/ui/dialog";
 import {
   DropdownMenu,
   DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
-import { DropdownMenuContent } from "@radix-ui/react-dropdown-menu";
-import { useState } from "react";
-import { Separator } from "~/components/ui/separator";
-import MasterList from "~/app/(protected)/admin/inventory/_components/MasterList";
+import { Input } from "~/components/ui/input";
 import PriceList from "./pricelist";
-import StockList from "~/app/(protected)/admin/inventory/_components/StockList";
 
 const InventorySearchAndButtonRouter = () => {
   const [isPricelistOpen, setIsPricelistOpen] = useState(false);
@@ -67,13 +62,13 @@ const InventorySearchAndButtonRouter = () => {
             <PriceList />
           </Dialog>
 
-          <Dialog onOpenChange={setIsMasterlistOpen} open={isMasterlistOpen}>
+          {/* <Dialog onOpenChange={setIsMasterlistOpen} open={isMasterlistOpen}>
             <MasterList />
           </Dialog>
 
           <Dialog onOpenChange={setIsStocklistOpen} open={isStocklistOpen}>
             <StockList />
-          </Dialog>
+          </Dialog> */}
 
           <Button
             className="bg-green p-5 font-bold"

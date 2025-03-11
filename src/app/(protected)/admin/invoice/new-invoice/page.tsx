@@ -117,6 +117,7 @@ const NewInvoice = () => {
   const [discountType, setDiscountType] = useState("%");
   const [stockTotals, setStockTotals] = useState<Record<number, string>>({});
   const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
+  const [isBatchAutoRestock, setIsBatchAutoRestock] = useState<boolean>(false);
   const [customerNotes, setCustomerNotes] = useState<string>("");
   const [isInputFocused, setIsInputFocused] = useState<string | undefined>(
     undefined,
@@ -216,6 +217,7 @@ const NewInvoice = () => {
         status: "PENDING",
         payment_term_id: 1,
         isAutoRestock: isAutoRestock,
+        isBatchAutoRestock,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
         supplier_unit_id: item[1].selectedUnit.supplier_unit_id,
@@ -451,7 +453,7 @@ const NewInvoice = () => {
               onRemove={handleRemoveBatch}
               updateCardDetails={updateCardDetails}
               handleAutoRestock={handleAutoRestock}
-              isAutoRestock={isAutoRestock}
+              BatchAutoRestock={setIsBatchAutoRestock}
               units={units}
             />
           );
@@ -469,9 +471,6 @@ const NewInvoice = () => {
           <span>TOTAL: ₱ {grandTotal.toFixed(2)}</span>
           <div className="ml-20 flex">
             <div className="relative flex items-center justify-end">
-              {/* <Label className="absolute mr-2 font-light text-textGray">
-                Discount
-              </Label> */}
               <Input
                 className="rounded-r-none border font-light shadow-none placeholder:font-light"
                 placeholder="Discount"

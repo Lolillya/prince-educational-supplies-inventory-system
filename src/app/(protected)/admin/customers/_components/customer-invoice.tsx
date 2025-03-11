@@ -115,10 +115,10 @@ export default function CustomerInvoice({
                             className="cursor-pointer hover:bg-slate-100/50 transition-colors"
                         >
                             <InvoiceDialog
-                                invoice={invoice}
                                 id={customerId}
                                 activity={invoice}
                                 context="customer"
+                                invoice={invoice}
                             />
                         </div>
                     ))}

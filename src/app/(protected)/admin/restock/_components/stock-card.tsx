@@ -1,4 +1,4 @@
-import React, {useState, useEffect, useMemo} from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Separator } from "~/components/ui/separator";
 import {
   Accordion,
@@ -31,7 +31,7 @@ type StockCardProps = {
   onStockChange: (newStock: number) => void; // Callback for stock changes
   onPriceChange: (newPrice: number) => void; // Callback for stock changes
   onUnitChange: (newUnit: string) => void; // Callback for unit changes
-  onStockUnitsChange;
+  onStockUnitsChange: (stockUnits: StockUnitData[]) => void; // Add this type
 };
 
 const StockCard = ({
@@ -41,8 +41,6 @@ const StockCard = ({
   onStockChange,
   onPriceChange,
   onUnitChange,
-  onConversionUnitChange,
-  onConversionRateChange,
   onStockUnitsChange,
 }: StockCardProps) => {
   const [stockUnits, setStockUnits] = useState<StockUnitData[]>([]);
@@ -68,11 +66,11 @@ const StockCard = ({
 
   // Calculate used units including main unit and all conversion units
   const usedUnits = useMemo(
-      () => [
-        unit,
-        ...stockUnits.map((u) => u.conversionUnit).filter(Boolean),
-      ],
-      [unit, stockUnits]
+    () => [
+      unit,
+      ...stockUnits.map((u) => u.conversionUnit).filter(Boolean),
+    ],
+    [unit, stockUnits]
   );
 
   // Whenever stockUnits change, notify the parent
@@ -81,7 +79,7 @@ const StockCard = ({
   }, [stockUnits, onStockUnitsChange]); // Make sure onStockUnitsChange is called when stockUnits change
 
   useEffect(() => {
-    if (stockUnits.length > 0) {
+    if (stockUnits.length > 0 && stockUnits[0]?.stock) {
       setStock(stockUnits[0].stock);
       setPrice(stockUnits[0].price);
       setUnit(stockUnits[0].unit);
@@ -138,10 +136,10 @@ const StockCard = ({
   useEffect(() => {
     if (searchTerm) {
       const filtered = unitOptions
-          .filter((name) => !usedUnits.includes(name))
-          .filter((name) =>
-              name.toLowerCase().includes(searchTerm.toLowerCase())
-          );
+        .filter((name) => !usedUnits.includes(name))
+        .filter((name) =>
+          name.toLowerCase().includes(searchTerm.toLowerCase())
+        );
       setFilteredUnits(filtered);
       setDropdownVisible(true);
     } else {
@@ -172,7 +170,10 @@ const StockCard = ({
         prevIndex > 0 ? prevIndex - 1 : prevIndex,
       );
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      handleSelectUnit(filteredUnits[highlightedIndex]);
+      const selectedUnit = filteredUnits[highlightedIndex];
+      if (selectedUnit) {
+        handleSelectUnit(selectedUnit);
+      }
     }
   };
 
@@ -193,18 +194,18 @@ const StockCard = ({
   };
 
   const updateStockUnit = (
-      index: number,
-      field: keyof StockUnitData,
-      value: string
+    index: number,
+    field: keyof StockUnitData,
+    value: string
   ) => {
     const updatedUnits = stockUnits.map((unit, i) =>
-        i === index ? { ...unit, [field]: value } : unit
+      i === index ? { ...unit, [field]: value } : unit
     );
 
     // Auto-add new card when both conversion fields are filled in the last unit
     if (index === updatedUnits.length - 1) {
       const currentUnit = updatedUnits[index];
-      if (currentUnit.conversionQty && currentUnit.conversionUnit) {
+      if (currentUnit?.conversionQty && currentUnit?.conversionUnit) {
         updatedUnits.push({
           stock: "",
           price: "",
@@ -229,7 +230,6 @@ const StockCard = ({
       <Separator orientation="horizontal" />
       <div className="mt-2">
         <Accordion type="single" value={accordionOpen ? "item-1" : ""}>
-        {/*<Accordion type="single" collapsible>*/}
           <AccordionItem value="item-1">
             <AccordionTrigger className="hover:no-underline">
               <div
@@ -245,7 +245,7 @@ const StockCard = ({
                       const value = e.target.value;
                       if (/^\d*$/.test(value)) {
                         // Allow only numeric input
-                        onStockChange(value); // Notify parent of changes
+                        onStockChange(Number(value)); // Convert string to number
                         updateStockUnit(0, "stock", value); // Propagate changes
                       }
                     }}
@@ -260,7 +260,7 @@ const StockCard = ({
                       const value = e.target.value;
                       if (/^\d*\.?\d*$/.test(value)) {
                         // Allow digits and optional decimal
-                        onPriceChange(value);
+                        onPriceChange(Number(value)); // Convert string to number
                         updateStockUnit(0, "price", value); // Propagate changes
                       }
                     }}
@@ -295,9 +295,8 @@ const StockCard = ({
                       {filteredUnits.map((unitName, index) => (
                         <div
                           key={index}
-                          className={`z-[99999] cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                            highlightedIndex === index ? "bg-emerald-200" : ""
-                          }`}
+                          className={`z-[99999] cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                            }`}
                           onMouseDown={() => handleSelectUnit(unitName)}
                         >
                           {unitName}
@@ -321,12 +320,14 @@ const StockCard = ({
                   key={index}
                   unitData={unitData}
                   unitOptions={unitOptions}
-                  usedUnits={usedUnits} // Add this prop
-                  inheritedUnit={index === 0 ? unit : undefined} // Pass top "Unit" value to the first StockUnit
-                  inheritedStock={index === 0 ? stock : undefined} // Pass stock from the parent for the first layer
-                  inheritedPrice={index === 0 ? price : undefined} // Pass price from the parent for the first layer
+                  usedUnits={usedUnits}
+                  inheritedUnit={index === 0 ? unit : undefined}
+                  inheritedStock={index === 0 ? stock : undefined}
+                  inheritedPrice={index === 0 ? price : undefined}
                   previousUnits={
-                    index > 0 ? stockUnits[index - 1].conversionUnit : undefined
+                    index > 0 && stockUnits[index - 1]?.conversionUnit
+                      ? stockUnits[index - 1]?.conversionUnit
+                      : undefined
                   }
                   onRemove={() => removeStockUnit(index)}
                   onUpdate={(field, value) =>
@@ -358,6 +359,9 @@ const StockUnit = ({
   usedUnits,
   onRemove,
   onUpdate,
+  inheritedUnit,
+  inheritedStock,
+  inheritedPrice,
 }: {
   unitData: StockUnitData;
   unitOptions: string[];
@@ -365,6 +369,9 @@ const StockUnit = ({
   usedUnits: string[];
   onRemove: () => void;
   onUpdate: (field: keyof StockUnitData, value: string) => void;
+  inheritedUnit?: string;
+  inheritedStock?: string;
+  inheritedPrice?: string;
 }) => {
   const [filteredUnits, setFilteredUnits] = useState<string[]>([]);
   const [dropdownVisible, setDropdownVisible] = useState(false);
@@ -374,14 +381,14 @@ const StockUnit = ({
   useEffect(() => {
     if (searchTerm) {
       setFilteredUnits(
-          unitOptions
-              .filter(unit =>
-                  !usedUnits.includes(unit) ||
-                  unit === unitData.conversionUnit
-              )
-              .filter(unitName =>
-                  unitName.toLowerCase().includes(searchTerm.toLowerCase())
-              )
+        unitOptions
+          .filter(unit =>
+            !usedUnits.includes(unit) ||
+            unit === unitData.conversionUnit
+          )
+          .filter(unitName =>
+            unitName.toLowerCase().includes(searchTerm.toLowerCase())
+          )
       );
       setDropdownVisible(true);
     } else {
@@ -419,7 +426,10 @@ const StockUnit = ({
         prevIndex > 0 ? prevIndex - 1 : prevIndex,
       );
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      handleSelectUnit(filteredUnits[highlightedIndex]);
+      const selectedUnit = filteredUnits[highlightedIndex];
+      if (selectedUnit) {
+        handleSelectUnit(selectedUnit);
+      }
     }
   };
 
@@ -431,7 +441,7 @@ const StockUnit = ({
             placeholder="000"
             value={unitData.stock} // Use the value from `unitData`
             onChange={(e) => onUpdate("stock", e.target.value)}
-            // disabled
+          // disabled
           />
         </div>
         <div className="flex flex-col items-start gap-1">
@@ -439,7 +449,7 @@ const StockUnit = ({
             placeholder="0000.00"
             value={unitData.price} // Use the value from `unitData`
             onChange={(e) => onUpdate("price", e.target.value)}
-            // disabled
+          // disabled
           />
         </div>
         <div className="flex flex-col items-start gap-1">
@@ -487,9 +497,8 @@ const StockUnit = ({
               {filteredUnits.map((unitName, index) => (
                 <div
                   key={index}
-                  className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                    highlightedIndex === index ? "bg-emerald-200" : ""
-                  }`}
+                  className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                    }`}
                   onMouseDown={() => handleSelectUnit(unitName)}
                 >
                   {unitName}

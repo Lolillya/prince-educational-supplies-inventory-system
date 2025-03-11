@@ -17,7 +17,7 @@ import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import RecordEditor from "../../_components/record-editor";
 import RecordExpand from "../../_components/record-expand";
-import { RestockProps } from "../page";
+import { type RestockProps } from "../page";
 import RestockTable from "./restock-table";
 
 const poppins = Poppins({

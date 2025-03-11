@@ -142,13 +142,13 @@ const NewSupplierState = ({ id }: { id: string }) => {
     const newErrors: SupplierFormErrors = {};
     const { firstName, lastName, businessName, contact, email, addressLine, city, region, country, postalCode, notes } = supplierForm;
 
-    if (firstName && (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/))) {
+    if (firstName && (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName)))) {
       newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
     } else if (firstName && firstName.length > 50) {
       newErrors.firstName = "First Name must be at most 50 characters long.";
     }
 
-    if (lastName && (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/))) {
+    if (lastName && (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName)))) {
       newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
     } else if (lastName && lastName.length > 50) {
       newErrors.lastName = "Last Name must be at most 50 characters long.";

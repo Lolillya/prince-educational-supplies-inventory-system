@@ -4,7 +4,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { Separator } from "~/components/ui/separator";
-import InventoryCard, { InventoryCardRef } from "../../_components/inventory-card";
+import InventoryCard, { type InventoryCardRef } from "../../_components/inventory-card";
 import { api } from "~/trpc/react";
 import { useParams } from "next/navigation";
 import { Button } from "~/components/ui/button";
@@ -105,9 +105,7 @@ const EditBatch = () => {
 
 
     const inventoryCardRefs = useRef<Record<number, InventoryCardRef>>({});
-    const [cardsData, setCardsData] = useState<{
-        [key: number]: StockUnitData[];
-    }>({});
+    const [cardsData, setCardsData] = useState<Record<number, StockUnitData[]>>({});
 
     const [itemData, setItemData] = useState<InventoryItem | null>(null);
     const [units, setUnits] = useState<Unit[]>([]);

@@ -6,7 +6,7 @@ import PieContainer from './pie-chart-container';
 
 interface CategoryPieCardProps {
 	pieChartData: { category: string; sales: number; fill: string }[];
-	pieChartConfig: { [key: string]: { label: string; color: string } };
+	pieChartConfig: Record<string, { label: string; color: string }>;
 	totalSales: number;
 }
 

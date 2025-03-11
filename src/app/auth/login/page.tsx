@@ -3,7 +3,7 @@
 import { Input } from "~/components/ui/input";
 import Company_Logo from "public/Company_Logo.svg";
 import Image from "next/image";
-import * as z from "zod";
+import type * as z from "zod";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";

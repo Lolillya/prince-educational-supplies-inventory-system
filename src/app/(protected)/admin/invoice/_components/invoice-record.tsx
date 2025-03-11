@@ -11,7 +11,7 @@ import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
-import { InvoiceProps } from "../page";
+import { type InvoiceProps } from "../page";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   invoice_number,

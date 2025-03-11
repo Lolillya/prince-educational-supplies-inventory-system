@@ -115,7 +115,7 @@ const NewInvoice = () => {
   const [grandTotal, setGrandTotal] = useState<number>(0);
   const [discount, setDiscount] = useState<number>(0);
   const [discountType, setDiscountType] = useState("%");
-  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
+  const [stockTotals, setStockTotals] = useState<Record<number, string>>({});
   const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
   const [customerNotes, setCustomerNotes] = useState<string>("");
   const [isInputFocused, setIsInputFocused] = useState<string | undefined>(

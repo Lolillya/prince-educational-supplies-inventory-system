@@ -389,7 +389,7 @@ const InventoryCard = forwardRef<InventoryCardRef, InventoryCardProps>(
             field: keyof StockUnitData,
             value: string
         ) => {
-            let updatedUnits = [...detailedStockUnits];
+            const updatedUnits = [...detailedStockUnits];
             const currentUnit = updatedUnits[index];
 
             if (!currentUnit) return; // Guard against undefined unit

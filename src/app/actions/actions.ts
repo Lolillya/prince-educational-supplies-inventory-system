@@ -1,7 +1,7 @@
 "use server";
 
 import { AuthError } from "next-auth";
-import { z } from "zod";
+import { type z } from "zod";
 import { signIn, signOut } from "~/auth";
 import { getUserByUsername } from "~/server/data/user";
 import { LoginSchema } from "~/schemas";

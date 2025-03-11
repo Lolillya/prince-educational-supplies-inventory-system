@@ -5,7 +5,7 @@ import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/
 
 interface SalesAreaCardProps {
 	areaChartData: { month: string; sales: number }[];
-	areaChartConfig: { [key: string]: { label: string; color: string; } }
+	areaChartConfig: Record<string, { label: string; color: string; }>
 }
 
 const SalesAreaCard: React.FC<SalesAreaCardProps> = ({ areaChartData, areaChartConfig }) => {

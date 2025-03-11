@@ -70,16 +70,14 @@ const InvoiceAddStock = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
-  const [stock, setStock] = useState<{ [key: number]: string }>({}); // Stock values as strings
-  const [price, setPrice] = useState<{ [key: number]: string }>({});
-  const [unit, setUnit] = useState<{ [key: number]: string }>({});
-  const [stockUnits, setStockUnits] = useState<{ [key: number]: StockUnit[] }>({});
+  const [stock, setStock] = useState<Record<number, string>>({}); // Stock values as strings
+  const [price, setPrice] = useState<Record<number, string>>({});
+  const [unit, setUnit] = useState<Record<number, string>>({});
+  const [stockUnits, setStockUnits] = useState<Record<number, StockUnit[]>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog open state
   const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
   const [dialogType, setDialogType] = useState("");
-  const [accordionStates, setAccordionStates] = useState<{
-    [key: number]: boolean;
-  }>({});
+  const [accordionStates, setAccordionStates] = useState<Record<number, boolean>>({});
 
   const {
     data: inventoryItems,

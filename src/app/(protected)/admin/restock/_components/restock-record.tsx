@@ -12,7 +12,7 @@ import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
 import RestockItem from "./restock-item";
 import ViewFullRestock from "./view-full-restock";
-import { RestockProps } from "../page";
+import { type RestockProps } from "../page";
 
 const RestockRecord: React.FC<RestockProps> = ({
   restockId,

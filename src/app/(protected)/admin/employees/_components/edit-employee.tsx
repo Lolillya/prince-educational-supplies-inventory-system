@@ -153,7 +153,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
 
     if (!firstName) {
       newErrors.firstName = "First Name is required.";
-    } else if (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/)) {
+    } else if (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName))) {
       newErrors.firstName =
         "First Name must only contain letters and be at least 2 characters long.";
     } else if (firstName.length > 50) {
@@ -162,7 +162,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
 
     if (!lastName) {
       newErrors.lastName = "Last Name is required.";
-    } else if (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/)) {
+    } else if (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName))) {
       newErrors.lastName =
         "Last Name must only contain letters and be at least 2 characters long.";
     } else if (lastName.length > 50) {

@@ -260,8 +260,8 @@ export const invoiceRouter = createTRPCRouter({
           const createdLineItems = await Promise.all(
             lineItems.map(async (item) => {
               let invoiceItemQty = item.quantity;
-              let unitId = item.unit_id;
-              let supplier_unit_id = item.supplier_unit_id;
+              const unitId = item.unit_id;
+              const supplier_unit_id = item.supplier_unit_id;
 
               // Step 3: Fetch the SupplierUnit for the selected unit
               const supplierUnit = await ctx.db.supplierUnit.findFirst({

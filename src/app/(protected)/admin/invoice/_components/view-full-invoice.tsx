@@ -15,7 +15,7 @@ import { Label } from "~/components/ui/label";
 import { Separator } from "~/components/ui/separator";
 import { Textarea } from "~/components/ui/textarea";
 import InvoiceTable from "./invoice-table";
-import { InvoiceProps } from "../page";
+import { type InvoiceProps } from "../page";
 import RecordExpand from "../../_components/record-expand";
 import { api } from "~/trpc/react";
 import { toast } from "~/hooks/use-toast";

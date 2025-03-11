@@ -18,17 +18,36 @@ import { Card, CardContent } from "~/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 
-type Item = {
-  variant: {
-    item: {
-      name: string;
-      brand: {
-        name: string;
-      };
-    };
-    name?: string;
-  };
-};
+interface ItemType {
+  name: string;
+  brand: BrandType;
+  category: CategoryType;
+  description?: string | null;
+  variants: any[];
+}
+
+interface BrandType {
+  name: string;
+  brand_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface CategoryType {
+  name: string;
+  category_id: number;
+  created_at: Date;
+  updated_at: Date;
+}
+
+interface CardType {
+  id: undefined;
+  tempId?: number;
+  variant: string;
+  lowStock: number;
+  veryLowStock: number;
+  isExisting: boolean;
+}
 
 const EditItem = () => {
   const router = useRouter();
@@ -69,9 +88,9 @@ const EditItem = () => {
   const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
   const [filteredVariants, setFilteredVariants] = useState<string[]>([]);
 
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [selectedBrand, setSelectedBrand] = useState(null);
-  const [selectedCategory, setSelectedCategory] = useState(null);
+  const [selectedItem, setSelectedItem] = useState<ItemType | null>(null);
+  const [selectedBrand, setSelectedBrand] = useState<BrandType | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<CategoryType | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedVariants, setSelectedVariants] = useState([]);
 
@@ -88,8 +107,6 @@ const EditItem = () => {
   } = api.inventory.listAllData.useQuery();
   const {
     mutateAsync: createItem,
-    Loading,
-    Error,
   } = api.inventory.createItem.useMutation();
   // Use mutations outside the handleSave function to avoid invalid hook calls.
   const { mutateAsync: createBrandMutation } =
@@ -104,12 +121,13 @@ const EditItem = () => {
     api.inventory.createStockLevel.useMutation();
   const { mutateAsync: createInventoryMutation } =
     api.inventory.createInventory.useMutation();
-  const { mutateAsync: updateItemMutation } =
-    api.inventory.updateItem.useMutation();
+  const {
+    mutateAsync: editItemMutation,
+  } = api.inventory.editItem.useMutation();
 
   // const [cards, setCards] = useState([{ id: Date.now() }]);
   // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
-  const [cards, setCards] = useState([
+  const [cards, setCards] = useState<CardType[]>([
     {
       id: undefined,
       variant: "",
@@ -155,23 +173,25 @@ const EditItem = () => {
 
       // Set variants
       const variants = (item.variants || []).map((v) => ({
-        id: v.variant_id,
+        id: undefined,
         variant: v.name || "",
-        lowStock: v.StockLevel?.low_stock || 0,
-        veryLowStock: v.StockLevel?.very_low_stock || 0,
+        lowStock: 0,
+        veryLowStock: 0,
+        isExisting: true
       }));
 
       setCards(
         variants.length > 0
           ? variants
           : [
-              {
-                id: Date.now(),
-                variant: "",
-                lowStock: 0,
-                veryLowStock: 0,
-              },
-            ],
+            {
+              id: undefined,
+              variant: "",
+              lowStock: 0,
+              veryLowStock: 0,
+              isExisting: false
+            },
+          ],
       );
     }
   }, [existingItemData]);
@@ -250,7 +270,7 @@ const EditItem = () => {
 
       if (matchingItem) {
         const variants = matchingItem.variants.map((v) => ({
-          id: v.variant_id,
+          id: undefined,
           variant: v.name,
           lowStock: v.StockLevel?.low_stock || 0,
           veryLowStock: v.StockLevel?.very_low_stock || 0,
@@ -260,19 +280,19 @@ const EditItem = () => {
           variants.length > 0
             ? variants
             : [
-                {
-                  id: Date.now(),
-                  variant: "",
-                  lowStock: 0,
-                  veryLowStock: 0,
-                  isExisting: false,
-                },
-              ],
+              {
+                id: undefined,
+                variant: "",
+                lowStock: 0,
+                veryLowStock: 0,
+                isExisting: false,
+              },
+            ],
         );
       } else {
         setCards([
           {
-            id: Date.now(),
+            id: undefined,
             variant: "",
             lowStock: 0,
             veryLowStock: 0,
@@ -283,7 +303,7 @@ const EditItem = () => {
     } else {
       setCards([
         {
-          id: Date.now(),
+          id: undefined,
           variant: "",
           lowStock: 0,
           veryLowStock: 0,
@@ -376,7 +396,7 @@ const EditItem = () => {
     field: string,
   ) => {
     let filteredOptions = [];
-    let setHighlightedIndexFn = (index: number) => {};
+    let setHighlightedIndexFn = (index: number | ((prev: number) => number)) => { };
 
     switch (field) {
       case "item":
@@ -408,7 +428,10 @@ const EditItem = () => {
         prevIndex > 0 ? prevIndex - 1 : prevIndex,
       );
     } else if (e.key === "Enter" && highlightedIndex >= 0) {
-      handleSelect(field, filteredOptions[highlightedIndex]);
+      const selectedOption = filteredOptions[highlightedIndex];
+      if (selectedOption) {
+        handleSelect(field, selectedOption);
+      }
     }
   };
 
@@ -429,7 +452,7 @@ const EditItem = () => {
     ]);
   };
 
-  const handleDeleteCard = (tempId) => {
+  const handleDeleteCard = (tempId: number) => {
     setCards(cards.filter((card) => card.tempId !== tempId));
   };
 
@@ -454,7 +477,7 @@ const EditItem = () => {
     });
     setCards([
       {
-        id: Date.now(),
+        id: undefined,
         variant: "",
         lowStock: 0,
         veryLowStock: 0,
@@ -470,12 +493,6 @@ const EditItem = () => {
 
   const { mutateAsync: updateVariantMutation } =
     api.inventory.updateVariant.useMutation();
-  const {
-    mutateAsync: editItemMutation,
-    isEditLoading,
-    isEditError,
-    isEditing,
-  } = api.inventory.editItem.useMutation();
 
   const handleSave = async () => {
     const hasAtLeastOneVariant = cards.some(
@@ -493,6 +510,8 @@ const EditItem = () => {
 
     for (let i = 0; i < cards.length; i++) {
       const card = cards[i];
+      if (!card) continue;
+
       if (card.variant.trim() !== "") {
         if (!card.lowStock || card.lowStock <= 0) {
           errors.push(
@@ -550,10 +569,6 @@ const EditItem = () => {
       };
 
       const response = await editItemMutation(payload);
-
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
 
       setDialogMessage("Item updated successfully!");
       setIsDialogSaveOpen(true);
@@ -668,7 +683,6 @@ const EditItem = () => {
                 }
                 onKeyDown={(e) => handleKeyDown(e, "item")}
               />
-
               {dropdownVisible && filteredItems.length > 0 && (
                 <div
                   className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
@@ -677,9 +691,7 @@ const EditItem = () => {
                   {filteredItems.map((itemName, index) => (
                     <div
                       key={index}
-                      className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                        highlightedIndex === index ? "bg-emerald-200" : ""
-                      }`}
+                      className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""}`}
                       onMouseDown={() => handleSelect("item", itemName)}
                     >
                       {itemName}
@@ -688,235 +700,6 @@ const EditItem = () => {
                 </div>
               )}
             </div>
-          </div>
-
-          <div className="w-full">
-            <Label className="text-textGray">Brand *</Label>
-            <div className="relative flex flex-col items-start gap-1">
-              <Input
-                placeholder="Brand"
-                value={brandSearch || brand}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^[a-zA-Z ]*$/.test(value)) {
-                    handleSearchBrand(e);
-                  }
-                  console.log(`Brand Search Updated: ${value}`);
-                }}
-                className="bg-white text-black placeholder-slate-500"
-                onFocus={() =>
-                  setDropdownVisible((prev) => ({ ...prev, brand: true }))
-                }
-                onBlur={() =>
-                  setDropdownVisible((prev) => ({ ...prev, brand: false }))
-                }
-                onKeyDown={(e) => handleKeyDown(e, "brand")}
-              />
-
-              {dropdownVisible && filteredBrands.length > 0 && (
-                <div
-                  className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                  style={{ maxHeight: "200px", overflowY: "auto" }}
-                >
-                  {filteredBrands.map((brandName, index) => (
-                    <div
-                      key={index}
-                      className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                        highlightedIndex === index ? "bg-emerald-200" : ""
-                      }`}
-                      onMouseDown={() => handleSelect("brand", brandName)}
-                    >
-                      {brandName}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-
-          <div className="w-full">
-            <Label className="text-textGray">Category</Label>
-            <div className="relative flex flex-col items-start gap-1">
-              <Input
-                placeholder="Category"
-                value={categorySearch || category}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^[a-zA-Z ]*$/.test(value)) {
-                    handleSearchCategory(e);
-                  }
-                  console.log(`Category Search Updated: ${value}`);
-                }}
-                className="bg-white text-black placeholder-slate-500"
-                onFocus={() =>
-                  setDropdownVisible((prev) => ({ ...prev, category: true }))
-                }
-                onBlur={() =>
-                  setDropdownVisible((prev) => ({ ...prev, category: false }))
-                }
-                onKeyDown={(e) => handleKeyDown(e, "category")}
-              />
-
-              {dropdownVisible && filteredCategories.length > 0 && (
-                <div
-                  className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                  style={{ maxHeight: "200px", overflowY: "auto" }}
-                >
-                  {filteredCategories.map((categoryName, index) => (
-                    <div
-                      key={index}
-                      className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                        highlightedIndex === index ? "bg-emerald-200" : ""
-                      }`}
-                      onMouseDown={() => handleSelect("category", categoryName)}
-                    >
-                      {categoryName}
-                    </div>
-                  ))}
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-
-        <div>
-          <Textarea
-            className="bg-gray"
-            placeholder="Item Description"
-            rows={5}
-            value={itemDescription}
-            onChange={(e) => {
-              setItemDescription(e.target.value);
-              console.log(`Item Description Updated: ${e.target.value}`);
-            }}
-          />
-        </div>
-
-        <div className="flex flex-col gap-3">
-          <Label>Variants *</Label>
-          {cards.map((card, index) => (
-            <Card key={card.id || index} className="w-full bg-[#F0F1F4] p-3">
-              <CardContent className="m-0 flex flex-row items-center justify-between gap-3 p-0">
-                <div className="relative flex w-full items-center">
-                  <Input
-                    placeholder="Variant"
-                    value={card.variant}
-                    onChange={(e) => {
-                      const updatedCards = [...cards];
-                      updatedCards[index].variant = e.target.value;
-                      setCards(updatedCards);
-                      console.log(`Variant Updated: ${e.target.value}`);
-                    }}
-                    className="bg-white text-black placeholder-slate-500"
-                  />
-                </div>
-                <div className="relative flex w-full items-center">
-                  <div className="absolute ml-2 h-2 w-2 rounded-full bg-orange-400"></div>
-                  <Input
-                    value={card.lowStock || ""}
-                    onChange={(e) => {
-                      const updatedCards = [...cards];
-                      updatedCards[index].lowStock = e.target.value
-                        ? Number(e.target.value)
-                        : 0;
-                      setCards(updatedCards);
-                      console.log(
-                        `Low Stock for Variant '${card.variant}': ${e.target.value}`,
-                      );
-                    }}
-                    className="flex-1 rounded-lg bg-white p-5"
-                    placeholder="Low Stock"
-                  />
-                </div>
-                <div className="relative flex w-full items-center">
-                  <div className="absolute ml-2 h-2 w-2 rounded-full bg-red"></div>
-                  <Input
-                    value={card.veryLowStock || ""}
-                    onChange={(e) => {
-                      const updatedCards = [...cards];
-                      updatedCards[index].veryLowStock = e.target.value
-                        ? Number(e.target.value)
-                        : 0;
-                      setCards(updatedCards);
-                      console.log(
-                        `Very Low Stock for Variant '${card.variant}': ${e.target.value}`,
-                      );
-                    }}
-                    className="flex-1 rounded-lg bg-white p-5"
-                    placeholder="Very Low Stock"
-                  />
-                </div>
-                <div className="flex items-center">
-                  <div className="relative ml-auto flex w-full items-center">
-                    {!card.isExisting && (
-                      <X
-                        size={15}
-                        className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
-                        onClick={() => handleDeleteCard(card.tempId)}
-                      />
-                    )}
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          <div className="mt-4">
-            <Button
-              variant="outline"
-              className="w-full"
-              onClick={handleAddCard}
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add Variant
-            </Button>
-          </div>
-
-          <div className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
-            <Button
-              className="border-gray-300 text-gray-700 border-2 bg-gray p-7 text-lg font-bold hover:bg-red"
-              onClick={clear}
-            >
-              Clear
-            </Button>
-
-            {/* Confirmation dialog triggered by the "Clear" button */}
-            <Dialog
-              open={isDialogCancelOpen}
-              onOpenChange={(open) => setIsDialogCancelOpen(open)}
-            >
-              <DialogContent className="flex w-full max-w-lg flex-col gap-6 rounded-lg bg-white p-10 shadow-lg">
-                <DialogTitle className="text-center text-xl font-semibold">
-                  Clear All Fields
-                </DialogTitle>
-                <DialogHeader className="text-center text-lg">
-                  Are you sure you want to clear all the fields? This action
-                  cannot be undone.
-                </DialogHeader>
-
-                <div className="flex justify-center gap-4">
-                  <Button
-                    className="border-gray-300 bg-gray-300 border-2 p-4 text-lg font-bold text-black hover:bg-textGray"
-                    onClick={handleCancelClear}
-                  >
-                    Cancel
-                  </Button>
-
-                  <Button
-                    className="border-red-500 bg-red-500 border-2 p-4 text-lg font-bold text-black hover:bg-red"
-                    onClick={handleConfirmClear}
-                  >
-                    Confirm
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
-            <Button
-              className="border-gray-300 text-gray-700 border-2 bg-gray p-7 text-lg font-bold hover:bg-green"
-              onClick={handleSave}
-              disabled={isSaving}
-            >
-              {isSaving ? "Saving..." : "Save"}
-            </Button>
           </div>
         </div>
       </div>

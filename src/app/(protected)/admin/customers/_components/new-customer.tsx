@@ -457,7 +457,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
                     Clear
                 </Button>
                 <Button
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(new Event('submit') as any)}
                     className="bg-green p-7 text-lg font-bold"
                     disabled={createCustomer.isPending}
                 >

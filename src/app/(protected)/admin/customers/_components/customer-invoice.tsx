@@ -5,10 +5,10 @@ import {
     PhilippinePeso,
     Printer,
 } from "lucide-react";
-import {Poppins} from "next/font/google";
+import { Poppins } from "next/font/google";
 import Link from "next/link";
-import React, {FC, useState} from "react";
-import {Button} from "~/components/ui/button";
+import React, { FC, useState } from "react";
+import { Button } from "~/components/ui/button";
 import {
     Dialog,
     DialogClose,
@@ -18,10 +18,10 @@ import {
     DialogTitle,
     DialogTrigger,
 } from "~/components/ui/dialog";
-import {Input} from "~/components/ui/input";
-import {Label} from "~/components/ui/label";
-import {Separator} from "~/components/ui/separator";
-import {Textarea} from "~/components/ui/textarea";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Separator } from "~/components/ui/separator";
+import { Textarea } from "~/components/ui/textarea";
 import {
     Tooltip,
     TooltipContent,
@@ -57,12 +57,11 @@ interface CustomerInvoiceProps {
 }
 
 export default function CustomerInvoice({
-                                            invoiceData,
-                                            id,
-                                            first_name,
-                                            last_name,
-                                            customerId,
-                                        }: CustomerInvoiceProps) {
+    invoiceData,
+    first_name,
+    last_name,
+    customerId,
+}: CustomerInvoiceProps) {
     const [showAll, setShowAll] = useState(false);
     const displayedData = showAll ? invoiceData : invoiceData.slice(0, 3);
     const totalCount = invoiceData.length;
@@ -94,7 +93,7 @@ export default function CustomerInvoice({
                     <div
                         className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
                         Invoices
-                        <ArrowUpRight className="h-4 w-4"/>
+                        <ArrowUpRight className="h-4 w-4" />
                     </div>
                 </Link>
                 {totalCount > 0 && (
@@ -444,7 +443,7 @@ export default function CustomerInvoice({
 {/*}*/
 }
 
-const CustomerRestockCard = ({invoiceData}: CustomerInvoiceProps) => {
+const CustomerRestockCard = ({ invoiceData }: CustomerInvoiceProps) => {
     // TODO: reflect restock data based on selected supplier
 
     return invoiceData.map((invoice, index) => (
@@ -457,7 +456,7 @@ const CustomerRestockCard = ({invoiceData}: CustomerInvoiceProps) => {
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <IdCard className="h-4 w-4"/>
+                            <IdCard className="h-4 w-4" />
                         </TooltipTrigger>
                         <TooltipContent
                             className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
@@ -491,7 +490,7 @@ const CustomerRestockCard = ({invoiceData}: CustomerInvoiceProps) => {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PhilippinePeso className="h-4 w-4"/>
+                                <PhilippinePeso className="h-4 w-4" />
                             </TooltipTrigger>
                             <TooltipContent
                                 className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">

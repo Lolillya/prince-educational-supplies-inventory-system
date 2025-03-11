@@ -1,23 +1,23 @@
 "use client";
 
-import React, {useState, useEffect, useMemo} from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
     DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
 } from "~/components/ui/dialog";
-import {Dialog} from "~/components/ui/dialog-transparent";
-import {Label} from "~/components/ui/label";
-import {ArrowLeft, Plus, X} from "lucide-react";
-import {Button} from "~/components/ui/button";
-import {Textarea} from "~/components/ui/textarea";
-import {Input} from "~/components/ui/input";
-import {api} from "~/trpc/react";
-import {Card, CardContent} from "~/components/ui/card";
-import {useRouter} from "next/navigation";
-import {useSession} from "next-auth/react";
-import {useMutation, useQuery} from "@tanstack/react-query";
+import { Dialog } from "~/components/ui/dialog-transparent";
+import { Label } from "~/components/ui/label";
+import { ArrowLeft, Plus, X } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Textarea } from "~/components/ui/textarea";
+import { Input } from "~/components/ui/input";
+import { api } from "~/trpc/react";
+import { Card, CardContent } from "~/components/ui/card";
+import { useRouter } from "next/navigation";
+import { useSession } from "next-auth/react";
+import { useMutation, useQuery } from "@tanstack/react-query";
 
 type Item = {
     variant: {
@@ -69,27 +69,39 @@ const NewItem = () => {
     const [filteredCategories, setFilteredCategories] = useState<string[]>([]);
     const [filteredVariants, setFilteredVariants] = useState<string[]>([]);
 
-    const [selectedItem, setSelectedItem] = useState(null);
-    const [selectedBrand, setSelectedBrand] = useState(null);
-    const [selectedCategory, setSelectedCategory] = useState(null);
+    const [selectedItem, setSelectedItem] = useState<{
+        name: string;
+        brand_id?: number;
+        category_id?: number;
+        description?: string;
+        item_id?: number;
+    } | null>(null);
+    const [selectedBrand, setSelectedBrand] = useState<{
+        name: string;
+        brand_id: number;
+    } | null>(null);
+    const [selectedCategory, setSelectedCategory] = useState<{
+        name: string;
+        category_id: number;
+    } | null>(null);
     const [selectedVariant, setSelectedVariant] = useState(null);
     const [selectedVariants, setSelectedVariants] = useState([]);
 
 
-    const {data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem} =
+    const { data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem } =
         api.inventory.getItemId.useQuery();
 
 
-    const {data: data, isLoading, isError} = api.inventory.listAllData.useQuery();
-    const {mutateAsync: createItem, Loading, Error} = api.inventory.createItem.useMutation();
-// Use mutations outside the handleSave function to avoid invalid hook calls.
-    const {mutateAsync: createBrandMutation} = api.inventory.createBrand.useMutation();
-    const {mutateAsync: createCategoryMutation} = api.inventory.createCategory.useMutation();
-    const {mutateAsync: createItemMutation} = api.inventory.createItem.useMutation();
-    const {mutateAsync: createVariantMutation} = api.inventory.createVariant.useMutation();
-    const {mutateAsync: createStockLevelMutation} = api.inventory.createStockLevel.useMutation();
-    const {mutateAsync: createInventoryMutation} = api.inventory.createInventory.useMutation();
-    const {mutateAsync: updateItemMutation} = api.inventory.updateItem.useMutation();
+    const { data: data, isLoading, isError } = api.inventory.listAllData.useQuery();
+    const { mutateAsync: createItem } = api.inventory.createItem.useMutation();
+    // Use mutations outside the handleSave function to avoid invalid hook calls.
+    const { mutateAsync: createBrandMutation } = api.inventory.createBrand.useMutation();
+    const { mutateAsync: createCategoryMutation } = api.inventory.createCategory.useMutation();
+    const { mutateAsync: createItemMutation } = api.inventory.createItem.useMutation();
+    const { mutateAsync: createVariantMutation } = api.inventory.createVariant.useMutation();
+    const { mutateAsync: createStockLevelMutation } = api.inventory.createStockLevel.useMutation();
+    const { mutateAsync: createInventoryMutation } = api.inventory.createInventory.useMutation();
+    const { mutateAsync: updateItemMutation } = api.inventory.updateItem.useMutation();
 
     // const [cards, setCards] = useState([{ id: Date.now() }]);
     // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
@@ -136,10 +148,10 @@ const NewItem = () => {
                     itemName.toLowerCase().includes(itemSearch.toLowerCase())
                 )
             );
-            setDropdownVisible((prev) => ({...prev, item: true}));
+            setDropdownVisible((prev) => ({ ...prev, item: true }));
         } else {
             setFilteredItems([]);
-            setDropdownVisible((prev) => ({...prev, item: false}));
+            setDropdownVisible((prev) => ({ ...prev, item: false }));
         }
     }, [itemSearch, itemOptions]);
 
@@ -150,10 +162,10 @@ const NewItem = () => {
                     brandName.toLowerCase().includes(brandSearch.toLowerCase())
                 )
             );
-            setDropdownVisible((prev) => ({...prev, brand: true}));
+            setDropdownVisible((prev) => ({ ...prev, brand: true }));
         } else {
             setFilteredBrands([]);
-            setDropdownVisible((prev) => ({...prev, brand: false}));
+            setDropdownVisible((prev) => ({ ...prev, brand: false }));
         }
     }, [brandSearch, brandOptions]);
 
@@ -164,10 +176,10 @@ const NewItem = () => {
                     categoryName.toLowerCase().includes(categorySearch.toLowerCase())
                 )
             );
-            setDropdownVisible((prev) => ({...prev, category: true}));
+            setDropdownVisible((prev) => ({ ...prev, category: true }));
         } else {
             setFilteredCategories([]);
-            setDropdownVisible((prev) => ({...prev, category: false}));
+            setDropdownVisible((prev) => ({ ...prev, category: false }));
         }
     }, [categorySearch, categoryOptions]);
 
@@ -224,7 +236,13 @@ const NewItem = () => {
                 }
                 const selectedItem = items.find(item => item.name === name);
                 if (selectedItem) {
-                    setSelectedItem(selectedItem); // Set the full object
+                    setSelectedItem({
+                        name: selectedItem.name,
+                        brand_id: selectedItem.brand_id,
+                        category_id: selectedItem.category_id,
+                        description: selectedItem.description || undefined,
+                        item_id: selectedItem.item_id
+                    });
                     setItemDescription(selectedItem.description || '');
                     console.log("Selected Item:", selectedItem);
                 }
@@ -266,7 +284,7 @@ const NewItem = () => {
         else if (type === "category") setCategorySearch("");
         else if (type === "brand") setBrandSearch("");
 
-        setDropdownVisible((prev) => ({...prev, [type]: false}));
+        setDropdownVisible((prev) => ({ ...prev, [type]: false }));
     };
 
 
@@ -299,8 +317,7 @@ const NewItem = () => {
 
     const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>, field: string) => {
         let filteredOptions = [];
-        let setHighlightedIndexFn = (index: number) => {
-        };
+        let setHighlightedIndexFn = (index: number | ((prev: number) => number)) => { };
 
         switch (field) {
             case "item":
@@ -332,7 +349,10 @@ const NewItem = () => {
                 prevIndex > 0 ? prevIndex - 1 : prevIndex
             );
         } else if (e.key === "Enter" && highlightedIndex >= 0) {
-            handleSelect(field, filteredOptions[highlightedIndex]);
+            const selectedOption = filteredOptions[highlightedIndex];
+            if (selectedOption) {
+                handleSelect(field, selectedOption);
+            }
         }
     };
 
@@ -349,7 +369,7 @@ const NewItem = () => {
         }]);
     };
 
-    const handleDeleteCard = (id) => {
+    const handleDeleteCard = (id: number) => {
         setCards(cards.filter(card => card.id !== id));
     };
 
@@ -372,13 +392,7 @@ const NewItem = () => {
             category: false,
             variant: false,
         });
-        setCards([{
-            id: Date.now(),
-            variant: "",
-            lowStock: 0,
-            veryLowStock: 0,
-            isExisting: false
-        }]);
+        setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
         setIsDialogCancelOpen(false);
     };
 
@@ -386,7 +400,7 @@ const NewItem = () => {
         setIsDialogCancelOpen(false);
     };
 
-    const {mutateAsync: updateVariantMutation} = api.inventory.updateVariant.useMutation();
+    const { mutateAsync: updateVariantMutation } = api.inventory.updateVariant.useMutation();
 
     const handleSave = async () => {
         const hasAtLeastOneVariant = cards.some(card => card.variant.trim() !== "");
@@ -402,11 +416,15 @@ const NewItem = () => {
 
         // Check the first variant
         const firstVariant = cards[0];
+        if (!firstVariant) {
+            errors.push("No variants found.");
+            return;
+        }
         if (firstVariant.variant.trim() !== "") {
-            if (firstVariant.lowStock === null || firstVariant.lowStock === "" || firstVariant.lowStock <= 0) {
+            if (firstVariant.lowStock === null || firstVariant.lowStock <= 0) {
                 errors.push("Low Stock value for the first variant must be greater than 0.");
             }
-            if (firstVariant.veryLowStock === null || firstVariant.veryLowStock === "" || firstVariant.veryLowStock <= 0) {
+            if (firstVariant.veryLowStock === null || firstVariant.veryLowStock <= 0) {
                 errors.push("Very Low Stock value for the first variant must be greater than 0.");
             }
         } else {
@@ -416,11 +434,13 @@ const NewItem = () => {
         // Check additional variants
         for (let i = 1; i < cards.length; i++) {
             const card = cards[i];
+            if (!card) continue;
+
             if (card.variant.trim() !== "") {
-                if (card.lowStock === null || card.lowStock === "" || card.lowStock <= 0) {
+                if (card.lowStock === null || card.lowStock <= 0) {
                     errors.push(`Low Stock value for variant "${card.variant}" must be greater than 0.`);
                 }
-                if (card.veryLowStock === null || card.veryLowStock === "" || card.veryLowStock <= 0) {
+                if (card.veryLowStock === null || card.veryLowStock <= 0) {
                     errors.push(`Very Low Stock value for variant "${card.variant}" must be greater than 0.`);
                 }
             } else if (card.lowStock !== 0 || card.veryLowStock !== 0) {
@@ -466,13 +486,13 @@ const NewItem = () => {
 
             const brandId = selectedBrand
                 ? selectedBrand.brand_id
-                : await createBrandMutation({name: brandSearch}).then((res) => res.brand_id);
+                : await createBrandMutation({ name: brandSearch }).then((res) => res.brand_id);
 
             console.log("Brand ID:", brandId);
 
             const categoryId = selectedCategory
                 ? selectedCategory.category_id
-                : await createCategoryMutation({name: categorySearch}).then((res) => res.category_id);
+                : await createCategoryMutation({ name: categorySearch }).then((res) => res.category_id);
 
             console.log("Category ID:", categoryId);
 
@@ -481,7 +501,8 @@ const NewItem = () => {
             if (selectedItem) {
                 if (
                     selectedItem.brand_id === brandId &&
-                    selectedItem.category_id === categoryId
+                    selectedItem.category_id === categoryId &&
+                    selectedItem.item_id
                 ) {
                     if (selectedItem.description !== itemDescription) {
                         item = await updateItemMutation({
@@ -518,6 +539,9 @@ const NewItem = () => {
             }
 
             for (const card of validCards) {
+                if (!item.item_id) {
+                    throw new Error("Item ID is required");
+                }
                 // Only create new variants (existing ones are filtered out)
                 const variant = await createVariantMutation({
                     item_id: item.item_id,
@@ -563,7 +587,7 @@ const NewItem = () => {
                 category: false,
                 variant: false,
             });
-            setCards([{id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0}]);
+            setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
             setIsDialogCancelOpen(false);
         } catch (error) {
             console.error("Error saving item:", error);
@@ -598,8 +622,8 @@ const NewItem = () => {
                             <DialogHeader>
                                 <div className="flex w-full justify-center text-center text-xl">
                                     <span>
-                                      You have unsaved changes. Are you sure you want to leave
-                                      this page?
+                                        You have unsaved changes. Are you sure you want to leave
+                                        this page?
                                     </span>
                                 </div>
                             </DialogHeader>
@@ -659,22 +683,21 @@ const NewItem = () => {
                                     console.log(`Item Search Updated: ${value}`);
                                 }}
                                 className="bg-white text-black placeholder-slate-500"
-                                onFocus={() => setDropdownVisible((prev) => ({...prev, item: true}))}
-                                onBlur={() => setDropdownVisible((prev) => ({...prev, item: false}))}
+                                onFocus={() => setDropdownVisible((prev) => ({ ...prev, item: true }))}
+                                onBlur={() => setDropdownVisible((prev) => ({ ...prev, item: false }))}
                                 onKeyDown={(e) => handleKeyDown(e, "item")}
                             />
 
                             {dropdownVisible && filteredItems.length > 0 && (
                                 <div
                                     className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                                    style={{maxHeight: "200px", overflowY: "auto"}}
+                                    style={{ maxHeight: "200px", overflowY: "auto" }}
                                 >
                                     {filteredItems.map((itemName, index) => (
                                         <div
                                             key={index}
-                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                                                highlightedIndex === index ? "bg-emerald-200" : ""
-                                            }`}
+                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                                }`}
                                             onMouseDown={() => handleSelect("item", itemName)}
                                         >
                                             {itemName}
@@ -699,22 +722,21 @@ const NewItem = () => {
                                     console.log(`Brand Search Updated: ${value}`);
                                 }}
                                 className="bg-white text-black placeholder-slate-500"
-                                onFocus={() => setDropdownVisible((prev) => ({...prev, brand: true}))}
-                                onBlur={() => setDropdownVisible((prev) => ({...prev, brand: false}))}
+                                onFocus={() => setDropdownVisible((prev) => ({ ...prev, brand: true }))}
+                                onBlur={() => setDropdownVisible((prev) => ({ ...prev, brand: false }))}
                                 onKeyDown={(e) => handleKeyDown(e, "brand")}
                             />
 
                             {dropdownVisible && filteredBrands.length > 0 && (
                                 <div
                                     className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                                    style={{maxHeight: "200px", overflowY: "auto"}}
+                                    style={{ maxHeight: "200px", overflowY: "auto" }}
                                 >
                                     {filteredBrands.map((brandName, index) => (
                                         <div
                                             key={index}
-                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                                                highlightedIndex === index ? "bg-emerald-200" : ""
-                                            }`}
+                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                                }`}
                                             onMouseDown={() => handleSelect("brand", brandName)}
                                         >
                                             {brandName}
@@ -739,8 +761,8 @@ const NewItem = () => {
                                     console.log(`Category Search Updated: ${value}`);
                                 }}
                                 className="bg-white text-black placeholder-slate-500"
-                                onFocus={() => setDropdownVisible((prev) => ({...prev, category: true}))}
-                                onBlur={() => setDropdownVisible((prev) => ({...prev, category: false}))}
+                                onFocus={() => setDropdownVisible((prev) => ({ ...prev, category: true }))}
+                                onBlur={() => setDropdownVisible((prev) => ({ ...prev, category: false }))}
                                 onKeyDown={(e) => handleKeyDown(e, "category")}
                             />
 
@@ -748,14 +770,13 @@ const NewItem = () => {
                             {dropdownVisible && filteredCategories.length > 0 && (
                                 <div
                                     className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                                    style={{maxHeight: "200px", overflowY: "auto"}}
+                                    style={{ maxHeight: "200px", overflowY: "auto" }}
                                 >
                                     {filteredCategories.map((categoryName, index) => (
                                         <div
                                             key={index}
-                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                                                highlightedIndex === index ? "bg-emerald-200" : ""
-                                            }`}
+                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                                }`}
                                             onMouseDown={() => handleSelect("category", categoryName)}
                                         >
                                             {categoryName}
@@ -791,8 +812,8 @@ const NewItem = () => {
                                         value={card.variant}
                                         onChange={(e) => {
                                             if (!card.isExisting) {
-                                                const updatedCards = [...cards];
-                                                updatedCards[index].variant = e.target.value;
+                                                const updatedCards = [...cards] as typeof cards;
+                                                updatedCards[index]!.variant = e.target.value;
                                                 setCards(updatedCards);
                                                 console.log(`Variant Updated: ${e.target.value}`);
                                             }
@@ -807,8 +828,8 @@ const NewItem = () => {
                                         value={card.lowStock || ""}
                                         onChange={(e) => {
                                             if (!card.isExisting) {
-                                                const updatedCards = [...cards];
-                                                updatedCards[index].lowStock = e.target.value ? Number(e.target.value) : 0;
+                                                const updatedCards = [...cards] as typeof cards;
+                                                updatedCards[index]!.lowStock = e.target.value ? Number(e.target.value) : 0;
                                                 setCards(updatedCards);
                                                 console.log(`Low Stock for Variant '${card.variant}': ${e.target.value}`);
                                             }
@@ -824,8 +845,8 @@ const NewItem = () => {
                                         value={card.veryLowStock || ""}
                                         onChange={(e) => {
                                             if (!card.isExisting) {
-                                                const updatedCards = [...cards];
-                                                updatedCards[index].veryLowStock = e.target.value ? Number(e.target.value) : 0;
+                                                const updatedCards = [...cards] as typeof cards;
+                                                updatedCards[index]!.veryLowStock = e.target.value ? Number(e.target.value) : 0;
                                                 setCards(updatedCards);
                                                 console.log(`Very Low Stock for Variant '${card.variant}': ${e.target.value}`);
                                             }
@@ -856,7 +877,7 @@ const NewItem = () => {
                             className="w-full"
                             onClick={handleAddCard}
                         >
-                            <Plus className="mr-2 h-4 w-4"/>
+                            <Plus className="mr-2 h-4 w-4" />
                             Add Variant
                         </Button>
                     </div>

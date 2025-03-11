@@ -18,10 +18,10 @@ const poppins = Poppins({
   weight: ["400", "700"],
 });
 
-export type RestockProps = {
+interface RestockProps {
   restockId: number;
-  date: string;
-  supplier: string;
+  date: string | undefined;
+  supplier: string | null;
   restockClerk: string;
   addedStock: number;
   restockItems: {
@@ -29,15 +29,13 @@ export type RestockProps = {
     item: string;
     brand: string;
     quantity: number;
-    price: number;
+    price: number | undefined;
     mainUnit: string;
     unitConversion: {
-      from: string;
-      count: number;
-      to: string;
+      [key: string]: any;
     }[];
   }[];
-};
+}
 
 const RestockPage = () => {
   const router = useRouter();
@@ -55,15 +53,15 @@ const RestockPage = () => {
     isLoading,
     error,
   } = api.restock.getRestockData.useQuery(
-      clerkId ? { clerkId } : supplierId ? { supplierId } : undefined
+    clerkId ? { clerkId } : supplierId ? { supplierId } : undefined
   );
 
 
   if (isLoading)
     return (
-        <section className="flex h-screen w-full items-center justify-center">
-          <LoadingSpinner />
-        </section>
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
     );
 
   const handleViewAll = (batch: RestockProps) => {
@@ -82,51 +80,51 @@ const RestockPage = () => {
     const date = restock.date?.toLowerCase() ?? "";
 
     return (
-        restockId.includes(query) ||
-        supplier.includes(query) ||
-        restockClerk.includes(query) ||
-        date.includes(query)
+      restockId.includes(query) ||
+      supplier.includes(query) ||
+      restockClerk.includes(query) ||
+      date.includes(query)
     );
   });
 
   return (
-      <section
-          className={`h-auto w-full ${poppins.className} flex flex-col gap-3 py-10`}
-      >
-        <div className="flex items-center justify-between px-20">
-          <div className="flex items-center gap-3">
-            {/*//Searchbar*/}
-            <SearchBar
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-            />
-            <Filter />
-          </div>
-          <Button
-              onClick={() => router.push("restock/add-stock")}
-              className="bg-green hover:bg-green/80"
-          >
-            <Plus strokeWidth={3} /> Add Stock
-          </Button>
+    <section
+      className={`h-auto w-full ${poppins.className} flex flex-col gap-3 py-10`}
+    >
+      <div className="flex items-center justify-between px-20">
+        <div className="flex items-center gap-3">
+          {/*//Searchbar*/}
+          <SearchBar
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          />
+          <Filter />
         </div>
+        <Button
+          onClick={() => router.push("restock/add-stock")}
+          className="bg-green hover:bg-green/80"
+        >
+          <Plus strokeWidth={3} /> Add Stock
+        </Button>
+      </div>
 
-        <ScrollArea className="mt-5">
-          <div className="grid grid-cols-2 px-20 gap-4">
-            {filteredRestocks?.map((restock: RestockProps) => (
-                <RestockRecord
-                    key={restock.restockId}
-                    restockId={restock.restockId}
-                    date={restock.date}
-                    supplier={restock.supplier}
-                    restockClerk={restock.restockClerk}
-                    addedStock={restock.addedStock}
-                    restockItems={restock.restockItems}
-                    onViewAll={handleViewAll}
-                />
-            ))}
-          </div>
-        </ScrollArea>
-      </section>
+      <ScrollArea className="mt-5">
+        <div className="grid grid-cols-2 px-20 gap-4">
+          {filteredRestocks?.map((restock: RestockProps) => (
+            <RestockRecord
+              key={restock.restockId}
+              restockId={restock.restockId}
+              date={restock.date}
+              supplier={restock.supplier}
+              restockClerk={restock.restockClerk}
+              addedStock={restock.addedStock}
+              restockItems={restock.restockItems}
+              onViewAll={handleViewAll}
+            />
+          ))}
+        </div>
+      </ScrollArea>
+    </section>
   );
 };
 

@@ -1,13 +1,51 @@
-import {Box, Boxes, Hash, Pencil, Tag} from 'lucide-react';
+import { Box, Boxes, Hash, Pencil, Tag } from 'lucide-react';
 import { Separator } from '~/components/ui/separator';
 import RecordInfo from '../../_components/record-info';
 import RecordNotes from '../../_components/record-notes';
 import EditRecord from './edit-record';
 import InventoryBatch from './inventory-batch';
-import {BatchVariant} from "@prisma/client";
+import { BatchVariant } from "@prisma/client";
 import { useRouter } from "next/navigation"
 import Edit from '../../_components/edit'
 import React from "react";
+
+// Update the interface to match the BatchVariant interface exactly
+interface BatchVariantData {
+	batch_variant_id: string;  // Changed from number to string
+	variant_id: number;
+	quantity: number;
+	batch: {
+		batch_id: string;
+		batch_number: string;
+		batchVariants?: {
+			batch_variant_id: string;
+			SupplierUnit?: {
+				supplier_unit_id: string;
+				quantity_per_unit: number;
+				price: number;
+				unit?: { name: string };
+				ConversionRate?: {
+					conversion_id: string;
+					conversion_rate: number;
+					fromUnit?: { name: string };
+					toUnit?: { name: string };
+				}[];
+			}[];
+		}[];
+	};
+	SupplierUnit?: {
+		supplier_unit_id: string;
+		quantity_per_unit: number;
+		price: number;
+		ConversionRate?: {
+			conversion_id: string;
+			conversion_rate: number;
+			fromUnit?: { name: string };
+			toUnit?: { name: string };
+		}[];
+		unit?: { name: string };
+	}[];
+}
 
 type SelectedItemProps = {
 	id: string;
@@ -18,7 +56,7 @@ type SelectedItemProps = {
 	category: string;
 	stockLevel: string;
 	notes?: string;
-	batchVariants: BatchVariant[];
+	batchVariants: BatchVariantData[];
 	onVerifyPassword: (password: string) => Promise<boolean>;
 }
 
@@ -81,22 +119,22 @@ const SelectedItem = ({
 						</div>
 					</div>
 					<p className="text-slate-400 text-sm flex items-center gap-1">
-						<Hash className="h-4 w-4"/>
+						<Hash className="h-4 w-4" />
 						{inventoryNumber}
 					</p>
 
 				</div>
 				{/*<EditRecord />*/}
 				<div className='hover:cursor-pointer' onClick={handleEditItem}>
-					<Edit className='text-gray-500'/>
+					<Edit className='text-gray-500' />
 				</div>
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5'/>
+			<Separator className='h-[1px] bg-slate-300 mt-5' />
 
 			<div className="flex flex-col gap-3 mt-5">
-				<RecordInfo icon={Box} recordType={'Item'} info={item}/>
-				<RecordInfo icon={Tag} recordType={'Brand'} info={brand}/>
+				<RecordInfo icon={Box} recordType={'Item'} info={item} />
+				<RecordInfo icon={Tag} recordType={'Brand'} info={brand} />
 				<RecordInfo icon={Boxes} recordType={'Category'} info={category} />
 				<RecordNotes notes={notes} />
 			</div>
@@ -107,10 +145,18 @@ const SelectedItem = ({
 
 				{/* //TODO: reflect invoice data based on selected customer */}
 				<InventoryBatch
-					batchVariants={batchVariants}
+					batchVariants={batchVariants.map(bv => ({
+						...bv,
+						batch_variant_id: bv.batch_variant_id.toString()
+					}))}
 					selectedVariantId={Number(id)}
 					onVerifyPassword={onVerifyPassword}
 					inventoryNumber={inventoryNumber}
+					restockId={0}
+					date=""
+					employee=""
+					addedStock={0}
+					restockData={undefined}
 				/>
 			</div>
 

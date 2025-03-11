@@ -127,8 +127,6 @@ const CustomersPage = () => {
     );
   });
 
-  void router.refresh();
-
   return (
     <section className="flex min-h-screen flex-col px-20 py-10 text-base">
       <div className="flex items-center justify-between">

@@ -221,31 +221,29 @@ const NewCustomerState = ({ id }: { id: string }) => {
         return newErrors;
     };
 
-    const handleSubmit = async () => {
-        const formErrors = validateForm();
-        setErrors(formErrors);
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        try {
+            await createCustomer.mutateAsync({
+                company: customerForm.businessName,
+                term: customerForm.term.trim() ?
+                    parseInt(customerForm.term, 10) :
+                    null,
+                firstName: customerForm.firstName,
+                lastName: customerForm.lastName,
+                contact: customerForm.contact,
+                email: customerForm.email,
+                addressLine: customerForm.addressLine,
+                city: customerForm.city,
+                region: customerForm.region,
+                country: customerForm.country,
+                postalCode: customerForm.postalCode,
+                notes: customerForm.notes,
+            });
 
-        if (Object.keys(formErrors).length === 0) {
-            try {
-                await createCustomer.mutateAsync({
-                    company: customerForm.businessName,
-                    term: customerForm.term.trim() ?
-                        parseInt(customerForm.term, 10) :
-                        null,
-                    firstName: customerForm.firstName,
-                    lastName: customerForm.lastName,
-                    contact: customerForm.contact,
-                    email: customerForm.email,
-                    addressLine: customerForm.addressLine,
-                    city: customerForm.city,
-                    region: customerForm.region,
-                    country: customerForm.country,
-                    postalCode: customerForm.postalCode,
-                    notes: customerForm.notes,
-                });
-            } catch (error) {
-                console.error("Error creating customer:", error);
-            }
+            await router.push("/admin/customers");
+        } catch (error) {
+            console.error("Failed to create customer:", error);
         }
     };
 

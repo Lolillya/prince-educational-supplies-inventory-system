@@ -122,8 +122,6 @@ const SuppliersPage = () => {
   //   ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
   //   : [];
 
-  void router.refresh();
-
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
       <div className="flex justify-between items-center">

@@ -184,31 +184,27 @@ const EditSupplierState = ({ id }: { id: string }) => {
         return newErrors;
     };
 
-    const handleSubmit = async () => {
-        const formErrors = validateForm();
-        setErrors(formErrors);
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        try {
+            await updateSupplier.mutateAsync({
+                id,
+                company: supplierForm.businessName,
+                firstName: supplierForm.firstName,
+                lastName: supplierForm.lastName,
+                contact: supplierForm.contact,
+                email: supplierForm.email,
+                addressLine: supplierForm.addressLine,
+                city: supplierForm.city,
+                region: supplierForm.region,
+                country: supplierForm.country,
+                postalCode: supplierForm.postalCode,
+                notes: supplierForm.notes,
+            });
 
-        if (Object.keys(formErrors).length === 0) {
-            try {
-                await updateSupplier.mutateAsync({
-                    id,
-                    company: supplierForm.businessName,
-                    firstName: supplierForm.firstName,
-                    lastName: supplierForm.lastName,
-                    contact: supplierForm.contact,
-                    email: supplierForm.email,
-                    addressLine: supplierForm.addressLine,
-                    city: supplierForm.city,
-                    region: supplierForm.region,
-                    country: supplierForm.country,
-                    postalCode: supplierForm.postalCode,
-                    notes: supplierForm.notes,
-                });
-            } catch (error) {
-                console.error("Error updating supplier:", error);
-                setErrorMessage("Failed to update supplier. Please try again.");
-                setShowErrorDialog(true);  // Open error dialog if update fails
-            }
+            await router.push("/admin/suppliers");
+        } catch (error) {
+            console.error("Failed to edit supplier:", error);
         }
     };
 

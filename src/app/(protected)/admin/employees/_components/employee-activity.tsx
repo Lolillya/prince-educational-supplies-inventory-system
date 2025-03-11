@@ -58,6 +58,9 @@ const EmployeeActivity = ({ activityData, clerkId }: EmployeeActivityProps) => {
 							<InvoiceDialog
 								key={activity.invoice_id}
 								activity={activity}
+								invoice={activity.invoice}
+								id={activity.invoice_id}
+								context="employee"
 							/>
 						)
 					))}

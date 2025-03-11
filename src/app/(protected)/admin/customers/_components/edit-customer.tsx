@@ -56,7 +56,7 @@ const defaultCustomerForm: CustomerFormState = {
 };
 
 const EditCustomerState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<CustomerFormErrors>({});
     const [customerForm, setCustomerForm] = useState<CustomerFormState>(defaultCustomerForm);
     const router = useRouter();
     const { refetch } = api.customers.list.useQuery();
@@ -99,7 +99,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
                 firstName: customerData.first_name ?? "",
                 lastName: customerData.last_name ?? "",
                 businessName: customerData.company ?? "",
-                term: customerData.term ?? "",
+                term: customerData.term?.toString() ?? "",
                 contact: customerData.contact ?? "",
                 email: customerData.email ?? "",
                 addressLine: customerData.location?.address_line ?? "",
@@ -167,7 +167,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
         }
 
         if (addressLine && addressLine.trim().length < 5) {
-        newErrors.addressLine = "Address must be at least 5 characters long.";
+            newErrors.addressLine = "Address must be at least 5 characters long.";
         } else if (addressLine && addressLine.trim().length > 100) {
             newErrors.addressLine = "Address Line must be at most 100 characters long.";
         }
@@ -330,8 +330,8 @@ const EditCustomerState = ({ id }: { id: string }) => {
                                 value={customerForm.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastname && (
-                                <span className="text-red">{errors.lastname}</span>
+                            {errors.lastName && (
+                                <span className="text-red">{errors.lastName}</span>
                             )}
                         </div>
                     </div>

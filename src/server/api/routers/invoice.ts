@@ -271,7 +271,35 @@ export const invoiceRouter = createTRPCRouter({
             })),
           });
 
-          return { createdInvoice, createdLineItems };
+          const generateBatchNumber = () => {
+            return Math.floor(1000000 + Math.random() * 9000000);
+          };
+
+          const batch = await ctx.db.batch.create({
+            data: {
+              quantity: lineItems[0]?.quantity ?? 0,
+              batch_number: generateBatchNumber(),
+              restock_clerk: invoice.invoice_clerk,
+            },
+          });
+
+          let batchVariant;
+
+          if (lineItems[0]?.variant_id !== undefined) {
+            batchVariant = await ctx.db.batchVariant.create({
+              data: {
+                batch_id: batch.batch_id,
+                variant_id: lineItems[0].variant_id, // Safe because we checked for undefined
+                quantity: lineItems[0].quantity ?? 0,
+              },
+            });
+          } else {
+            console.warn(
+              "Skipping batchVariant creation due to undefined variant_id",
+            );
+          }
+
+          return { createdInvoice, createdLineItems, batch, batchVariant };
         }
 
         // Step 3: Process each Line Item when isBatchAutoRestock is FALSE

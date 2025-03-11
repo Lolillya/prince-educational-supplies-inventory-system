@@ -526,7 +526,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
                 </Dialog>
 
                 <Button
-                    onClick={handleSubmit}
+                    onClick={() => handleSubmit(new Event('submit') as any)}
                     className="bg-green p-7 text-lg font-bold"
                     disabled={updateCustomer.isPending}
                 >

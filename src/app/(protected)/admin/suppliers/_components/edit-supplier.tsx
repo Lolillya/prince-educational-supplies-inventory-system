@@ -488,7 +488,7 @@ const EditSupplierState = ({ id }: { id: string }) => {
                     </DialogContent>
                 </Dialog>
 
-                <Button onClick={handleSubmit} className="bg-green p-7 text-lg font-bold">
+                <Button onClick={() => handleSubmit(new Event('submit') as any)} className="bg-green p-7 text-lg font-bold">
                     Save
                 </Button>
             </div>

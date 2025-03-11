@@ -418,7 +418,7 @@ const NewSupplierState = ({ id }: { id: string }) => {
         <Button onClick={handleClear} className="bg-green p-7 text-lg font-bold">
           Clear
         </Button>
-        <Button onClick={handleSubmit} className="bg-green p-7 text-lg font-bold">
+        <Button onClick={() => handleSubmit(new Event('submit') as any)} className="bg-green p-7 text-lg font-bold">
           Save
         </Button>
       </div>

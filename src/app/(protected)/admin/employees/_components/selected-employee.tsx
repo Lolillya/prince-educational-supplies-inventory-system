@@ -63,11 +63,10 @@ const SelectedEmployee = ({
 								{name}
 							</p>
 							{/* //TODO: reflect admin status */}
-							<p className={`rounded-full px-2 py-[3px] text-sm tracking-wide ${
-								role_Id === 1
-									? 'bg-rose-200 text-rose-700'
-									: 'bg-emerald-200 text-emerald-700'
-							}`}>
+							<p className={`rounded-full px-2 py-[3px] text-sm tracking-wide ${role_Id === 1
+								? 'bg-rose-200 text-rose-700'
+								: 'bg-emerald-200 text-emerald-700'
+								}`}>
 								{role_Id === 1 ? 'admin' : 'employee'}
 							</p>
 						</div>
@@ -77,14 +76,14 @@ const SelectedEmployee = ({
 					</div>
 				</div>
 				<div onClick={handleEditEmployee} className="cursor-pointer">
-					<Edit/>
+					<Edit />
 				</div>
 			</div>
 
-			<Separator className='h-[1px] bg-slate-300 mt-5'/>
+			<Separator className='h-[1px] bg-slate-300 mt-5' />
 
 			<div className="flex flex-col gap-3 mt-5">
-			<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
+				<RecordInfo icon={Phone} recordType={'Contact'} info={contact} />
 				<RecordInfo icon={Mail} recordType={'Email'} info={email} />
 				<RecordInfo icon={MapPin} recordType={'Location'} info={location} />
 				<RecordNotes notes={notes} />
@@ -99,10 +98,10 @@ const SelectedEmployee = ({
 			<div className='mt-5'>
 
 				{/* //TODO: reflect restock data based on selected supplier */}
-				<EmployeeActivity
-					activityData={activityData}
+				{/* <EmployeeActivity
+					activityData={activityData ?? { restocks: [], invoices: [] }}
 					clerkId={clerkId}
-				/>
+				/> */}
 			</div>
 		</div>
 	)

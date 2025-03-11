@@ -202,11 +202,7 @@ const EditSupplierState = ({ id }: { id: string }) => {
                 notes: supplierForm.notes,
             });
 
-            try {
-                await router.push("/admin/suppliers");
-            } catch (error) {
-                console.error("Navigation failed:", error);
-            }
+            void router.push("/admin/suppliers");
         } catch (error) {
             console.error("Failed to edit supplier:", error);
         }
@@ -221,11 +217,7 @@ const EditSupplierState = ({ id }: { id: string }) => {
             await deleteSupplier.mutateAsync({ id });
             setSuccessMessage("Supplier deleted successfully!");
             setShowSuccessDialog(true);  // Show success dialog
-            try {
-                await router.push("/admin/suppliers");
-            } catch (error) {
-                console.error("Navigation failed:", error);
-            }
+            void router.push("/admin/suppliers");
         } catch (error) {
             console.error("Error deleting supplier:", error);
             setErrorMessage("Failed to delete supplier. Please try again.");

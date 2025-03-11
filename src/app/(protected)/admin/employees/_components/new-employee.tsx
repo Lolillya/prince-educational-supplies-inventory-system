@@ -9,7 +9,7 @@ import { Label } from "~/components/ui/label";
 import { LoadingSpinner } from "~/components/loading";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
-import {DialogTitle} from "@radix-ui/react-dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
 
 
@@ -61,7 +61,7 @@ const defaultEmployeeForm: EmployeeFormState = {
 };
 
 const NewEmployeeState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<EmployeeFormErrors>({});
     const router = useRouter();
     const { refetch } = api.employees.list.useQuery();
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -148,7 +148,7 @@ const NewEmployeeState = ({ id }: { id: string }) => {
 
     const validateForm = (): EmployeeFormErrors => {
         const newErrors: EmployeeFormErrors = {};
-        const { firstName, lastName, contact, email, addressLine, city, region, country, postalCode, notes,username,password } = employeeForm;
+        const { firstName, lastName, contact, email, addressLine, city, region, country, postalCode, notes, username, password } = employeeForm;
 
         if (!firstName) {
             newErrors.firstName = "First Name is required.";

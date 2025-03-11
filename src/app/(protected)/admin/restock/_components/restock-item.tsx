@@ -26,6 +26,7 @@ interface RestockItemsProps {
     from: string;
     count: number;
     to: string;
+    price: number;
   }[];
 }
 
@@ -66,6 +67,7 @@ const RestockItem: React.FC<RestockItemsProps> = ({
                     from={unit.from}
                     count={unit.count}
                     to={unit.to}
+                    price={unit.price}
                   />
                 ))}
               </HoverCardContent>

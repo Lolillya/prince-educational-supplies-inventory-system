@@ -1,26 +1,26 @@
 /** @type {import("eslint").Linter.Config} */
 const config = {
-  "parser": "@typescript-eslint/parser",
-  "parserOptions": {
-    "project": true
+  parser: "@typescript-eslint/parser",
+  parserOptions: {
+    project: true,
   },
-  "plugins": [
-    "@typescript-eslint"
-  ],
-  "extends": [
+  plugins: ["@typescript-eslint"],
+  extends: [
     "next/core-web-vitals",
     "plugin:@typescript-eslint/recommended-type-checked",
-    "plugin:@typescript-eslint/stylistic-type-checked"
+    "plugin:@typescript-eslint/stylistic-type-checked",
   ],
-  "rules": {
+  rules: {
     "@typescript-eslint/array-type": "off",
     "@typescript-eslint/consistent-type-definitions": "off",
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       {
+
         "prefer": "type-imports",
         "fixStyle": "inline-type-imports"
       }
+
     ],
     "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/require-await": "off",
@@ -42,15 +42,19 @@ const config = {
     "@typescript-eslint/restrict-template-expressions": "warn",
     "@typescript-eslint/no-empty-object-type": "warn",
     "react-hooks/exhaustive-deps": "warn",
+
     "@typescript-eslint/no-unused-expressions": "warn"
   },
   "ignorePatterns": [
+
     ".config/*",
     "node_modules/*",
     ".next/*",
     "build/*",
+
     "dist/*"
   ]
 }
 
 module.exports = config;
+

@@ -16,6 +16,7 @@ import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
 
+
 interface PersonalDetails {
   personal_details_id: string;
   location_id: number;
@@ -30,6 +31,7 @@ interface PersonalDetails {
     username: string;
   } | null;
 }
+
 
 interface Customer {
   id: string;
@@ -67,19 +69,20 @@ const CustomersPage = () => {
 
   const { data: customerData } = api.customers.list.useQuery();
 
-
   const utils = api.useUtils();
   const { data: session } = useSession();
   const userRole = session?.user?.role;
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: invoiceActivity } = api.customers.getCustomerInvoices.useQuery(
+
     { customerId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
     { enabled: !!selectedRecord }
+
   );
 
   const activityCustomerData = {
-    invoices: invoiceActivity ?? []
+    invoices: invoiceActivity ?? [],
   };
 
   const verifyPasswordMutation = api.customers.verifyPassword.useMutation();
@@ -108,8 +111,8 @@ const CustomersPage = () => {
   });
 
   const checkAdminRole = () => {
-    if (userRole !== 'ADMIN') {
-      alert('Only ADMIN users can delete suppliers');
+    if (userRole !== "ADMIN") {
+      alert("Only ADMIN users can delete suppliers");
       return false;
     }
     return true;
@@ -159,6 +162,7 @@ const CustomersPage = () => {
           <RecordHeader
             record="Customers"
             number={filteredCustomers?.length ?? 0}
+
             data={filteredCustomers?.map(customer => ({
               ...customer,
               Personal_Details: {
@@ -167,6 +171,7 @@ const CustomersPage = () => {
                 location_id: customer.Personal_Details.location?.location_id ?? 0,
               }
             })) ?? []}
+
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredCustomers?.length ?? 0) > 0 ? (
@@ -183,7 +188,7 @@ const CustomersPage = () => {
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
                       }
-                      recordType={'Customers'}
+                      recordType={"Customers"}
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
                         handleDelete(id);
@@ -239,7 +244,7 @@ const CustomersPage = () => {
                     // TODO: reflect restock data based on selected supplier
                     // restockData={supplierRestockData}
                     invoiceHistoryData={activityCustomerData}
-                    clerkId={selectedRecord.id ?? ''}
+                    clerkId={selectedRecord.id ?? ""}
                   />
                 </div>
               </ScrollArea>

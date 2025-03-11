@@ -18,6 +18,8 @@ import {
 } from "~/components/ui/tooltip";
 
 import InvoiceDialog from "~/app/(protected)/admin/employees/_components/invoice-dialog";
+import {router} from "next/client";
+import {useRouter} from "next/navigation";
 
 // const poppins = Poppins({
 //     subsets: ["latin"],
@@ -43,16 +45,19 @@ interface CustomerInvoiceProps {
 }
 
 export default function CustomerInvoice({
+
     invoiceData,
     // first_name,
     // last_name,
     customerId,
 }: CustomerInvoiceProps) {
     const router = useRouter();
+
     const [showAll, setShowAll] = useState(false);
     const displayedData = showAll ? invoiceData : invoiceData.slice(0, 3);
     const totalCount = invoiceData.length;
     const shownCount = displayedData.length;
+    const router = useRouter();
 
     // const [isEditing, setIsEditing] = useState(false);
     // const [isDialogOpen, setIsDialogOpen] = useState(false);

@@ -22,6 +22,9 @@ interface InventoryPageProps {
   // Add any page-specific props here
 }
 
+// Add a type for the API response
+type APIInventoryResponse = Awaited<ReturnType<typeof api.inventory.listInventory.useQuery>['data']>;
+
 const InventoryPage = () => {
   const router = useRouter();
   const [searchTerm, setSearchTerm] = useState<string>("");
@@ -102,7 +105,7 @@ const InventoryPage = () => {
     const search = searchTerm.toLowerCase();
 
     return item.includes(search) || id.toString().includes(search);
-  }) ?? []) as InventoryItem[];
+  }) ?? []) satisfies APIInventoryResponse;
 
   return (
     <section className="flex min-h-screen flex-col px-20 py-10 text-base">

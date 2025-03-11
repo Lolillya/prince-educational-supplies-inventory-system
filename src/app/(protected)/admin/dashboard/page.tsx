@@ -24,12 +24,10 @@ interface PieChartData {
   fill: string;
 }
 
-interface PieChartConfig {
-  [key: string]: {
+type PieChartConfig = Record<string, {
     label: string;
     color: string;
-  };
-}
+  }>;
 
 const pieChartData: PieChartData[] = [
   { category: "Stationery", sales: 275, fill: "hsl(var(--chart-1))" },
@@ -53,12 +51,10 @@ interface AreaChartData {
   sales: number;
 }
 
-interface AreaChartConfig {
-  [key: string]: {
+type AreaChartConfig = Record<string, {
     label: string;
     color: string;
-  };
-}
+  }>;
 
 const areaChartData: AreaChartData[] = [
   { month: "January", sales: 123 },

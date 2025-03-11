@@ -1,13 +1,13 @@
-import { Mail, MapPin, PhilippinePeso, Phone, User2 } from "lucide-react";
+import { Mail, MapPin, Phone, User2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Separator } from "~/components/ui/separator";
+import Edit from '../../_components/edit';
 import RecordInfo from "../../_components/record-info";
 import RecordNotes from "../../_components/record-notes";
-import Edit from '../../_components/edit'
 import CustomerInvoice from "./customer-invoice";
-import React, { useState } from "react";
 import Payables from "./payables";
-import { useRouter } from "next/navigation";
 
 type SelectedCustomerProps = {
   first_name: string;
@@ -33,6 +33,13 @@ type SelectedCustomerProps = {
       };
     };
   }[];
+  auth?: {
+    username: string;
+  } | null;
+  invoiceHistoryData: {
+    invoices: any[]; // Replace 'any' with the correct type
+  };
+  clerkId: string;
 };
 
 const SelectedCustomer = ({
@@ -48,8 +55,11 @@ const SelectedCustomer = ({
   location,
   notes,
   invoiceData,
+  // auth,
+  // invoiceHistoryData,
+  // clerkId,
 }: SelectedCustomerProps) => {
-  const [sum, setSum] = useState<number>();
+  // const [sum, setSum] = useState<number>();
   const router = useRouter();
 
   const handleEditCustomer = (e: React.MouseEvent) => {
@@ -72,9 +82,9 @@ const SelectedCustomer = ({
                 {company}
               </p>
               {role_Id === 3 && (
-                  <p className="rounded-full px-2 py-[3px] text-sm tracking-wide bg-cyan-200 text-cyan-700">
-                    Customer
-                  </p>
+                <p className="rounded-full px-2 py-[3px] text-sm tracking-wide bg-cyan-200 text-cyan-700">
+                  Customer
+                </p>
               )}
             </div>
             <p className='text-slate-400 text-sm'>
@@ -83,19 +93,19 @@ const SelectedCustomer = ({
           </div>
         </div>
         <div onClick={handleEditCustomer} className="cursor-pointer">
-          <Edit/>
+          <Edit />
         </div>
       </div>
 
-      <Separator className="mt-5 h-[1px] bg-slate-300"/>
+      <Separator className="mt-5 h-[1px] bg-slate-300" />
 
       <div className="mt-5 flex flex-col gap-3">
-        <Payables sum={5000}/>
+        <Payables sum={5000} />
 
         <RecordInfo
-            icon={User2}
-            recordType={"Representative"}
-            info={representative}
+          icon={User2}
+          recordType={"Representative"}
+          info={representative}
         />
         <RecordInfo icon={Phone} recordType={"Contact"} info={contact} />
         <RecordInfo icon={Mail} recordType={"Email"} info={email} />
@@ -108,10 +118,10 @@ const SelectedCustomer = ({
       <div className="mt-5">
         {/* //TODO: reflect invoice data based on selected customer */}
         <CustomerInvoice
-            invoiceData={invoiceData}
-            customerId={id}
-            first_name={first_name}
-            last_name={last_name}
+          invoiceData={invoiceData}
+          customerId={id}
+          first_name={first_name}
+          last_name={last_name}
         />
       </div>
     </div>

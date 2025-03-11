@@ -1,6 +1,6 @@
 import jsPDF from "jspdf";
 import "jspdf-autotable";
-import type { RouterOutputs } from "~/trpc/shared";
+import type { RouterOutputs } from "~/trpc/react";
 
 interface ItemState {
   selectedBatchId?: string;
@@ -52,7 +52,7 @@ export const handleExport = ({
     // Group items by description and unit, tracking unique prices
     const groupedItems = sortedItems.reduce(
       (acc, { item, index }) => {
-        const itemKey = `${item.variant.id}-${index}`;
+        const itemKey = `${item.variant.variant_id}-${index}`;
         const state = itemStates[itemKey];
         const description = [
           item.variant.item.name,

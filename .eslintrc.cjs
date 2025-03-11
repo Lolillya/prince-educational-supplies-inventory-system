@@ -16,9 +16,11 @@ const config = {
     "@typescript-eslint/consistent-type-imports": [
       "warn",
       {
-        prefer: "type-imports",
-        fixStyle: "inline-type-imports",
-      },
+
+        "prefer": "type-imports",
+        "fixStyle": "inline-type-imports"
+      }
+
     ],
     "@typescript-eslint/no-unused-vars": "warn",
     "@typescript-eslint/require-await": "off",
@@ -40,15 +42,19 @@ const config = {
     "@typescript-eslint/restrict-template-expressions": "warn",
     "@typescript-eslint/no-empty-object-type": "warn",
     "react-hooks/exhaustive-deps": "warn",
-    "@typescript-eslint/no-unused-expressions": "warn",
+
+    "@typescript-eslint/no-unused-expressions": "warn"
   },
-  ignorePatterns: [
+  "ignorePatterns": [
+
     ".config/*",
     "node_modules/*",
     ".next/*",
     "build/*",
-    "dist/*",
-  ],
-};
+
+    "dist/*"
+  ]
+}
 
 module.exports = config;
+

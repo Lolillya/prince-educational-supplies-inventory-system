@@ -1,44 +1,30 @@
 import {
     ArrowUpRight,
-    Calendar,
     IdCard,
-    PhilippinePeso,
-    Printer,
+    PhilippinePeso
+    // Calendar,
+    // Printer
 } from "lucide-react";
-import {Poppins} from "next/font/google";
+// import { Poppins } from "next/font/google";
 import Link from "next/link";
-import React, {FC, useState} from "react";
-import {Button} from "~/components/ui/button";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "~/components/ui/dialog";
-import {Input} from "~/components/ui/input";
-import {Label} from "~/components/ui/label";
-import {Separator} from "~/components/ui/separator";
-import {Textarea} from "~/components/ui/textarea";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
+import { Separator } from "~/components/ui/separator";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "~/components/ui/tooltip";
-import RecordEditor from "../../_components/record-editor";
-import RecordExpand from "../../_components/record-expand";
 
 import InvoiceDialog from "~/app/(protected)/admin/employees/_components/invoice-dialog";
 import {router} from "next/client";
 import {useRouter} from "next/navigation";
 
-const poppins = Poppins({
-    subsets: ["latin"],
-    weight: ["400", "700"],
-});
+// const poppins = Poppins({
+//     subsets: ["latin"],
+//     weight: ["400", "700"],
+// });
 
 interface CustomerInvoiceProps {
     invoiceData: {
@@ -59,12 +45,14 @@ interface CustomerInvoiceProps {
 }
 
 export default function CustomerInvoice({
-                                            invoiceData,
-                                            // id,
-                                            // first_name,
-                                            // last_name,
-                                            customerId,
-                                        }: CustomerInvoiceProps) {
+
+    invoiceData,
+    // first_name,
+    // last_name,
+    customerId,
+}: CustomerInvoiceProps) {
+    const router = useRouter();
+
     const [showAll, setShowAll] = useState(false);
     const displayedData = showAll ? invoiceData : invoiceData.slice(0, 3);
     const totalCount = invoiceData.length;
@@ -82,7 +70,7 @@ export default function CustomerInvoice({
     //     setIsEditing((prev) => !prev);
     //     setShowWarning(false);
     // };
-    //
+
     // const handleKeyDown = (event: React.KeyboardEvent) => {
     //     if (event.key === "Escape" && isEditing) {
     //         setShowWarning(true);
@@ -97,7 +85,7 @@ export default function CustomerInvoice({
                     <div
                         className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
                         Invoices
-                        <ArrowUpRight className="h-4 w-4"/>
+                        <ArrowUpRight className="h-4 w-4" />
                     </div>
                 </Link>
                 {totalCount > 0 && (
@@ -117,10 +105,10 @@ export default function CustomerInvoice({
                             className="cursor-pointer hover:bg-slate-100/50 transition-colors"
                         >
                             <InvoiceDialog
-                                invoice={invoice}
                                 id={customerId}
                                 activity={invoice}
                                 context="customer"
+                                invoice={invoice}
                             />
                         </div>
                     ))}
@@ -250,8 +238,6 @@ export default function CustomerInvoice({
 {/*        </div>*/
 }
 {/*      </div>*/
-}
-{/*    </DialogHeader>*/
 }
 
 {/*    <Separator orientation="horizontal" className="h-[2px]" />*/
@@ -447,20 +433,18 @@ export default function CustomerInvoice({
 {/*}*/
 }
 
-const CustomerRestockCard = ({invoiceData}: CustomerInvoiceProps) => {
-    // TODO: reflect restock data based on selected supplier
-
-    return invoiceData.map((invoice, index) => (
+const CustomerRestockCard = ({ invoiceData }: CustomerInvoiceProps) => {
+    return invoiceData.map((invoice) => (
         <div
             className="flex cursor-pointer flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:bg-slate-200/50"
-            key={index}
+            key={invoice.invoice_number}
         >
             <p className="text-left text-slate-600">#{invoice.invoice_number}</p>
             <div className="flex flex-grow items-center gap-3 overflow-hidden">
                 <TooltipProvider>
                     <Tooltip>
                         <TooltipTrigger asChild>
-                            <IdCard className="h-4 w-4"/>
+                            <IdCard className="h-4 w-4" />
                         </TooltipTrigger>
                         <TooltipContent
                             className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
@@ -494,7 +478,7 @@ const CustomerRestockCard = ({invoiceData}: CustomerInvoiceProps) => {
                     <TooltipProvider>
                         <Tooltip>
                             <TooltipTrigger asChild>
-                                <PhilippinePeso className="h-4 w-4"/>
+                                <PhilippinePeso className="h-4 w-4" />
                             </TooltipTrigger>
                             <TooltipContent
                                 className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">

@@ -1,11 +1,11 @@
 import { TrendingUp } from 'lucide-react';
-import React from 'react'
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart'
+import React from 'react';
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart';
 
 interface SalesAreaCardProps {
 	areaChartData: { month: string; sales: number }[];
-	areaChartConfig: { [key: string]: { label: string; color: string; } }
+	areaChartConfig: Record<string, { label: string; color: string; }>
 }
 
 const SalesAreaCard: React.FC<SalesAreaCardProps> = ({ areaChartData, areaChartConfig }) => {

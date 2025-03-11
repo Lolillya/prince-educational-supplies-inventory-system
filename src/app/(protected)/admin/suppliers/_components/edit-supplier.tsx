@@ -1,14 +1,14 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogTrigger, DialogContent, DialogTitle, DialogDescription, DialogFooter } from "~/components/ui/dialog";
+import React, { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogTitle, DialogTrigger } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 interface SupplierFormState {
     firstName: string;
@@ -53,7 +53,7 @@ const defaultSupplierForm: SupplierFormState = {
 };
 
 const EditSupplierState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<SupplierFormErrors>({});
     const [supplierForm, setSupplierForm] = useState<SupplierFormState>(defaultSupplierForm);
     const router = useRouter();
     const { refetch } = api.suppliers.list.useQuery();
@@ -119,13 +119,13 @@ const EditSupplierState = ({ id }: { id: string }) => {
         const newErrors: SupplierFormErrors = {};
         const { firstName, lastName, businessName, contact, email, addressLine, city, region, country, postalCode, notes } = supplierForm;
 
-        if (firstName && (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/))) {
+        if (firstName && (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName)))) {
             newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
         } else if (firstName && firstName.length > 50) {
             newErrors.firstName = "First Name must be at most 50 characters long.";
         }
 
-        if (lastName && (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/))) {
+        if (lastName && (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName)))) {
             newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
         } else if (lastName && lastName.length > 50) {
             newErrors.lastName = "Last Name must be at most 50 characters long.";
@@ -184,31 +184,27 @@ const EditSupplierState = ({ id }: { id: string }) => {
         return newErrors;
     };
 
-    const handleSubmit = async () => {
-        const formErrors = validateForm();
-        setErrors(formErrors);
+    const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        e.preventDefault();
+        try {
+            await updateSupplier.mutateAsync({
+                id,
+                company: supplierForm.businessName,
+                firstName: supplierForm.firstName,
+                lastName: supplierForm.lastName,
+                contact: supplierForm.contact,
+                email: supplierForm.email,
+                addressLine: supplierForm.addressLine,
+                city: supplierForm.city,
+                region: supplierForm.region,
+                country: supplierForm.country,
+                postalCode: supplierForm.postalCode,
+                notes: supplierForm.notes,
+            });
 
-        if (Object.keys(formErrors).length === 0) {
-            try {
-                await updateSupplier.mutateAsync({
-                    id,
-                    company: supplierForm.businessName,
-                    firstName: supplierForm.firstName,
-                    lastName: supplierForm.lastName,
-                    contact: supplierForm.contact,
-                    email: supplierForm.email,
-                    addressLine: supplierForm.addressLine,
-                    city: supplierForm.city,
-                    region: supplierForm.region,
-                    country: supplierForm.country,
-                    postalCode: supplierForm.postalCode,
-                    notes: supplierForm.notes,
-                });
-            } catch (error) {
-                console.error("Error updating supplier:", error);
-                setErrorMessage("Failed to update supplier. Please try again.");
-                setShowErrorDialog(true);  // Open error dialog if update fails
-            }
+            void router.push("/admin/suppliers");
+        } catch (error) {
+            console.error("Failed to edit supplier:", error);
         }
     };
 
@@ -221,6 +217,7 @@ const EditSupplierState = ({ id }: { id: string }) => {
             await deleteSupplier.mutateAsync({ id });
             setSuccessMessage("Supplier deleted successfully!");
             setShowSuccessDialog(true);  // Show success dialog
+            void router.push("/admin/suppliers");
         } catch (error) {
             console.error("Error deleting supplier:", error);
             setErrorMessage("Failed to delete supplier. Please try again.");
@@ -293,8 +290,8 @@ const EditSupplierState = ({ id }: { id: string }) => {
                                 value={supplierForm.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastname && (
-                                <span className="text-red">{errors.lastname}</span>
+                            {errors.lastName && (
+                                <span className="text-red">{errors.lastName}</span>
                             )}
                         </div>
                     </div>
@@ -492,7 +489,7 @@ const EditSupplierState = ({ id }: { id: string }) => {
                     </DialogContent>
                 </Dialog>
 
-                <Button onClick={handleSubmit} className="bg-green p-7 text-lg font-bold">
+                <Button onClick={() => handleSubmit(new Event('submit') as any)} className="bg-green p-7 text-lg font-bold">
                     Save
                 </Button>
             </div>

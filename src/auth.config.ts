@@ -1,9 +1,9 @@
-import { NextAuthConfig, User } from "next-auth";
+import { type NextAuthConfig, type User } from "next-auth";
 import { LoginSchema } from "./schemas";
 
 import Credentials from "next-auth/providers/credentials";
 import { getUserByUsername, getUserRole } from "./server/data/user";
-import { Roles } from "@prisma/client";
+import { type Roles } from "@prisma/client";
 
 const authConfig: NextAuthConfig = {
   providers: [
@@ -38,7 +38,7 @@ const authConfig: NextAuthConfig = {
       if (token) {
         session.user = {
           ...session.user,
-          id: token.sub as string,
+          id: token.sub!,
           username: token.username as string,
           firstName: token.firstName as string,
           lastName: token.lastName as string,

@@ -1,14 +1,14 @@
-import { ScrollArea } from '~/components/ui/scroll-area';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
-import { RestockProps } from '../page';
 import { Button } from '~/components/ui/button';
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card';
 import { Input } from '~/components/ui/input';
 import { Label } from '~/components/ui/label';
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover';
+import { ScrollArea } from '~/components/ui/scroll-area';
 import { Separator } from '~/components/ui/separator';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 import MoreOptions from '../../_components/more-options';
-import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card';
+import { type RestockProps } from '../page';
 import UnitLine from './unit-line';
 
 const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['restockItems']; isEditing: boolean }) => {
@@ -59,7 +59,7 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 											</HoverCardTrigger>
 											<HoverCardContent className="shadow-none flex flex-col gap-3">
 												{item.unitConversion.map((unit, index) => (
-													<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to}  price={unit.price} />
+													<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to} />
 												))}
 											</HoverCardContent>
 										</HoverCard>

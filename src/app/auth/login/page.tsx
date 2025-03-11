@@ -3,7 +3,7 @@
 import { Input } from "~/components/ui/input";
 import Company_Logo from "public/Company_Logo.svg";
 import Image from "next/image";
-import * as z from "zod";
+import type * as z from "zod";
 
 import { useState } from "react";
 import { useForm } from "react-hook-form";
@@ -15,6 +15,22 @@ import { login } from "~/app/actions/actions";
 import { Eye, EyeClosed } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Label } from "~/components/ui/label";
+
+interface ErrorResponse {
+  error: string;
+}
+
+interface LoginResponse {
+  role: string;
+  personal_details: { first_name: string | null; last_name: string | null; contact: string | null; company: string | null; notes: string | null; };
+  username: string;
+  password: string;
+  personal_details_id: string;
+  authentication_id: number;
+}
+
+const isErrorResponse = (data: any): data is ErrorResponse => 'error' in data;
+const isLoginResponse = (data: any): data is LoginResponse => 'role' in data;
 
 const LoginPage = () => {
   const [isPending, setIsPending] = useState(false);
@@ -43,18 +59,20 @@ const LoginPage = () => {
         return;
       }
 
-      if (data.error) {
+      if (isErrorResponse(data)) {
         setSuccess(data.error);
         return;
       }
 
-      switch (data.role) {
-        case "ADMIN":
-          router.push(DEFAULT_ADMIN_REDIRECT);
-          break;
+      if (isLoginResponse(data)) {
+        switch (data.role) {
+          case "ADMIN":
+            router.push(DEFAULT_ADMIN_REDIRECT);
+            break;
 
-        default:
-          router.push(DEFAULT_EMPLOYEE_REDIRECT);
+          default:
+            router.push(DEFAULT_EMPLOYEE_REDIRECT);
+        }
       }
     } catch (error) {
       console.error("Login error: ", error);

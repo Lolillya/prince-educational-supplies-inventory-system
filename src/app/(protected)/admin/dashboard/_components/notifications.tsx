@@ -1,10 +1,9 @@
 import { Bell, BellOff } from 'lucide-react'
 import React from 'react'
 import { Popover, PopoverContent, PopoverTrigger } from '~/components/ui/popover'
+import { ScrollArea } from '~/components/ui/scroll-area'
 import { Separator } from '~/components/ui/separator'
 import NotificationItem from './notification-item'
-import { ScrollArea } from '~/components/ui/scroll-area'
-import { Scrollbar } from '@radix-ui/react-scroll-area'
 
 interface Notifications {
 	date: string;

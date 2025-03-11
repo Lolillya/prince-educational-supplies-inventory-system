@@ -1,8 +1,7 @@
 
-import React from 'react'
-import { Avatar, AvatarFallback } from '~/components/ui/avatar'
-import { Separator } from '~/components/ui/separator'
-import Favorite from '../../_components/favorite';
+import React from 'react';
+import { Avatar, AvatarFallback } from '~/components/ui/avatar';
+import { Separator } from '~/components/ui/separator';
 import Delete from '../../_components/delete';
 
 type RecordItemProps = {

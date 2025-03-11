@@ -1,19 +1,11 @@
 import { Box } from "lucide-react";
 import React from "react";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
-import { Separator } from "~/components/ui/separator";
-import MoreOptions from "../../_components/more-options";
-import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
 } from "~/components/ui/hover-card";
+import { Separator } from "~/components/ui/separator";
 import UnitLine from "./unit-line";
 
 interface RestockItemsProps {
@@ -26,6 +18,7 @@ interface RestockItemsProps {
     from: string;
     count: number;
     to: string;
+    price: number;
   }[];
 }
 
@@ -66,6 +59,7 @@ const RestockItem: React.FC<RestockItemsProps> = ({
                     from={unit.from}
                     count={unit.count}
                     to={unit.to}
+                    price={unit.price}
                   />
                 ))}
               </HoverCardContent>

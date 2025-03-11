@@ -1,9 +1,11 @@
 "use client";
 
-import { Search, ArrowLeft, ArrowRight } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import StockCard from "../_components/stock-card";
+import { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 import {
   DialogContent,
   DialogHeader,
@@ -12,6 +14,7 @@ import {
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Table,
   TableBody,
@@ -20,17 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Label } from "~/components/ui/label";
-import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
-import SupplierDropdown from "../_components/Supplier-Dropdown";
 import {
   HoverCard,
-  HoverCardTrigger,
   HoverCardContent,
+  HoverCardTrigger,
 } from "../_components/Hover-Card";
-import { useSession } from "next-auth/react";
-import { LoadingSpinner } from "~/components/loading";
+import StockCard from "../_components/stock-card";
+import SupplierDropdown from "../_components/Supplier-Dropdown";
 
 // Define the data structure for inventory items
 
@@ -39,12 +39,14 @@ type StockUnit = {
   conversionQty: number | string; // This should be either a number or a string, as it might come as a string
   conversionUnit: string;
   stock: string | number; // Stock could be a string or number, depending on input format
+  price: string | number; // Add price field
 };
 
 type InventoryItem = {
   inventory_id: number;
+  variant_id: number;
   variant: {
-    name: string | null;
+    name: string | undefined;
     item: {
       name: string;
       brand: {
@@ -52,8 +54,14 @@ type InventoryItem = {
       };
     };
   };
-  stockUnits?: StockUnit[]; // Optional, as not all items may have stock units
+  stockUnits?: StockUnit[];
 };
+
+// Add this type definition at the top with other types
+interface Supplier {
+  id: string;
+  company: string | null;
+}
 
 const InvoiceAddStock = () => {
   const router = useRouter();
@@ -62,16 +70,14 @@ const InvoiceAddStock = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
-  const [stock, setStock] = useState<{ [key: number]: string }>({}); // Stock values as strings
-  const [price, setPrice] = useState<{ [key: number]: string }>({});
-  const [unit, setUnit] = useState<{ [key: number]: string }>({});
-  const [stockUnits, setStockUnits] = useState<{ [key: number]: string }>({});
+  const [stock, setStock] = useState<Record<number, string>>({}); // Stock values as strings
+  const [price, setPrice] = useState<Record<number, string>>({});
+  const [unit, setUnit] = useState<Record<number, string>>({});
+  const [stockUnits, setStockUnits] = useState<Record<number, StockUnit[]>>({});
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog open state
   const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
   const [dialogType, setDialogType] = useState("");
-  const [accordionStates, setAccordionStates] = useState<{
-    [key: number]: boolean;
-  }>({});
+  const [accordionStates, setAccordionStates] = useState<Record<number, boolean>>({});
 
   const {
     data: inventoryItems,
@@ -88,7 +94,8 @@ const InvoiceAddStock = () => {
 
   const { data: suppliers } = api.restock.getSuppliers.useQuery();
 
-  const [selectedSupplier, setSelectedSupplier] = useState("");
+  // Update the state type
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
   // Filter inventory items based on the search term
   useEffect(() => {
@@ -145,25 +152,27 @@ const InvoiceAddStock = () => {
     const stockValue = Number(stock[inventoryId] || 0);
     const itemStockUnits = stockUnits[inventoryId] || [];
 
-    // Skip the first row when reducing
-    return itemStockUnits.slice(1).reduce((acc, unit) => {
-      const unitStock = Number(unit.stock || 0);
-      return acc + unitStock;
-    }, stockValue);
+    // Make sure itemStockUnits is treated as an array and add type annotations
+    return (Array.isArray(itemStockUnits) ? itemStockUnits : [])
+      .slice(1)
+      .reduce((acc: number, unit: StockUnit) => {
+        const unitStock = Number(unit.stock || 0);
+        return acc + unitStock;
+      }, stockValue);
   };
 
-  const overAllTotalStock = selectedItems.reduce(
-    (sum, item) => sum + totalStock(item.inventory_id),
+  const overAllTotalStock = selectedItems.reduce((sum, item) => sum + totalStock(item.inventory_id),
     0,
   );
 
   const getConversionData = (inventoryId: number) => {
     const itemStockUnits = stockUnits[inventoryId] || [];
+
     return itemStockUnits
       .filter(
-        (unit) => unit.conversionQty?.trim() && unit.conversionUnit?.trim(),
+        (unit: StockUnit) => unit.conversionQty?.toString().trim() && unit.conversionUnit?.trim(),
       )
-      .map((unit, index) => {
+      .map((unit: StockUnit, index: number) => {
         const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
         const currentUnit = previousUnit
           ? previousUnit.conversionUnit
@@ -185,7 +194,7 @@ const InvoiceAddStock = () => {
     const itemStockUnits = stockUnits[inventoryId] || [];
     // Only count rows where both conversionQty and conversionUnit are filled
     return itemStockUnits.filter(
-      (unit) => unit.conversionQty?.trim() && unit.conversionUnit?.trim(),
+      (unit: StockUnit) => unit.conversionQty?.toString().trim() && unit.conversionUnit?.trim(),
     ).length;
   };
 
@@ -233,7 +242,7 @@ const InvoiceAddStock = () => {
       itemStockUnits.forEach((unit, index) => {
         if (!unit.unit) {
           unit.unit =
-            index > 0 ? itemStockUnits[index - 1].conversionUnit : unit.unit;
+            index > 0 ? itemStockUnits[index - 1]?.conversionUnit ?? unit.unit : unit.unit;
         }
         console.log(`StockUnit ${index + 1}: `, unit);
       });
@@ -242,7 +251,7 @@ const InvoiceAddStock = () => {
 
   const { mutateAsync: saveRestock, isPending: test } =
     api.restock.saveRestock.useMutation();
-  const handleSave = async (selectedItems, supplierId) => {
+  const handleSave = async (selectedItems: InventoryItem[], supplierId: string) => {
     if (!supplierId) {
       setDialogMessage("Supplier ID is missing. Please select a supplier.");
       setDialogType("error");
@@ -290,53 +299,6 @@ const InvoiceAddStock = () => {
       setIsDialogOpen(true);
     }
   };
-  //
-  // const handleSave = async (selectedItems, supplierId) => {
-  //   if (!supplierId) {
-  //     setDialogMessage("Supplier ID is missing. Please select a supplier.");
-  //     setDialogType("error");
-  //     setIsDialogOpen(true);
-  //     return;
-  //   }
-  //
-  //   try {
-  //     const payload = selectedItems.map((item) => ({
-  //       inventory_id: item.inventory_id,
-  //       variant_id: item.variant_id,
-  //       totalStock: totalStock(item.inventory_id),
-  //       stockValue: Number(stock[item.inventory_id]) || 0, // Ensure it's a number here
-  //       stockUnits: stockUnits[item.inventory_id]?.map((stockUnit) => ({
-  //         stock: Number(stockUnit.stock),
-  //         price: Number(stockUnit.price),
-  //         unit: stockUnit.unit,
-  //         conversionQty: Number(stockUnit.conversionQty),
-  //         conversionUnit: stockUnit.conversionUnit,
-  //       })) || [],
-  //     }));
-  //
-  //
-  //     console.log("Payload before mutation:", payload);
-  //
-  //     // Perform mutation (save data)
-  //     await saveRestock({ selectedItems: payload, supplierId });
-  //
-  //     // Show success dialog
-  //     setDialogMessage("Restock data saved successfully!");
-  //     setDialogType("success");
-  //     setIsDialogOpen(true);
-  //
-  //     // Redirect to /admin/restock after success
-  //     setTimeout(() => {
-  //       router.push("/admin/restock");
-  //     }, 2000); // Delay redirect to let the user see the success message
-  //
-  //   } catch (error) {
-  //     console.error("Error saving restock data:", error);
-  //     setDialogMessage("Failed to save restock data.");
-  //     setDialogType("error");
-  //     setIsDialogOpen(true);
-  //   }
-  // };
 
   if (isLoading || isLoadingBatch) {
     return (
@@ -372,8 +334,8 @@ const InvoiceAddStock = () => {
         itemStockUnits.some(
           (unit) =>
             // Invalid if either field is empty while the other is filled
-            (unit.conversionQty?.trim() && !unit.conversionUnit?.trim()) ||
-            (!unit.conversionQty?.trim() && unit.conversionUnit?.trim()),
+            (unit.conversionQty?.toString().trim() && !unit.conversionUnit?.trim()) ||
+            (!unit.conversionQty?.toString().trim() && unit.conversionUnit?.trim()),
         )
       );
     });
@@ -508,10 +470,10 @@ const InvoiceAddStock = () => {
             onRemove={() => handleRemoveItem(item.inventory_id)}
             stockValue={stock[item.inventory_id] || ""}
             onStockChange={(newStock) =>
-              handleStockChange(item.inventory_id, newStock)
+              handleStockChange(item.inventory_id, newStock.toString())
             }
             onPriceChange={(newPrice) =>
-              handlePriceChange(item.inventory_id, newPrice)
+              handlePriceChange(item.inventory_id, newPrice.toString())
             }
             onUnitChange={(newUnit) =>
               handleUnitChange(item.inventory_id, newUnit)
@@ -519,12 +481,12 @@ const InvoiceAddStock = () => {
             onStockUnitsChange={(newStockUnits) =>
               handleStockUnitsChange(item.inventory_id, newStockUnits)
             }
-            onAccordionToggle={(isExpanded) =>
+            onAccordionToggle={(isExpanded: boolean) =>
               setAccordionStates((prev) => ({
                 ...prev,
                 [item.inventory_id]: isExpanded,
               }))
-            } // Pass state toggle callback
+            }
           />
         ))}
       </div>
@@ -543,11 +505,10 @@ const InvoiceAddStock = () => {
           <DialogTrigger asChild>
             <Button
               size={"lg"}
-              className={`bg-green py-8 text-sm font-bold text-white ${
-                isFormValid() && selectedItems.length > 0
-                  ? ""
-                  : "cursor-not-allowed opacity-50"
-              }`}
+              className={`bg-green py-8 text-sm font-bold text-white ${isFormValid() && selectedItems.length > 0
+                ? ""
+                : "cursor-not-allowed opacity-50"
+                }`}
               disabled={!isFormValid() || selectedItems.length === 0} // Disable if form is invalid or no items are selected
             >
               Confirm Restock
@@ -614,15 +575,15 @@ const InvoiceAddStock = () => {
                     className="bg-green px-7 font-bold"
                     size={"lg"}
                     onClick={() => {
-                      if (!selectedSupplier) {
+                      if (!selectedSupplier?.id) {
                         alert("Please select a supplier before saving.");
                         return;
                       }
                       console.log(
                         "Selected Supplier:",
-                        selectedSupplier?.name,
+                        selectedSupplier.company,
                         "ID:",
-                        selectedSupplier?.id,
+                        selectedSupplier.id,
                       );
                       logData();
                       handleSave(selectedItems, selectedSupplier.id);
@@ -638,6 +599,7 @@ const InvoiceAddStock = () => {
         </Dialog>
       </div>
     </section>
+
   );
 };
 

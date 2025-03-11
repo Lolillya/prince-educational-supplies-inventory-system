@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
 import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTitle,
+  DialogTrigger,
 } from "~/components/ui/dialog";
-import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 interface EmployeeFormState {
   firstName: string;
@@ -60,7 +60,7 @@ const defaultEmployeeForm: EmployeeFormState = {
 };
 
 const EditEmployeeState = ({ id }: { id: string }) => {
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<EmployeeFormErrors>({});
   const [employeeForm, setEmployeeForm] =
     useState<EmployeeFormState>(defaultEmployeeForm);
   const router = useRouter();
@@ -153,7 +153,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
 
     if (!firstName) {
       newErrors.firstName = "First Name is required.";
-    } else if (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/)) {
+    } else if (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName))) {
       newErrors.firstName =
         "First Name must only contain letters and be at least 2 characters long.";
     } else if (firstName.length > 50) {
@@ -162,7 +162,7 @@ const EditEmployeeState = ({ id }: { id: string }) => {
 
     if (!lastName) {
       newErrors.lastName = "Last Name is required.";
-    } else if (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/)) {
+    } else if (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName))) {
       newErrors.lastName =
         "Last Name must only contain letters and be at least 2 characters long.";
     } else if (lastName.length > 50) {
@@ -299,8 +299,8 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                 Administrator Privileges
               </Label>
               <SwitchComponent
-                  isAllowed={isAdmin}
-                  onToggle={setIsAdmin}
+                isAllowed={isAdmin}
+                onToggle={setIsAdmin}
               />
             </div>
           </div>
@@ -311,24 +311,24 @@ const EditEmployeeState = ({ id }: { id: string }) => {
             </Label>
             <div className="flex items-center gap-3">
               <Input
-                  name="firstName"
-                  placeholder="First Name"
-                  className="p-7"
-                  value={employeeForm.firstName}
-                  onChange={handleInputChange}
+                name="firstName"
+                placeholder="First Name"
+                className="p-7"
+                value={employeeForm.firstName}
+                onChange={handleInputChange}
               />
               {errors.firstName && (
-                  <span className="text-red">{errors.firstName}</span>
+                <span className="text-red">{errors.firstName}</span>
               )}
               <Input
-                  name="lastName"
-                  placeholder="Last Name"
-                  className="p-7"
-                  value={employeeForm.lastName}
-                  onChange={handleInputChange}
+                name="lastName"
+                placeholder="Last Name"
+                className="p-7"
+                value={employeeForm.lastName}
+                onChange={handleInputChange}
               />
               {errors.lastName && (
-                  <span className="text-red">{errors.lastName}</span>
+                <span className="text-red">{errors.lastName}</span>
               )}
             </div>
           </div>
@@ -337,25 +337,25 @@ const EditEmployeeState = ({ id }: { id: string }) => {
             <div className="flex w-full flex-col gap-2">
               <Label>Contact Number</Label>
               <Input
-                  name="contact"
-                  placeholder="Contact Number"
-                  className="p-7"
-                  value={employeeForm.contact}
-                  onChange={handleInputChange}
+                name="contact"
+                placeholder="Contact Number"
+                className="p-7"
+                value={employeeForm.contact}
+                onChange={handleInputChange}
               />
               {errors.contact && (
-                  <span className="text-red">{errors.contact}</span>
+                <span className="text-red">{errors.contact}</span>
               )}
             </div>
 
             <div className="flex w-full flex-col gap-2">
               <Label>Email</Label>
               <Input
-                  name="email"
-                  placeholder="Email"
-                  className="p-7"
-                  value={employeeForm.email}
-                  onChange={handleInputChange}
+                name="email"
+                placeholder="Email"
+                className="p-7"
+                value={employeeForm.email}
+                onChange={handleInputChange}
               />
               {errors.email && <span className="text-red">{errors.email}</span>}
             </div>
@@ -366,14 +366,14 @@ const EditEmployeeState = ({ id }: { id: string }) => {
               Address <span className="text-red"></span>
             </Label>
             <Input
-                name="addressLine"
-                placeholder="Address"
-                className="p-7"
-                value={employeeForm.addressLine}
-                onChange={handleInputChange}
+              name="addressLine"
+              placeholder="Address"
+              className="p-7"
+              value={employeeForm.addressLine}
+              onChange={handleInputChange}
             />
             {errors.addressLine && (
-                <span className="text-red">{errors.addressLine}</span>
+              <span className="text-red">{errors.addressLine}</span>
             )}
           </div>
 
@@ -383,11 +383,11 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                 City <span className="text-red"></span>
               </Label>
               <Input
-                  name="city"
-                  placeholder="City"
-                  className="p-7"
-                  value={employeeForm.city}
-                  onChange={handleInputChange}
+                name="city"
+                placeholder="City"
+                className="p-7"
+                value={employeeForm.city}
+                onChange={handleInputChange}
               />
               {errors.city && <span className="text-red">{errors.city}</span>}
             </div>
@@ -395,14 +395,14 @@ const EditEmployeeState = ({ id }: { id: string }) => {
             <div className="flex w-full flex-col gap-2">
               <Label>Region</Label>
               <Input
-                  name="region"
-                  placeholder="Region"
-                  className="p-7"
-                  value={employeeForm.region}
-                  onChange={handleInputChange}
+                name="region"
+                placeholder="Region"
+                className="p-7"
+                value={employeeForm.region}
+                onChange={handleInputChange}
               />
               {errors.region && (
-                  <span className="text-red">{errors.region}</span>
+                <span className="text-red">{errors.region}</span>
               )}
             </div>
           </div>
@@ -413,40 +413,40 @@ const EditEmployeeState = ({ id }: { id: string }) => {
                 Country <span className="text-red"></span>
               </Label>
               <Input
-                  name="country"
-                  placeholder="Country"
-                  className="p-7"
-                  value={employeeForm.country}
-                  onChange={handleInputChange}
+                name="country"
+                placeholder="Country"
+                className="p-7"
+                value={employeeForm.country}
+                onChange={handleInputChange}
               />
               {errors.country && (
-                  <span className="text-red">{errors.country}</span>
+                <span className="text-red">{errors.country}</span>
               )}
             </div>
 
             <div className="flex w-full flex-col gap-2">
               <Label>Postal Code</Label>
               <Input
-                  name="postalCode"
-                  placeholder="Postal Code"
-                  className="p-7"
-                  value={employeeForm.postalCode}
-                  onChange={handleInputChange}
+                name="postalCode"
+                placeholder="Postal Code"
+                className="p-7"
+                value={employeeForm.postalCode}
+                onChange={handleInputChange}
               />
               {errors.postalCode && (
-                  <span className="text-red">{errors.postalCode}</span>
+                <span className="text-red">{errors.postalCode}</span>
               )}
             </div>
           </div>
 
           <div>
             <Textarea
-                name="notes"
-                placeholder="About this employee..."
-                rows={4}
-                className="resize-none bg-gray"
-                value={employeeForm.notes}
-                onChange={handleInputChange}
+              name="notes"
+              placeholder="About this employee..."
+              rows={4}
+              className="resize-none bg-gray"
+              value={employeeForm.notes}
+              onChange={handleInputChange}
             />
             {errors.notes && <span className="text-red">{errors.notes}</span>}
           </div>
@@ -461,8 +461,8 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         <Dialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
           <DialogTrigger asChild>
             <Button
-                onClick={() => setShowDeleteDialog(true)}
-                className="bg-red p-7 text-lg font-bold"
+              onClick={() => setShowDeleteDialog(true)}
+              className="bg-red p-7 text-lg font-bold"
             >
               Delete Employee
             </Button>
@@ -527,16 +527,16 @@ const EditEmployeeState = ({ id }: { id: string }) => {
         </Dialog>
 
         <Button
-            onClick={handleSubmit}
-            className="bg-green p-7 text-lg font-bold"
-            disabled={isSaving}
+          onClick={handleSubmit}
+          className="bg-green p-7 text-lg font-bold"
+          disabled={isSaving}
         >
           {isSaving ? (
-              <div className="flex items-center gap-2">
-                Saving...
-              </div>
+            <div className="flex items-center gap-2">
+              Saving...
+            </div>
           ) : (
-              "Save"
+            "Save"
           )}
         </Button>
       </div>

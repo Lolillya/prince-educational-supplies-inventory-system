@@ -1,5 +1,5 @@
 import { PopoverClose } from "@radix-ui/react-popover";
-import { Banknote, Undo2 } from "lucide-react";
+import { Undo2 } from "lucide-react";
 import React from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";

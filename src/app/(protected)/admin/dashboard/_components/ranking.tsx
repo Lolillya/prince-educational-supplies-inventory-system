@@ -1,7 +1,7 @@
-import { ArrowUpRight, Award, Truck, Users2 } from 'lucide-react';
+import { ArrowUpRight, Truck, Users2 } from 'lucide-react';
+import React from 'react';
 import { Separator } from '~/components/ui/separator';
 import LeaderboardItem from './leaderboard-item';
-import React from 'react';
 
 interface LeaderboardProps {
 	rank: number;

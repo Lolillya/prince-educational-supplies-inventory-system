@@ -1,10 +1,8 @@
 "use client";
 
-import { Poppins } from "next/font/google";
+import { useState } from "react";
 import CustomerRouter from "../_components/customer-router";
 import NewCustomerState from "../_components/new-customer";
-import { api } from "~/trpc/react";
-import { useState } from "react";
 
 type CustomerData = {
   businessName: string;

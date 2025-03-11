@@ -2,16 +2,26 @@
 
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogTitle,
+  DialogTrigger,
 } from "~/components/ui/dialog";
 
-import { Label } from "~/components/ui/label";
-import { Button } from "~/components/ui/button";
-import InvoiceCard from "../_components/invoice-card-copy";
 import { ArrowLeft, Search } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "~/components/ui/select";
 import {
   Table,
   TableBody,
@@ -20,20 +30,10 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { LoadingSpinner } from "~/components/loading";
-import { useSession } from "next-auth/react";
-import { toast } from "~/hooks/use-toast";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "~/components/ui/select";
 import { Textarea } from "~/components/ui/textarea";
+import { toast } from "~/hooks/use-toast";
+import { api } from "~/trpc/react";
+import InvoiceCard from "../_components/invoice-card-copy";
 
 type InventoryItem = {
   inventory_id: number;
@@ -115,7 +115,7 @@ const NewInvoice = () => {
   const [grandTotal, setGrandTotal] = useState<number>(0);
   const [discount, setDiscount] = useState<number>(0);
   const [discountType, setDiscountType] = useState("%");
-  const [stockTotals, setStockTotals] = useState<{ [key: number]: string }>({});
+  const [stockTotals, setStockTotals] = useState<Record<number, string>>({});
   const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
   const [customerNotes, setCustomerNotes] = useState<string>("");
   const [isInputFocused, setIsInputFocused] = useState<string | undefined>(

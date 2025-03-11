@@ -1,4 +1,4 @@
-import {Box, Calendar, Printer} from 'lucide-react'
+import { Box, Calendar, Printer } from 'lucide-react'
 import { Poppins } from 'next/font/google'
 import React, { useState } from 'react'
 import { Button } from '~/components/ui/button'
@@ -17,11 +17,13 @@ const poppins = Poppins({
 });
 
 interface RestockDialogProps {
+	restock: any;  // Add restock prop
+	clerkId: string;  // Add clerkId prop
 	activity: any;
-	context?: 'employee' | 'supplier'; // Add context prop
+	context: 'employee' | 'supplier';
 }
 
-const RestockDialog = ({ activity, context = 'employee' }: RestockDialogProps) => {
+const RestockDialog = ({ restock, clerkId, activity, context = 'employee' }: RestockDialogProps) => {
 	const totalAdded = activity.batchVariants?.reduce(
 		(sum: number, bv: any) => sum + bv.quantity, 0
 	) || 0;

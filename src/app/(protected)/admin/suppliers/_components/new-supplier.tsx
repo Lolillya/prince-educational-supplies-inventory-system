@@ -1,15 +1,15 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
-import {DialogTitle} from "@radix-ui/react-dialog";
+import React, { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 
 
@@ -57,7 +57,7 @@ const defaultSupplierForm: SupplierFormState = {
 };
 
 const NewSupplierState = ({ id }: { id: string }) => {
-  const [errors, setErrors] = useState<Record<string, string>>({});
+  const [errors, setErrors] = useState<SupplierFormErrors>({});
   const router = useRouter();
   const { refetch } = api.suppliers.list.useQuery();
   const [dialogOpen, setDialogOpen] = useState(false);
@@ -114,7 +114,7 @@ const NewSupplierState = ({ id }: { id: string }) => {
   }, [isLoading, supplierData]);
 
   const handleInputChange = (
-      e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
     const { name, value } = e.target;
     setSupplierForm((prev) => ({
@@ -125,15 +125,15 @@ const NewSupplierState = ({ id }: { id: string }) => {
 
   if (isLoading)
     return (
-        <section className="flex h-screen w-full items-center justify-center">
-          <LoadingSpinner />
-        </section>
+      <section className="flex h-screen w-full items-center justify-center">
+        <LoadingSpinner />
+      </section>
     );
   if (isError)
     return (
-        <section className="flex h-screen w-full items-center justify-center">
-          <span>Error fetching data...</span>
-        </section>
+      <section className="flex h-screen w-full items-center justify-center">
+        <span>Error fetching data...</span>
+      </section>
     );
 
   const isValidEmail = (email: string) => /\S+@\S+\.\S+/.test(email);
@@ -142,13 +142,13 @@ const NewSupplierState = ({ id }: { id: string }) => {
     const newErrors: SupplierFormErrors = {};
     const { firstName, lastName, businessName, contact, email, addressLine, city, region, country, postalCode, notes } = supplierForm;
 
-    if (firstName && (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/))) {
+    if (firstName && (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName)))) {
       newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
     } else if (firstName && firstName.length > 50) {
       newErrors.firstName = "First Name must be at most 50 characters long.";
     }
 
-    if (lastName && (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/))) {
+    if (lastName && (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName)))) {
       newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
     } else if (lastName && lastName.length > 50) {
       newErrors.lastName = "Last Name must be at most 50 characters long.";
@@ -207,28 +207,26 @@ const NewSupplierState = ({ id }: { id: string }) => {
     return newErrors;
   };
 
-  const handleSubmit = async () => {
-    const formErrors = validateForm();
-    setErrors(formErrors);
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    try {
+      await createSupplier.mutateAsync({
+        company: supplierForm.businessName,
+        firstName: supplierForm.firstName,
+        lastName: supplierForm.lastName,
+        contact: supplierForm.contact,
+        email: supplierForm.email,
+        addressLine: supplierForm.addressLine,
+        city: supplierForm.city,
+        region: supplierForm.region,
+        country: supplierForm.country,
+        postalCode: supplierForm.postalCode,
+        notes: supplierForm.notes,
+      });
 
-    if (Object.keys(formErrors).length === 0) {
-      try {
-        await createSupplier.mutateAsync({
-          company: supplierForm.businessName,
-          firstName: supplierForm.firstName,
-          lastName: supplierForm.lastName,
-          contact: supplierForm.contact,
-          email: supplierForm.email,
-          addressLine: supplierForm.addressLine,
-          city: supplierForm.city,
-          region: supplierForm.region,
-          country: supplierForm.country,
-          postalCode: supplierForm.postalCode,
-          notes: supplierForm.notes,
-        });
-      } catch (error) {
-        console.error("Error creating supplier:", error);
-      }
+      void router.push("/admin/suppliers");
+    } catch (error) {
+      console.error("Failed to create supplier:", error);
     }
   };
 
@@ -239,212 +237,212 @@ const NewSupplierState = ({ id }: { id: string }) => {
 
 
   return (
-      <div className="flex h-full flex-col gap-5 px-52">
-        <form className="h-full w-full">
-          <div className="flex h-full w-full flex-col justify-center gap-7">
-            <div className="flex flex-col gap-2">
-              <Label>
-                Business <span className="text-red">*</span>
-              </Label>
-              <Input
-                  name="businessName"
-                  placeholder="Business Name"
-                  className="p-7"
-                  required
-                  value={supplierForm.businessName}
-                  onChange={handleInputChange}
-              />
-              {errors.businessName && (
-                  <span className="text-red">{errors.businessName}</span>
-              )}
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label>
-                Representative <span className="text-red"></span>
-              </Label>
-              <div className="flex items-center gap-3">
-                <Input
-                    name="firstName"
-                    placeholder="First Name"
-                    className="p-7"
-                    value={supplierForm.firstName}
-                    onChange={handleInputChange}
-                />
-                {errors.firstName && (
-                    <span className="text-red">{errors.firstName}</span>
-                )}
-                <Input
-                    name="lastName"
-                    placeholder="Last Name"
-                    className="p-7"
-                    value={supplierForm.lastName}
-                    onChange={handleInputChange}
-                />
-                {errors.lastname && (
-                    <span className="text-red">{errors.lastname}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex w-full flex-col gap-2">
-                <Label>Contact Number</Label>
-                <Input
-                    name="contact"
-                    placeholder="Contact Number"
-                    className="p-7"
-                    value={supplierForm.contact}
-                    onChange={handleInputChange}
-                />
-                {errors.contact && (
-                    <span className="text-red">{errors.contact}</span>
-                )}
-              </div>
-
-              <div className="flex w-full flex-col gap-2">
-                <Label>Email</Label>
-                <Input
-                    name="email"
-                    placeholder="Email"
-                    className="p-7"
-                    value={supplierForm.email}
-                    onChange={handleInputChange}
-                />
-                {errors.email && (
-                    <span className="text-red">{errors.email}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex flex-col gap-2">
-              <Label>
-                Address <span className="text-red"></span>
-              </Label>
-              <Input
-                  name="addressLine"
-                  placeholder="Address"
-                  className="p-7"
-                  value={supplierForm.addressLine}
-                  onChange={handleInputChange}
-              />
-              {errors.addressLine && (
-                  <span className="text-red">{errors.addressLine}</span>
-              )}
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex w-full flex-col gap-2">
-                <Label>
-                  City <span className="text-red"></span>
-                </Label>
-                <Input
-                    name="city"
-                    placeholder="City"
-                    className="p-7"
-                    value={supplierForm.city}
-                    onChange={handleInputChange}
-                />
-                {errors.city && (
-                    <span className="text-red">{errors.city}</span>
-                )}
-              </div>
-
-              <div className="flex w-full flex-col gap-2">
-                <Label>Region</Label>
-                <Input
-                    name="region"
-                    placeholder="Region"
-                    className="p-7"
-                    value={supplierForm.region}
-                    onChange={handleInputChange}
-                />
-                {errors.region && (
-                    <span className="text-red">{errors.region}</span>
-                )}
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <div className="flex w-full flex-col gap-2">
-                <Label>
-                  Country <span className="text-red"></span>
-                </Label>
-                <Input
-                    name="country"
-                    placeholder="Country"
-                    className="p-7"
-                    value={supplierForm.country}
-                    onChange={handleInputChange}
-                />
-                {errors.country && (
-                    <span className="text-red">{errors.country}</span>
-                )}
-              </div>
-
-              <div className="flex w-full flex-col gap-2">
-                <Label>Postal Code</Label>
-                <Input
-                    name="postalCode"
-                    placeholder="Postal Code"
-                    className="p-7"
-                    value={supplierForm.postalCode}
-                    onChange={handleInputChange}
-                />
-                {errors.postalCode && (
-                    <span className="text-red">{errors.postalCode}</span>
-                )}
-              </div>
-            </div>
-
-            <div>
-              <Textarea
-                  name="notes"
-                  placeholder="About this supplier..."
-                  rows={4}
-                  className="resize-none bg-gray"
-                  value={supplierForm.notes}
-                  onChange={handleInputChange}
-              />
-              {errors.notes && (
-                  <span className="text-red">{errors.notes}</span>
-              )}
-            </div>
-
-            <div className="flex justify-end gap-3"></div>
+    <div className="flex h-full flex-col gap-5 px-52">
+      <form className="h-full w-full">
+        <div className="flex h-full w-full flex-col justify-center gap-7">
+          <div className="flex flex-col gap-2">
+            <Label>
+              Business <span className="text-red">*</span>
+            </Label>
+            <Input
+              name="businessName"
+              placeholder="Business Name"
+              className="p-7"
+              required
+              value={supplierForm.businessName}
+              onChange={handleInputChange}
+            />
+            {errors.businessName && (
+              <span className="text-red">{errors.businessName}</span>
+            )}
           </div>
-        </form>
 
-        {/* Buttons */}
-        <div className="flex w-full items-center justify-end gap-3">
-          <Button onClick={handleClear} className="bg-green p-7 text-lg font-bold">
-            Clear
-          </Button>
-          <Button onClick={handleSubmit} className="bg-green p-7 text-lg font-bold">
-            Save
-          </Button>
-        </div>
+          <div className="flex flex-col gap-2">
+            <Label>
+              Representative <span className="text-red"></span>
+            </Label>
+            <div className="flex items-center gap-3">
+              <Input
+                name="firstName"
+                placeholder="First Name"
+                className="p-7"
+                value={supplierForm.firstName}
+                onChange={handleInputChange}
+              />
+              {errors.firstName && (
+                <span className="text-red">{errors.firstName}</span>
+              )}
+              <Input
+                name="lastName"
+                placeholder="Last Name"
+                className="p-7"
+                value={supplierForm.lastName}
+                onChange={handleInputChange}
+              />
+              {errors.lastName && (
+                <span className="text-red">{errors.lastName}</span>
+              )}
+            </div>
+          </div>
 
-        <div>
-          <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-            <DialogContent>
-              <DialogTitle>Success</DialogTitle> {/* Add this */}
-              <p>Supplier created successfully!</p>
-              <DialogFooter>
-                <Button
-                    onClick={() => {
-                      setDialogOpen(false);
-                      router.push("/admin/suppliers"); // Redirect
-                    }}
-                    className="bg-green p-7 text-lg font-bold"
-                >
-                  OK
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
+          <div className="flex gap-3">
+            <div className="flex w-full flex-col gap-2">
+              <Label>Contact Number</Label>
+              <Input
+                name="contact"
+                placeholder="Contact Number"
+                className="p-7"
+                value={supplierForm.contact}
+                onChange={handleInputChange}
+              />
+              {errors.contact && (
+                <span className="text-red">{errors.contact}</span>
+              )}
+            </div>
+
+            <div className="flex w-full flex-col gap-2">
+              <Label>Email</Label>
+              <Input
+                name="email"
+                placeholder="Email"
+                className="p-7"
+                value={supplierForm.email}
+                onChange={handleInputChange}
+              />
+              {errors.email && (
+                <span className="text-red">{errors.email}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <Label>
+              Address <span className="text-red"></span>
+            </Label>
+            <Input
+              name="addressLine"
+              placeholder="Address"
+              className="p-7"
+              value={supplierForm.addressLine}
+              onChange={handleInputChange}
+            />
+            {errors.addressLine && (
+              <span className="text-red">{errors.addressLine}</span>
+            )}
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex w-full flex-col gap-2">
+              <Label>
+                City <span className="text-red"></span>
+              </Label>
+              <Input
+                name="city"
+                placeholder="City"
+                className="p-7"
+                value={supplierForm.city}
+                onChange={handleInputChange}
+              />
+              {errors.city && (
+                <span className="text-red">{errors.city}</span>
+              )}
+            </div>
+
+            <div className="flex w-full flex-col gap-2">
+              <Label>Region</Label>
+              <Input
+                name="region"
+                placeholder="Region"
+                className="p-7"
+                value={supplierForm.region}
+                onChange={handleInputChange}
+              />
+              {errors.region && (
+                <span className="text-red">{errors.region}</span>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3">
+            <div className="flex w-full flex-col gap-2">
+              <Label>
+                Country <span className="text-red"></span>
+              </Label>
+              <Input
+                name="country"
+                placeholder="Country"
+                className="p-7"
+                value={supplierForm.country}
+                onChange={handleInputChange}
+              />
+              {errors.country && (
+                <span className="text-red">{errors.country}</span>
+              )}
+            </div>
+
+            <div className="flex w-full flex-col gap-2">
+              <Label>Postal Code</Label>
+              <Input
+                name="postalCode"
+                placeholder="Postal Code"
+                className="p-7"
+                value={supplierForm.postalCode}
+                onChange={handleInputChange}
+              />
+              {errors.postalCode && (
+                <span className="text-red">{errors.postalCode}</span>
+              )}
+            </div>
+          </div>
+
+          <div>
+            <Textarea
+              name="notes"
+              placeholder="About this supplier..."
+              rows={4}
+              className="resize-none bg-gray"
+              value={supplierForm.notes}
+              onChange={handleInputChange}
+            />
+            {errors.notes && (
+              <span className="text-red">{errors.notes}</span>
+            )}
+          </div>
+
+          <div className="flex justify-end gap-3"></div>
         </div>
+      </form>
+
+      {/* Buttons */}
+      <div className="flex w-full items-center justify-end gap-3">
+        <Button onClick={handleClear} className="bg-green p-7 text-lg font-bold">
+          Clear
+        </Button>
+        <Button onClick={() => handleSubmit(new Event('submit') as any)} className="bg-green p-7 text-lg font-bold">
+          Save
+        </Button>
       </div>
+
+      <div>
+        <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
+          <DialogContent>
+            <DialogTitle>Success</DialogTitle> {/* Add this */}
+            <p>Supplier created successfully!</p>
+            <DialogFooter>
+              <Button
+                onClick={() => {
+                  setDialogOpen(false);
+                  router.push("/admin/suppliers"); // Redirect
+                }}
+                className="bg-green p-7 text-lg font-bold"
+              >
+                OK
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </div>
 
   );
 };

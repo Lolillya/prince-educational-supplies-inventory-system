@@ -151,7 +151,7 @@ export const handleExport = ({
     // Create final table data
     Object.values(groupedItems).forEach(({ description, unit, quantities }) => {
       if (quantities.size === 1) {
-        tableRows.push([description, unit, Array.from(quantities)[0]]);
+        tableRows.push([description, unit, Array.from(quantities)[0] || "0"]);
       } else {
         Array.from(quantities).forEach((quantity, idx) => {
           tableRows.push([description, `${unit}(${idx + 1})`, quantity]);

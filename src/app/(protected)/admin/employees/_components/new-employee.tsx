@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
+import { DialogTitle } from "@radix-ui/react-dialog";
 import { useRouter } from "next/navigation";
-import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
-import {DialogTitle} from "@radix-ui/react-dialog";
+import React, { useEffect, useState } from "react";
 import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 
 
@@ -61,7 +61,7 @@ const defaultEmployeeForm: EmployeeFormState = {
 };
 
 const NewEmployeeState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<EmployeeFormErrors>({});
     const router = useRouter();
     const { refetch } = api.employees.list.useQuery();
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -148,11 +148,11 @@ const NewEmployeeState = ({ id }: { id: string }) => {
 
     const validateForm = (): EmployeeFormErrors => {
         const newErrors: EmployeeFormErrors = {};
-        const { firstName, lastName, contact, email, addressLine, city, region, country, postalCode, notes,username,password } = employeeForm;
+        const { firstName, lastName, contact, email, addressLine, city, region, country, postalCode, notes, username, password } = employeeForm;
 
         if (!firstName) {
             newErrors.firstName = "First Name is required.";
-        } else if (firstName.length < 2 || !firstName.match(/^[a-zA-Z]+$/)) {
+        } else if (firstName.length < 2 || !(/^[a-zA-Z]+$/.exec(firstName))) {
             newErrors.firstName = "First Name must only contain letters and be at least 2 characters long.";
         } else if (firstName.length > 50) {
             newErrors.firstName = "First Name must be at most 50 characters long.";
@@ -160,7 +160,7 @@ const NewEmployeeState = ({ id }: { id: string }) => {
 
         if (!lastName) {
             newErrors.lastName = "Last Name is required.";
-        } else if (lastName.length < 2 || !lastName.match(/^[a-zA-Z]+$/)) {
+        } else if (lastName.length < 2 || !(/^[a-zA-Z]+$/.exec(lastName))) {
             newErrors.lastName = "Last Name must only contain letters and be at least 2 characters long.";
         } else if (lastName.length > 50) {
             newErrors.lastName = "Last Name must be at most 50 characters long.";

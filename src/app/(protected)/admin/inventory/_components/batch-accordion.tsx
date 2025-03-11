@@ -1,4 +1,4 @@
-import React from "react";
+import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
@@ -7,15 +7,48 @@ import {
 } from "~/components/ui/accordion";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "~/components/ui/table";
-import Link from "next/link";
 
-const BatchAccordion = ({ batch, selectedVariantId, batchNumber }) => {
+interface BatchVariant {
+  variant_id: string | number;
+  SupplierUnit?: {
+    unit?: {
+      name: string;
+    };
+    supplier?: {
+      Personal_Details?: {
+        first_name?: string;
+        last_name?: string;
+      };
+    };
+    price?: number | string;
+    quantity_per_unit?: number | string;
+    ConversionRate?: {
+      conversion_rate: number;
+      toUnit?: {
+        name: string;
+      };
+    }[];
+  }[];
+}
+
+interface Batch {
+  batch_id: string | number;
+  batchVariants?: BatchVariant[];
+}
+
+interface BatchAccordionProps {
+  batch: Batch;
+  selectedVariantId: string | number;
+  batchNumber: number | string;
+}
+
+const BatchAccordion = ({ batch, selectedVariantId, batchNumber }: BatchAccordionProps) => {
   const batchVariants = batch?.batchVariants || [];
 
   return (
@@ -42,9 +75,8 @@ const BatchAccordion = ({ batch, selectedVariantId, batchNumber }) => {
                       const supplierUnits = batchVariant?.SupplierUnit || [];
                       const supplier = supplierUnits?.[0]?.supplier || {}; // Access supplier details
                       const personalDetails = supplier?.Personal_Details || {};
-                      const supplierName = `${personalDetails?.first_name || "Unknown"} ${
-                        personalDetails?.last_name || ""
-                      }`;
+                      const supplierName = `${personalDetails?.first_name || "Unknown"} ${personalDetails?.last_name || ""
+                        }`;
 
                       return (
                         <span key={index}>

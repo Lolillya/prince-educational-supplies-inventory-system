@@ -1,16 +1,16 @@
 "use client";
 
+import { ArrowLeft } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "~/components/ui/dialog";
-import { ArrowLeft } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
 
 interface NewSupplierRouterProps {
   title: string; // Title to display in the header

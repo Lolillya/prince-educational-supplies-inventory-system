@@ -22,6 +22,9 @@ type SelectedSupplierProps = {
 		restocks: any[];
 	};
 	clerkId: string;
+	auth: {
+		// Add appropriate type properties here
+	} | null | undefined;
 }
 
 const SelectedSupplier = ({

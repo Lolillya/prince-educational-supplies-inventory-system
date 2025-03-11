@@ -14,7 +14,7 @@ import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
 import { Toaster } from "~/components/ui/sonner";
-import {useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 interface Customer {
   id: string;
@@ -64,19 +64,18 @@ const CustomersPage = () => {
 
   const { data: customerData } = api.customers.list.useQuery();
 
-
   const utils = api.useUtils();
   const { data: session } = useSession();
   const userRole = session?.user?.role;
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: invoiceActivity } = api.customers.getCustomerInvoices.useQuery(
-      { customerId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
-      { enabled: !!selectedRecord }
+    { customerId: selectedRecord?.id ?? "" }, // Use selectedRecord.id (User_Role's id)
+    { enabled: !!selectedRecord },
   );
 
   const activityCustomerData = {
-    invoices: invoiceActivity ?? []
+    invoices: invoiceActivity ?? [],
   };
 
   const verifyPasswordMutation = api.customers.verifyPassword.useMutation();
@@ -105,8 +104,8 @@ const CustomersPage = () => {
   });
 
   const checkAdminRole = () => {
-    if (userRole !== 'ADMIN') {
-      alert('Only ADMIN users can delete suppliers');
+    if (userRole !== "ADMIN") {
+      alert("Only ADMIN users can delete suppliers");
       return false;
     }
     return true;
@@ -146,7 +145,7 @@ const CustomersPage = () => {
           <RecordHeader
             record="Customers"
             number={filteredCustomers?.length ?? 0}
-            data={filteredCustomers ?? []}          
+            data={filteredCustomers ?? []}
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredCustomers?.length ?? 0) > 0 ? (
@@ -163,7 +162,7 @@ const CustomersPage = () => {
                         selectedRecord?.Personal_Details_Id ===
                         customer.Personal_Details_Id
                       }
-                      recordType={'Customers'}
+                      recordType={"Customers"}
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
                         if (!checkAdminRole()) return;
@@ -215,12 +214,12 @@ const CustomersPage = () => {
                       .join("\n")}
                     notes={selectedRecord.Personal_Details.notes ?? ""}
                     auth={selectedRecord.Personal_Details.auth}
-                      // activityData={activityData}
+                    // activityData={activityData}
 
-                      // TODO: reflect restock data based on selected supplier
-                      // restockData={supplierRestockData}
+                    // TODO: reflect restock data based on selected supplier
+                    // restockData={supplierRestockData}
                     invoiceHistoryData={activityCustomerData}
-                    clerkId={selectedRecord.id ?? ''}
+                    clerkId={selectedRecord.id ?? ""}
                   />
                 </div>
               </ScrollArea>

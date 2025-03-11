@@ -98,7 +98,10 @@ const RestockRecord: React.FC<RestockProps> = ({
               brand={item.brand}
               quantity={item.quantity}
               mainUnit={item.mainUnit}
-              unitConversion={item.unitConversion}
+              unitConversion={item.unitConversion.map(conv => ({
+                ...conv,
+                price: 0 // Add the missing price property, replace 0 with actual price if available
+              }))}
             />
           );
         })}
@@ -125,7 +128,7 @@ const RestockRecord: React.FC<RestockProps> = ({
               orientation="vertical"
               className="h-6 w-[2px] bg-slate-200"
             /> */}
-            
+
           </div>
         </div>
       </div>

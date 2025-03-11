@@ -9,7 +9,7 @@ import { Label } from "~/components/ui/label";
 import { LoadingSpinner } from "~/components/loading";
 import { useRouter } from "next/navigation";
 import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
-import {DialogTitle} from "@radix-ui/react-dialog";
+import { DialogTitle } from "@radix-ui/react-dialog";
 
 
 
@@ -60,7 +60,7 @@ const defaultCustomerForm: CustomerFormState = {
 };
 
 const NewCustomerState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<CustomerFormErrors>({});
     const router = useRouter();
     const { refetch } = api.customers.list.useQuery();
     const [dialogOpen, setDialogOpen] = useState(false);
@@ -105,7 +105,7 @@ const NewCustomerState = ({ id }: { id: string }) => {
                 firstName: customerData.first_name ?? "",
                 lastName: customerData.last_name ?? "",
                 businessName: customerData.company ?? "",
-                term: customerData.term ?? "",
+                term: customerData.term?.toString() ?? "",
                 contact: customerData.contact ?? "",
                 email: customerData.email ?? "",
                 addressLine: customerData.location?.address_line ?? "",
@@ -319,8 +319,8 @@ const NewCustomerState = ({ id }: { id: string }) => {
                                 value={customerForm.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastname && (
-                                <span className="text-red">{errors.lastname}</span>
+                            {errors.lastName && (
+                                <span className="text-red">{errors.lastName}</span>
                             )}
                         </div>
                     </div>

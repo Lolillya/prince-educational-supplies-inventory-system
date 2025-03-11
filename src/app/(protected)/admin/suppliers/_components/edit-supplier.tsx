@@ -53,7 +53,7 @@ const defaultSupplierForm: SupplierFormState = {
 };
 
 const EditSupplierState = ({ id }: { id: string }) => {
-    const [errors, setErrors] = useState<Record<string, string>>({});
+    const [errors, setErrors] = useState<SupplierFormErrors>({});
     const [supplierForm, setSupplierForm] = useState<SupplierFormState>(defaultSupplierForm);
     const router = useRouter();
     const { refetch } = api.suppliers.list.useQuery();
@@ -293,8 +293,8 @@ const EditSupplierState = ({ id }: { id: string }) => {
                                 value={supplierForm.lastName}
                                 onChange={handleInputChange}
                             />
-                            {errors.lastname && (
-                                <span className="text-red">{errors.lastname}</span>
+                            {errors.lastName && (
+                                <span className="text-red">{errors.lastName}</span>
                             )}
                         </div>
                     </div>

@@ -122,6 +122,16 @@ const SuppliersPage = () => {
   //   ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
   //   : [];
 
+  const handleDelete = async (id: string) => {
+    if (!checkAdminRole()) return;
+    try {
+      await deleteSupplierMutation.mutateAsync({ id });
+      void router.refresh();
+    } catch (error) {
+      console.error("Failed to delete supplier:", error);
+    }
+  };
+
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
       <div className="flex justify-between items-center">
@@ -161,7 +171,7 @@ const SuppliersPage = () => {
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
                         if (!checkAdminRole()) return;
-                        deleteSupplierMutation.mutate({ id });
+                        handleDelete(id);
                       }}
                       userRole={userRole}
                     />

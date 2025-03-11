@@ -115,6 +115,16 @@ const CustomersPage = () => {
     return true;
   };
 
+  const handleDelete = async (id: string) => {
+    if (!checkAdminRole()) return;
+    try {
+      await deleteCustomerMutation.mutateAsync({ id });
+      void router.refresh();
+    } catch (error) {
+      console.error("Failed to delete customer:", error);
+    }
+  };
+
   const filteredCustomers = customerData?.filter((customer) => {
     const company = customer.Personal_Details.company?.toLowerCase() ?? "";
     const contact = customer.Personal_Details.contact?.toLowerCase() ?? "";
@@ -176,8 +186,7 @@ const CustomersPage = () => {
                       recordType={'Customers'}
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
-                        if (!checkAdminRole()) return;
-                        deleteCustomerMutation.mutate({ id });
+                        handleDelete(id);
                       }}
                       userRole={userRole}
                     />

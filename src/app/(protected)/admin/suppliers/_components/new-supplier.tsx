@@ -224,7 +224,11 @@ const NewSupplierState = ({ id }: { id: string }) => {
         notes: supplierForm.notes,
       });
 
-      await router.push("/admin/suppliers");
+      try {
+        await router.push("/admin/suppliers");
+      } catch (error) {
+        console.error("Navigation failed:", error);
+      }
     } catch (error) {
       console.error("Failed to create supplier:", error);
     }

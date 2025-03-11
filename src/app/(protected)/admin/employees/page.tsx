@@ -129,6 +129,16 @@ const EmployeesPage = () => {
     );
   });
 
+  const handleDelete = async (id: string) => {
+    if (!checkAdminRole()) return;
+    try {
+      await deleteEmployeeMutation.mutateAsync({ id });
+      void router.refresh();
+    } catch (error) {
+      console.error("Failed to delete employee:", error);
+    }
+  };
+
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
       <div className="flex justify-between items-center">
@@ -167,8 +177,7 @@ const EmployeesPage = () => {
                       recordType={'Employees'}
                       onVerifyPassword={handleVerifyPassword}
                       onDelete={(id) => {
-                        if (!checkAdminRole()) return;
-                        deleteEmployeeMutation.mutate({ id });
+                        handleDelete(id);
                       }}
                       userRole={userRole}
                     />

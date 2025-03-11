@@ -24,7 +24,7 @@ type Item = {
   };
 };
 
-type StockCardProps = {
+interface StockCardProps {
   item: Item;
   onRemove: () => void;
   stockValue: string; // Controlled stock value from parent
@@ -32,7 +32,8 @@ type StockCardProps = {
   onPriceChange: (newPrice: number) => void; // Callback for stock changes
   onUnitChange: (newUnit: string) => void; // Callback for unit changes
   onStockUnitsChange: (stockUnits: StockUnitData[]) => void; // Add this type
-};
+  onAccordionToggle: (isExpanded: boolean) => void;
+}
 
 const StockCard = ({
   item,
@@ -42,6 +43,7 @@ const StockCard = ({
   onPriceChange,
   onUnitChange,
   onStockUnitsChange,
+  onAccordionToggle,
 }: StockCardProps) => {
   const [stockUnits, setStockUnits] = useState<StockUnitData[]>([]);
   const [stock, setStock] = useState("");

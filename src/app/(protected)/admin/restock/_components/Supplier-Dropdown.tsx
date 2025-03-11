@@ -4,13 +4,13 @@ import { Label } from "~/components/ui/label";
 
 interface Supplier {
     id: string;
-    company: string;
+    company: string | null;
 }
 
 interface SupplierDropdownProps {
     suppliers: Supplier[];
     selectedSupplier: Supplier | null;
-    setSelectedSupplier: (supplier: { id: string; name: string }) => void;
+    setSelectedSupplier: (supplier: Supplier) => void;
 }
 
 const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }: SupplierDropdownProps) => {
@@ -63,11 +63,8 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }: 
     // };
     const handleSelectSupplier = (supplier: Supplier) => {
         // Set both the supplier id and company name
-        setSelectedSupplier({
-            id: supplier.id, // Set supplier ID
-            name: supplier.company, // Set company name
-        });
-        setSearchTerm(supplier.company); // Display selected supplier name
+        setSelectedSupplier(supplier);
+        setSearchTerm(supplier.company || ""); // Display selected supplier name
         setDropdownVisible(false); // Immediately hide the dropdown
         setHighlightedIndex(-1); // Reset index
     };

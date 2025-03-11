@@ -30,6 +30,7 @@ import {
 } from "~/components/ui/tooltip";
 import RecordEditor from "../../_components/record-editor";
 import RecordExpand from "../../_components/record-expand";
+import { useRouter } from "next/navigation";
 
 import InvoiceDialog from "~/app/(protected)/admin/employees/_components/invoice-dialog";
 
@@ -62,6 +63,7 @@ export default function CustomerInvoice({
     last_name,
     customerId,
 }: CustomerInvoiceProps) {
+    const router = useRouter();
     const [showAll, setShowAll] = useState(false);
     const displayedData = showAll ? invoiceData : invoiceData.slice(0, 3);
     const totalCount = invoiceData.length;
@@ -246,8 +248,6 @@ export default function CustomerInvoice({
 {/*        </div>*/
 }
 {/*      </div>*/
-}
-{/*    </DialogHeader>*/
 }
 
 {/*    <Separator orientation="horizontal" className="h-[2px]" />*/

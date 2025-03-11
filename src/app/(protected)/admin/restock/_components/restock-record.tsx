@@ -99,8 +99,10 @@ const RestockRecord: React.FC<RestockProps> = ({
               quantity={item.quantity}
               mainUnit={item.mainUnit}
               unitConversion={item.unitConversion.map(conv => ({
-                ...conv,
-                price: 0 // Add the missing price property, replace 0 with actual price if available
+                from: conv.from,
+                count: conv.count,
+                to: conv.to,
+                price: conv.price ?? 0 // Use nullish coalescing for price
               }))}
             />
           );

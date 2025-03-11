@@ -18,7 +18,7 @@ const poppins = Poppins({
   weight: ["400", "700"],
 });
 
-interface RestockProps {
+export interface RestockProps {
   restockId: number;
   date: string | undefined;
   supplier: string | null;
@@ -35,6 +35,7 @@ interface RestockProps {
       [key: string]: any;
     }[];
   }[];
+  onViewAll?: (batch: RestockProps) => void;
 }
 
 const RestockPage = () => {

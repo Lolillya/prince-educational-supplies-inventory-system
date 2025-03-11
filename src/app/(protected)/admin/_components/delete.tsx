@@ -16,7 +16,7 @@ interface DeleteProps {
 	recordInfo: string | null;
 	recordType: string;
 	id: string; // Changed from variantId to string ID
-	onDelete: (id: string) => void; // Updated to accept string ID
+	onDelete: (id: string) => Promise<void>;
 	onVerifyPassword: (password: string) => Promise<boolean>;
 	userRole?: string;
 }
@@ -148,7 +148,7 @@ const Delete: React.FC<DeleteProps> = ({ className, recordInfo, recordType, id, 
 							</DialogClose>
 							<Button
 								className="bg-red hover:bg-red/80"
-								onClick={handleDelete}
+								onClick={() => void handleDelete()}
 							>
 								Delete Record
 							</Button>

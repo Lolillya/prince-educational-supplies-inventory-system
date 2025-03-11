@@ -1,13 +1,14 @@
-import { ArrowUpRight, IdCard, PhilippinePeso } from "lucide-react";
+// import { ArrowUpRight, IdCard, PhilippinePeso } from "lucide-react";
+import { ArrowUpRight } from "lucide-react";
 import { useRouter } from "next/navigation";
 import React, { useState } from "react";
-import { Separator } from "~/components/ui/separator";
-import {
-  Tooltip,
-  TooltipContent,
-  TooltipProvider,
-  TooltipTrigger,
-} from "~/components/ui/tooltip";
+// import { Separator } from "~/components/ui/separator";
+// import {
+//   Tooltip,
+//   TooltipContent,
+//   TooltipProvider,
+//   TooltipTrigger,
+// } from "~/components/ui/tooltip";
 import Link from "next/link";
 import InvoiceDialog from "~/app/(protected)/admin/employees/_components/invoice-dialog";
 
@@ -563,60 +564,60 @@ export default function CustomerInvoice({
   /*}*/
 }
 
-const CustomerRestockCard = ({ invoiceData }: CustomerInvoiceProps) => {
-  return invoiceData.map((invoice) => (
-    <div
-      className="flex cursor-pointer flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:bg-slate-200/50"
-      key={invoice.invoice_number}
-    >
-      <p className="text-left text-slate-600">#{invoice.invoice_number}</p>
-      <div className="flex flex-grow items-center gap-3 overflow-hidden">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <IdCard className="h-4 w-4" />
-            </TooltipTrigger>
-            <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
-              Recorded by Stacey Andrew Moralidad Gonzaga
-            </TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
-        <p className="truncate text-sm">
-          {invoice.invoiceClerk.Personal_Details.company}
-        </p>
-      </div>
-      <div className="flex items-center gap-4 text-slate-400">
-        <div className="flex items-center gap-3 text-slate-400">
-          {/* <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <Calendar className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
-                Recorded on 2025-01-13
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider> */}
-          <p className="text-sm">{invoice.created_at.toLocaleDateString()}</p>
-        </div>
-        <Separator
-          orientation="vertical"
-          className="h-6 w-[2px] bg-slate-200"
-        />
-        <div className="flex items-center gap-3">
-          <TooltipProvider>
-            <Tooltip>
-              <TooltipTrigger asChild>
-                <PhilippinePeso className="h-4 w-4" />
-              </TooltipTrigger>
-              <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
-                ₱{invoice.total_amount} grand total
-              </TooltipContent>
-            </Tooltip>
-          </TooltipProvider>
-          <p className="text-sm">{invoice.total_amount}</p>
-        </div>
-      </div>
-    </div>
-  ));
-};
+// const CustomerRestockCard = ({ invoiceData }: CustomerInvoiceProps) => {
+//   return invoiceData.map((invoice) => (
+//     <div
+//       className="flex cursor-pointer flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:bg-slate-200/50"
+//       key={invoice.invoice_number}
+//     >
+//       <p className="text-left text-slate-600">#{invoice.invoice_number}</p>
+//       <div className="flex flex-grow items-center gap-3 overflow-hidden">
+//         <TooltipProvider>
+//           <Tooltip>
+//             <TooltipTrigger asChild>
+//               <IdCard className="h-4 w-4" />
+//             </TooltipTrigger>
+//             <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+//               Recorded by Stacey Andrew Moralidad Gonzaga
+//             </TooltipContent>
+//           </Tooltip>
+//         </TooltipProvider>
+//         <p className="truncate text-sm">
+//           {invoice.invoiceClerk.Personal_Details.company}
+//         </p>
+//       </div>
+//       <div className="flex items-center gap-4 text-slate-400">
+//         <div className="flex items-center gap-3 text-slate-400">
+//           {/* <TooltipProvider>
+//             <Tooltip>
+//               <TooltipTrigger asChild>
+//                 <Calendar className="h-4 w-4" />
+//               </TooltipTrigger>
+//               <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+//                 Recorded on 2025-01-13
+//               </TooltipContent>
+//             </Tooltip>
+//           </TooltipProvider> */}
+//           <p className="text-sm">{invoice.created_at.toLocaleDateString()}</p>
+//         </div>
+//         <Separator
+//           orientation="vertical"
+//           className="h-6 w-[2px] bg-slate-200"
+//         />
+//         <div className="flex items-center gap-3">
+//           <TooltipProvider>
+//             <Tooltip>
+//               <TooltipTrigger asChild>
+//                 <PhilippinePeso className="h-4 w-4" />
+//               </TooltipTrigger>
+//               <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+//                 ₱{invoice.total_amount} grand total
+//               </TooltipContent>
+//             </Tooltip>
+//           </TooltipProvider>
+//           <p className="text-sm">{invoice.total_amount}</p>
+//         </div>
+//       </div>
+//     </div>
+//   ));
+// };

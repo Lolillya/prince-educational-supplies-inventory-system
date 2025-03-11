@@ -16,52 +16,10 @@ import SelectedItem from "./_components/selected-item";
 import RecordItem from "./_components/record-item";
 import { useSession } from "next-auth/react";
 import { Toaster } from "~/components/ui/sonner";
+import type { InventoryItem } from "~/types/inventory";
 
-interface InventoryItemInfoProps {
-  inventoryItems: InventoryItem[];
-}
-
-interface Unit {
-  unit_id: number;
-  name: string;
-  conversion_rate: string;
-}
-
-interface Brand {
-  brand_id: number;
-  name: string;
-}
-
-interface Category {
-  category_id: number;
-  name: string;
-}
-
-interface Item {
-  item_id: number;
-  name: string;
-  description: string;
-  brand: Brand;
-  category: Category;
-}
-
-interface Variant {
-  variant_id: number;
-  item_id: number;
-  unit: Unit;
-  item: Item;
-  name?: string;
-  description?: string;
-  Batch: Batch[];
-  BatchVariant: BatchVariant[];
-}
-
-interface InventoryItem {
-  inventory_id: number;
-  variant_id: number;
-  quantity: number;
-  inventory_number: number;
-  variant: Variant;
+interface InventoryPageProps {
+  // Add any page-specific props here
 }
 
 const InventoryPage = () => {
@@ -109,10 +67,10 @@ const InventoryPage = () => {
     },
   });
 
-  const handleVerifyPassword = async (password: string) => {
+  const handleVerifyPassword = async (password: string): Promise<boolean> => {
     if (!personalDetailsId) {
       console.error("No personal details ID found in session.");
-      return;
+      return false;
     }
 
     try {
@@ -120,14 +78,14 @@ const InventoryPage = () => {
         personalDetailsId,
         password,
       });
-      return true; // Password is correct
+      return true;
     } catch (error) {
-      return false; // Password is incorrect
+      return false;
     }
   };
 
   const getStockLevel = (
-    stockLevel: { low_stock: number; very_low_stock: number } | null,
+    stockLevel: { low_stock: number; very_low_stock: number; } | null | undefined,
     inventoryQuantity: number,
   ): string => {
     if (!stockLevel) return "good";
@@ -137,14 +95,14 @@ const InventoryPage = () => {
     return "good";
   };
 
-  const filteredInventory = inventoryData?.filter((inventory) => {
+  const filteredInventory = (inventoryData?.filter((inventory) => {
     const item =
       `${inventory.variant.item.name} - ${inventory.variant.item.brand.name} - ${inventory.variant.name}`.toLowerCase();
     const id = inventory.variant_id;
     const search = searchTerm.toLowerCase();
 
     return item.includes(search) || id.toString().includes(search);
-  });
+  }) ?? []) as InventoryItem[];
 
   return (
     <section className="flex min-h-screen flex-col px-20 py-10 text-base">
@@ -168,7 +126,7 @@ const InventoryPage = () => {
           <RecordHeader
             record="Inventory"
             number={filteredInventory?.length ?? 0}
-            data={filteredInventory ?? []}
+            data={filteredInventory}
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredInventory?.length ?? 0) > 0 ? (
@@ -224,8 +182,25 @@ const InventoryPage = () => {
                       selectedRecord.quantity,
                     )}
                     category={selectedRecord.variant.item.category.name}
-                    notes={selectedRecord.variant.item.description}
-                    batchVariants={selectedRecord.variant.BatchVariant}
+                    notes={selectedRecord.variant.item.description ?? undefined}
+                    batchVariants={selectedRecord.variant.BatchVariant.map(bv => ({
+                      batch_variant_id: bv.batch_variant_id.toString(),
+                      variant_id: bv.variant_id,
+                      quantity: bv.quantity,
+                      batch: {
+                        batch_id: bv.batch_variant_id.toString(),
+                        batch_number: bv.batch_variant_id.toString(),
+                        batchVariants: [{
+                          batch_variant_id: bv.batch_variant_id.toString(),
+                          SupplierUnit: [{
+                            supplier_unit_id: "0",
+                            quantity_per_unit: bv.quantity,
+                            price: 0,
+                            unit: { name: "" }
+                          }]
+                        }]
+                      }
+                    }))}
                     onVerifyPassword={handleVerifyPassword}
                   />
                 </div>

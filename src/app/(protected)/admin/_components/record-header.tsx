@@ -8,11 +8,12 @@ import type { Supplier } from '~/types/suppliers';
 import type { Customer } from '~/types/customers';
 import { toast } from 'sonner';
 import type { Employee } from '~/types/employees';
+import type { InventoryItem } from "~/types/inventory";
 
 interface RecordHeaderProps {
-	record: 'Suppliers' | 'Customers' | 'Employees';
+	record: string;
 	number: number;
-	data: Supplier[] | Customer[] | Employee[];
+	data: Supplier[] | Customer[] | Employee[] | InventoryItem[] | unknown[];
 }
 
 const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {

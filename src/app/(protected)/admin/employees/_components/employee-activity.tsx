@@ -51,6 +51,8 @@ const EmployeeActivity = ({ activityData, clerkId }: EmployeeActivityProps) => {
 						selectedTab === "restock" ? (
 							<RestockDialog
 								key={activity.batch_id}
+								restock={activity}
+								clerkId={clerkId}
 								activity={activity}
 								context="employee"
 							/>

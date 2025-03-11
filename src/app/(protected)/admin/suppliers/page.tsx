@@ -14,7 +14,7 @@ import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedSupplier from './_components/selected-supplier'
 import { Toaster } from '~/components/ui/sonner'
-import {useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 interface Supplier {
   id: string;
@@ -62,8 +62,8 @@ const SuppliersPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: restockActivity } = api.suppliers.getSupplierRestocks.useQuery(
-      { supplierId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
-      { enabled: !!selectedRecord }
+    { supplierId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
+    { enabled: !!selectedRecord }
   );
 
   const activityData = {
@@ -121,6 +121,8 @@ const SuppliersPage = () => {
   // const supplierRestockData = selectedRecord
   //   ? restockData?.filter((restock) => restock.supplier === selectedRecord.Personal_Details.company)
   //   : [];
+
+  void router.refresh();
 
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
@@ -190,7 +192,7 @@ const SuppliersPage = () => {
                       // `${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`
                       [
                         selectedRecord.Personal_Details.first_name,
-                        selectedRecord.Personal_Details.last_name,  
+                        selectedRecord.Personal_Details.last_name,
                       ]
                         .filter((line) => line)
                         .join(" ")

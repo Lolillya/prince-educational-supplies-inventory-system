@@ -14,7 +14,7 @@ import SearchBar from '../_components/search-bar'
 import SelectRecordMessage from '../_components/select-record-message'
 import SelectedEmployee from './_components/selected-employee'
 import { Toaster } from '~/components/ui/sonner'
-import {useSession} from "next-auth/react";
+import { useSession } from "next-auth/react";
 
 interface Employee {
   id: string;
@@ -65,13 +65,13 @@ const EmployeesPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: restockData } = api.employees.getRestockActivity.useQuery(
-      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+    { enabled: !!selectedRecord }
   );
 
   const { data: invoiceData } = api.employees.getInvoiceActivity.useQuery(
-      { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { clerkId: selectedRecord?.Personal_Details_Id ?? '' },
+    { enabled: !!selectedRecord }
   );
 
   const activityData = {
@@ -129,6 +129,8 @@ const EmployeesPage = () => {
     );
   });
 
+  void router.refresh();
+
   return (
     <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
       <div className="flex justify-between items-center">
@@ -149,7 +151,7 @@ const EmployeesPage = () => {
         <div className="flex flex-col gap-3 w-3/5 flex-grow">
           <RecordHeader
             record="Employees"
-            number={filteredEmployees?.length ?? 0} 
+            number={filteredEmployees?.length ?? 0}
             data={filteredEmployees ?? []}
           />
           <div className="flex flex-grow rounded-lg h-full overflow-hidden">

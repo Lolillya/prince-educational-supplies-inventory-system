@@ -40,7 +40,7 @@ const InventoryPage = () => {
     onSuccess: () => {
       console.log("Variant successfully deleted!");
       utils.inventory.listInventory.invalidate(); // Invalidate the cache for the listInventory query
-      router.refresh(); // Optional: Refresh the page if needed
+      void router.refresh(); // Optional: Refresh the page if needed
     },
     onError: (error) => {
       console.error("Failed to delete variant:", error);

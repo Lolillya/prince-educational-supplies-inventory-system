@@ -59,7 +59,7 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 											</HoverCardTrigger>
 											<HoverCardContent className="shadow-none flex flex-col gap-3">
 												{item.unitConversion.map((unit, index) => (
-													<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to}  price={unit.price} />
+													<UnitLine key={index} from={unit.from} count={unit.count} to={unit.to} />
 												))}
 											</HoverCardContent>
 										</HoverCard>

@@ -1,4 +1,5 @@
 import { Mail, MapPin, Phone, User2 } from 'lucide-react'
+import { useRouter } from 'next/navigation'
 import React from 'react'
 import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Separator } from '~/components/ui/separator'
@@ -6,7 +7,6 @@ import Edit from '../../_components/edit'
 import RecordInfo from '../../_components/record-info'
 import RecordNotes from '../../_components/record-notes'
 import SupplierRestock from './supplier-restock'
-import { useRouter } from 'next/navigation'
 
 type SelectedSupplierProps = {
 	id: string;

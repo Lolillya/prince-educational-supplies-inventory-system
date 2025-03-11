@@ -1,6 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
+import { ArrowLeft } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useParams, useRouter } from "next/navigation";
+import React, { useEffect, useMemo, useState } from "react";
+import { Button } from "~/components/ui/button";
 import {
   DialogContent,
   DialogHeader,
@@ -8,15 +12,9 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
-import { Label } from "~/components/ui/label";
-import { ArrowLeft, Plus, X } from "lucide-react";
-import { Button } from "~/components/ui/button";
-import { Textarea } from "~/components/ui/textarea";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import { api } from "~/trpc/react";
-import { Card, CardContent } from "~/components/ui/card";
-import { useParams, useRouter } from "next/navigation";
-import { useSession } from "next-auth/react";
 
 interface ItemType {
   name: string;

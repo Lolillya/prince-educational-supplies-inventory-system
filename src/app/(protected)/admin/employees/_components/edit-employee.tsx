@@ -1,22 +1,22 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
 import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
+import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 import {
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogTitle,
   DialogDescription,
   DialogFooter,
+  DialogTitle,
+  DialogTrigger,
 } from "~/components/ui/dialog";
-import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 interface EmployeeFormState {
   firstName: string;

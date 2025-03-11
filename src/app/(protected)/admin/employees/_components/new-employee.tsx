@@ -1,16 +1,16 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
-import { api } from "~/trpc/react";
-import { Input } from "~/components/ui/input";
-import { Textarea } from "~/components/ui/textarea";
-import { Button } from "~/components/ui/button";
-import { Label } from "~/components/ui/label";
-import { LoadingSpinner } from "~/components/loading";
-import { useRouter } from "next/navigation";
-import { Dialog, DialogTrigger, DialogContent, DialogFooter, DialogClose } from "~/components/ui/dialog";
 import { DialogTitle } from "@radix-ui/react-dialog";
+import { useRouter } from "next/navigation";
+import React, { useEffect, useState } from "react";
 import SwitchComponent from "~/app/(protected)/admin/employees/_components/switch";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
+import { Dialog, DialogContent, DialogFooter } from "~/components/ui/dialog";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Textarea } from "~/components/ui/textarea";
+import { api } from "~/trpc/react";
 
 
 

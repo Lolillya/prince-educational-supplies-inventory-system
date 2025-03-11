@@ -1,9 +1,7 @@
 import React from 'react'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Separator } from '~/components/ui/separator'
-import Favorite from '../../_components/favorite'
-import MoreOptions from '../../_components/more-options'
 import Delete from '../../_components/delete'
+import Favorite from '../../_components/favorite'
 type RecordItemProps = {
 	id: string;
 	inventoryNumber: string;

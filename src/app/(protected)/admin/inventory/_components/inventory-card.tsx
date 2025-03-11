@@ -1,16 +1,15 @@
-import React, { useState, useEffect, useMemo, forwardRef, useImperativeHandle } from "react";
-import { Separator } from "~/components/ui/separator";
+import { ArrowRight, Plus, X } from "lucide-react";
+import Link from "next/link";
+import React, { forwardRef, useEffect, useImperativeHandle, useMemo, useState } from "react";
 import {
     Accordion,
     AccordionContent,
     AccordionItem,
     AccordionTrigger,
 } from "~/components/ui/accordion";
-import { Label } from "~/components/ui/label";
-import { ArrowRight, Plus, X } from "lucide-react";
 import { Input } from "~/components/ui/input";
-import { api } from "~/trpc/react";
-import Link from "next/link";
+import { Label } from "~/components/ui/label";
+import { Separator } from "~/components/ui/separator";
 
 // Add missing type definitions
 interface StockUnitData {

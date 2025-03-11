@@ -1,22 +1,6 @@
 import { Box } from "lucide-react";
-import { Separator } from "~/components/ui/separator";
-import MoreOptions from "../../_components/more-options";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuSeparator,
-  DropdownMenuTrigger,
-} from "~/components/ui/dropdown-menu";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-} from "~/components/ui/dialog";
-import { Label } from "~/components/ui/label";
+import { Separator } from "~/components/ui/separator";
 
 type Props = {
   line_items: {

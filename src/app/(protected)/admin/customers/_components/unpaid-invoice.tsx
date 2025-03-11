@@ -1,8 +1,8 @@
 import { Calendar } from 'lucide-react';
 import { Poppins } from 'next/font/google';
 import { Separator } from '~/components/ui/separator';
-import Payment from '../../_components/payment';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
+import Payment from '../../_components/payment';
 
 const poppins = Poppins({
 	subsets: ["latin"],

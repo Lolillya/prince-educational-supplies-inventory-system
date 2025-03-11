@@ -1,10 +1,12 @@
 "use client";
 
 import { Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Toaster } from "~/components/ui/sonner";
 import { api } from "~/trpc/react";
 import Filter from "../_components/filter";
 import NoRecordsMessage from "../_components/no-records-message";
@@ -13,8 +15,6 @@ import RecordItem from "../_components/record-item";
 import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
-import { Toaster } from "~/components/ui/sonner";
-import { useSession } from "next-auth/react";
 
 interface PersonalDetails {
   personal_details_id: string;

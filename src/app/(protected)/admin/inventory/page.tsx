@@ -1,22 +1,21 @@
 "use client";
 
-import type { Batch, BatchVariant } from "@prisma/client";
 import { Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Toaster } from "~/components/ui/sonner";
 import { api } from "~/trpc/react";
+import type { InventoryItem } from "~/types/inventory";
 import Filter from "../_components/filter";
 import NoRecordsMessage from "../_components/no-records-message";
 import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import RecordHeader from "./_components/record-header";
-import SelectedItem from "./_components/selected-item";
 import RecordItem from "./_components/record-item";
-import { useSession } from "next-auth/react";
-import { Toaster } from "~/components/ui/sonner";
-import type { InventoryItem } from "~/types/inventory";
+import SelectedItem from "./_components/selected-item";
 
 interface InventoryPageProps {
   // Add any page-specific props here

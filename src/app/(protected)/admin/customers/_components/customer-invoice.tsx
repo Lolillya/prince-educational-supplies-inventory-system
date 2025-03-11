@@ -1,36 +1,19 @@
 import {
     ArrowUpRight,
-    Calendar,
     IdCard,
-    PhilippinePeso,
-    Printer,
+    PhilippinePeso
 } from "lucide-react";
 import { Poppins } from "next/font/google";
 import Link from "next/link";
-import React, { FC, useState } from "react";
-import { Button } from "~/components/ui/button";
-import {
-    Dialog,
-    DialogClose,
-    DialogContent,
-    DialogDescription,
-    DialogHeader,
-    DialogTitle,
-    DialogTrigger,
-} from "~/components/ui/dialog";
-import { Input } from "~/components/ui/input";
-import { Label } from "~/components/ui/label";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { Separator } from "~/components/ui/separator";
-import { Textarea } from "~/components/ui/textarea";
 import {
     Tooltip,
     TooltipContent,
     TooltipProvider,
     TooltipTrigger,
 } from "~/components/ui/tooltip";
-import RecordEditor from "../../_components/record-editor";
-import RecordExpand from "../../_components/record-expand";
-import { useRouter } from "next/navigation";
 
 import InvoiceDialog from "~/app/(protected)/admin/employees/_components/invoice-dialog";
 

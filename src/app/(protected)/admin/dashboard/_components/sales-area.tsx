@@ -1,7 +1,7 @@
 import { TrendingUp } from 'lucide-react';
-import React from 'react'
-import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart'
+import React from 'react';
+import { Area, AreaChart, CartesianGrid, XAxis } from 'recharts';
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from '~/components/ui/chart';
 
 interface SalesAreaCardProps {
 	areaChartData: { month: string; sales: number }[];

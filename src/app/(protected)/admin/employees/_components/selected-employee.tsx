@@ -1,13 +1,11 @@
-import { IdCard, Mail, MapPin, Phone } from 'lucide-react';
+import { Mail, MapPin, Phone } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 import { Avatar, AvatarFallback } from '~/components/ui/avatar';
 import { Separator } from '~/components/ui/separator';
+import Edit from '../../_components/edit';
 import RecordInfo from '../../_components/record-info';
 import RecordNotes from '../../_components/record-notes';
 import AccountRecovery from './account-recovery';
-import EditRecord from './edit-record';
-import EmployeeActivity from './employee-activity';
-import Edit from '../../_components/edit'
-import { useRouter } from 'next/navigation'
 
 type SelectedEmployeeProps = {
 	id: string;

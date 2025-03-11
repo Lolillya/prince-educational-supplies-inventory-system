@@ -1,9 +1,11 @@
 "use client";
 
-import { Search, ArrowLeft, ArrowRight } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import { ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import StockCard from "../_components/stock-card";
+import { useEffect, useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 import {
   DialogContent,
   DialogHeader,
@@ -12,6 +14,7 @@ import {
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
 import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
 import {
   Table,
   TableBody,
@@ -20,17 +23,14 @@ import {
   TableHeader,
   TableRow,
 } from "~/components/ui/table";
-import { Label } from "~/components/ui/label";
-import { useState, useEffect } from "react";
 import { api } from "~/trpc/react";
-import SupplierDropdown from "../_components/Supplier-Dropdown";
 import {
   HoverCard,
-  HoverCardTrigger,
   HoverCardContent,
+  HoverCardTrigger,
 } from "../_components/Hover-Card";
-import { useSession } from "next-auth/react";
-import { LoadingSpinner } from "~/components/loading";
+import StockCard from "../_components/stock-card";
+import SupplierDropdown from "../_components/Supplier-Dropdown";
 
 // Define the data structure for inventory items
 

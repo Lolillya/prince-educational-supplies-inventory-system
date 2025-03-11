@@ -1,6 +1,5 @@
-import { ArrowRight, Calendar, Pin, Truck } from "lucide-react";
+import { Calendar, Pin, Truck } from "lucide-react";
 import React from "react";
-import { Button } from "~/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -10,9 +9,9 @@ import {
 } from "~/components/ui/dropdown-menu";
 import { Separator } from "~/components/ui/separator";
 import MoreOptions from "../../_components/more-options";
+import { type RestockProps } from "../page";
 import RestockItem from "./restock-item";
 import ViewFullRestock from "./view-full-restock";
-import { type RestockProps } from "../page";
 
 const RestockRecord: React.FC<RestockProps> = ({
   restockId,

@@ -1,13 +1,13 @@
-import { Mail, MapPin, PhilippinePeso, Phone, User2 } from "lucide-react";
+import { Mail, MapPin, Phone, User2 } from "lucide-react";
+import { useRouter } from "next/navigation";
+import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Separator } from "~/components/ui/separator";
+import Edit from '../../_components/edit';
 import RecordInfo from "../../_components/record-info";
 import RecordNotes from "../../_components/record-notes";
-import Edit from '../../_components/edit'
 import CustomerInvoice from "./customer-invoice";
-import React, { useState } from "react";
 import Payables from "./payables";
-import { useRouter } from "next/navigation";
 
 type SelectedCustomerProps = {
   first_name: string;

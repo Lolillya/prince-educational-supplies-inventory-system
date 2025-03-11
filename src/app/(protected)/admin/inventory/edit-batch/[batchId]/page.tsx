@@ -1,16 +1,15 @@
 "use client";
 
-import React, { useEffect, useRef, useState } from "react";
-import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
-import { Separator } from "~/components/ui/separator";
-import InventoryCard, { type InventoryCardRef } from "../../_components/inventory-card";
-import { api } from "~/trpc/react";
-import { useParams } from "next/navigation";
-import { Button } from "~/components/ui/button";
+import { useParams, useRouter } from "next/navigation";
+import { useEffect, useRef, useState } from "react";
 import { LoadingSpinner } from "~/components/loading";
-import { Dialog } from "~/components/ui/dialog-transparent";
+import { Button } from "~/components/ui/button";
 import { DialogContent, DialogHeader, DialogTitle } from "~/components/ui/dialog";
+import { Dialog } from "~/components/ui/dialog-transparent";
+import { Separator } from "~/components/ui/separator";
+import { api } from "~/trpc/react";
+import InventoryCard, { type InventoryCardRef } from "../../_components/inventory-card";
 
 interface StockUnitData {
     stock: string;

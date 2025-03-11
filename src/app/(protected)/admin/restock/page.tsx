@@ -2,16 +2,15 @@
 
 import { Plus } from "lucide-react";
 import { Poppins } from "next/font/google";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { useState } from "react";
+import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import { api } from "~/trpc/react";
 import Filter from "../_components/filter";
 import SearchBar from "../_components/search-bar";
 import RestockRecord from "./_components/restock-record";
-import { ScrollArea } from "~/components/ui/scroll-area";
-import { LoadingSpinner } from "~/components/loading";
-import { useSearchParams } from 'next/navigation';
 
 const poppins = Poppins({
   subsets: ["latin"],

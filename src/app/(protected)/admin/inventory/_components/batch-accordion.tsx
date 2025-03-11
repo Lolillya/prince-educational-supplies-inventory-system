@@ -1,4 +1,4 @@
-import React from "react";
+import Link from "next/link";
 import {
   Accordion,
   AccordionContent,
@@ -7,13 +7,12 @@ import {
 } from "~/components/ui/accordion";
 import {
   Table,
-  TableHeader,
-  TableRow,
-  TableHead,
   TableBody,
   TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
 } from "~/components/ui/table";
-import Link from "next/link";
 
 interface BatchVariant {
   variant_id: string | number;

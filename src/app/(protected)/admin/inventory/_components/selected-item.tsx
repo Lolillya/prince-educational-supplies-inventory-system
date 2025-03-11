@@ -1,13 +1,10 @@
-import { Box, Boxes, Hash, Pencil, Tag } from 'lucide-react';
+import { Box, Boxes, Hash, Tag } from 'lucide-react';
+import { useRouter } from "next/navigation";
 import { Separator } from '~/components/ui/separator';
+import Edit from '../../_components/edit';
 import RecordInfo from '../../_components/record-info';
 import RecordNotes from '../../_components/record-notes';
-import EditRecord from './edit-record';
 import InventoryBatch from './inventory-batch';
-import { BatchVariant } from "@prisma/client";
-import { useRouter } from "next/navigation"
-import Edit from '../../_components/edit'
-import React from "react";
 
 // Update the interface to match the BatchVariant interface exactly
 interface BatchVariantData {

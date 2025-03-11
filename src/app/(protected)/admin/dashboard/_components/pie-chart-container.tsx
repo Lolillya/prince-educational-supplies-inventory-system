@@ -1,5 +1,5 @@
-import { type ComponentType } from "react";
 import dynamic from "next/dynamic";
+import { type ComponentType } from "react";
 
 interface CategoryPieCardProps {
   pieChartData: { category: string; sales: number; fill: string }[];

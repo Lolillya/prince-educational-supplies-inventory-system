@@ -1,19 +1,11 @@
 import { TooltipContent } from '@radix-ui/react-tooltip'
-import { ArrowUpRight, Box, Calendar, IdCard, Printer } from 'lucide-react'
-import Link from 'next/link'
-import { Button } from '~/components/ui/button'
-import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
-import { Separator } from '~/components/ui/separator'
-import { Textarea } from '~/components/ui/textarea'
-import { Tooltip, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
-import RestockTable from '../../restock/_components/restock-table'
-import RecordEditor from '../../_components/record-editor'
-import RecordExpand from '../../_components/record-expand'
-import { useState } from 'react'
+import { ArrowUpRight, Box, Calendar, IdCard } from 'lucide-react'
 import { Poppins } from 'next/font/google'
-import RestockDialog from "~/app/(protected)/admin/employees/_components/restock-dialog";
+import Link from 'next/link'
+import { useState } from 'react'
+import RestockDialog from "~/app/(protected)/admin/employees/_components/restock-dialog"
+import { Separator } from '~/components/ui/separator'
+import { Tooltip, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 
 const poppins = Poppins({
 	subsets: ["latin"],

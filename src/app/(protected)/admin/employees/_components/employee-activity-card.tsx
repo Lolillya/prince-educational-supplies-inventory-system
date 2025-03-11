@@ -1,4 +1,4 @@
-import { Box, Calendar, Hash, PhilippinePeso } from 'lucide-react';
+import { Box, Calendar, PhilippinePeso } from 'lucide-react';
 import { Separator } from '~/components/ui/separator';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip';
 

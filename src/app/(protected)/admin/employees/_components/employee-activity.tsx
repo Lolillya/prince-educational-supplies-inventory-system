@@ -1,10 +1,8 @@
-import { ArrowUpRight } from 'lucide-react'
-import Link from 'next/link'
-import { Separator } from '~/components/ui/separator'
-import RestockDialog from './restock-dialog'
-import InvoiceDialog from './invoice-dialog';
-import EmployeeTabs from './employee-tabs';
 import { useState } from 'react';
+import { Separator } from '~/components/ui/separator';
+import EmployeeTabs from './employee-tabs';
+import InvoiceDialog from './invoice-dialog';
+import RestockDialog from './restock-dialog';
 
 interface EmployeeActivityProps {
 	restockId: number;

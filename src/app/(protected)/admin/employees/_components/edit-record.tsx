@@ -1,16 +1,15 @@
 import { Poppins } from 'next/font/google'
 import React, { useState } from 'react'
-import { Avatar, AvatarFallback } from '~/components/ui/avatar'
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
+import { Switch } from '~/components/ui/switch'
 import { Textarea } from '~/components/ui/textarea'
 import Edit from '../../_components/edit'
+import EmojiPopover from '../../_components/emoji-picker'
 import RecordEditor from '../../_components/record-editor'
 import RecordExpand from '../../_components/record-expand'
-import EmojiPopover from '../../_components/emoji-picker'
-import { Switch } from '~/components/ui/switch'
 
 const poppins = Poppins({
 	subsets: ["latin"],

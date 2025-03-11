@@ -1,6 +1,5 @@
 import { PopoverClose } from '@radix-ui/react-popover'
 import { Send } from 'lucide-react'
-import React from 'react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'

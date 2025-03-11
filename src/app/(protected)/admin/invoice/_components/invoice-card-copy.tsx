@@ -158,7 +158,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       unit_id: number;
       unit: { name: string; unit_id: number };
     }[],
-    currentBatchBasis?: SupplierBatch, // Accept batchBasis explicitly
+    currentBatchBasis?: SupplierBatch,
   ) => {
     if (!currentBatchBasis) return "bg-yellow/30";
 
@@ -237,8 +237,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
     // Update state once
     setSelectedUnitQuantity(total);
-
-    // console.log("Total Quantity:", total); // ✅ Log final total
   };
 
   const handleSelectUnit = (
@@ -252,6 +250,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       supplier_unit_id,
     });
   };
+
+  useEffect(() => {
+    if (isBatchAutoRestock) {
+      setSupplier("Manual");
+    }
+  }, [isBatchAutoRestock]);
 
   useEffect(() => {
     if (selectedBatches.length > 0) {
@@ -645,6 +649,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     value={supplier}
                     onValueChange={(value) => setSupplier(value)}
                     disabled={
+                      isBatchAutoRestock ||
                       !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                     }
                   >

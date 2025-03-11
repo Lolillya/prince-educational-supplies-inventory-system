@@ -529,7 +529,7 @@ export const inventoryRouter = createTRPCRouter({
             const {inventoryId} = input;
 
             // Fetch the variant associated with the inventoryId
-            const variant = await prisma.variant.findUnique({
+            const variant = await db.variant.findUnique({
                 where: {variant_id: inventoryId},
                 include: {
                     item: true, // Include the related item to access its ID
@@ -547,7 +547,7 @@ export const inventoryRouter = createTRPCRouter({
             }
 
             // Delete the Item and rely on cascading deletes for related records
-            await prisma.item.delete({
+            await db.item.delete({
                 where: {item_id: itemId},
             });
 
@@ -564,7 +564,7 @@ export const inventoryRouter = createTRPCRouter({
             const {variantId} = input;
 
             // Delete the Variant; related records will be deleted due to cascading deletes
-            await prisma.variant.delete({
+            await db.variant.delete({
                 where: {variant_id: variantId},
             });
 
@@ -582,7 +582,7 @@ export const inventoryRouter = createTRPCRouter({
             const {personalDetailsId, password} = input;
 
             // Fetch the authentication record for the user
-            const authRecord = await prisma.authentication.findUnique({
+            const authRecord = await db.authentication.findUnique({
                 where: {personal_details_id: personalDetailsId},
             });
 
@@ -623,7 +623,7 @@ export const inventoryRouter = createTRPCRouter({
             const { batchVariantId, units } = input;
 
             return await db.$transaction(async (prisma) => {
-                const results = [];
+                const results: any[] = [];
                 const BATCH_SIZE = 10;
 
                 for (let i = 0; i < units.length; i += BATCH_SIZE) {

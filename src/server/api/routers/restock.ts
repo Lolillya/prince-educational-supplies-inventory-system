@@ -31,7 +31,7 @@ export const restockRouter = createTRPCRouter({
                 return result;
             } catch (error) {
                 console.error("Error adding unit:", error);
-                throw new Error(`Failed to add unit: ${error.message}`);
+                throw new Error(`Failed to add unit: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         }),
 
@@ -47,7 +47,7 @@ export const restockRouter = createTRPCRouter({
                 return result;
             } catch (error) {
                 console.error("Error deleting unit:", error);
-                throw new Error(`Failed to delete unit: ${error.message}`);
+                throw new Error(`Failed to delete unit: ${error instanceof Error ? error.message : 'Unknown error'}`);
             }
         }),
 
@@ -211,6 +211,7 @@ export const restockRouter = createTRPCRouter({
                         data: {
                             variant_id: item.variant_id,
                             quantity: item.totalStock, // Set initial stock value as the stockValue
+                            inventory_clerk: restockClerk,
                         },
                     });
                 }

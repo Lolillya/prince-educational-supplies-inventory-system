@@ -293,11 +293,14 @@ model Payment {
   invoice_id     Int
   amount         Float
   payment_date   DateTime      @default(now())
-  payment_method String
+  payment_method PaymentMethod
+  reference      String?
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
   invoice        Invoice       @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
   PaymentLog     Payment_Log[]
+
+  @@index([invoice_id])
 }
 
 model Payment_Log {
@@ -402,4 +405,11 @@ enum Roles {
   EMPLOYEE
   CUSTOMER
   SUPPLIER
+}
+
+enum PaymentMethod {
+  CASH
+  CARD
+  ONLINE
+  CHEQUE
 }

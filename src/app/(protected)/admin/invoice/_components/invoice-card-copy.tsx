@@ -60,9 +60,10 @@ type InvoiceCardProps = {
       }[];
     }>;
   }>;
-  isAutoRestock: boolean;
+
   onRemove: (batchNumber: number) => void;
   handleAutoRestock: (checked: boolean) => void;
+  BatchAutoRestock: (value: boolean) => void;
   updateCardDetails: (
     id: number,
     totalPrice: number,
@@ -118,8 +119,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   onRemove,
   updateCardDetails,
   handleAutoRestock,
+  BatchAutoRestock,
   isInputFocused,
-  isAutoRestock,
   units,
 }) => {
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
@@ -158,7 +159,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       unit_id: number;
       unit: { name: string; unit_id: number };
     }[],
-    currentBatchBasis?: SupplierBatch, // Accept batchBasis explicitly
+    currentBatchBasis?: SupplierBatch,
   ) => {
     if (!currentBatchBasis) return "bg-yellow/30";
 
@@ -237,8 +238,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
     // Update state once
     setSelectedUnitQuantity(total);
-
-    // console.log("Total Quantity:", total); // ✅ Log final total
   };
 
   const handleSelectUnit = (
@@ -254,12 +253,21 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   };
 
   useEffect(() => {
+    BatchAutoRestock(isBatchAutoRestock);
+    if (isBatchAutoRestock) {
+      setSupplier("Manual");
+    }
+  }, [isBatchAutoRestock]);
+
+  useEffect(() => {
     if (selectedBatches.length > 0) {
       setBatchBasis(selectedBatches[0]); // Always set the first batch as the basis
     } else {
       setBatchBasis(undefined);
     }
   }, [selectedBatches]);
+
+  console.log("SelectedUnit:", selectedUnit);
 
   useEffect(() => {
     handleSelectUnitQuantity();
@@ -283,7 +291,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       variant!,
       variant_id,
       selectedUnit.unit_id,
-      // selectedUnit.supplier_unit_id,
     );
   }, [
     totalPrice,
@@ -537,11 +544,15 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       <SelectValue placeholder="Select Unit" />
                     </SelectTrigger>
                     <SelectContent>
-                      {isBatchAutoRestock
-                        ? units?.map((u) => (
+                      {isBatchAutoRestock && units?.length
+                        ? units.map((u) => (
                             <SelectItem
                               key={u.unit_id}
-                              value={JSON.stringify(u)}
+                              value={JSON.stringify({
+                                id: u.unit_id,
+                                name: u.name,
+                                supplier_unit_id: undefined,
+                              })}
                             >
                               <Label>{u.name}</Label>
                             </SelectItem>
@@ -556,7 +567,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 batch: index + 1,
                               })),
                             )
-                            .filter(
+                            ?.filter(
                               (unit, index, self) =>
                                 self.findIndex(
                                   (u) =>
@@ -564,7 +575,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                     unit.name.toLowerCase(),
                                 ) === index,
                             )
-                            .map((uniqueUnit) => (
+                            ?.map((uniqueUnit) => (
                               <SelectItem
                                 key={uniqueUnit.id}
                                 value={JSON.stringify(uniqueUnit)}
@@ -645,6 +656,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     value={supplier}
                     onValueChange={(value) => setSupplier(value)}
                     disabled={
+                      isBatchAutoRestock ||
                       !(unitQuantity !== 0 && selectedUnit.unitName !== "")
                     }
                   >

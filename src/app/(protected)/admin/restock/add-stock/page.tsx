@@ -66,7 +66,6 @@ interface Supplier {
 const InvoiceAddStock = () => {
   const router = useRouter();
   const session = useSession();
-
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
@@ -588,7 +587,7 @@ const InvoiceAddStock = () => {
                       logData();
                       handleSave(selectedItems, selectedSupplier.id);
                     }}
-                    disabled={test}
+                    disabled={!selectedSupplier || test}
                   >
                     Save
                   </Button>

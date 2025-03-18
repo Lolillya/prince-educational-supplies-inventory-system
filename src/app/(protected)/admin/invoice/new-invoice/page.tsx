@@ -96,6 +96,7 @@ const NewInvoice = () => {
         totalPrice: number;
         unitPrice: number;
         quantity: number;
+        available: number;
         discount: number;
         discountType: string;
         selectedUnit: {
@@ -142,6 +143,7 @@ const NewInvoice = () => {
     totalPrice: number,
     unitPrice: number,
     quantity: number,
+    available: number,
     discount: number,
     discountType: string,
     selectedUnit: {
@@ -160,6 +162,7 @@ const NewInvoice = () => {
         totalPrice,
         unitPrice,
         quantity,
+        available,
         discount,
         discountType,
         selectedUnit,
@@ -223,6 +226,7 @@ const NewInvoice = () => {
         supplier_unit_id: item[1].selectedUnit.supplier_unit_id,
         variant_id: item[1].variant_id,
         quantity: item[1].quantity,
+        available: item[1].available,
         unit_price: item[1].unitPrice,
         total_price: item[1].totalPrice,
         unit_id: item[1].selectedUnit.unit_id,
@@ -453,6 +457,7 @@ const NewInvoice = () => {
               onRemove={handleRemoveBatch}
               updateCardDetails={updateCardDetails}
               handleAutoRestock={handleAutoRestock}
+              isAutoRestock={isAutoRestock}
               BatchAutoRestock={setIsBatchAutoRestock}
               units={units}
             />

@@ -18,6 +18,7 @@ const LineItemSchema = z.object({
   supplier_unit_id: z.number().optional(),
   variant_id: z.number(),
   quantity: z.number(),
+  available: z.number(),
   unit_price: z.number(),
   total_price: z.number(),
   unit_id: z.number(),
@@ -302,6 +303,53 @@ export const invoiceRouter = createTRPCRouter({
           return { createdInvoice, createdLineItems, batch, batchVariant };
         }
 
+        else if (invoice.isAutoRestock) { 
+          console.log("Auto Restock triggered!")
+
+          const createdLineItems = await ctx.db.line_Item.createMany({
+            data: lineItems.map((item) => ({
+              invoice_id: invoiceId,
+              variant_id: item.variant_id,
+              quantity: item.quantity,
+              unit_price: item.unit_price,
+              total_price: item.total_price,
+              unit_id: item.unit_id,
+            })),
+          });
+
+          const generateBatchNumber = () => {
+            return Math.floor(1000000 + Math.random() * 9000000);
+          }
+
+          const batch = await ctx.db.batch.create({
+            data: {
+              quantity: (lineItems[0]?.quantity ?? 0) - (lineItems[0]?.available ?? 0),
+              batch_number: generateBatchNumber(),
+              restock_clerk: invoice.invoice_clerk,
+            },
+          });
+
+          let batchVariant;
+
+          if (lineItems[0]?.variant_id !== undefined) {
+            batchVariant = await ctx.db.batchVariant.create({
+              data: {
+                batch_id: batch.batch_id,
+                variant_id: lineItems[0].variant_id, // Safe because we checked for undefined
+                quantity: (lineItems[0]?.quantity - lineItems[0]?.available),
+              },
+            });
+          } else {
+            console.warn(
+              "Skipping batchVariant creation due to undefined variant_id",
+            );
+          }
+
+          return { createdInvoice, createdLineItems, batch, batchVariant };
+
+
+        }
+
         // Step 3: Process each Line Item when isBatchAutoRestock is FALSE
         const createdLineItems = await Promise.all(
           lineItems.map(async (item) => {
@@ -405,16 +453,16 @@ export const invoiceRouter = createTRPCRouter({
             }
 
             // Create Line Item
-            return ctx.db.line_Item.create({
-              data: {
-                invoice_id: invoiceId,
-                variant_id: item.variant_id,
-                quantity: item.quantity,
-                unit_price: item.unit_price,
-                total_price: item.total_price,
-                unit_id: unitId,
-              },
-            });
+            // return ctx.db.line_Item.create({
+            //   data: {
+            //     invoice_id: invoiceId,
+            //     variant_id: item.variant_id,
+            //     quantity: item.quantity,
+            //     unit_price: item.unit_price,
+            //     total_price: item.total_price,
+            //     unit_id: unitId,
+            //   },
+            // });
           }),
         );
 

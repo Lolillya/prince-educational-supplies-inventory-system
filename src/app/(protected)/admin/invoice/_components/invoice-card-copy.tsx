@@ -38,6 +38,7 @@ type InvoiceCardProps = {
   brandName: string;
   variant: string | null;
   variant_id: number;
+  isAutoRestock: boolean;
 
   BatchVariant: Array<{
     batch_variant_id: number;
@@ -69,6 +70,7 @@ type InvoiceCardProps = {
     totalPrice: number,
     price: number,
     quantity: number,
+    available: number,
     discount: number,
     discountType: string,
     selectedUnit: {
@@ -89,7 +91,6 @@ type InvoiceCardProps = {
         name: string;
       }>
     | undefined;
-  // setIsInputFocused: () => void;
 };
 
 type SupplierUnit = {
@@ -119,6 +120,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   onRemove,
   updateCardDetails,
   handleAutoRestock,
+  isAutoRestock,
   BatchAutoRestock,
   isInputFocused,
   units,
@@ -217,7 +219,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
-  // console.log(selectedUnit);
+  console.log(isAutoRestock);
 
   const handleSelectUnitQuantity = () => {
     // console.log("Selected Batches:", selectedBatches);
@@ -283,6 +285,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       totalPrice,
       price.price,
       unitQuantity,
+      selectedUnitQuantity,
       Number(discount),
       discountType,
       selectedUnit,
@@ -299,6 +302,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     discount,
     discountType,
     selectedUnit,
+    selectedUnitQuantity,
     itemName,
     brandName,
     variant,

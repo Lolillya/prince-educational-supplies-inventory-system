@@ -86,7 +86,7 @@ const NewInvoice = () => {
   const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierProps>();
   const [filteredSupplier, setFilteredSupplier] = useState<SupplierProps[]>([]);
-
+  const [term, setTerm] = useState<string>("");
   const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [activeCards, setActiveCards] = useState<
@@ -543,7 +543,12 @@ const NewInvoice = () => {
                       </ul>
                     </div>
                   )}
-                  <Input placeholder="30" className="w-[10%] rounded-l-none" />
+                  <Input
+                      placeholder="30"
+                      className="w-[10%] rounded-l-none"
+                      value={term}
+                      onChange={(e) => setTerm(e.target.value)}
+                  />
                 </div>
               </div>
             </div>
@@ -598,7 +603,7 @@ const NewInvoice = () => {
                     className="bg-green px-7 font-bold"
                     size={"lg"}
                     onClick={handleSaveInvoice}
-                    disabled={!selectedSupplier}
+                    disabled={!selectedSupplier || !term}
                   >
                     Save
                   </Button>

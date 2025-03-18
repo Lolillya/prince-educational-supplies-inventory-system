@@ -140,10 +140,12 @@ const InvoiceAddStock = () => {
     });
   };
 
-  const handleStockChange = (inventoryId: number, newStock: string) => {
+  const handleStockChange = (inventoryId: number, value: string) => {
+    // Allow only numeric input
+    const numericValue = value.replace(/[^0-9]/g, "");
     setStock((prev) => ({
       ...prev,
-      [inventoryId]: newStock, // Update stock for the specific item
+      [inventoryId]: numericValue,
     }));
   };
 
@@ -197,13 +199,45 @@ const InvoiceAddStock = () => {
     ).length;
   };
 
-  const handlePriceChange = (inventoryId: number, newPrice: string) => {
-    setPrice((prev) => ({ ...prev, [inventoryId]: newPrice }));
+// Note: this only rounds off to the second decimal at the console
+  const handlePriceChange = (inventoryId: number, value: string) => {
+    // Step 1: Allow only numeric input and a single decimal point
+    const numericValue = value.replace(/[^0-9.]/g, "");
+
+    // Step 2: Ensure only one decimal point
+    const decimalCount = (numericValue.match(/\./g) || []).length;
+    if (decimalCount > 1) return;
+
+    // Step 3: Split into integer and decimal parts
+    const [integerPart, decimalPart] = numericValue.split(".");
+
+    // Step 4: Limit decimal part to 2 digits
+    if (decimalPart && decimalPart.length > 2) {
+      // If more than 2 decimal places, truncate to 2
+      const truncatedValue = `${integerPart}.${decimalPart.slice(0, 2)}`;
+      setPrice((prev) => ({
+        ...prev,
+        [inventoryId]: truncatedValue,
+      }));
+      return;
+    }
+
+    // Step 5: Update the state with the validated value
+    setPrice((prev) => ({
+      ...prev,
+      [inventoryId]: numericValue,
+    }));
   };
 
-  const handleUnitChange = (inventoryId: number, newUnit: string) => {
-    setUnit((prev) => ({ ...prev, [inventoryId]: newUnit }));
+  const handleUnitChange = (inventoryId: number, value: string) => {
+    // Allow only alphabetic characters and spaces
+    const stringValue = value.replace(/[^a-zA-Z\s]/g, "");
+    setUnit((prev) => ({
+      ...prev,
+      [inventoryId]: stringValue,
+    }));
   };
+
   const handleStockUnitsChange = (
     inventoryId: number,
     newStockUnits: any[],

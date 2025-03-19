@@ -74,6 +74,7 @@ export const invoiceRouter = createTRPCRouter({
                       },
                     },
                     ConversionRate: {
+                      orderBy: { conversion_id: 'asc' },
                       select: {
                         conversion_rate: true,
                         toUnit: {

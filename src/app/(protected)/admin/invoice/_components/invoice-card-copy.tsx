@@ -462,7 +462,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 ₱ {unit.price.toFixed(2)}
                               </TableCell>
                               <TableCell className="flex items-center gap-1">
-                                {unit.unit.name !== "Pieces" && (
+                                {unit.ConversionRate.length > 0 && (
                                   <>
                                     <MoveRight size={15} />{" "}
                                     {unit.ConversionRate[0]?.conversion_rate}{" "}

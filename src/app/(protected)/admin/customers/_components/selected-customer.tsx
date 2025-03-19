@@ -40,6 +40,9 @@ type SelectedCustomerProps = {
     invoices: any[]; // Replace 'any' with the correct type
   };
   clerkId: string;
+  unpaidInvoices: any[]; // Replace with proper type
+  unpaidSum: number;
+  onPaymentSuccess: () => void;
 };
 
 const SelectedCustomer = ({
@@ -58,6 +61,9 @@ const SelectedCustomer = ({
   // auth,
   // invoiceHistoryData,
   // clerkId,
+  unpaidInvoices,
+  unpaidSum,
+  onPaymentSuccess,
 }: SelectedCustomerProps) => {
   // const [sum, setSum] = useState<number>();
   const router = useRouter();
@@ -100,7 +106,13 @@ const SelectedCustomer = ({
       <Separator className="mt-5 h-[1px] bg-slate-300" />
 
       <div className="mt-5 flex flex-col gap-3">
-        <Payables sum={5000} />
+        <Payables
+            sum={unpaidSum}
+            unpaidInvoices={unpaidInvoices}
+            emoji={emoji}
+            company={company}
+            onPaymentSuccess={onPaymentSuccess}
+        />
 
         <RecordInfo
           icon={User2}

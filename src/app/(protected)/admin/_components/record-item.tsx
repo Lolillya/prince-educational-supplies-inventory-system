@@ -11,7 +11,7 @@ type RecordItemProps = {
   onClick: () => void;
   isSelected: boolean;
   recordType: string;
-  onDelete: (id: string) => void;
+  onDelete: (id: string) => Promise<void>;
   onVerifyPassword: (password: string) => Promise<boolean>;
   userRole?: string;
 };
@@ -25,7 +25,7 @@ const RecordItem: React.FC<RecordItemProps> = ({
   recordType,
   onDelete,
   onVerifyPassword,
-  userRole
+  userRole,
 }) => {
   return (
     <>
@@ -48,12 +48,12 @@ const RecordItem: React.FC<RecordItemProps> = ({
           <div className="flex items-center gap-2">
             <Favorite />
             <Delete
-                recordInfo={name}
-                recordType={recordType}
-                id={id}
-                onDelete={onDelete}
-                onVerifyPassword={onVerifyPassword}
-                userRole={userRole}
+              recordInfo={name}
+              recordType={recordType}
+              id={id}
+              onDelete={onDelete}
+              onVerifyPassword={onVerifyPassword}
+              userRole={userRole}
             />
           </div>
         </div>

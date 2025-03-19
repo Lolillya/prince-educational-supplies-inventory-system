@@ -138,7 +138,8 @@ export const customerRouter = createTRPCRouter({
       await db.user_Role.create({
         data: {
           Personal_Details_Id: personalDetails.personal_details_id,
-          role_Id: 3, // Assuming 4 is the role ID for "Customer"
+          role_Id: 3,
+          emoji: '🏬',
         },
       });
 
@@ -301,5 +302,45 @@ export const customerRouter = createTRPCRouter({
           },
           orderBy: { created_at: "desc" }
         });
+      }),
+
+  unpaidInvoices: publicProcedure
+      .input(z.object({ customerId: z.string() }))
+      .query(async ({ input }) => {
+        const invoices = await db.invoice.findMany({
+          where: {
+            customer_id: input.customerId,
+            status: 'PENDING'
+          },
+          include: {
+            Payment: true,
+            line_items: {
+              include: {
+                variant: {
+                  include: {
+                    item: {
+                      include: {
+                        brand: true
+                      }
+                    }
+                  }
+                },
+                unit: true
+              }
+            },
+            invoiceClerk: {
+              include: {
+                Personal_Details: true
+              }
+            }
+          }
+        });
+
+        return invoices.map(invoice => ({
+          ...invoice,
+          paid_amount: invoice.Payment.reduce((sum, p) => sum + (p.amount || 0), 0),
+          remaining: (invoice.total_amount || 0) -
+              invoice.Payment.reduce((sum, p) => sum + (p.amount || 0), 0)
+        }));
       }),
 });

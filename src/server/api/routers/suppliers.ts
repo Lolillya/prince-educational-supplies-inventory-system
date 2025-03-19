@@ -109,6 +109,7 @@ export const supplierRouter = createTRPCRouter({
           data: {
             Personal_Details_Id: personalDetails.personal_details_id,
             role_Id: 4, // Assuming 4 is the role ID for "Supplier"
+              emoji: '📦',
           },
         });
 

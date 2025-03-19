@@ -70,10 +70,10 @@ const EditCustomerState = ({ id }: { id: string }) => {
 
 
     const updateCustomer = api.customers.update.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             setSuccessMessage("Customer updated successfully!");
             setShowSuccessDialog(true);  // Open success dialog after update
-            refetch();  // Fetch updated data
+            await refetch();
         },
         onError: (error) => {
             setErrorMessage(`Failed to update customer: ${error.message}`);
@@ -82,10 +82,10 @@ const EditCustomerState = ({ id }: { id: string }) => {
     });
 
     const deleteCustomer = api.customers.delete.useMutation({
-        onSuccess: () => {
+        onSuccess: async () => {
             setSuccessMessage("Customer deleted successfully!");
             setShowSuccessDialog(true);  // Open success dialog after delete
-            refetch();  // Fetch updated data
+            await refetch();  // Fetch updated data
         },
         onError: (error) => {
             setErrorMessage(`Failed to delete customer: ${error.message}`);
@@ -218,7 +218,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
                 notes: customerForm.notes,
             });
 
-            await router.push("/admin/customers");
+            router.push("/admin/customers");
         } catch (error) {
             console.error("Failed to edit customer:", error);
         }
@@ -290,14 +290,20 @@ const EditCustomerState = ({ id }: { id: string }) => {
                                 placeholder="Term by Days (minimum 2 days)"
                                 className="p-7"
                                 value={customerForm.term}
+                                // onChange={(e) => {
+                                //     // Directly pass the value without correction
+                                //     handleInputChange({
+                                //         target: {
+                                //             name: "term",
+                                //             value: e.target.value
+                                //         }
+                                //     } as any);
+                                // }}
                                 onChange={(e) => {
-                                    // Directly pass the value without correction
-                                    handleInputChange({
-                                        target: {
-                                            name: "term",
-                                            value: e.target.value
-                                        }
-                                    } as any);
+                                    setCustomerForm(prev => ({
+                                        ...prev,
+                                        term: e.target.value
+                                    }));
                                 }}
                             />
                             {errors.term && <span className="text-red">{errors.term}</span>}
@@ -487,7 +493,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
                                 Cancel
                             </Button>
                             <Button
-                                onClick={handleDelete}  // Trigger the delete handler
+                                onClick={() => void handleDelete()}  // Trigger the delete handler
                                 className="bg-red text-white"
                             >
                                 Confirm Deletion
@@ -526,7 +532,7 @@ const EditCustomerState = ({ id }: { id: string }) => {
                 </Dialog>
 
                 <Button
-                    onClick={() => handleSubmit(new Event('submit') as any)}
+                    onClick={() => void handleSubmit(new Event('submit') as never)}
                     className="bg-green p-7 text-lg font-bold"
                     disabled={updateCustomer.isPending}
                 >

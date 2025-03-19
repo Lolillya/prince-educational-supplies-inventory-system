@@ -17,11 +17,22 @@ const poppins = Poppins({
 });
 
 interface PayablesProps {
-	sum: number | 0;
+	sum: number;
+	unpaidInvoices: {
+		invoice_number: number;
+		created_at: Date;
+		total_amount: number;
+		remaining: number;
+	}[];
+	emoji: string;  // Add emoji prop
+	company: string;  // Add companyName prop
+	onPaymentSuccess: () => void;
 }
 
-const Payables = ({ sum }: PayablesProps) => {
+const Payables = ({ sum, unpaidInvoices, emoji, company, onPaymentSuccess }: PayablesProps) => {
 	const [selectedTab, setSelectedTab] = useState<"payables" | "payments">("payables");
+	// Calculate total remaining from invoices if sum is incorrect
+	const calculatedSum = sum ?? unpaidInvoices.reduce((acc, invoice) => acc + invoice.remaining, 0);
 
 	return (
 		<Dialog>
@@ -34,15 +45,15 @@ const Payables = ({ sum }: PayablesProps) => {
 						<div className='flex gap-5 items-center'>
 							<Avatar className='h-16 w-16 !rounded-lg'>
 								<AvatarFallback className="bg-black text-slate-700 !rounded-lg text-3xl">
-									🎭
+									{emoji || "🏢"}
 								</AvatarFallback>
 							</Avatar>
 							<div className='flex flex-col gap-2'>
 								<DialogTitle className='text-slate-700 text-xl font-normal'>
-									LilyCo {/** Please pass real data here */}
+									{company || "Customer Company"}
 								</DialogTitle>
 								<p className='text-slate-400 text-sm'>
-									{7} unpaid invoices
+									{unpaidInvoices.length} unpaid invoices
 								</p>
 							</div>
 						</div>
@@ -55,15 +66,16 @@ const Payables = ({ sum }: PayablesProps) => {
 				<ScrollArea className='h-80'>
 					<div className='flex gap-2 flex-col'>
 						{selectedTab === "payables" ? (
-							<>
-								<UnpaidInvoice />
-								<UnpaidInvoice />
-								<UnpaidInvoice />
-								<UnpaidInvoice />
-								<UnpaidInvoice />
-								<UnpaidInvoice />
-							</>
+							unpaidInvoices.map((invoice) => (
+								<UnpaidInvoice
+									key={invoice.invoice_id}
+									invoice={invoice}
+									onPaymentSuccess={onPaymentSuccess}
+								/>
+							))
 						) : (
+							// paymentRecords.map((record) => (
+							// 	<PaymentRecord key={record.record_id} record={record} />
 							<>
 								<PaymentRecord />
 								<PaymentRecord />
@@ -72,7 +84,9 @@ const Payables = ({ sum }: PayablesProps) => {
 								<PaymentRecord />
 								<PaymentRecord />
 							</>
+							// ))
 						)}
+
 					</div>
 				</ScrollArea>
 
@@ -82,7 +96,7 @@ const Payables = ({ sum }: PayablesProps) => {
 
 					<div className="flex h-full flex-col justify-between gap-1">
 						<p className="text-base font-normal text-slate-700">
-							₱{5000} {/** Please pass real data here */}
+							₱{calculatedSum.toFixed(2)}
 						</p>
 						<p className=" text-slate-400 text-sm tracking-wide">Unpaid Total</p>
 					</div>

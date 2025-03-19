@@ -75,15 +75,30 @@ const CustomersPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: invoiceActivity } = api.customers.getCustomerInvoices.useQuery(
-
-    { customerId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
-    { enabled: !!selectedRecord }
-
+      { customerId: selectedRecord?.Personal_Details_Id ?? '' },
+      { enabled: !!selectedRecord }
   );
 
   const activityCustomerData = {
     invoices: invoiceActivity ?? [],
   };
+
+  // Add unpaid invoices query
+  const { data: unpaidInvoices } = api.customers.unpaidInvoices.useQuery(
+      { customerId: selectedRecord?.Personal_Details_Id ?? '' },
+      { enabled: !!selectedRecord }
+  );
+
+// Calculate sum correctly
+  const unpaidSum = unpaidInvoices?.reduce(
+      (sum, invoice) => sum + invoice.remaining,
+      0
+  ) ?? 0;
+
+  const { refetch } = api.customers.unpaidInvoices.useQuery(
+      { customerId: selectedRecord?.Personal_Details_Id ?? '' },
+      { enabled: !!selectedRecord }
+  );
 
   const verifyPasswordMutation = api.customers.verifyPassword.useMutation();
   const handleVerifyPassword = async (password: string) => {
@@ -245,6 +260,9 @@ const CustomersPage = () => {
                     // restockData={supplierRestockData}
                     invoiceHistoryData={activityCustomerData}
                     clerkId={selectedRecord.id ?? ""}
+                    unpaidInvoices={unpaidInvoices ?? []}
+                    unpaidSum={unpaidSum}
+                    onPaymentSuccess={() => refetch()}
                   />
                 </div>
               </ScrollArea>

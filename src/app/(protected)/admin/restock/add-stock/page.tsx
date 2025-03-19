@@ -28,9 +28,11 @@ import {
   HoverCard,
   HoverCardContent,
   HoverCardTrigger,
-} from "../_components/Hover-Card";
+} from "~/components/ui/hover-card";
 import StockCard from "../_components/stock-card";
 import SupplierDropdown from "../_components/Supplier-Dropdown";
+import StockCardV2 from "../_components/stock-card-v2";
+import { ScrollArea } from "~/components/ui/scroll-area";
 
 // Define the data structure for inventory items
 
@@ -462,8 +464,9 @@ const InvoiceAddStock = () => {
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {selectedItems.map((item) => (
+      <ScrollArea className="h-full]">
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          {/* {selectedItems.map((item) => (
           <StockCard
             key={item.inventory_id}
             item={item}
@@ -488,9 +491,10 @@ const InvoiceAddStock = () => {
               }))
             }
           />
-        ))}
-      </div>
-
+        ))} */}
+          <StockCardV2 />
+        </div>
+      </ScrollArea>
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
         <span>TOTAL: {overAllTotalStock}</span>
         {/*<Button*/}

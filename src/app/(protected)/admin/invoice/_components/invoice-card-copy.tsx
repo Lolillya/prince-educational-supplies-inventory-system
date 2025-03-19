@@ -138,7 +138,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     supplier_unit_id: 0,
   });
   const [selectedUnitQuantity, setSelectedUnitQuantity] = useState<number>(0);
-  const [discount, setDiscount] = useState("");
+  const [discount, setDiscount] = useState<number>(0);
   const [discountType, setDiscountType] = useState("%");
   const [openAccordion, setOpenAccordion] = useState<string | undefined>(
     undefined,
@@ -264,6 +264,20 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       setBatchBasis(selectedBatches[0]); // Always set the first batch as the basis
     } else {
       setBatchBasis(undefined);
+    }
+
+    if (selectedBatches.length === 0) {
+      setUnitQuantity(0);
+      setPrice({
+        price: 0,
+        batch: 0,
+      });
+      setDiscount(0);
+      setSelectedUnit({
+        unitName: "",
+        unit_id: 0,
+        supplier_unit_id: 0,
+      });
     }
   }, [selectedBatches]);
 
@@ -710,7 +724,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                         supplier !== ""
                       )
                     }
-                    onChange={(e) => setDiscount(e.target.value)}
+                    onChange={(e) => setDiscount(Number(e.target.value))}
                     onInput={(e) => {
                       e.currentTarget.value = e.currentTarget.value.replace(
                         /[^0-9]/g,

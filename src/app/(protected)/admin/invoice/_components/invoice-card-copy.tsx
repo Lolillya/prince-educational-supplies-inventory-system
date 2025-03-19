@@ -449,7 +449,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {variant.SupplierUnit.map((unit, unitIndex) => (
+                          {variant.SupplierUnit
+                              .sort((a, b) => a.supplier_unit_id - b.supplier_unit_id)
+                              .map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
 

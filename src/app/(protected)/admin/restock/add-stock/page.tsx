@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Search } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 import {
@@ -13,8 +13,13 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
-import { Input } from "~/components/ui/input";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "~/components/ui/hover-card";
 import { Label } from "~/components/ui/label";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -24,15 +29,9 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "~/components/ui/hover-card";
-import StockCard from "../_components/stock-card";
-import SupplierDropdown from "../_components/Supplier-Dropdown";
+import ItemSearch from "../_components/item-search";
 import StockCardV2 from "../_components/stock-card-v2";
-import { ScrollArea } from "~/components/ui/scroll-area";
+import SupplierDropdown from "../_components/Supplier-Dropdown";
 
 // Define the data structure for inventory items
 
@@ -69,8 +68,6 @@ const InvoiceAddStock = () => {
   const router = useRouter();
   const session = useSession();
 
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [stock, setStock] = useState<Record<number, string>>({}); // Stock values as strings
   const [price, setPrice] = useState<Record<number, string>>({});
@@ -99,25 +96,6 @@ const InvoiceAddStock = () => {
   // Update the state type
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
-  // Filter inventory items based on the search term
-  useEffect(() => {
-    if (searchTerm && inventoryItems) {
-      const results = inventoryItems.filter(
-        (item: InventoryItem) =>
-          item.variant.item.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          item.variant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.variant.item.brand.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()),
-      );
-      setFilteredItems(results);
-    } else {
-      setFilteredItems([]);
-    }
-  }, [searchTerm, inventoryItems]);
-
   // Handle selecting an item
   const handleSelectItem = (item: InventoryItem) => {
     if (
@@ -128,7 +106,6 @@ const InvoiceAddStock = () => {
       setSelectedItems([...selectedItems, item]);
       setStock((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
     }
-    setSearchTerm(""); // Clear the search term to hide the dropdown
   };
 
   // Handle removing an item
@@ -363,7 +340,7 @@ const InvoiceAddStock = () => {
   }
 
   return (
-    <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
+    <section className="flex h-auto w-screen flex-col gap-3 p-10">
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-1">
           {/* Dialog Component */}
@@ -435,66 +412,34 @@ const InvoiceAddStock = () => {
 
       <div className="flex w-full justify-center gap-3">
         <div className="relative flex w-full max-w-md items-center justify-center">
-          <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
-          <Input
-            placeholder="Search"
-            className="bg-gray p-5 pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+          <ItemSearch
+            filteredItems={inventoryItems}
+            onItemSelect={handleSelectItem}
           />
-          {searchTerm && filteredItems.length > 0 && (
-            <div className="absolute top-full z-10 mt-2 w-full bg-white shadow-md">
-              <ul>
-                {filteredItems.map((item) => (
-                  <li
-                    key={item.inventory_id}
-                    className="hover:bg-gray-100 cursor-pointer p-2"
-                    onClick={() => handleSelectItem(item)}
-                  >
-                    <div className="font-bold">{item.variant.item.name}</div>
-                    <div className="text-gray-500">
-                      {item.variant.item.brand.name}
-                    </div>
-                    <div className="text-sm">{item.variant.name || "N/A"}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
 
-      <ScrollArea className="h-full]">
-        <div className="grid grid-cols-2 gap-4 mt-4">
-          {/* {selectedItems.map((item) => (
-          <StockCard
-            key={item.inventory_id}
-            item={item}
-            onRemove={() => handleRemoveItem(item.inventory_id)}
-            stockValue={stock[item.inventory_id] || ""}
-            onStockChange={(newStock) =>
-              handleStockChange(item.inventory_id, newStock.toString())
-            }
-            onPriceChange={(newPrice) =>
-              handlePriceChange(item.inventory_id, newPrice.toString())
-            }
-            onUnitChange={(newUnit) =>
-              handleUnitChange(item.inventory_id, newUnit)
-            }
-            onStockUnitsChange={(newStockUnits) =>
-              handleStockUnitsChange(item.inventory_id, newStockUnits)
-            }
-            onAccordionToggle={(isExpanded: boolean) =>
-              setAccordionStates((prev) => ({
-                ...prev,
-                [item.inventory_id]: isExpanded,
-              }))
-            }
-          />
-        ))} */}
-          <StockCardV2 />
+      {selectedItems.length > 0 ? (
+        <ScrollArea className="h-full">
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {selectedItems.map((item) => (
+              <StockCardV2
+                key={item.inventory_id}
+                item={item}
+                onRemove={() => handleRemoveItem(item.inventory_id)}
+              />
+            ))}
+          </div>
+        </ScrollArea>
+      ) : (
+        <div className="h-full flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Search className="h-20 w-20 text-slate-400" />
+            <p className="text-slate-400">Search and select an item to get started.</p>
+          </div>
         </div>
-      </ScrollArea>
+      )}
+
       <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
         <span>TOTAL: {overAllTotalStock}</span>
         {/*<Button*/}

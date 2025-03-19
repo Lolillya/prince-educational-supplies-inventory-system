@@ -44,6 +44,7 @@ export type InvoiceProps = {
     };
   }[];
   handleExport: (invoiceData: LineItemsProp) => void;
+  handleVoidItem: () => void;
 };
 
 export type LineItemsProp = {
@@ -119,6 +120,9 @@ const InvoicePage = () => {
       </section>
     );
 
+  
+
+    
   const handleExport = ({
     line_items,
     invoice_number,
@@ -219,6 +223,12 @@ const InvoicePage = () => {
     doc.save(`invoice_${invoice_number}.pdf`);
   };
 
+
+  const handleVoidItem = () => {
+    console.log("void triggered")
+  }
+
+
   return (
     <section className={`flex h-auto w-full flex-col gap-3 pt-10`}>
       <div className="flex items-center justify-between px-20">
@@ -248,6 +258,7 @@ const InvoicePage = () => {
                 invoice_number={invoice.invoice_number}
                 invoice_id={invoice.invoice_id}
                 date={invoice.created_at}
+                handleVoidItem={handleVoidItem}
                 customer={invoice.customer.Personal_Details.company ?? ""}
                 invoiceClerk={
                   invoice.invoiceClerk.Personal_Details.first_name +

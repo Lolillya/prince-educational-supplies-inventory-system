@@ -77,6 +77,7 @@ export const invoiceRouter = createTRPCRouter({
                         conversion_rate: true,
                         toUnit: {
                           select: {
+                            
                             name: true,
                           },
                         },
@@ -471,4 +472,6 @@ export const invoiceRouter = createTRPCRouter({
 
       return result;
     }),
+
+    // voidItem: publicProcedure.input()
 });

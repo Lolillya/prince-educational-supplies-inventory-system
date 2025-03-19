@@ -123,6 +123,7 @@ const NewInvoice = () => {
   const [isInputFocused, setIsInputFocused] = useState<string | undefined>(
     undefined,
   );
+  
 
   const {
     data: inventoryItems,
@@ -135,7 +136,18 @@ const NewInvoice = () => {
   const { data: nextInvoiceId, isLoading: loadingInvoiceId } =
     api.invoice.getInvoiceId.useQuery();
   const { mutateAsync: createInvoice, isPending: isInvoicePending } =
-    api.invoice.createInvoiceWithLineItems.useMutation();
+    api.invoice.createInvoiceWithLineItems.useMutation({
+      onSuccess: (data) => {
+        console.log("Invoice created successfully:", data);
+        toast({
+          title: "Success",
+          description: "Invoice created successfully!",
+          variant: "default",
+          className: "bg-green text-white"
+        });
+        router.push("/admin/invoice")
+      },
+    });
   const { data: units } = api.invoice.getUnits.useQuery();
 
   const updateCardDetails = (
@@ -237,11 +249,7 @@ const NewInvoice = () => {
 
     try {
       await createInvoice(invoiceData);
-      toast({
-        title: "Success",
-        description: "Invoice created successfully!",
-        variant: "default",
-      });
+      
     } catch (error: unknown) {
       let errorMessage = "An unexpected error occurred.";
 
@@ -519,96 +527,108 @@ const NewInvoice = () => {
               Confirm Invoice
             </Button>
           </DialogTrigger>
-          <DialogContent className="flex h-full max-h-[80%] w-full max-w-3xl flex-col">
-            <DialogTitle>ORDER CONFIRMATION</DialogTitle>
-
-            <div className="flex w-full flex-col gap-3">
-              <div className="text-gray-400 flex flex-col gap-1">
-                <Label>Customer & Term</Label>
-                <div className="relative flex w-full items-center">
-                  <Input
-                    placeholder="Business Name"
-                    className="w-[90%] rounded-r-none"
-                    value={supplierSearchTerm}
-                    onChange={(e) => setSupplierSearchTerm(e.target.value)}
-                  />
-                  {supplierSearchTerm && filteredSupplier.length > 0 && (
-                    <div className="absolute top-full z-10 mt-2 w-full rounded-lg bg-white p-3 shadow-md">
-                      <ul className="max-h-64 overflow-auto">
-                        {filteredSupplier.map((supplier) => (
-                          <li
-                            key={supplier.Personal_Details.personal_details_id}
-                            className="p-2 hover:cursor-pointer hover:bg-gray"
-                            onClick={() => handleSelectedSupplier(supplier)}
-                          >
-                            {supplier.Personal_Details.company}
-                          </li>
-                        ))}
-                      </ul>
+          <DialogContent className={`flex h-full  ${isInvoicePending ? "max-h-[40%]" : "max-h-[80%]" } w-full max-w-3xl flex-col transition-all duration-300`}>
+            {isInvoicePending ? (
+              <div className="flex h-full w-full items-center justify-center">
+                <LoadingSpinner />
+              </div>
+            ) : (
+              <>
+                <DialogTitle>ORDER CONFIRMATION</DialogTitle>
+                <div className="flex w-full flex-col gap-3">
+                  <div className="text-gray-400 flex flex-col gap-1">
+                    <Label>Customer & Term</Label>
+                    <div className="relative flex w-full items-center">
+                      <Input
+                        placeholder="Business Name"
+                        className="w-[90%] rounded-r-none"
+                        value={supplierSearchTerm}
+                        onChange={(e) => setSupplierSearchTerm(e.target.value)}
+                      />
+                      {supplierSearchTerm && filteredSupplier.length > 0 && (
+                        <div className="absolute top-full z-10 mt-2 w-full rounded-lg bg-white p-3 shadow-md">
+                          <ul className="max-h-64 overflow-auto">
+                            {filteredSupplier.map((supplier) => (
+                              <li
+                                key={
+                                  supplier.Personal_Details.personal_details_id
+                                }
+                                className="p-2 hover:cursor-pointer hover:bg-gray"
+                                onClick={() => handleSelectedSupplier(supplier)}
+                              >
+                                {supplier.Personal_Details.company}
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      <Input
+                        placeholder="30"
+                        className="w-[10%] rounded-l-none"
+                      />
                     </div>
-                  )}
-                  <Input placeholder="30" className="w-[10%] rounded-l-none" />
+                  </div>
                 </div>
-              </div>
-            </div>
 
-            <div className="flex h-full w-full flex-col justify-between overflow-y-scroll">
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Item</TableHead>
-                    <TableHead>Quantity</TableHead>
-                    <TableHead>Unit</TableHead>
-                    <TableHead>Unit Price</TableHead>
-                    <TableHead>Discount</TableHead>
-                    <TableHead>Subtotal</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {Object.entries(activeCards).map((item) => (
-                    <TableRow key={item[0]}>
-                      <TableCell>
-                        {item[1].itemName} - {item[1].brandName} -{" "}
-                        {item[1].variant}{" "}
-                      </TableCell>
-                      <TableCell>{item[1].quantity}</TableCell>
-                      <TableCell>{item[1].selectedUnit.unitName}</TableCell>
-                      <TableCell className="text-right">
-                        {item[1].unitPrice.toFixed(2)}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {item[1].discount}{" "}
-                        {item[1].discountType === "%" ? "%" : ""}
-                      </TableCell>
-                      <TableCell className="text-right">
-                        {item[1].totalPrice.toFixed(2)}
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                <div className="flex h-full w-full flex-col justify-between overflow-y-scroll">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Item</TableHead>
+                        <TableHead>Quantity</TableHead>
+                        <TableHead>Unit</TableHead>
+                        <TableHead>Unit Price</TableHead>
+                        <TableHead>Discount</TableHead>
+                        <TableHead>Subtotal</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {Object.entries(activeCards).map((item) => (
+                        <TableRow key={item[0]}>
+                          <TableCell>
+                            {item[1].itemName} - {item[1].brandName} -{" "}
+                            {item[1].variant}{" "}
+                          </TableCell>
+                          <TableCell>{item[1].quantity}</TableCell>
+                          <TableCell>{item[1].selectedUnit.unitName}</TableCell>
+                          <TableCell className="text-right">
+                            {item[1].unitPrice.toFixed(2)}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item[1].discount}{" "}
+                            {item[1].discountType === "%" ? "%" : ""}
+                          </TableCell>
+                          <TableCell className="text-right">
+                            {item[1].totalPrice.toFixed(2)}
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
 
-              <div className="bottom-0 flex w-full flex-col justify-end gap-3">
-                <Textarea
-                  placeholder="Customer Notes"
-                  rows={4}
-                  value={customerNotes}
-                  onChange={(e) => setCustomerNotes(e.target.value)}
-                  className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline-none"
-                />
-                <div className="flex items-center justify-end gap-3">
-                  <span>TOTAL: ₱ {grandTotal.toFixed(2).toString()}</span>
-                  <Button
-                    className="bg-green px-7 font-bold"
-                    size={"lg"}
-                    onClick={handleSaveInvoice}
-                    disabled={!selectedSupplier}
-                  >
-                    Save
-                  </Button>
+                  <div className="bottom-0 flex w-full flex-col justify-end gap-3">
+                    <Textarea
+                      placeholder="Customer Notes"
+                      rows={4}
+                      value={customerNotes}
+                      onChange={(e) => setCustomerNotes(e.target.value)}
+                      className="!min-h-16 resize-none border-none bg-slate-100 text-slate-700 focus:outline-none"
+                    />
+                    <div className="flex items-center justify-end gap-3">
+                      <span>TOTAL: ₱ {grandTotal.toFixed(2).toString()}</span>
+                      <Button
+                        className="bg-green px-7 font-bold"
+                        size={"lg"}
+                        onClick={handleSaveInvoice}
+                        disabled={!selectedSupplier || isInvoicePending}
+                      >
+                        Save
+                      </Button>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            </div>
+              </>
+            )}
           </DialogContent>
         </Dialog>
       </div>

@@ -14,6 +14,7 @@ import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
+  handleVoidItem,
   invoice_number,
   invoice_id,
   date,
@@ -52,7 +53,10 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
+                <DropdownMenuItem
+                  className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
+                  onClick={handleVoidItem}
+                >
                   Void
                 </DropdownMenuItem>
               </DropdownMenuContent>
@@ -119,6 +123,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               line_items={line_items}
               notes={notes}
               handleExport={handleExport}
+              handleVoidItem={handleVoidItem}
             />
           </div>
         </div>

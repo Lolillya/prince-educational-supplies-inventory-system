@@ -493,8 +493,18 @@ const EditItem = () => {
     api.inventory.updateVariant.useMutation();
 
   const handleSave = async () => {
+    // Check for duplicate variant names
+    const variantNames = cards.map(card => card.variant.trim().toLowerCase());
+    const hasDuplicates = new Set(variantNames).size !== variantNames.length;
+
+    if (hasDuplicates) {
+      setDialogMessage("Duplicate variant names are not allowed. Please ensure each variant has a unique name.");
+      setIsDialogSaveOpen(true);
+      return;
+    }
+
     const hasAtLeastOneVariant = cards.some(
-      (card) => card.variant.trim() !== "",
+        (card) => card.variant.trim() !== "",
     );
 
     if (!hasAtLeastOneVariant) {
@@ -513,17 +523,17 @@ const EditItem = () => {
       if (card.variant.trim() !== "") {
         if (!card.lowStock || card.lowStock <= 0) {
           errors.push(
-            `Low Stock value for variant "${card.variant}" must be greater than 0.`,
+              `Low Stock value for variant "${card.variant}" must be greater than 0.`,
           );
         }
         if (!card.veryLowStock || card.veryLowStock <= 0) {
           errors.push(
-            `Very Low Stock value for variant "${card.variant}" must be greater than 0.`,
+              `Very Low Stock value for variant "${card.variant}" must be greater than 0.`,
           );
         }
       } else if (card.lowStock !== 0 || card.veryLowStock !== 0) {
         errors.push(
-          `Variant row ${i + 1} has stock values but no variant name. Fill out the variant name or clear the stock values.`,
+            `Variant row ${i + 1} has stock values but no variant name. Fill out the variant name or clear the stock values.`,
         );
       }
     }
@@ -535,10 +545,10 @@ const EditItem = () => {
     }
 
     if (
-      (!itemSearch && !selectedItem) ||
-      (!brandSearch && !selectedBrand) ||
-      (!categorySearch && !selectedCategory) ||
-      !itemDescription
+        (!itemSearch && !selectedItem) ||
+        (!brandSearch && !selectedBrand) ||
+        (!categorySearch && !selectedCategory) ||
+        !itemDescription
     ) {
       setDialogMessage("Please fill out all required fields.");
       setIsDialogSaveOpen(true);
@@ -592,116 +602,127 @@ const EditItem = () => {
   }
 
   return (
-    <section className="flex w-full flex-col gap-3 p-10">
-      <div className="border-b-100 relative flex items-center justify-between border-b p-3">
-        <div className="flex items-center gap-2">
-          <Dialog onOpenChange={setIsOpen} open={isOpen}>
-            <DialogTrigger asChild>
-              <ArrowLeft
-                size={25}
-                color="#FF7B7B"
-                className="transition-all duration-300 hover:scale-125 hover:cursor-pointer"
-              />
-            </DialogTrigger>
-            <DialogContent className="max-h- flex w-full max-w-lg flex-col p-10">
-              <DialogTitle className="text-center">Confirm</DialogTitle>
-              <DialogHeader>
-                <div className="flex w-full justify-center text-center text-xl">
-                  <span>
-                    You have unsaved changes. Are you sure you want to leave
-                    this page?
-                  </span>
-                </div>
-              </DialogHeader>
+      <section className="flex w-full flex-col gap-3 p-10">
+        <div className="border-b-100 relative flex items-center justify-between border-b p-3">
+          <div className="flex items-center gap-2">
+            <Dialog onOpenChange={setIsOpen} open={isOpen}>
+              <DialogTrigger asChild>
+                <ArrowLeft
+                    size={25}
+                    color="#FF7B7B"
+                    className="transition-all duration-300 hover:scale-125 hover:cursor-pointer"
+                />
+              </DialogTrigger>
+              <DialogContent className="max-h- flex w-full max-w-lg flex-col p-10">
+                <DialogTitle className="text-center">Confirm</DialogTitle>
+                <DialogHeader>
+                  <div className="flex w-full justify-center text-center text-xl">
+                <span>
+                  You have unsaved changes. Are you sure you want to leave
+                  this page?
+                </span>
+                  </div>
+                </DialogHeader>
 
-              <div className="flex w-full items-center justify-center gap-3">
-                <Button
-                  className="border-2 border-green bg-white p-6 text-lg font-bold text-green"
-                  onClick={() => setIsOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button
-                  className="bg-green p-6 text-lg font-bold text-white"
-                  onClick={() => router.push("/admin/inventory")}
-                >
-                  Leave
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <Dialog onOpenChange={setIsDialogSaveOpen} open={isDialogSaveOpen}>
-            <DialogContent className="flex max-h-screen w-full max-w-lg flex-col p-6">
-              <DialogTitle className="text-center text-lg font-bold">
-                Save Item
-              </DialogTitle>
-              <DialogHeader>
-                <div className="flex w-full justify-center text-center text-lg">
-                  <span>{dialogMessage}</span>
+                <div className="flex w-full items-center justify-center gap-3">
+                  <Button
+                      className="border-2 border-green bg-white p-6 text-lg font-bold text-green"
+                      onClick={() => setIsOpen(false)}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                      className="bg-green p-6 text-lg font-bold text-white"
+                      onClick={() => router.push("/admin/inventory")}
+                  >
+                    Leave
+                  </Button>
                 </div>
-              </DialogHeader>
-              <div className="mt-4 flex w-full items-center justify-center gap-4">
-                <Button
-                  size="lg"
-                  className="border-gray-300 text-gray-700 border-2 bg-white p-3 hover:bg-green"
-                  onClick={() => setIsDialogSaveOpen(false)}
-                >
-                  Close
-                </Button>
-              </div>
-            </DialogContent>
-          </Dialog>
-          <span className="font-bold">EDIT ITEM</span>
-          <span className="ml-3 text-sm font-light text-textGray">
-            #{itemId}
-          </span>
-        </div>
-      </div>
-      <div className="flex flex-col gap-10 p-10">
-        <div className="flex justify-between gap-3">
-          <div className="w-full">
-            <Label className="text-textGray">Item *</Label>
-            <div className="relative flex flex-col items-start gap-1">
-              <Input
-                placeholder="Item"
-                value={itemSearch || item}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (/^[a-zA-Z ]*$/.test(value)) {
-                    handleSearchItem(e);
-                  }
-                  console.log(`Item Search Updated: ${value}`);
-                }}
-                className="bg-white text-black placeholder-slate-500"
-                onFocus={() =>
-                  setDropdownVisible((prev) => ({ ...prev, item: true }))
-                }
-                onBlur={() =>
-                  setDropdownVisible((prev) => ({ ...prev, item: false }))
-                }
-                onKeyDown={(e) => handleKeyDown(e, "item")}
-              />
-              {dropdownVisible && filteredItems.length > 0 && (
-                <div
-                  className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                  style={{ maxHeight: "200px", overflowY: "auto" }}
-                >
-                  {filteredItems.map((itemName, index) => (
-                    <div
-                      key={index}
-                      className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""}`}
-                      onMouseDown={() => handleSelect("item", itemName)}
-                    >
-                      {itemName}
-                    </div>
-                  ))}
+              </DialogContent>
+            </Dialog>
+            <Dialog onOpenChange={setIsDialogSaveOpen} open={isDialogSaveOpen}>
+              <DialogContent className="flex max-h-screen w-full max-w-lg flex-col p-6">
+                <DialogTitle className="text-center text-lg font-bold">
+                  Save Item
+                </DialogTitle>
+                <DialogHeader>
+                  <div className="flex w-full justify-center text-center text-lg">
+                    <span>{dialogMessage}</span>
+                  </div>
+                </DialogHeader>
+                <div className="mt-4 flex w-full items-center justify-center gap-4">
+                  <Button
+                      size="lg"
+                      className="border-gray-300 text-gray-700 border-2 bg-white p-3 hover:bg-green"
+                      onClick={() => setIsDialogSaveOpen(false)}
+                  >
+                    Close
+                  </Button>
                 </div>
-              )}
-            </div>
+              </DialogContent>
+            </Dialog>
+            <span className="font-bold">EDIT ITEM</span>
+            <span className="ml-3 text-sm font-light text-textGray">
+          #{itemId}
+        </span>
           </div>
         </div>
-      </div>
-    </section>
+        <div className="flex flex-col gap-10 p-10">
+          <div className="flex justify-between gap-3">
+            <div className="w-full">
+              <Label className="text-textGray">Item *</Label>
+              <div className="relative flex flex-col items-start gap-1">
+                <Input
+                    placeholder="Item"
+                    value={itemSearch || item}
+                    onChange={(e) => {
+                      const value = e.target.value;
+                      if (/^[a-zA-Z ]*$/.test(value)) {
+                        handleSearchItem(e);
+                      }
+                      console.log(`Item Search Updated: ${value}`);
+                    }}
+                    className="bg-white text-black placeholder-slate-500"
+                    onFocus={() =>
+                        setDropdownVisible((prev) => ({ ...prev, item: true }))
+                    }
+                    onBlur={() =>
+                        setDropdownVisible((prev) => ({ ...prev, item: false }))
+                    }
+                    onKeyDown={(e) => handleKeyDown(e, "item")}
+                />
+                {dropdownVisible && filteredItems.length > 0 && (
+                    <div
+                        className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
+                        style={{ maxHeight: "200px", overflowY: "auto" }}
+                    >
+                      {filteredItems.map((itemName, index) => (
+                          <div
+                              key={index}
+                              className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""}`}
+                              onMouseDown={() => handleSelect("item", itemName)}
+                          >
+                            {itemName}
+                          </div>
+                      ))}
+                    </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Add a Save Button */}
+          <div className="flex justify-end">
+            <Button
+                className="bg-green p-6 text-lg font-bold text-white"
+                onClick={handleSave}
+                disabled={isSaving}
+            >
+              {isSaving ? "Saving..." : "Save"}
+            </Button>
+          </div>
+        </div>
+      </section>
   );
 };
 

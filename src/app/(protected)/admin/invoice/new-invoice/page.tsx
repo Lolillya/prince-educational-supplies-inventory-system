@@ -96,6 +96,7 @@ const NewInvoice = () => {
         totalPrice: number;
         unitPrice: number;
         quantity: number;
+        available: number;
         discount: number;
         discountType: string;
         selectedUnit: {
@@ -117,6 +118,7 @@ const NewInvoice = () => {
   const [discountType, setDiscountType] = useState("%");
   const [stockTotals, setStockTotals] = useState<Record<number, string>>({});
   const [isAutoRestock, setIsAutoRestock] = useState<boolean>(false);
+  const [isBatchAutoRestock, setIsBatchAutoRestock] = useState<boolean>(false);
   const [customerNotes, setCustomerNotes] = useState<string>("");
   const [isInputFocused, setIsInputFocused] = useState<string | undefined>(
     undefined,
@@ -141,6 +143,7 @@ const NewInvoice = () => {
     totalPrice: number,
     unitPrice: number,
     quantity: number,
+    available: number,
     discount: number,
     discountType: string,
     selectedUnit: {
@@ -160,6 +163,7 @@ const NewInvoice = () => {
         unitPrice,
         quantity,
         discount,
+        available,
         discountType,
         selectedUnit,
         itemName,
@@ -216,11 +220,13 @@ const NewInvoice = () => {
         status: "PENDING",
         payment_term_id: 1,
         isAutoRestock: isAutoRestock,
+        isBatchAutoRestock,
       },
       lineItems: Object.entries(activeCards).map((item) => ({
         supplier_unit_id: item[1].selectedUnit.supplier_unit_id,
         variant_id: item[1].variant_id,
         quantity: item[1].quantity,
+        available: item[1].available,
         unit_price: item[1].unitPrice,
         total_price: item[1].totalPrice,
         unit_id: item[1].selectedUnit.unit_id,
@@ -452,6 +458,7 @@ const NewInvoice = () => {
               updateCardDetails={updateCardDetails}
               handleAutoRestock={handleAutoRestock}
               isAutoRestock={isAutoRestock}
+              BatchAutoRestock={setIsBatchAutoRestock}
               units={units}
             />
           );

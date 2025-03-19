@@ -222,8 +222,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   console.log(isAutoRestock);
 
   const handleSelectUnitQuantity = () => {
-    // console.log("Selected Batches:", selectedBatches);
-
     // Calculate the total quantity
     const total = selectedBatches.reduce((acc, batch) => {
       return (
@@ -273,7 +271,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
   useEffect(() => {
     handleSelectUnitQuantity();
-  }, [selectedUnit]);
+  }, [selectedUnit, selectedBatches]);
 
   useEffect(() => {
     calculateTotal();
@@ -535,17 +533,35 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     />
                   </div>
                   <Select
+                    value={
+                      selectedUnit.unit_id === 0
+                        ? undefined
+                        : JSON.stringify({
+                            id: selectedUnit.unit_id,
+                            name: selectedUnit.unitName,
+                            supplier_unit_id: selectedUnit.supplier_unit_id,
+                          })
+                    }
                     onValueChange={(value) => {
-                      const selectedUnit = JSON.parse(value);
+                      const selected = JSON.parse(value);
+                      setSelectedUnit({
+                        unitName: selected.name,
+                        unit_id: selected.id,
+                        supplier_unit_id: selected.supplier_unit_id || 0,
+                      });
                       handleSelectUnit(
-                        selectedUnit.name,
-                        selectedUnit.id,
-                        selectedUnit.supplier_unit_id,
+                        selected.name,
+                        selected.id,
+                        selected.supplier_unit_id,
                       );
                     }}
                   >
                     <SelectTrigger className="w-full rounded-l-none">
-                      <SelectValue placeholder="Select Unit" />
+                      <SelectValue placeholder="Select Unit">
+                        {selectedUnit.unit_id !== 0
+                          ? selectedUnit.unitName
+                          : null}
+                      </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
                       {isBatchAutoRestock && units?.length
@@ -558,37 +574,40 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 supplier_unit_id: undefined,
                               })}
                             >
-                              <Label>{u.name}</Label>
+                              {u.name}
                             </SelectItem>
                           ))
-                        : selectedBatches
-                            ?.flatMap((batch, index) =>
-                              batch.supplierUnits.map((unit) => ({
-                                supplier_unit_id: unit.supplier_unit_id,
-                                name: unit.unit.name,
-                                id: unit.unit.unit_id,
-                                quantity: unit.quantity_per_unit,
-                                batch: index + 1,
-                              })),
-                            )
-                            ?.filter(
-                              (unit, index, self) =>
-                                self.findIndex(
-                                  (u) =>
-                                    u.name.toLowerCase() ===
-                                    unit.name.toLowerCase(),
-                                ) === index,
-                            )
-                            ?.map((uniqueUnit) => (
-                              <SelectItem
-                                key={uniqueUnit.id}
-                                value={JSON.stringify(uniqueUnit)}
-                              >
-                                <Label>{uniqueUnit.name}</Label>
-                              </SelectItem>
-                            ))}
+                        : selectedBatches?.length
+                          ? selectedBatches
+                              .flatMap((batch, index) =>
+                                batch.supplierUnits.map((unit) => ({
+                                  supplier_unit_id: unit.supplier_unit_id,
+                                  name: unit.unit.name,
+                                  id: unit.unit.unit_id,
+                                  quantity: unit.quantity_per_unit,
+                                  batch: index + 1,
+                                })),
+                              )
+                              .filter(
+                                (unit, index, self) =>
+                                  self.findIndex(
+                                    (u) =>
+                                      u.name.toLowerCase() ===
+                                      unit.name.toLowerCase(),
+                                  ) === index,
+                              )
+                              .map((uniqueUnit) => (
+                                <SelectItem
+                                  key={uniqueUnit.id}
+                                  value={JSON.stringify(uniqueUnit)}
+                                >
+                                  {uniqueUnit.name}
+                                </SelectItem>
+                              ))
+                          : null}
                     </SelectContent>
                   </Select>
+
                 </div>
               </div>
 

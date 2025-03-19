@@ -402,6 +402,16 @@ const NewItem = () => {
     const { mutateAsync: updateVariantMutation } = api.inventory.updateVariant.useMutation();
 
     const handleSave = async () => {
+        // Check for duplicate variant names
+        const variantNames = cards.map(card => card.variant.trim().toLowerCase());
+        const hasDuplicates = new Set(variantNames).size !== variantNames.length;
+
+        if (hasDuplicates) {
+            setDialogMessage("Duplicate variant names are not allowed. Please ensure each variant has a unique name.");
+            setIsDialogSaveOpen(true);
+            return;
+        }
+
         const hasAtLeastOneVariant = cards.some(card => card.variant.trim() !== "");
 
         if (!hasAtLeastOneVariant) {
@@ -472,10 +482,6 @@ const NewItem = () => {
             const validCards = cards.filter(card =>
                 !card.isExisting && card.variant.trim() !== ""
             );
-            // try {
-            //     // Filter out empty variants
-            //     const validCards = cards.filter(card => card.variant.trim() !== "");
-
 
             console.log("Item:", itemSearch || selectedItem);
             console.log("Brand:", brandSearch || selectedBrand);
@@ -562,7 +568,6 @@ const NewItem = () => {
                 });
             }
 
-
             setDialogMessage("New item created successfully!");
             setIsDialogSaveOpen(true);
 
@@ -596,7 +601,6 @@ const NewItem = () => {
             setIsSaving(false);
         }
     };
-
     let content = null;
     if (isLoading) {
         content = <p>Loading...</p>;

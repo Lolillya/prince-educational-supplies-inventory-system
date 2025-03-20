@@ -3,7 +3,7 @@
 import { ArrowLeft, Plus, X } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import React, { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import {
@@ -17,6 +17,21 @@ import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
 import { Textarea } from "~/components/ui/textarea";
 import { api } from "~/trpc/react";
+import Variant from "../_components/variant";
+import Conversion from "../_components/conversion";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import ConversionCard from "../_components/conversion-card";
+import { Toaster } from "~/components/ui/sonner";
+import {
+    Table,
+    TableBody,
+    TableCell,
+    TableHead,
+    TableHeader,
+    TableRow,
+} from "~/components/ui/table";
+import { Separator } from "~/components/ui/separator";
+import { toast } from "sonner";
 
 type Item = {
     variant: {
@@ -91,7 +106,7 @@ const NewItem = () => {
         api.inventory.getItemId.useQuery();
 
 
-    const { data: data, isLoading, isError } = api.inventory.listAllData.useQuery();
+    const { data, isLoading, isError } = api.inventory.listAllData.useQuery();
     const { mutateAsync: createItem } = api.inventory.createItem.useMutation();
     // Use mutations outside the handleSave function to avoid invalid hook calls.
     const { mutateAsync: createBrandMutation } = api.inventory.createBrand.useMutation();
@@ -104,13 +119,14 @@ const NewItem = () => {
 
     // const [cards, setCards] = useState([{ id: Date.now() }]);
     // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
-    const [cards, setCards] = useState([{
+    const [variants, setVariants] = useState([{
         id: Date.now(),
         variant: "",
         lowStock: 0,
         veryLowStock: 0,
         isExisting: false
     }]);
+    const [conversions, setConversions] = useState([{ id: Date.now() }]);
 
     const [isSaving, setIsSaving] = useState(false);
 
@@ -123,7 +139,7 @@ const NewItem = () => {
     const categories = useMemo(() => data?.categories ?? [], [data]);
     const units = useMemo(() => data?.units ?? [], [data]);
     const items = useMemo(() => data?.items ?? [], [data]);
-    const variants = useMemo(() => data?.variants ?? [], [data]);
+    const variantsMemo = useMemo(() => data?.variants ?? [], [data]);
 
     useEffect(() => {
         if (item) {
@@ -201,30 +217,12 @@ const NewItem = () => {
                     veryLowStock: v.StockLevel?.very_low_stock || 0, // Add comma here
                     isExisting: true
                 }));
-                setCards(variants.length > 0 ? variants : [{
-                    id: Date.now(),
-                    variant: "",
-                    lowStock: 0,
-                    veryLowStock: 0,
-                    isExisting: false
-                }]);
+                setVariants(variants.length > 0 ? variants : [{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
             } else {
-                setCards([{
-                    id: Date.now(),
-                    variant: "",
-                    lowStock: 0,
-                    veryLowStock: 0,
-                    isExisting: false
-                }]);
+                setVariants([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
             }
         } else {
-            setCards([{
-                id: Date.now(),
-                variant: "",
-                lowStock: 0,
-                veryLowStock: 0,
-                isExisting: false
-            }]);
+            setVariants([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
         }
     }, [item, brandSearch, selectedBrand, categorySearch, selectedCategory, items]);
     const handleSelect = (type: string, name: string) => {
@@ -358,18 +356,24 @@ const NewItem = () => {
     // const handleAddCard = () => {
     //     setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
     // }
-    const handleAddCard = () => {
-        setCards([...cards, {
-            id: Date.now(),
-            variant: "",
-            lowStock: 0,
-            veryLowStock: 0,
-            isExisting: false
-        }]);
+    const handleAddVariant = () => {
+        setVariants(prev => [...prev, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
+    };
+
+    const handleRemoveVariant = (id: number) => {
+        setVariants(prev => prev.filter(variant => variant.id !== id));
+    };
+
+    const handleAddConversion = () => {
+        setConversions(prev => [...prev, { id: Date.now() }]);
+    };
+
+    const handleRemoveConversion = (id: number) => {
+        setConversions(prev => prev.filter(conv => conv.id !== id));
     };
 
     const handleDeleteCard = (id: number) => {
-        setCards(cards.filter(card => card.id !== id));
+        setVariants(variants.filter(variant => variant.id !== id));
     };
 
     const clear = () => {
@@ -391,7 +395,7 @@ const NewItem = () => {
             category: false,
             variant: false,
         });
-        setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
+        setVariants([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
         setIsDialogCancelOpen(false);
     };
 
@@ -402,76 +406,28 @@ const NewItem = () => {
     const { mutateAsync: updateVariantMutation } = api.inventory.updateVariant.useMutation();
 
     const handleSave = async () => {
-        // Check for duplicate variant names
-        const variantNames = cards.map(card => card.variant.trim().toLowerCase());
-        const hasDuplicates = new Set(variantNames).size !== variantNames.length;
-
-        if (hasDuplicates) {
-            setDialogMessage("Duplicate variant names are not allowed. Please ensure each variant has a unique name.");
-            setIsDialogSaveOpen(true);
+        // Check main inputs first
+        if (!itemSearch && !selectedItem) {
+            toast('❌ Missing input', {
+                description: 'Please fill in the Item name field',
+                duration: 4000,
+            });
             return;
         }
 
-        const hasAtLeastOneVariant = cards.some(card => card.variant.trim() !== "");
-
-        if (!hasAtLeastOneVariant) {
-            setDialogMessage("Please fill out at least one variant row.");
-            setIsDialogSaveOpen(true);
+        if (!brandSearch && !selectedBrand) {
+            toast('❌ Missing input', {
+                description: 'Please fill in the Brand field',
+                duration: 4000,
+            });
             return;
         }
 
-        // Collect all validation errors
-        const errors = [];
-
-        // Check the first variant
-        const firstVariant = cards[0];
-        if (!firstVariant) {
-            errors.push("No variants found.");
-            return;
-        }
-        if (firstVariant.variant.trim() !== "") {
-            if (firstVariant.lowStock === null || firstVariant.lowStock <= 0) {
-                errors.push("Low Stock value for the first variant must be greater than 0.");
-            }
-            if (firstVariant.veryLowStock === null || firstVariant.veryLowStock <= 0) {
-                errors.push("Very Low Stock value for the first variant must be greater than 0.");
-            }
-        } else {
-            errors.push("The first variant must be filled out.");
-        }
-
-        // Check additional variants
-        for (let i = 1; i < cards.length; i++) {
-            const card = cards[i];
-            if (!card) continue;
-
-            if (card.variant.trim() !== "") {
-                if (card.lowStock === null || card.lowStock <= 0) {
-                    errors.push(`Low Stock value for variant "${card.variant}" must be greater than 0.`);
-                }
-                if (card.veryLowStock === null || card.veryLowStock <= 0) {
-                    errors.push(`Very Low Stock value for variant "${card.variant}" must be greater than 0.`);
-                }
-            } else if (card.lowStock !== 0 || card.veryLowStock !== 0) {
-                errors.push(`Variant row ${i + 1} has Low Stock or Very Low Stock values but no variant name. Please fill out the variant name or clear the stock values.`);
-            }
-        }
-
-        // If there are errors, show them and stop
-        if (errors.length > 0) {
-            setDialogMessage(errors.join("\n"));
-            setIsDialogSaveOpen(true);
-            return;
-        }
-
-        if (
-            (!itemSearch && !selectedItem) ||
-            (!brandSearch && !selectedBrand) ||
-            (!categorySearch && !selectedCategory) ||
-            !itemDescription
-        ) {
-            setDialogMessage("Please fill out all required fields.");
-            setIsDialogSaveOpen(true);
+        if (!categorySearch && !selectedCategory) {
+            toast('❌ Missing input', {
+                description: 'Please fill in the Category field',
+                duration: 4000,
+            });
             return;
         }
 
@@ -479,27 +435,29 @@ const NewItem = () => {
 
         try {
             // Filter out empty variants and existing ones
-            const validCards = cards.filter(card =>
-                !card.isExisting && card.variant.trim() !== ""
+            const validVariants = variants.filter(variant =>
+                !variant.isExisting &&
+                variant.variant?.trim() !== "" &&
+                variant.lowStock > 0 &&
+                variant.veryLowStock > 0
             );
 
-            console.log("Item:", itemSearch || selectedItem);
-            console.log("Brand:", brandSearch || selectedBrand);
-            console.log("Category:", categorySearch || selectedCategory);
-            console.log("Item Description:", itemDescription);
-            console.log("Valid Variants:", validCards);
+            if (validVariants.length === 0) {
+                toast('❌ Missing input', {
+                    description: 'Please fill out at least one variant with all required fields',
+                    duration: 4000,
+                });
+                setIsSaving(false);
+                return;
+            }
 
             const brandId = selectedBrand
                 ? selectedBrand.brand_id
                 : await createBrandMutation({ name: brandSearch }).then((res) => res.brand_id);
 
-            console.log("Brand ID:", brandId);
-
             const categoryId = selectedCategory
                 ? selectedCategory.category_id
                 : await createCategoryMutation({ name: categorySearch }).then((res) => res.category_id);
-
-            console.log("Category ID:", categoryId);
 
             let item;
 
@@ -517,10 +475,8 @@ const NewItem = () => {
                             category_id: categoryId,
                             name: selectedItem.name,
                         });
-                        console.log("Updated item description:", item);
                     } else {
                         item = selectedItem;
-                        console.log("Using existing item:", item);
                     }
                 } else {
                     item = await createItemMutation({
@@ -529,74 +485,58 @@ const NewItem = () => {
                         category_id: categoryId,
                         description: itemDescription,
                     });
-
-                    console.log("Created new item:", item);
                 }
             } else {
                 item = await createItemMutation({
-                    name: itemSearch || "",
+                    name: itemSearch,
                     brand_id: brandId,
                     category_id: categoryId,
                     description: itemDescription,
                 });
-
-                console.log("Created new item:", item);
             }
 
-            for (const card of validCards) {
+            // Create variants and their associated data
+            for (const variant of validVariants) {
                 if (!item.item_id) {
                     throw new Error("Item ID is required");
                 }
-                // Only create new variants (existing ones are filtered out)
-                const variant = await createVariantMutation({
+
+                const createdVariant = await createVariantMutation({
                     item_id: item.item_id,
-                    name: card.variant,
+                    name: variant.variant,
                 });
-                console.log("Created Variant:", variant);
 
                 await createStockLevelMutation({
-                    variant_id: variant.variant_id,
-                    low_stock: card.lowStock,
-                    very_low_stock: card.veryLowStock,
+                    variant_id: createdVariant.variant_id,
+                    low_stock: variant.lowStock,
+                    very_low_stock: variant.veryLowStock,
                 });
 
                 await createInventoryMutation({
-                    variant_id: variant.variant_id,
+                    variant_id: createdVariant.variant_id,
                     quantity: 0,
                     inventory_clerk: session.data?.user.id ?? "",
                     inventory_number: Math.floor(1000000 + Math.random() * 9000000),
                 });
             }
 
-            setDialogMessage("New item created successfully!");
-            setIsDialogSaveOpen(true);
-
             utils.inventory.listInventory.invalidate();
+
+            toast('✅ Success', {
+                description: 'New item created successfully!',
+                duration: 4000,
+            });
 
             setTimeout(() => {
                 router.push("/admin/inventory");
             }, 2000);
 
-            setItem("");
-            setBrand("");
-            setCategory("");
-            setVariant("");
-            setItemDescription("");
-            setItemSearch("");
-            setBrandSearch("");
-            setCategorySearch("");
-            setDropdownVisible({
-                item: false,
-                brand: false,
-                category: false,
-                variant: false,
-            });
-            setCards([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
-            setIsDialogCancelOpen(false);
         } catch (error) {
             console.error("Error saving item:", error);
-            setDialogMessage("Failed to save item.");
-            setIsDialogSaveOpen(true);
+            toast('❌ Error', {
+                description: 'Failed to save item',
+                duration: 4000,
+            });
         } finally {
             setIsSaving(false);
         }
@@ -609,8 +549,8 @@ const NewItem = () => {
     }
 
     return (
-        <section className="flex w-full flex-col gap-3 p-10">
-            <div className="border-b-100 relative flex items-center justify-between border-b p-3">
+        <section className="flex min-h-screen w-full flex-col p-10">
+            <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
                 <div className="flex items-center gap-2">
                     <Dialog onOpenChange={setIsOpen} open={isOpen}>
                         <DialogTrigger asChild>
@@ -670,268 +610,236 @@ const NewItem = () => {
                     <span className="ml-3 text-sm font-light text-textGray">#{nextItemId}</span>
                 </div>
             </div>
-            <div className="flex flex-col gap-10 p-10">
-                <div className="flex justify-between gap-3">
-                    <div className="w-full">
-                        <Label className="text-textGray">Item *</Label>
-                        <div className="relative flex flex-col items-start gap-1">
-                            <Input
-                                placeholder="Item"
-                                value={itemSearch || item}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (/^[a-zA-Z ]*$/.test(value)) {
-                                        handleSearchItem(e);
-                                    }
-                                    console.log(`Item Search Updated: ${value}`);
-                                }}
-                                className="bg-white text-black placeholder-slate-500"
-                                onFocus={() => setDropdownVisible((prev) => ({ ...prev, item: true }))}
-                                onBlur={() => setDropdownVisible((prev) => ({ ...prev, item: false }))}
-                                onKeyDown={(e) => handleKeyDown(e, "item")}
-                            />
 
-                            {dropdownVisible && filteredItems.length > 0 && (
-                                <div
-                                    className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                                    style={{ maxHeight: "200px", overflowY: "auto" }}
-                                >
-                                    {filteredItems.map((itemName, index) => (
-                                        <div
-                                            key={index}
-                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
-                                                }`}
-                                            onMouseDown={() => handleSelect("item", itemName)}
-                                        >
-                                            {itemName}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
+            <ScrollArea className="flex-1">
+                <div className="flex flex-col gap-10 p-10">
+                    <div className="flex justify-between gap-3">
+                        <div className="w-full">
+                            <Label className="text-slate-500">Item <span className="text-rose-500">*</span></Label>
+                            <div className="relative flex flex-col items-start gap-1">
+                                <Input
+                                    placeholder="Item"
+                                    value={itemSearch || item}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^[a-zA-Z ]*$/.test(value)) {
+                                            handleSearchItem(e);
+                                        }
+                                        console.log(`Item Search Updated: ${value}`);
+                                    }}
+                                    className="bg-slate-100 text-slate-700 placeholder-slate-300 shadow-none"
+                                    onFocus={() => setDropdownVisible((prev) => ({ ...prev, item: true }))}
+                                    onBlur={() => setDropdownVisible((prev) => ({ ...prev, item: false }))}
+                                    onKeyDown={(e) => handleKeyDown(e, "item")}
+                                />
 
-                    <div className="w-full">
-                        <Label className="text-textGray">Brand *</Label>
-                        <div className="relative flex flex-col items-start gap-1">
-                            <Input
-                                placeholder="Brand"
-                                value={brandSearch || brand}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (/^[a-zA-Z ]*$/.test(value)) {
-                                        handleSearchBrand(e);
-                                    }
-                                    console.log(`Brand Search Updated: ${value}`);
-                                }}
-                                className="bg-white text-black placeholder-slate-500"
-                                onFocus={() => setDropdownVisible((prev) => ({ ...prev, brand: true }))}
-                                onBlur={() => setDropdownVisible((prev) => ({ ...prev, brand: false }))}
-                                onKeyDown={(e) => handleKeyDown(e, "brand")}
-                            />
-
-                            {dropdownVisible && filteredBrands.length > 0 && (
-                                <div
-                                    className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                                    style={{ maxHeight: "200px", overflowY: "auto" }}
-                                >
-                                    {filteredBrands.map((brandName, index) => (
-                                        <div
-                                            key={index}
-                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
-                                                }`}
-                                            onMouseDown={() => handleSelect("brand", brandName)}
-                                        >
-                                            {brandName}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-
-                    <div className="w-full">
-                        <Label className="text-textGray">Category</Label>
-                        <div className="relative flex flex-col items-start gap-1">
-                            <Input
-                                placeholder="Category"
-                                value={categorySearch || category}
-                                onChange={(e) => {
-                                    const value = e.target.value;
-                                    if (/^[a-zA-Z ]*$/.test(value)) {
-                                        handleSearchCategory(e);
-                                    }
-                                    console.log(`Category Search Updated: ${value}`);
-                                }}
-                                className="bg-white text-black placeholder-slate-500"
-                                onFocus={() => setDropdownVisible((prev) => ({ ...prev, category: true }))}
-                                onBlur={() => setDropdownVisible((prev) => ({ ...prev, category: false }))}
-                                onKeyDown={(e) => handleKeyDown(e, "category")}
-                            />
-
-
-                            {dropdownVisible && filteredCategories.length > 0 && (
-                                <div
-                                    className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
-                                    style={{ maxHeight: "200px", overflowY: "auto" }}
-                                >
-                                    {filteredCategories.map((categoryName, index) => (
-                                        <div
-                                            key={index}
-                                            className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
-                                                }`}
-                                            onMouseDown={() => handleSelect("category", categoryName)}
-                                        >
-                                            {categoryName}
-                                        </div>
-                                    ))}
-                                </div>
-                            )}
-                        </div>
-                    </div>
-                </div>
-
-                <div>
-                    <Textarea
-                        className="bg-gray"
-                        placeholder="Item Description"
-                        rows={5}
-                        value={itemDescription}
-                        onChange={(e) => {
-                            setItemDescription(e.target.value);
-                            console.log(`Item Description Updated: ${e.target.value}`);
-                        }}
-                    />
-                </div>
-
-                <div className="flex flex-col gap-3">
-                    <Label>Variants *</Label>
-                    {cards.map((card, index) => (
-                        <Card key={card.id} className="w-full bg-[#F0F1F4] p-3">
-                            <CardContent className="m-0 flex flex-row items-center justify-between gap-3 p-0">
-                                <div className="relative flex w-full items-center">
-                                    <Input
-                                        placeholder="Variant"
-                                        value={card.variant}
-                                        onChange={(e) => {
-                                            if (!card.isExisting) {
-                                                const updatedCards = [...cards] as typeof cards;
-                                                updatedCards[index]!.variant = e.target.value;
-                                                setCards(updatedCards);
-                                                console.log(`Variant Updated: ${e.target.value}`);
-                                            }
-                                        }}
-                                        className="bg-white text-black placeholder-slate-500"
-                                        disabled={card.isExisting}
-                                    />
-                                </div>
-                                <div className="relative flex w-full items-center">
-                                    <div className="absolute ml-2 h-2 w-2 rounded-full bg-orange-400"></div>
-                                    <Input
-                                        value={card.lowStock || ""}
-                                        onChange={(e) => {
-                                            if (!card.isExisting) {
-                                                const updatedCards = [...cards] as typeof cards;
-                                                updatedCards[index]!.lowStock = e.target.value ? Number(e.target.value) : 0;
-                                                setCards(updatedCards);
-                                                console.log(`Low Stock for Variant '${card.variant}': ${e.target.value}`);
-                                            }
-                                        }}
-                                        className="flex-1 rounded-lg bg-white p-5"
-                                        placeholder="Low Stock"
-                                        disabled={card.isExisting}
-                                    />
-                                </div>
-                                <div className="relative flex w-full items-center">
-                                    <div className="absolute ml-2 h-2 w-2 rounded-full bg-red"></div>
-                                    <Input
-                                        value={card.veryLowStock || ""}
-                                        onChange={(e) => {
-                                            if (!card.isExisting) {
-                                                const updatedCards = [...cards] as typeof cards;
-                                                updatedCards[index]!.veryLowStock = e.target.value ? Number(e.target.value) : 0;
-                                                setCards(updatedCards);
-                                                console.log(`Very Low Stock for Variant '${card.variant}': ${e.target.value}`);
-                                            }
-                                        }}
-                                        className="flex-1 rounded-lg bg-white p-5"
-                                        placeholder="Very Low Stock"
-                                        disabled={card.isExisting}
-                                    />
-                                </div>
-                                <div className="flex items-center">
-                                    <div className="relative ml-auto flex w-full items-center">
-                                        {!card.isExisting && (
-                                            <X
-                                                size={15}
-                                                className="scale-125 transition-all duration-300 hover:scale-150 hover:cursor-pointer"
-                                                onClick={() => handleDeleteCard(card.id)}
-                                            />
-                                        )}
+                                {dropdownVisible && filteredItems.length > 0 && (
+                                    <div
+                                        className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
+                                        style={{ maxHeight: "200px", overflowY: "auto" }}
+                                    >
+                                        {filteredItems.map((itemName, index) => (
+                                            <div
+                                                key={index}
+                                                className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                                    }`}
+                                                onMouseDown={() => handleSelect("item", itemName)}
+                                            >
+                                                {itemName}
+                                            </div>
+                                        ))}
                                     </div>
+                                )}
+                            </div>
+                        </div>
 
-                                </div>
-                            </CardContent>
-                        </Card>
-                    ))}
-                    <div className="mt-4">
-                        <Button
-                            variant="outline"
-                            className="w-full"
-                            onClick={handleAddCard}
-                        >
-                            <Plus className="mr-2 h-4 w-4" />
-                            Add Variant
-                        </Button>
+                        <div className="w-full">
+                            <Label className="text-slate-500">Brand <span className="text-rose-500">*</span></Label>
+                            <div className="relative flex flex-col items-start gap-1">
+                                <Input
+                                    placeholder="Brand"
+                                    value={brandSearch || brand}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^[a-zA-Z ]*$/.test(value)) {
+                                            handleSearchBrand(e);
+                                        }
+                                        console.log(`Brand Search Updated: ${value}`);
+                                    }}
+                                    className="bg-slate-100 text-slate-700 placeholder-slate-300 shadow-none"
+                                    onFocus={() => setDropdownVisible((prev) => ({ ...prev, brand: true }))}
+                                    onBlur={() => setDropdownVisible((prev) => ({ ...prev, brand: false }))}
+                                    onKeyDown={(e) => handleKeyDown(e, "brand")}
+                                />
+
+                                {dropdownVisible && filteredBrands.length > 0 && (
+                                    <div
+                                        className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
+                                        style={{ maxHeight: "200px", overflowY: "auto" }}
+                                    >
+                                        {filteredBrands.map((brandName, index) => (
+                                            <div
+                                                key={index}
+                                                className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                                    }`}
+                                                onMouseDown={() => handleSelect("brand", brandName)}
+                                            >
+                                                {brandName}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="w-full">
+                            <Label className="text-slate-500">Category <span className="text-rose-500">*</span></Label>
+                            <div className="relative flex flex-col items-start gap-1">
+                                <Input
+                                    placeholder="Category"
+                                    value={categorySearch || category}
+                                    onChange={(e) => {
+                                        const value = e.target.value;
+                                        if (/^[a-zA-Z ]*$/.test(value)) {
+                                            handleSearchCategory(e);
+                                        }
+                                        console.log(`Category Search Updated: ${value}`);
+                                    }}
+                                    className="bg-slate-100 text-slate-700 placeholder-slate-300 shadow-none"
+                                    onFocus={() => setDropdownVisible((prev) => ({ ...prev, category: true }))}
+                                    onBlur={() => setDropdownVisible((prev) => ({ ...prev, category: false }))}
+                                    onKeyDown={(e) => handleKeyDown(e, "category")}
+                                />
+
+
+                                {dropdownVisible && filteredCategories.length > 0 && (
+                                    <div
+                                        className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
+                                        style={{ maxHeight: "200px", overflowY: "auto" }}
+                                    >
+                                        {filteredCategories.map((categoryName, index) => (
+                                            <div
+                                                key={categoryName}
+                                                className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                                                    }`}
+                                                onMouseDown={() => handleSelect("category", categoryName)}
+                                            >
+                                                {categoryName}
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
                     </div>
 
-                    <div
-                        className="absolute bottom-0 right-0 z-[5] flex w-full items-center justify-end gap-3 bg-white px-10 py-5 pl-36 font-bold drop-shadow-2xl">
-                        <Button
-                            className="border-2 border-gray-300 bg-gray p-7 text-lg font-bold text-gray-700 hover:bg-red"
-                            onClick={clear}
-                        >
-                            Clear
-                        </Button>
-
-                        {/* Confirmation dialog triggered by the "Clear" button */}
-                        <Dialog open={isDialogCancelOpen} onOpenChange={(open) => setIsDialogCancelOpen(open)}>
-                            <DialogContent
-                                className="w-full max-w-lg p-10 flex flex-col gap-6 bg-white rounded-lg shadow-lg">
-                                <DialogTitle className="text-center text-xl font-semibold">Clear All
-                                    Fields</DialogTitle>
-                                <DialogHeader className="text-center text-lg">
-                                    Are you sure you want to clear all the fields? This action cannot be undone.
-                                </DialogHeader>
-
-                                <div className="flex justify-center gap-4">
-                                    <Button
-                                        className="border-2 border-gray-300 bg-gray-300 p-4 text-lg font-bold text-black hover:bg-textGray"
-                                        onClick={handleCancelClear}
-                                    >
-                                        Cancel
-                                    </Button>
-
-                                    <Button
-                                        className="border-2 border-red-500 bg-red-500 p-4 text-lg font-bold text-black hover:bg-red"
-                                        onClick={handleConfirmClear}
-                                    >
-                                        Confirm
-                                    </Button>
-                                </div>
-                            </DialogContent>
-                        </Dialog>
-                        <Button
-                            className="border-2 border-gray-300 bg-gray p-7 text-lg font-bold text-gray-700 hover:bg-green"
-                            onClick={handleSave}
-                            disabled={isSaving}
-                        >
-                            {isSaving ? "Saving..." : "Save"}
-                        </Button>
-
+                    <div>
+                        <Textarea
+                            className="bg-slate-100 text-slate-700 placeholder-slate-300 shadow-none"
+                            placeholder="Item Description"
+                            rows={5}
+                            value={itemDescription}
+                            onChange={(e) => {
+                                setItemDescription(e.target.value);
+                                console.log(`Item Description Updated: ${e.target.value}`);
+                            }}
+                        />
                     </div>
-                </div>
+
+                    <div className="flex flex-col gap-3">
+                        <Label className="text-slate-500">Variants <span className="text-rose-500">*</span></Label>
+
+                        <div className="grid grid-cols-3 gap-4">
+                            {variants.map((variant, index) => (
+                                <Variant
+                                    key={variant.id}
+                                    onRemove={() => handleRemoveVariant(variant.id)}
+                                    isOnlyVariant={variants.length === 1}
+                                    value={{
+                                        variant: variant.variant,
+                                        lowStock: variant.lowStock,
+                                        veryLowStock: variant.veryLowStock
+                                    }}
+                                    onChange={(value) => {
+                                        const newVariants = [...variants];
+                                        newVariants[index] = {
+                                            ...newVariants[index],
+                                            ...value
+                                        };
+                                        setVariants(newVariants);
+                                    }}
+                                />
+                            ))}
+                            {variants.length < 9 && (
+                                <Button
+                                    className="bg-slate-100/50 rounded-lg p-3 h-48 text-slate-400 hover:bg-slate-100 border-4 border-dashed"
+                                    onClick={handleAddVariant}
+                                >
+                                    + Add a Variant
+                                </Button>
+                            )}
+                        </div>
+
+                        <div className="mt-8">
+                            <Label className="text-slate-500">Preset Conversions</Label>
+
+                            <div className="grid grid-cols-3 gap-4 mt-2">
+                                {conversions.map((conversion) => (
+                                    <ConversionCard
+                                        key={conversion.id}
+                                        onRemove={() => handleRemoveConversion(conversion.id)}
+                                    />
+                                ))}
+                                {conversions.length < 9 && (
+                                    <Button
+                                        className="bg-slate-100/50 rounded-lg p-3 h-96 text-slate-400 hover:bg-slate-100 border-4 border-dashed"
+                                        onClick={handleAddConversion}
+                                    >
+                                        + Add a Preset
+                                    </Button>
+                                )}
+                            </div>
+                        </div>
+                    </div>
+                </div >
+            </ScrollArea>
+
+            <Separator className="h-px" />
+            <div className="flex w-full items-center justify-end bg-white pt-4 gap-4">
+                    <Button
+                        size={"lg"}
+                        className="hover:bg-green/80 bg-slate-200 text-slate-500 hover:bg-slate-200/70"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                    >
+                        Clear
+                    </Button>
+
+                    <Button
+                        size={"lg"}
+                        className="hover:bg-green/80 bg-green text-white"
+                        onClick={handleSave}
+                        disabled={isSaving}
+                    >
+                        {isSaving ? "Saving..." : "Save Item"}
+                    </Button>
             </div>
+
+            <Toaster
+                toastOptions={{
+                    style: {
+                        width: '500px',
+                        padding: '12px',
+                        color: '#475569',
+                        fontSize: '16px',
+                        bottom: '80px',
+                        right: '12px',
+                        background: 'white',
+                        border: '1px solid #E5E7EB',
+                        boxShadow: 'none'
+                    },
+                }}
+            />
         </section>
     );
 };

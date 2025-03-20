@@ -61,6 +61,7 @@ export const invoiceRouter = createTRPCRouter({
                   },
                 },
                 SupplierUnit: {
+                  orderBy: { supplier_unit_id: 'asc' },
                   select: {
                     supplier_unit_id: true,
                     price: true,
@@ -73,6 +74,7 @@ export const invoiceRouter = createTRPCRouter({
                       },
                     },
                     ConversionRate: {
+                      orderBy: { conversion_id: 'asc' },
                       select: {
                         conversion_rate: true,
                         toUnit: {
@@ -230,7 +232,7 @@ export const invoiceRouter = createTRPCRouter({
       return result;
     }),
 
-  createInvoiceWithLineItems: publicProcedure
+    createInvoiceWithLineItems: publicProcedure
     .input(
       z.object({
         invoice: invoiceSchema,
@@ -239,239 +241,201 @@ export const invoiceRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const { invoice, lineItems } = input;
-
+  
       console.log("Processing Invoice:", invoice);
-
-      const result = await ctx.db.$transaction(async () => {
-        // Step 1: Create Invoice
-        const createdInvoice = await ctx.db.invoice.create({
-          data: {
-            customer_id: invoice.customer_id,
-            invoice_clerk: invoice.invoice_clerk,
-            total_amount: invoice.total_amount,
-            discount: invoice.discount,
-            status: invoice.status,
-            payment_term_id: invoice.payment_term_id,
-            notes: invoice.customerNotes,
-          },
-        });
-
-        const invoiceId = createdInvoice.invoice_id;
-
-        // Step 2: If isBatchAutoRestock is TRUE, directly create line items and return
-        if (invoice.isBatchAutoRestock) {
-          console.log("Batch Auto-Restock Enabled - Skipping stock logic");
-
-          const createdLineItems = await ctx.db.line_Item.createMany({
-            data: lineItems.map((item) => ({
-              invoice_id: invoiceId,
-              variant_id: item.variant_id,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              total_price: item.total_price,
-              unit_id: item.unit_id,
-            })),
-          });
-
-          const generateBatchNumber = () => {
-            return Math.floor(1000000 + Math.random() * 9000000);
-          };
-
-          const batch = await ctx.db.batch.create({
+  
+      try {
+        const result = await ctx.db.$transaction(async (tx) => {
+          // Step 1: Create Invoice
+          const createdInvoice = await tx.invoice.create({
             data: {
-              quantity: lineItems[0]?.quantity ?? 0,
-              batch_number: generateBatchNumber(),
-              restock_clerk: invoice.invoice_clerk,
+              customer_id: invoice.customer_id,
+              invoice_clerk: invoice.invoice_clerk,
+              total_amount: invoice.total_amount,
+              discount: invoice.discount,
+              status: invoice.status,
+              payment_term_id: invoice.payment_term_id,
+              notes: invoice.customerNotes,
             },
           });
-
-          let batchVariant;
-
-          if (lineItems[0]?.variant_id !== undefined) {
-            batchVariant = await ctx.db.batchVariant.create({
-              data: {
-                batch_id: batch.batch_id,
-                variant_id: lineItems[0].variant_id, // Safe because we checked for undefined
-                quantity: lineItems[0].quantity ?? 0,
-              },
-            });
-          } else {
-            console.warn(
-              "Skipping batchVariant creation due to undefined variant_id",
+  
+          const invoiceId = createdInvoice.invoice_id;
+  
+          // Step 2: Handle Auto-Restock cases
+          if (invoice.isBatchAutoRestock || invoice.isAutoRestock) {
+            console.log(
+              invoice.isBatchAutoRestock
+                ? "Batch Auto-Restock Enabled - Skipping stock logic"
+                : "Auto Restock triggered!"
             );
-          }
-
-          return { createdInvoice, createdLineItems, batch, batchVariant };
-        }
-
-        else if (invoice.isAutoRestock) { 
-          console.log("Auto Restock triggered!")
-
-          const createdLineItems = await ctx.db.line_Item.createMany({
-            data: lineItems.map((item) => ({
-              invoice_id: invoiceId,
-              variant_id: item.variant_id,
-              quantity: item.quantity,
-              unit_price: item.unit_price,
-              total_price: item.total_price,
-              unit_id: item.unit_id,
-            })),
-          });
-
-          const generateBatchNumber = () => {
-            return Math.floor(1000000 + Math.random() * 9000000);
-          }
-
-          const batch = await ctx.db.batch.create({
-            data: {
-              quantity: (lineItems[0]?.quantity ?? 0) - (lineItems[0]?.available ?? 0),
-              batch_number: generateBatchNumber(),
-              restock_clerk: invoice.invoice_clerk,
-            },
-          });
-
-          let batchVariant;
-
-          if (lineItems[0]?.variant_id !== undefined) {
-            batchVariant = await ctx.db.batchVariant.create({
+  
+            const createdLineItems = await tx.line_Item.createMany({
+              data: lineItems.map((item) => ({
+                invoice_id: invoiceId,
+                variant_id: item.variant_id,
+                quantity: item.quantity,
+                unit_price: item.unit_price,
+                total_price: item.total_price,
+                unit_id: item.unit_id,
+              })),
+            });
+  
+            const generateBatchNumber = () =>
+              Math.floor(1000000 + Math.random() * 9000000);
+  
+            const batchQuantity =
+              invoice.isBatchAutoRestock
+                ? lineItems[0]?.quantity ?? 0
+                : (lineItems[0]?.quantity ?? 0) -
+                  (lineItems[0]?.available ?? 0);
+  
+            const batch = await tx.batch.create({
               data: {
-                batch_id: batch.batch_id,
-                variant_id: lineItems[0].variant_id, // Safe because we checked for undefined
-                quantity: (lineItems[0]?.quantity - lineItems[0]?.available),
+                quantity: batchQuantity,
+                batch_number: generateBatchNumber(),
+                restock_clerk: invoice.invoice_clerk,
               },
             });
-          } else {
-            console.warn(
-              "Skipping batchVariant creation due to undefined variant_id",
-            );
-          }
-
-          return { createdInvoice, createdLineItems, batch, batchVariant };
-
-
-        }
-
-        // Step 3: Process each Line Item when isBatchAutoRestock is FALSE
-        const createdLineItems = await Promise.all(
-          lineItems.map(async (item) => {
-            let invoiceItemQty = item.quantity;
-            const unitId = item.unit_id;
-            const supplier_unit_id = item.supplier_unit_id;
-
-            // Find the Supplier Unit
-            const supplierUnit = await ctx.db.supplierUnit.findFirst({
-              where: { supplier_unit_id, unit_id: unitId },
-            });
-
-            if (!supplierUnit) {
-              throw new Error(
-                `Supplier unit not found for variant ID: ${item.variant_id}`,
-              );
-            }
-
-            const supplierUnitList = await ctx.db.supplierUnit.findMany({
-              where: { batch_variant_id: supplierUnit.batch_variant_id },
-              orderBy: { supplier_unit_id: "desc" },
-            });
-
-            const conversionList = await ctx.db.conversionRate.findMany({
-              where: {
-                supplier_unit_id: {
-                  in: supplierUnitList.map((unit) => unit.supplier_unit_id),
-                },
-              },
-            });
-
-            console.log("Processing Item:", item);
-
-            if (invoice.isAutoRestock) {
-              await ctx.db.supplierUnit.update({
-                where: { supplier_unit_id: supplierUnit.supplier_unit_id },
-                data: { quantity_per_unit: 0 },
-              });
-            } else {
-              while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
-                if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
-                  await ctx.db.supplierUnit.update({
-                    where: { supplier_unit_id: supplierUnit.supplier_unit_id },
-                    data: { quantity_per_unit: { decrement: invoiceItemQty } },
-                  });
-                  invoiceItemQty = 0;
-                } else {
-                  // Find conversion for higher unit
-                  const conversion = conversionList.find(
-                    (c) => c.to_unit_id === supplierUnit.unit_id,
-                  );
-
-                  if (!conversion) {
-                    throw new Error(
-                      `Insufficient stock and no higher unit available for variant ID: ${item.variant_id}`,
-                    );
-                  }
-
-                  const higherUnit = supplierUnitList.find(
-                    (su) => su.unit_id === conversion.from_unit_id,
-                  );
-
-                  if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
-                    throw new Error(
-                      `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
-                    );
-                  }
-
-                  // Deduct from higher unit
-                  await ctx.db.supplierUnit.update({
-                    where: { supplier_unit_id: higherUnit.supplier_unit_id },
-                    data: { quantity_per_unit: { decrement: 1 } },
-                  });
-
-                  // Convert quantity and update supplierUnit
-                  supplierUnit.quantity_per_unit += conversion.conversion_rate;
-                }
-              }
-
-              await ctx.db.supplierUnit.update({
-                where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+  
+            if (lineItems[0]?.variant_id !== undefined) {
+              const batchVariant = await tx.batchVariant.create({
                 data: {
-                  quantity_per_unit:
-                    supplierUnit.quantity_per_unit - invoiceItemQty,
+                  batch_id: batch.batch_id,
+                  variant_id: lineItems[0].variant_id,
+                  quantity: batchQuantity,
                 },
               });
+  
+              return { createdInvoice, createdLineItems, batch, batchVariant };
+            } else {
+              console.warn(
+                "Skipping batchVariant creation due to undefined variant_id"
+              );
+              return { createdInvoice, createdLineItems, batch };
             }
-
-            const allZeroQuantity =
-              (await ctx.db.supplierUnit.count({
-                where: {
-                  batch_variant_id: supplierUnit.batch_variant_id,
-                  quantity_per_unit: { gt: 0 },
-                },
-              })) === 0;
-
-            if (allZeroQuantity) {
-              await ctx.db.batchVariant.delete({
+          }
+  
+          // Step 3: Process Line Items when no auto-restock
+          const createdLineItems = await Promise.all(
+            lineItems.map(async (item) => {
+              let invoiceItemQty = item.quantity;
+              const unitId = item.unit_id;
+              const supplier_unit_id = item.supplier_unit_id;
+  
+              const supplierUnit = await tx.supplierUnit.findFirst({
+                where: { supplier_unit_id, unit_id: unitId },
+              });
+  
+              if (!supplierUnit) {
+                throw new Error(
+                  `Supplier unit not found for variant ID: ${item.variant_id}`
+                );
+              }
+  
+              const supplierUnitList = await tx.supplierUnit.findMany({
                 where: { batch_variant_id: supplierUnit.batch_variant_id },
+                orderBy: { supplier_unit_id: "desc" },
               });
-            }
-
-            // Create Line Item
-            // return ctx.db.line_Item.create({
-            //   data: {
-            //     invoice_id: invoiceId,
-            //     variant_id: item.variant_id,
-            //     quantity: item.quantity,
-            //     unit_price: item.unit_price,
-            //     total_price: item.total_price,
-            //     unit_id: unitId,
-            //   },
-            // });
-          }),
-        );
-
-        return { createdInvoice, createdLineItems };
-      });
-
-      return result;
-    }),
+  
+              const conversionList = await tx.conversionRate.findMany({
+                where: {
+                  supplier_unit_id: {
+                    in: supplierUnitList.map((unit) => unit.supplier_unit_id),
+                  },
+                },
+              });
+  
+              console.log("Processing Item:", item);
+  
+              if (invoice.isAutoRestock) {
+                await tx.supplierUnit.update({
+                  where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+                  data: { quantity_per_unit: 0 },
+                });
+              } else {
+                while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
+                  if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
+                    await tx.supplierUnit.update({
+                      where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+                      data: { quantity_per_unit: { decrement: invoiceItemQty } },
+                    });
+                    invoiceItemQty = 0;
+                  } else {
+                    const conversion = conversionList.find(
+                      (c) => c.to_unit_id === supplierUnit.unit_id
+                    );
+  
+                    if (!conversion) {
+                      throw new Error(
+                        `Insufficient stock and no higher unit available for variant ID: ${item.variant_id}`
+                      );
+                    }
+  
+                    const higherUnit = supplierUnitList.find(
+                      (su) => su.unit_id === conversion.from_unit_id
+                    );
+  
+                    if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
+                      throw new Error(
+                        `Insufficient stock in higher unit for variant ID: ${item.variant_id}`
+                      );
+                    }
+  
+                    await tx.supplierUnit.update({
+                      where: { supplier_unit_id: higherUnit.supplier_unit_id },
+                      data: { quantity_per_unit: { decrement: 1 } },
+                    });
+  
+                    supplierUnit.quantity_per_unit += conversion.conversion_rate;
+                  }
+                }
+  
+                await tx.supplierUnit.update({
+                  where: { supplier_unit_id: supplierUnit.supplier_unit_id },
+                  data: {
+                    quantity_per_unit:
+                      supplierUnit.quantity_per_unit - invoiceItemQty,
+                  },
+                });
+              }
+  
+              const allZeroQuantity =
+                (await tx.supplierUnit.count({
+                  where: {
+                    batch_variant_id: supplierUnit.batch_variant_id,
+                    quantity_per_unit: { gt: 0 },
+                  },
+                })) === 0;
+  
+              if (allZeroQuantity) {
+                await tx.batchVariant.delete({
+                  where: { batch_variant_id: supplierUnit.batch_variant_id },
+                });
+              }
+  
+              return tx.line_Item.create({
+                data: {
+                  invoice_id: invoiceId,
+                  variant_id: item.variant_id,
+                  quantity: item.quantity,
+                  unit_price: item.unit_price,
+                  total_price: item.total_price,
+                  unit_id: unitId,
+                },
+              });
+            })
+          );
+  
+          return { createdInvoice, createdLineItems };
+        });
+  
+        return result;
+      } catch (error) {
+        console.error("Transaction failed, rolling back:", error);
+        throw new Error("Invoice creation failed. Please try again.");
+      }
+    })
+  
 
     // voidItem: publicProcedure.input()
 });

@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowLeft, CornerDownRight, Plus, X } from 'lucide-react'
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Button } from '~/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Input } from '~/components/ui/input'
@@ -25,6 +25,10 @@ interface StockCardV2Props {
 		};
 	};
 	onRemove: () => void;
+	onStockChange: (inventoryId: number, totalStock: string) => void;
+	onPriceChange: (inventoryId: number, price: string) => void;
+	onUnitChange: (inventoryId: number, unit: string) => void;
+	onConversionChange: (conversions: { qty: string; unit: string; price: string; }[]) => void;
 }
 
 interface ConversionData {
@@ -35,7 +39,9 @@ interface ConversionData {
 	price: string;
 }
 
-const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
+const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChange, onConversionChange }: StockCardV2Props) => {
+	const [mainStock, setMainStock] = useState("0")
+	const [mainPrice, setMainPrice] = useState("0.00")
 	const [inputValue, setInputValue] = useState("")
 	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1)
 	const [conversions, setConversions] = useState<ConversionData[]>([])
@@ -59,6 +65,7 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 		setInputValue(unitName)
 		setHighlightedIndex(-1)
 		setIsDropdownVisible(false)
+		onUnitChange(item.inventory_id, unitName)
 		if (inputRef.current) {
 			inputRef.current.blur()
 		}
@@ -108,6 +115,41 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 		}
 	}
 
+	const handleUpdateConversion = useCallback((updatedData: ConversionData) => {
+		setConversions(prev => {
+			const newConversions = prev.map(conv =>
+				conv.id === updatedData.id ? updatedData : conv
+			);
+			return newConversions;
+		});
+	}, []);
+
+	// Move the conversion data update to a separate effect with a debounce
+	useEffect(() => {
+		const timeoutId = setTimeout(() => {
+			const conversionData = conversions.map(conv => ({
+				qty: conv.qty,
+				unit: conv.unit,
+				price: conv.price
+			}));
+			onConversionChange(conversionData);
+		}, 100); // Small delay to prevent rapid updates
+
+		return () => clearTimeout(timeoutId);
+	}, [conversions, onConversionChange]);
+
+	// Simplify the stock update effect
+	useEffect(() => {
+		const timeoutId = setTimeout(() => {
+			const totalStockValue = Number(mainStock) + conversions.reduce((sum, conv) =>
+				sum + Number(conv.stock), 0
+			);
+			onStockChange(item.inventory_id, totalStockValue.toString());
+		}, 100);
+
+		return () => clearTimeout(timeoutId);
+	}, [mainStock, conversions, item.inventory_id, onStockChange]);
+
 	const handleAddConversion = () => {
 		setConversions(prev => [...prev, {
 			id: nextId,
@@ -115,21 +157,13 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 			unit: "",
 			stock: "0",
 			price: "0.00"
-		}])
-		setNextId(prev => prev + 1)
-	}
+		}]);
+		setNextId(prev => prev + 1);
+	};
 
 	const handleRemoveConversion = (id: number) => {
-		setConversions(prev => prev.filter(conv => conv.id !== id))
-	}
-
-	const handleUpdateConversion = (updatedData: ConversionData) => {
-		setConversions(prev =>
-			prev.map(conv =>
-				conv.id === updatedData.id ? updatedData : conv
-			)
-		)
-	}
+		setConversions(prev => prev.filter(conv => conv.id !== id));
+	};
 
 	return (
 		<div className='bg-slate-100 p-4 rounded-lg'>
@@ -188,7 +222,7 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 									<ScrollArea className="max-h-[200px]">
 										{filteredUnits.map((unitName, index) => (
 											<div
-												key={index}
+												key={unitName}
 												className={`cursor-pointer px-4 py-2 hover:bg-slate-100 ${highlightedIndex === index ? "bg-slate-200" : ""
 													}`}
 												onMouseDown={() => handleSelectUnit(unitName)}
@@ -224,27 +258,22 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 								<Input
 									type="number"
 									step="1"
-									min="0"
+									min="1"
 									className="bg-white text-slate-700 shadow-none"
 									placeholder='Stock'
-									defaultValue={0}
+									value={mainStock}
 									onKeyDown={(e) => {
 										if (e.key === '.') {
 											e.preventDefault();
 										}
 									}}
 									onChange={(e) => {
-										const value = e.target.value;
-										if (!value) {
-											e.target.value = "0";
-										} else {
-											// Remove any decimals and non-numeric characters
-											e.target.value = value.replace(/[^\d]/g, '');
-										}
+										const value = e.target.value.replace(/[^\d]/g, '');
+										setMainStock(value || "1");
 									}}
 									onBlur={(e) => {
 										if (!e.target.value) {
-											e.target.value = "0";
+											setMainStock("1");
 										}
 									}}
 								/>
@@ -253,22 +282,25 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 								<Label className="text-sm text-slate-400">Unit Price</Label>
 								<Input
 									type="number"
-									step="0.01"
+									step="0.25"
 									min="0"
 									className="bg-white text-slate-700 shadow-none"
 									placeholder='Price'
-									defaultValue={0}
+									value={mainPrice}
 									onChange={(e) => {
-										if (!e.target.value) {
-											e.target.value = "0.00";
-										}
+										const value = e.target.value || "0.00";
+										setMainPrice(value);
+										onPriceChange(item.inventory_id, value);
 									}}
 									onBlur={(e) => {
 										if (!e.target.value) {
-											e.target.value = "0";
+											const value = "0.00";
+											setMainPrice(value);
+											onPriceChange(item.inventory_id, value);
 										} else {
-											const value = Number.parseFloat(e.target.value);
-											e.target.value = value.toFixed(2);
+											const value = Number.parseFloat(e.target.value).toFixed(2);
+											setMainPrice(value);
+											onPriceChange(item.inventory_id, value);
 										}
 									}}
 								/>
@@ -292,7 +324,7 @@ const StockCardV2 = ({ item, onRemove }: StockCardV2Props) => {
 					</div>
 				</div>
 			</div>
-			<Separator className='mt-4 h-px bg-slate-300' />
+			<div className="mt-4 h-[1px] border-t-[3px] border-dashed border-slate-300" />
 
 			<ScrollArea className='h-40'>
 				<div className="px-1 pb-1">

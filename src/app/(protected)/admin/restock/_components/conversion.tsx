@@ -1,5 +1,5 @@
 import { CornerDownRight, X } from 'lucide-react'
-import React, { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { Button } from '~/components/ui/button'
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
@@ -36,10 +36,21 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 		)
 		: []
 
+	// Update inputValue when data.unit changes from parent
+	useEffect(() => {
+		if (data.unit !== inputValue) {
+			setInputValue(data.unit);
+		}
+	}, [data.unit, inputValue]);
+
 	const handleSelectUnit = (unitName: string) => {
 		setInputValue(unitName)
 		setHighlightedIndex(-1)
 		setIsDropdownVisible(false)
+		onUpdate({
+			...data,
+			unit: unitName
+		})
 		if (inputRef.current) {
 			inputRef.current.blur()
 		}
@@ -108,31 +119,18 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 										<div className="flex w-full">
 											<div className="w-1/2">
 												<Input
-													className="bg-white shadow-none rounded-r-none text-slate-700"
-													placeholder='Qty'
 													type="number"
-													min="1"
-													step="1"
-													defaultValue={1}
-													onKeyDown={(e) => {
-														if (e.key === '.') {
-															e.preventDefault();
-														}
-													}}
+													step="0"
+													min="0"
+													className="bg-white text-slate-700 shadow-none rounded-r-none"
+													placeholder='Stock'
+													value={data.qty}
 													onChange={(e) => {
-														const value = e.target.value;
-														if (!value) {
-															onUpdate({ ...data, qty: "1" });
-														} else {
-															// Remove any decimals and non-numeric characters
-															const cleanValue = value.replace(/[^\d]/g, '');
-															onUpdate({ ...data, qty: cleanValue });
-														}
-													}}
-													onBlur={(e) => {
-														if (!e.target.value) {
-															onUpdate({ ...data, qty: "1" });
-														}
+														const value = e.target.value.replace(/[^\d]/g, '') || "0";
+														onUpdate({
+															...data,
+															qty: value
+														});
 													}}
 												/>
 											</div>
@@ -144,24 +142,34 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 													placeholder='Unit'
 													value={inputValue}
 													onChange={(e) => {
-														const value = e.target.value
+														const value = e.target.value;
 														if (/^[a-zA-Z ]*$/.test(value)) {
-															setInputValue(value)
-															setHighlightedIndex(-1)
-															setIsDropdownVisible(true)
-														}
-													}}
-													onFocus={() => {
-														if (inputValue && filteredUnits.length > 0) {
-															setIsDropdownVisible(true)
+															setInputValue(value);
+															setHighlightedIndex(-1);
+															setIsDropdownVisible(true);
+															// Update parent immediately with the new value
+															onUpdate({
+																...data,
+																unit: value
+															});
 														}
 													}}
 													onBlur={() => {
 														setTimeout(() => {
 															if (!dropdownRef.current?.contains(document.activeElement)) {
-																setIsDropdownVisible(false)
+																setIsDropdownVisible(false);
+																// Only update parent if value has changed and is valid
+																if (inputValue !== data.unit && unitOptions.includes(inputValue)) {
+																	onUpdate({
+																		...data,
+																		unit: inputValue
+																	});
+																} else if (!unitOptions.includes(inputValue)) {
+																	// Reset to last valid value if current value is not valid
+																	setInputValue(data.unit);
+																}
 															}
-														}, 100)
+														}, 100);
 													}}
 													onKeyDown={handleKeyDown}
 												/>
@@ -169,22 +177,19 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 												{isDropdownVisible && inputValue && filteredUnits.length > 0 && (
 													<div
 														ref={dropdownRef}
-														className="absolute left-0 top-full z-[9999] mt-1 w-full"
+														className="fixed z-[9999] mt-1"
 														style={{
-															position: 'fixed',
-															transform: 'translateY(0)',
-															width: inputRef.current?.offsetWidth + 'px',
-															left: inputRef.current?.getBoundingClientRect().left + 'px',
-															top: (inputRef.current?.getBoundingClientRect().bottom || 0) + 4 + 'px'
+															top: `${(inputRef.current?.getBoundingClientRect().bottom || 0) + 4}px`,
+															left: `${inputRef.current?.getBoundingClientRect().left || 0}px`,
+															width: `${inputRef.current?.offsetWidth || 0}px`
 														}}
 													>
-														<div className="bg-white rounded-md shadow-lg">
+														<div className="bg-white rounded-md shadow-lg border border-slate-200">
 															<ScrollArea className="max-h-[200px]">
 																{filteredUnits.map((unitName, index) => (
 																	<div
-																		key={index}
-																		className={`cursor-pointer px-4 py-2 hover:bg-slate-100 ${highlightedIndex === index ? "bg-slate-200" : ""
-																			}`}
+																		key={unitName}
+																		className={`cursor-pointer px-4 py-2 hover:bg-slate-100 ${highlightedIndex === index ? "bg-slate-200" : ""}`}
 																		onMouseDown={() => handleSelectUnit(unitName)}
 																	>
 																		{unitName}
@@ -213,25 +218,13 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 								min="0"
 								className="bg-white text-slate-700 shadow-none"
 								placeholder='Stock'
-								defaultValue={0}
-								onKeyDown={(e) => {
-									if (e.key === '.') {
-										e.preventDefault();
-									}
-								}}
+								value={data.stock}
 								onChange={(e) => {
-									const value = e.target.value;
-									if (!value) {
-										e.target.value = "0";
-									} else {
-										// Remove any decimals and non-numeric characters
-										e.target.value = value.replace(/[^\d]/g, '');
-									}
-								}}
-								onBlur={(e) => {
-									if (!e.target.value) {
-										e.target.value = "0";
-									}
+									const value = e.target.value.replace(/[^\d]/g, '') || "0";
+									onUpdate({
+										...data,
+										stock: value
+									});
 								}}
 							/>
 						</div>
@@ -239,23 +232,24 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 							<Label className="text-sm text-slate-400">Unit Price</Label>
 							<Input
 								type="number"
-								step="0.01"
+								step="0.25"
 								min="0"
 								className="bg-white text-slate-700 shadow-none"
 								placeholder='Price'
-								defaultValue={0}
+								value={data.price}
 								onChange={(e) => {
-									if (!e.target.value) {
-										e.target.value = "0.00";
-									}
+									const value = e.target.value || "0.00";
+									onUpdate({
+										...data,
+										price: value
+									});
 								}}
 								onBlur={(e) => {
-									if (!e.target.value) {
-										e.target.value = "0";
-									} else {
-										const value = Number.parseFloat(e.target.value);
-										e.target.value = value.toFixed(2);
-									}
+									const value = e.target.value ? Number(e.target.value).toFixed(2) : "0.00";
+									onUpdate({
+										...data,
+										price: value
+									});
 								}}
 							/>
 						</div>
@@ -263,10 +257,7 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 							className="flex h-10 w-12 items-center justify-center !p-1 bg-slate-100 hover:!bg-slate-200/50"
 							onClick={onRemove}
 						>
-							<X
-								className="!h-5 !w-5 text-slate-400"
-								strokeWidth={2.5}
-							/>
+							<X className="!h-5 !w-5 text-slate-400" strokeWidth={2.5} />
 						</Button>
 					</div>
 				</div>

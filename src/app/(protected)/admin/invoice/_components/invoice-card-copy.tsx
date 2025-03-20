@@ -125,6 +125,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   isInputFocused,
   units,
 }) => {
+  const [availableUnits, setAvailableUnits] = useState<number[]>([]);
+
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState({
     price: 0,
@@ -154,35 +156,76 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   );
   const [isBatchAutoRestock, setIsBatchAutoRestock] = useState<boolean>(false);
 
+  const buildHierarchy = (supplierUnits: SupplierUnit[]): number[] => {
+    const conversions = supplierUnits.flatMap(su =>
+        su.ConversionRate.map(cr => ({
+          from: cr.from_unit_id,
+          to: cr.to_unit_id,
+        }))
+    );
+
+    const fromUnits = new Set(conversions.map(c => c.from));
+    const toUnits = new Set(conversions.map(c => c.to));
+
+    let rootUnitId: number | undefined;
+    for (const from of fromUnits) {
+      if (!toUnits.has(from)) {
+        rootUnitId = from;
+        break;
+      }
+    }
+
+    if (!rootUnitId) {
+      return Array.from(new Set(supplierUnits.map(su => su.unit.unit_id)));
+    }
+
+    const hierarchy: number[] = [rootUnitId];
+    let currentUnit = rootUnitId;
+
+    while (true) {
+      const nextConversion = conversions.find(c => c.from === currentUnit);
+      if (!nextConversion) break;
+      hierarchy.push(nextConversion.to);
+      currentUnit = nextConversion.to;
+    }
+
+    return hierarchy;
+  };
+
+  const longestCommonSuffix = (a: number[], b: number[]): number[] => {
+    let i = a.length - 1;
+    let j = b.length - 1;
+    const suffix: number[] = [];
+
+    while (i >= 0 && j >= 0 && a[i] === b[j]) {
+      suffix.unshift(a[i]);
+      i--;
+      j--;
+    }
+
+    return suffix;
+  };
+
   const getBatchColor = (
-    supplierUnits: {
-      price: number;
-      quantity_per_unit: number;
-      unit_id: number;
-      unit: { name: string; unit_id: number };
-    }[],
-    currentBatchBasis?: SupplierBatch,
+      supplierUnits: SupplierUnit[],
+      currentBatchBasis?: SupplierBatch,
   ) => {
     if (!currentBatchBasis) return "bg-yellow/30";
 
-    const batchBasisUnitIds = currentBatchBasis.supplierUnits.map(
-      (unit) => unit.unit_id,
-    );
-    const currentBatchUnitIds = supplierUnits.map((unit) => unit.unit_id);
+    const basisHierarchy = buildHierarchy(currentBatchBasis.supplierUnits);
+    const currentHierarchy = buildHierarchy(supplierUnits);
 
-    const hasExactSameOrder =
-      batchBasisUnitIds.length === currentBatchUnitIds.length &&
-      batchBasisUnitIds.every((id, index) => id === currentBatchUnitIds[index]);
+    const basisLowest = basisHierarchy[basisHierarchy.length - 1];
+    const currentLowest = currentHierarchy[currentHierarchy.length - 1];
+    if (basisLowest !== currentLowest) return "bg-red/80";
 
-    const hasAtLeastOneSameUnit = currentBatchUnitIds.some((id) =>
-      batchBasisUnitIds.includes(id),
-    );
+    const isExactMatch = basisHierarchy.length === currentHierarchy.length &&
+        basisHierarchy.every((id, i) => id === currentHierarchy[i]);
 
-    const hasPartialMatch = hasAtLeastOneSameUnit && !hasExactSameOrder;
+    if (isExactMatch) return "bg-green/50";
 
-    if (hasExactSameOrder) return "bg-green/50";
-    if (hasPartialMatch) return "bg-yellow-300";
-    return "bg-red/80";
+    const commonSuffix = longestCommonSuffix(basisHierarchy, currentHierarchy);
+    return commonSuffix.length > 0 ? "bg-yellow-300" : "bg-red/80";
   };
 
   const handlePriceInput = (price: number, batch: number) => {
@@ -251,6 +294,24 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       supplier_unit_id,
     });
   };
+
+  useEffect(() => {
+    if (selectedBatches.length === 0) {
+      setAvailableUnits([]);
+      return;
+    }
+
+    const hierarchies = selectedBatches.map(batch =>
+        buildHierarchy(batch.supplierUnits)
+    );
+
+    let commonSuffix = hierarchies[0] || [];
+    for (const hierarchy of hierarchies.slice(1)) {
+      commonSuffix = longestCommonSuffix(commonSuffix, hierarchy);
+    }
+
+    setAvailableUnits(commonSuffix);
+  }, [selectedBatches]);
 
   useEffect(() => {
     BatchAutoRestock(isBatchAutoRestock);
@@ -582,47 +643,45 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {isBatchAutoRestock && units?.length
-                        ? units.map((u) => (
-                            <SelectItem
-                              key={u.unit_id}
-                              value={JSON.stringify({
-                                id: u.unit_id,
-                                name: u.name,
-                                supplier_unit_id: undefined,
-                              })}
-                            >
-                              {u.name}
-                            </SelectItem>
+                      {isBatchAutoRestock && units?.length ? (
+                          units.map((u) => (
+                              <SelectItem
+                                  key={u.unit_id}
+                                  value={JSON.stringify({
+                                    id: u.unit_id,
+                                    name: u.name,
+                                    supplier_unit_id: undefined,
+                                  })}
+                              >
+                                {u.name}
+                              </SelectItem>
                           ))
-                        : selectedBatches?.length
-                          ? selectedBatches
-                              .flatMap((batch, index) =>
-                                batch.supplierUnits.map((unit) => ({
-                                  supplier_unit_id: unit.supplier_unit_id,
-                                  name: unit.unit.name,
-                                  id: unit.unit.unit_id,
-                                  quantity: unit.quantity_per_unit,
-                                  batch: index + 1,
-                                })),
+                      ) : selectedBatches?.length ? (
+                          selectedBatches
+                              .flatMap((batch) =>
+                                  batch.supplierUnits
+                                      .filter((su) => availableUnits.includes(su.unit.unit_id))
+                                      .map((unit) => ({
+                                        supplier_unit_id: unit.supplier_unit_id,
+                                        name: unit.unit.name,
+                                        id: unit.unit.unit_id,
+                                        quantity: unit.quantity_per_unit,
+                                        batch: batch.index + 1,
+                                      }))
                               )
                               .filter(
-                                (unit, index, self) =>
-                                  self.findIndex(
-                                    (u) =>
-                                      u.name.toLowerCase() ===
-                                      unit.name.toLowerCase(),
-                                  ) === index,
+                                  (unit, index, self) =>
+                                      self.findIndex((u) => u.id === unit.id) === index
                               )
                               .map((uniqueUnit) => (
-                                <SelectItem
-                                  key={uniqueUnit.id}
-                                  value={JSON.stringify(uniqueUnit)}
-                                >
-                                  {uniqueUnit.name}
-                                </SelectItem>
+                                  <SelectItem
+                                      key={uniqueUnit.id}
+                                      value={JSON.stringify(uniqueUnit)}
+                                  >
+                                    {uniqueUnit.name}
+                                  </SelectItem>
                               ))
-                          : null}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>

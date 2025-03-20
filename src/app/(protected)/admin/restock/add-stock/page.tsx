@@ -1,9 +1,9 @@
 "use client";
 
-import { ArrowLeft, ArrowRight, Search } from "lucide-react";
+import { ArrowLeft, ArrowRight, Search, CornerDownRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useEffect, useState } from "react";
+import { useState, useCallback } from "react";
 import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 import {
@@ -13,8 +13,13 @@ import {
   DialogTrigger,
 } from "~/components/ui/dialog";
 import { Dialog } from "~/components/ui/dialog-transparent";
-import { Input } from "~/components/ui/input";
+import {
+  HoverCard,
+  HoverCardContent,
+  HoverCardTrigger,
+} from "~/components/ui/hover-card";
 import { Label } from "~/components/ui/label";
+import { ScrollArea } from "~/components/ui/scroll-area";
 import {
   Table,
   TableBody,
@@ -24,13 +29,12 @@ import {
   TableRow,
 } from "~/components/ui/table";
 import { api } from "~/trpc/react";
-import {
-  HoverCard,
-  HoverCardContent,
-  HoverCardTrigger,
-} from "../_components/Hover-Card";
-import StockCard from "../_components/stock-card";
+import ItemSearch from "../_components/item-search";
+import StockCardV2 from "../_components/stock-card-v2";
 import SupplierDropdown from "../_components/Supplier-Dropdown";
+import { Separator } from "~/components/ui/separator";
+import { Toaster } from "~/components/ui/sonner";
+import { toast } from 'sonner';
 
 // Define the data structure for inventory items
 
@@ -63,12 +67,34 @@ interface Supplier {
   company: string | null;
 }
 
+interface StockCardV2Props {
+  item: {
+    inventory_id: number;
+    variant: {
+      name: string | undefined;
+      item: {
+        name: string;
+        brand: {
+          name: string;
+        };
+      };
+    };
+  };
+  onRemove: () => void;
+  onStockChange: (inventoryId: number, totalStock: string) => void;
+  onPriceChange: (inventoryId: number, price: string) => void;
+  onUnitChange: (inventoryId: number, unit: string) => void;
+  onConversionChange: (conversions: {
+    qty: string;
+    unit: string;
+    price: string;
+  }[]) => void;
+}
+
 const InvoiceAddStock = () => {
   const router = useRouter();
   const session = useSession();
 
-  const [searchTerm, setSearchTerm] = useState<string>("");
-  const [filteredItems, setFilteredItems] = useState<InventoryItem[]>([]);
   const [selectedItems, setSelectedItems] = useState<InventoryItem[]>([]);
   const [stock, setStock] = useState<Record<number, string>>({}); // Stock values as strings
   const [price, setPrice] = useState<Record<number, string>>({});
@@ -78,6 +104,11 @@ const InvoiceAddStock = () => {
   const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
   const [dialogType, setDialogType] = useState("");
   const [accordionStates, setAccordionStates] = useState<Record<number, boolean>>({});
+  const [conversionStates, setConversionStates] = useState<Record<number, {
+    qty: string;
+    unit: string;
+    price: string;
+  }[]>>({});
 
   const {
     data: inventoryItems,
@@ -97,25 +128,6 @@ const InvoiceAddStock = () => {
   // Update the state type
   const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
 
-  // Filter inventory items based on the search term
-  useEffect(() => {
-    if (searchTerm && inventoryItems) {
-      const results = inventoryItems.filter(
-        (item: InventoryItem) =>
-          item.variant.item.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()) ||
-          item.variant.name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-          item.variant.item.brand.name
-            .toLowerCase()
-            .includes(searchTerm.toLowerCase()),
-      );
-      setFilteredItems(results);
-    } else {
-      setFilteredItems([]);
-    }
-  }, [searchTerm, inventoryItems]);
-
   // Handle selecting an item
   const handleSelectItem = (item: InventoryItem) => {
     if (
@@ -126,7 +138,6 @@ const InvoiceAddStock = () => {
       setSelectedItems([...selectedItems, item]);
       setStock((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
     }
-    setSearchTerm(""); // Clear the search term to hide the dropdown
   };
 
   // Handle removing an item
@@ -141,12 +152,12 @@ const InvoiceAddStock = () => {
     });
   };
 
-  const handleStockChange = (inventoryId: number, newStock: string) => {
+  const handleStockChange = useCallback((inventoryId: number, newStock: string) => {
     setStock((prev) => ({
       ...prev,
-      [inventoryId]: newStock, // Update stock for the specific item
+      [inventoryId]: newStock,
     }));
-  };
+  }, []); // Empty dependencies since it doesn't depend on any values
 
   const totalStock = (inventoryId: number) => {
     const stockValue = Number(stock[inventoryId] || 0);
@@ -166,35 +177,35 @@ const InvoiceAddStock = () => {
   );
 
   const getConversionData = (inventoryId: number) => {
-    const itemStockUnits = stockUnits[inventoryId] || [];
+    const mainUnit = unit[inventoryId] || "";
+    const mainPrice = price[inventoryId] || "0.00";
+    const itemConversions = conversionStates[inventoryId] || [];
 
-    return itemStockUnits
-      .filter(
-        (unit: StockUnit) => unit.conversionQty?.toString().trim() && unit.conversionUnit?.trim(),
-      )
-      .map((unit: StockUnit, index: number) => {
-        const previousUnit = index > 0 ? itemStockUnits[index - 1] : null;
-        const currentUnit = previousUnit
-          ? previousUnit.conversionUnit
-          : unit.unit;
-        return (
-          <div key={index} className="flex items-center gap-2">
-            <p>{currentUnit}</p>
-            <ArrowRight className="h-4 w-4" />
-            <p>
-              <span>{unit.conversionQty}</span> {unit.conversionUnit}
-            </p>
+    return (
+      <div className="flex flex-col gap-1">
+        <div className='flex justify-between items-end w-full'>
+          <p className='text-slate-500 text-sm'>{mainUnit} <span className='ml-2 text-slate-400 text-sm'>main</span></p>
+          <p className='text-slate-500 text-sm'>₱{Number(mainPrice).toFixed(2)}</p>
+        </div>
+        {itemConversions.map((conv) => (
+          <div key={`${conv.qty}-${conv.unit}-${conv.price}`} className='flex justify-between items-end w-full'>
+            <div className="flex items-center gap-2">
+              <CornerDownRight className='h-3 w-3 text-slate-400' strokeWidth={2.5} />
+              <p className='text-slate-500 text-sm'>{conv.qty} {conv.unit}</p>
+            </div>
+            <p className='text-slate-500 text-sm'>₱{Number(conv.price || 0).toFixed(2)}</p>
           </div>
-        );
-      });
+        ))}
+      </div>
+    );
   };
 
   // Modified: Get number of conversions dynamically
   const getConversionCount = (inventoryId: number) => {
-    const itemStockUnits = stockUnits[inventoryId] || [];
-    // Only count rows where both conversionQty and conversionUnit are filled
-    return itemStockUnits.filter(
-      (unit: StockUnit) => unit.conversionQty?.toString().trim() && unit.conversionUnit?.trim(),
+    const itemConversions = conversionStates[inventoryId] || [];
+    // Only count rows where both qty and unit are filled
+    return itemConversions.filter(conv =>
+      conv.qty?.trim() !== "" && conv.unit?.trim() !== ""
     ).length;
   };
 
@@ -207,7 +218,7 @@ const InvoiceAddStock = () => {
   };
   const handleStockUnitsChange = (
     inventoryId: number,
-    newStockUnits: any[],
+    newStockUnits: StockUnit[],
   ) => {
     setStockUnits((prev) => {
       const currentUnits = prev[inventoryId];
@@ -225,7 +236,7 @@ const InvoiceAddStock = () => {
   };
 
   const logData = () => {
-    selectedItems.forEach((item) => {
+    for (const item of selectedItems) {
       console.log(`Inventory ID: ${item.inventory_id}`); // Log inventory ID
       console.log(`StockUnit for item ${item.variant.item.name}:`);
       console.log(`Stock Value: ${stock[item.inventory_id] || ""}`);
@@ -246,7 +257,7 @@ const InvoiceAddStock = () => {
         }
         console.log(`StockUnit ${index + 1}: `, unit);
       });
-    });
+    };
   };
 
   const { mutateAsync: saveRestock, isPending: test } =
@@ -300,6 +311,13 @@ const InvoiceAddStock = () => {
     }
   };
 
+  const handleConversionChange = (inventoryId: number, conversions: { qty: string; unit: string; price: string; }[]) => {
+    setConversionStates(prev => ({
+      ...prev,
+      [inventoryId]: conversions
+    }));
+  };
+
   if (isLoading || isLoadingBatch) {
     return (
       <section className="flex h-screen w-full items-center justify-center">
@@ -316,32 +334,67 @@ const InvoiceAddStock = () => {
     );
   }
 
-  const isFormValid = () => {
-    const hasIncompleteParentFields = selectedItems.some(
-      (item) =>
-        !stock[item.inventory_id] ||
+  const getFormValidation = () => {
+    const invalidItems = selectedItems.filter(item => {
+      // Check main inputs
+      const hasMissingMainInputs = !stock[item.inventory_id] ||
         !price[item.inventory_id] ||
-        !unit[item.inventory_id],
-    );
+        !unit[item.inventory_id];
 
-    // Check for incomplete or inconsistent child fields
-    const hasIncompleteChildFields = selectedItems.some((item) => {
-      const itemStockUnits = stockUnits[item.inventory_id] || [];
-      const isExpanded = accordionStates[item.inventory_id]; // Check expansion state
+      // Check conversion fields
+      const itemConversions = conversionStates[item.inventory_id] || [];
+      const hasInvalidConversions = itemConversions.some(conv => {
+        // Check if either qty or unit is filled but not both
+        const hasQty = conv.qty?.trim() !== "";
+        const hasUnit = conv.unit?.trim() !== "";
+        return (hasQty && !hasUnit) || (!hasQty && hasUnit) || (!hasQty && !hasUnit);
+      });
 
-      return (
-        isExpanded && // Only validate child rows if accordion is expanded
-        itemStockUnits.some(
-          (unit) =>
-            // Invalid if either field is empty while the other is filled
-            (unit.conversionQty?.toString().trim() && !unit.conversionUnit?.trim()) ||
-            (!unit.conversionQty?.toString().trim() && unit.conversionUnit?.trim()),
-        )
-      );
+      return hasMissingMainInputs || hasInvalidConversions;
     });
 
-    // Form is valid if no parent or child fields are incomplete
-    return !hasIncompleteParentFields && !hasIncompleteChildFields;
+    return {
+      isValid: invalidItems.length === 0,
+      invalidItems
+    };
+  };
+
+  const handleConfirmRestock = () => {
+    const { isValid, invalidItems } = getFormValidation();
+
+    if (!isValid) {
+      // Show one toast for each item that has any missing inputs
+      for (const item of invalidItems) {
+        const itemName = `${item.variant.item.name} - ${item.variant.item.brand.name} - ${item.variant.name || "N/A"}`;
+        const itemConversions = conversionStates[item.inventory_id] || [];
+
+        // Check main inputs
+        if (!stock[item.inventory_id] || !price[item.inventory_id] || !unit[item.inventory_id]) {
+          toast('❌ Missing main inputs', {
+            description: `Please fill in all main fields for:\n${itemName}`,
+            duration: 4000,
+          });
+        }
+
+        // Check conversion inputs
+        const hasEmptyConversions = itemConversions.some(conv => {
+          const hasQty = conv.qty?.trim() !== "";
+          const hasUnit = conv.unit?.trim() !== "";
+          return (hasQty && !hasUnit) || (!hasQty && hasUnit) || (!hasQty && !hasUnit);
+        });
+
+        if (hasEmptyConversions) {
+          toast('❌ Incomplete conversions', {
+            description: `Please complete or remove empty conversions for:\n${itemName}`,
+            duration: 4000,
+          });
+        }
+      }
+      return;
+    }
+
+    // If valid, don't open the status dialog, let the Dialog component handle it
+    // The Dialog component will open because we're not preventing the default behavior
   };
 
   if (isLoading) {
@@ -361,7 +414,7 @@ const InvoiceAddStock = () => {
   }
 
   return (
-    <section className={`flex h-auto w-screen flex-col gap-3 p-10`}>
+    <section className="flex h-auto w-screen flex-col gap-3 p-10">
       <div className="border-b-100 relative flex items-center justify-between border-b pb-5">
         <div className="flex items-center gap-1">
           {/* Dialog Component */}
@@ -433,66 +486,59 @@ const InvoiceAddStock = () => {
 
       <div className="flex w-full justify-center gap-3">
         <div className="relative flex w-full max-w-md items-center justify-center">
-          <Search className="text-gray-500 absolute left-3 top-1/2 -translate-y-1/2 transform" />
-          <Input
-            placeholder="Search"
-            className="bg-gray p-5 pl-10"
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
+          <ItemSearch
+            filteredItems={inventoryItems}
+            onItemSelect={handleSelectItem}
           />
-          {searchTerm && filteredItems.length > 0 && (
-            <div className="absolute top-full z-10 mt-2 w-full bg-white shadow-md">
-              <ul>
-                {filteredItems.map((item) => (
-                  <li
-                    key={item.inventory_id}
-                    className="hover:bg-gray-100 cursor-pointer p-2"
-                    onClick={() => handleSelectItem(item)}
-                  >
-                    <div className="font-bold">{item.variant.item.name}</div>
-                    <div className="text-gray-500">
-                      {item.variant.item.brand.name}
-                    </div>
-                    <div className="text-sm">{item.variant.name || "N/A"}</div>
-                  </li>
-                ))}
-              </ul>
-            </div>
-          )}
         </div>
       </div>
 
-      <div className="grid grid-cols-2 gap-4">
-        {selectedItems.map((item) => (
-          <StockCard
-            key={item.inventory_id}
-            item={item}
-            onRemove={() => handleRemoveItem(item.inventory_id)}
-            stockValue={stock[item.inventory_id] || ""}
-            onStockChange={(newStock) =>
-              handleStockChange(item.inventory_id, newStock.toString())
-            }
-            onPriceChange={(newPrice) =>
-              handlePriceChange(item.inventory_id, newPrice.toString())
-            }
-            onUnitChange={(newUnit) =>
-              handleUnitChange(item.inventory_id, newUnit)
-            }
-            onStockUnitsChange={(newStockUnits) =>
-              handleStockUnitsChange(item.inventory_id, newStockUnits)
-            }
-            onAccordionToggle={(isExpanded: boolean) =>
-              setAccordionStates((prev) => ({
-                ...prev,
-                [item.inventory_id]: isExpanded,
-              }))
-            }
+      {selectedItems.length > 0 ? (
+        <ScrollArea className="h-full">
+          <div className="grid grid-cols-2 gap-4 mt-4">
+            {selectedItems.map((item) => (
+              <StockCardV2
+                key={item.inventory_id}
+                item={item}
+                onRemove={() => handleRemoveItem(item.inventory_id)}
+                onStockChange={handleStockChange}
+                onPriceChange={handlePriceChange}
+                onUnitChange={handleUnitChange}
+                onConversionChange={(conversions) => handleConversionChange(item.inventory_id, conversions)}
+              />
+            ))}
+          </div>
+          <Toaster
+            toastOptions={{
+              style: {
+                width: '500px',
+                padding: '12px',
+                color: '#475569',
+                fontSize: '16px',
+                bottom: '80px',
+                right: '12px',
+                background: 'white',
+                border: '1px solid #E5E7EB',
+                boxShadow: 'none'
+              },
+            }}
           />
-        ))}
-      </div>
+        </ScrollArea>
+      ) : (
+        <div className="h-full flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Search className="h-20 w-20 text-slate-400" />
+            <p className="text-slate-400">Search and select an item to get started.</p>
+          </div>
+        </div>
+      )}
 
-      <div className="right-0 z-[5] mt-auto flex w-full items-center justify-between gap-3 bg-white font-bold">
-        <span>TOTAL: {overAllTotalStock}</span>
+      <Separator className="h-px" />
+      <div className="right-0 z-[5] flex w-full items-center justify-between bg-white">
+        <div className="flex flex-col">
+          <p className="text-xl text-slate-500">{overAllTotalStock} </p>
+          <span className="text-sm text-slate-400 italic">Total Stock</span>
+        </div>
         {/*<Button*/}
         {/*    size={"lg"}*/}
         {/*    className="bg-green py-8 text-sm font-bold text-white"*/}
@@ -505,11 +551,16 @@ const InvoiceAddStock = () => {
           <DialogTrigger asChild>
             <Button
               size={"lg"}
-              className={`bg-green py-8 text-sm font-bold text-white ${isFormValid() && selectedItems.length > 0
-                ? ""
-                : "cursor-not-allowed opacity-50"
-                }`}
-              disabled={!isFormValid() || selectedItems.length === 0} // Disable if form is invalid or no items are selected
+              className={`hover:bg-green/80 bg-green text-white ${selectedItems.length === 0 ? "cursor-not-allowed opacity-50" : ""}`}
+              onClick={(e) => {
+                const { isValid } = getFormValidation();
+                if (!isValid) {
+                  e.preventDefault(); // Prevent dialog from opening if validation fails
+                  handleConfirmRestock();
+                }
+                // If valid, let the dialog open naturally
+              }}
+              disabled={selectedItems.length === 0}
             >
               Confirm Restock
             </Button>
@@ -599,7 +650,6 @@ const InvoiceAddStock = () => {
         </Dialog>
       </div>
     </section>
-
   );
 };
 

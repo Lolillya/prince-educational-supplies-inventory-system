@@ -216,15 +216,19 @@ const CustomersPage = () => {
               <ScrollArea className="h-full w-full">
                 <div className="flex h-40 w-full flex-col">
                   <SelectedCustomer
-                    first_name={
-                      selectedRecord.Personal_Details.first_name ?? ""
-                    }
+                    first_name={selectedRecord.Personal_Details.first_name ?? ""}
                     last_name={selectedRecord.Personal_Details.last_name ?? ""}
                     id={selectedRecord.Personal_Details_Id}
                     role_Id={selectedRecord.role_Id}
                     emoji={selectedRecord.emoji}
                     company={selectedRecord.Personal_Details.company ?? ""}
-                    representative={`${selectedRecord.Personal_Details.first_name} ${selectedRecord.Personal_Details.last_name}`}
+                    representative={[
+                      selectedRecord.Personal_Details.first_name,
+                      selectedRecord.Personal_Details.last_name
+                    ]
+                      .filter((line) => line)
+                      .join(" ")
+                    }
                     contact={selectedRecord.Personal_Details.contact ?? ""}
                     email={selectedRecord.Personal_Details.email ?? ""}
                     invoiceData={selectedRecord.customerInvoices}
@@ -240,7 +244,6 @@ const CustomersPage = () => {
                     notes={selectedRecord.Personal_Details.notes ?? ""}
                     auth={selectedRecord.Personal_Details.auth}
                     // activityData={activityData}
-
                     // TODO: reflect restock data based on selected supplier
                     // restockData={supplierRestockData}
                     invoiceHistoryData={activityCustomerData}

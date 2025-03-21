@@ -808,7 +808,7 @@ const NewItem = () => {
             <div className="flex w-full items-center justify-end bg-white pt-4 gap-4">
                     <Button
                         size={"lg"}
-                        className="hover:bg-green/80 bg-slate-200 text-slate-500 hover:bg-slate-200/70"
+                        className="bg-slate-200 text-slate-500 hover:bg-slate-200/70"
                         onClick={handleSave}
                         disabled={isSaving}
                     >

@@ -33,12 +33,12 @@ const RestockRecord: React.FC<RestockProps> = ({
                 <MoreOptions className="!h-1 !w-1 !rounded-lg" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Print
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Export
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Print*/}
+                {/*</DropdownMenuItem>*/}
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Export*/}
+                {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Restock
@@ -50,9 +50,9 @@ const RestockRecord: React.FC<RestockProps> = ({
                 <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
                   Void
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Delete
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">*/}
+                {/*  Delete*/}
+                {/*</DropdownMenuItem>*/}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

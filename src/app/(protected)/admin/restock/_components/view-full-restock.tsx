@@ -91,7 +91,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
             </div>
             <div className="flex items-center gap-3">
               <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
-              <RecordExpand />
+              {/*<RecordExpand />*/}
             </div>
           </div>
         </DialogHeader>

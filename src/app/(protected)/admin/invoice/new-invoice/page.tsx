@@ -537,7 +537,9 @@ const NewInvoice = () => {
               </div>
             ) : (
               <>
-                <DialogTitle>ORDER CONFIRMATION</DialogTitle>
+                <DialogTitle>
+                  ORDER CONFIRMATION <span className="text-gray-400 ml-3 text-m font-light">#{nextInvoiceId}</span>
+                </DialogTitle>
                 <div className="flex w-full flex-col gap-3">
                   <div className="text-gray-400 flex flex-col gap-1">
                     <Label>Customer & Term</Label>

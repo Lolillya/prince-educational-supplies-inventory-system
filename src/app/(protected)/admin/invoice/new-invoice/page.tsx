@@ -568,9 +568,14 @@ const NewInvoice = () => {
                         </div>
                       )}
                       <Input
-                        placeholder="30"
-                        className="w-[10%] rounded-l-none"
-                        onChange={(e) => setTerm(e.target.value)}
+                          placeholder="30"
+                          className="w-[10%] rounded-l-none"
+                          value={term}
+                          onChange={(e) => setTerm(e.target.value)}
+                          onInput={(e) => {
+                            // Allow only numbers
+                            e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+                          }}
                       />
                     </div>
                   </div>

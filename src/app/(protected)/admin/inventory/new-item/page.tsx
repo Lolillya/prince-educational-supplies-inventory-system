@@ -806,14 +806,16 @@ const NewItem = () => {
 
             <Separator className="h-px" />
             <div className="flex w-full items-center justify-end bg-white pt-4 gap-4">
-                    <Button
-                        size={"lg"}
-                        className="bg-slate-200 text-slate-500 hover:bg-slate-200/70"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                    >
-                        Clear
-                    </Button>
+                    {/*<Button*/}
+                    {/*    size={"lg"}*/}
+                    {/*    className="bg-slate-200 text-slate-500 hover:bg-slate-200/70"*/}
+                    {/*    onClick={handleSave}*/}
+                    {/*    disabled={isSaving}*/}
+                    {/*>*/}
+                    {/*    Clear*/}
+                    {/*</Button>*/}
+
+
 
                     <Button
                         size={"lg"}

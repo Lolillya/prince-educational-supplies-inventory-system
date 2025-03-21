@@ -47,12 +47,12 @@ const RestockRecord: React.FC<RestockProps> = ({
                   View Supplier
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
-                {/*<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">*/}
-                {/*  Void*/}
-                {/*</DropdownMenuItem>*/}
                 <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Delete
+                  Void
                 </DropdownMenuItem>
+                {/*<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">*/}
+                {/*  Delete*/}
+                {/*</DropdownMenuItem>*/}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>

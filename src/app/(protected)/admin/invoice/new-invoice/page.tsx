@@ -546,7 +546,7 @@ const NewInvoice = () => {
                     <div className="relative flex w-full items-center">
                       <Input
                         placeholder="Business Name"
-                        className="w-[90%] rounded-r-none"
+                        className="bg-emerald-100 text-black placeholder-slate-500"
                         value={supplierSearchTerm}
                         onChange={(e) => setSupplierSearchTerm(e.target.value)}
                       />

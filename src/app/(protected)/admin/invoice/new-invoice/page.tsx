@@ -537,14 +537,16 @@ const NewInvoice = () => {
               </div>
             ) : (
               <>
-                <DialogTitle>ORDER CONFIRMATION</DialogTitle>
+                <DialogTitle>
+                  ORDER CONFIRMATION <span className="text-gray-400 ml-3 text-m font-light">#{nextInvoiceId}</span>
+                </DialogTitle>
                 <div className="flex w-full flex-col gap-3">
                   <div className="text-gray-400 flex flex-col gap-1">
                     <Label>Customer & Term</Label>
                     <div className="relative flex w-full items-center">
                       <Input
                         placeholder="Business Name"
-                        className="w-[90%] rounded-r-none"
+                        className="bg-emerald-100 text-black placeholder-slate-500"
                         value={supplierSearchTerm}
                         onChange={(e) => setSupplierSearchTerm(e.target.value)}
                       />
@@ -566,9 +568,14 @@ const NewInvoice = () => {
                         </div>
                       )}
                       <Input
-                        placeholder="30"
-                        className="w-[10%] rounded-l-none"
-                        onChange={(e) => setTerm(e.target.value)}
+                          placeholder="30"
+                          className="w-[10%] rounded-l-none"
+                          value={term}
+                          onChange={(e) => setTerm(e.target.value)}
+                          onInput={(e) => {
+                            // Allow only numbers
+                            e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+                          }}
                       />
                     </div>
                   </div>

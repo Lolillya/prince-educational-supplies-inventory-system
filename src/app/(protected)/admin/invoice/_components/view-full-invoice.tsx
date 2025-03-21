@@ -19,6 +19,7 @@ import { api } from "~/trpc/react";
 import RecordExpand from "../../_components/record-expand";
 import { type InvoiceProps } from "../page";
 import InvoiceTable from "./invoice-table";
+import { handleExport } from "~/lib/utils/exportInvoice";
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
   invoice_number,
@@ -29,7 +30,6 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   grandTotal,
   line_items,
   notes,
-  handleExport,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
@@ -201,21 +201,19 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <DialogClose asChild disabled={isEditing}>
               {!hasChanges ? (
                 <Button
                   variant={"secondary"}
                   className="text-slate-700 hover:bg-slate-200"
-                  disabled={isEditing}
+                  disabled
                 >
-                  Close
+                  Save Changes
                 </Button>
               ) : (
-                <Button disabled={isSavingInvoice} onClick={handleSaveInvoice}>
-                  Save
+                <Button disabled={isSavingInvoice} onClick={handleSaveInvoice} className="bg-slate-200 hover:bg-slate-200/80 text-slate-600">
+                  Save Changes
                 </Button>
               )}
-            </DialogClose>
             <Button
               className="bg-green hover:bg-green/80"
               disabled={isEditing}

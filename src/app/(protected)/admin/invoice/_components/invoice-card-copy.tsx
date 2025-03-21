@@ -101,13 +101,31 @@ type SupplierUnit = {
   unit: {
     name: string;
     unit_id: number;
-    supplier_unit_id: number;
   };
+  ConversionRate: {
+    conversion_rate: number;
+    from_unit_id: number; // Add missing field
+    to_unit_id: number;   // Add missing field
+    toUnit: {
+      name: string;
+      unit_id: number;    // Add unit_id here
+    };
+  }[];
 };
 
 type SupplierBatch = {
   index: number;
   supplierUnits: SupplierUnit[];
+};
+
+type HierarchyNode = {
+  unitId: number;
+  rateFromPrevious?: number;
+};
+type ConversionDebug = {
+  fromUnitId: number;
+  toUnitId: number;
+  rate: number;
 };
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
@@ -156,49 +174,103 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   );
   const [isBatchAutoRestock, setIsBatchAutoRestock] = useState<boolean>(false);
 
-  const buildHierarchy = (supplierUnits: SupplierUnit[]): number[] => {
-    const conversions = supplierUnits.flatMap(su =>
-        su.ConversionRate.map(cr => ({
-          from: cr.from_unit_id,
+  const buildHierarchy = (supplierUnits: SupplierUnit[]): HierarchyNode[] => {
+    const conversionMap = new Map<number, { to: number; rate: number }[]>();
+    const debugConversions: ConversionDebug[] = [];
+
+    supplierUnits.forEach((su) => {
+      su.ConversionRate.forEach((cr) => {
+        debugConversions.push({
+          fromUnitId: cr.from_unit_id,
+          toUnitId: cr.to_unit_id,
+          rate: cr.conversion_rate,
+        });
+
+        if (!conversionMap.has(cr.from_unit_id)) {
+          conversionMap.set(cr.from_unit_id, []);
+        }
+        conversionMap.get(cr.from_unit_id)?.push({
           to: cr.to_unit_id,
-        }))
+          rate: cr.conversion_rate,
+        });
+      });
+    });
+
+    console.log('--- buildHierarchy Debug ---');
+    console.log('All conversions:', debugConversions);
+    console.log('Conversion map:', conversionMap);
+
+    const allTargets = new Set(
+        Array.from(conversionMap.values()).flatMap(convs => convs.map(c => c.to))
     );
 
-    const fromUnits = new Set(conversions.map(c => c.from));
-    const toUnits = new Set(conversions.map(c => c.to));
+    const rootUnits = Array.from(conversionMap.keys())
+        .filter(unitId => !allTargets.has(unitId));
 
-    let rootUnitId: number | undefined;
-    for (const from of fromUnits) {
-      if (!toUnits.has(from)) {
-        rootUnitId = from;
-        break;
-      }
+    console.log('Root units:', rootUnits);
+
+    if (rootUnits.length === 0) {
+      const units = [...new Set(supplierUnits.map(su => su.unit.unit_id))]
+          .map(unitId => ({ unitId }));
+      console.log('No conversions hierarchy:', units);
+      return units;
     }
 
-    if (!rootUnitId) {
-      return Array.from(new Set(supplierUnits.map(su => su.unit.unit_id)));
-    }
+    const hierarchy: HierarchyNode[] = [];
+    let currentUnitId = rootUnits[0];
+    hierarchy.push({ unitId: currentUnitId });
 
-    const hierarchy: number[] = [rootUnitId];
-    let currentUnit = rootUnitId;
+    console.log('Starting hierarchy with root:', currentUnitId);
 
     while (true) {
-      const nextConversion = conversions.find(c => c.from === currentUnit);
-      if (!nextConversion) break;
-      hierarchy.push(nextConversion.to);
-      currentUnit = nextConversion.to;
+      const conversions = conversionMap.get(currentUnitId);
+      if (!conversions || conversions.length === 0) break;
+
+      const conversion = conversions[0];
+      console.log(`Adding conversion: ${currentUnitId} -> ${conversion.to} (rate: ${conversion.rate})`);
+
+      hierarchy.push({
+        unitId: conversion.to,
+        rateFromPrevious: conversion.rate,
+      });
+      currentUnitId = conversion.to;
     }
 
+    console.log('Final hierarchy:', hierarchy);
     return hierarchy;
   };
 
-  const longestCommonSuffix = (a: number[], b: number[]): number[] => {
+  const longestCommonSuffix = (
+      a: HierarchyNode[],
+      b: HierarchyNode[]
+  ): HierarchyNode[] => {
     let i = a.length - 1;
     let j = b.length - 1;
-    const suffix: number[] = [];
+    const suffix: HierarchyNode[] = [];
 
-    while (i >= 0 && j >= 0 && a[i] === b[j]) {
-      suffix.unshift(a[i]);
+    console.log('Comparing hierarchies:');
+    console.log('Hierarchy A:', a.map(n => `${n.unitId} (${n.rateFromPrevious})`));
+    console.log('Hierarchy B:', b.map(n => `${n.unitId} (${n.rateFromPrevious})`));
+
+    while (i >= 0 && j >= 0) {
+      const nodeA = a[i];
+      const nodeB = b[j];
+
+      if (nodeA.unitId !== nodeB.unitId) break;
+
+      const isLeafA = i === a.length - 1;
+      const isLeafB = j === b.length - 1;
+      const isRootA = i === 0;
+      const isRootB = j === 0;
+
+      if (!isLeafA && !isLeafB) {
+        if (!isRootA && !isRootB) {
+          if (nodeA.rateFromPrevious !== nodeB.rateFromPrevious) break;
+        }
+      }
+
+      console.log(`Matched: ${nodeA.unitId} (${nodeA.rateFromPrevious}) <-> ${nodeB.unitId} (${nodeB.rateFromPrevious})`);
+      suffix.unshift({ ...nodeA });
       i--;
       j--;
     }
@@ -208,23 +280,52 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
   const getBatchColor = (
       supplierUnits: SupplierUnit[],
-      currentBatchBasis?: SupplierBatch,
+      currentBatchBasis?: SupplierBatch
   ) => {
     if (!currentBatchBasis) return "bg-yellow/30";
 
     const basisHierarchy = buildHierarchy(currentBatchBasis.supplierUnits);
     const currentHierarchy = buildHierarchy(supplierUnits);
 
-    const basisLowest = basisHierarchy[basisHierarchy.length - 1];
-    const currentLowest = currentHierarchy[currentHierarchy.length - 1];
-    if (basisLowest !== currentLowest) return "bg-red/80";
+    console.log('\n--- getBatchColor Debug ---');
+    console.log('Basis hierarchy:', basisHierarchy);
+    console.log('Current hierarchy:', currentHierarchy);
 
-    const isExactMatch = basisHierarchy.length === currentHierarchy.length &&
-        basisHierarchy.every((id, i) => id === currentHierarchy[i]);
+    // 1. Check leaf unit match
+    const basisLeaf = basisHierarchy[basisHierarchy.length - 1];
+    const currentLeaf = currentHierarchy[currentHierarchy.length - 1];
 
+    console.log(`Leaf comparison: 
+    Basis: ${basisLeaf.unitId}
+    Current: ${currentLeaf.unitId}`);
+
+    if (basisLeaf.unitId !== currentLeaf.unitId) {
+      console.log('Leaf mismatch - red');
+      return "bg-red/80";
+    }
+
+    // 2. Check exact match (all units and rates match except leaf rate)
+    let isExactMatch = basisHierarchy.length === currentHierarchy.length;
+
+    if (isExactMatch) {
+      for (let i = 0; i < basisHierarchy.length - 1; i++) {
+        const basisNode = basisHierarchy[i];
+        const currentNode = currentHierarchy[i];
+
+        if (basisNode.unitId !== currentNode.unitId ||
+            basisNode.rateFromPrevious !== currentNode.rateFromPrevious) {
+          isExactMatch = false;
+          break;
+        }
+      }
+    }
+
+    console.log('Exact match check:', isExactMatch);
     if (isExactMatch) return "bg-green/50";
 
     const commonSuffix = longestCommonSuffix(basisHierarchy, currentHierarchy);
+    console.log('Common suffix length:', commonSuffix.length);
+
     return commonSuffix.length > 0 ? "bg-yellow-300" : "bg-red/80";
   };
 
@@ -265,13 +366,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   console.log(isAutoRestock);
 
   const handleSelectUnitQuantity = () => {
-    // Calculate the total quantity
     const total = selectedBatches.reduce((acc, batch) => {
       return (
         acc +
         batch.supplierUnits.reduce((sum, supplier) => {
           if (selectedUnit.unit_id === supplier.unit_id) {
-            // console.log("Matching Supplier:", supplier); // ✅ Log supplier details
             return sum + supplier.quantity_per_unit;
           }
           return sum;
@@ -279,7 +378,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       );
     }, 0);
 
-    // Update state once
     setSelectedUnitQuantity(total);
   };
 
@@ -296,24 +394,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   };
 
   useEffect(() => {
-    if (selectedBatches.length === 0) {
-      setAvailableUnits([]);
-      return;
-    }
-
-    const hierarchies = selectedBatches.map(batch =>
-        buildHierarchy(batch.supplierUnits)
-    );
-
-    let commonSuffix = hierarchies[0] || [];
-    for (const hierarchy of hierarchies.slice(1)) {
-      commonSuffix = longestCommonSuffix(commonSuffix, hierarchy);
-    }
-
-    setAvailableUnits(commonSuffix);
-  }, [selectedBatches]);
-
-  useEffect(() => {
     BatchAutoRestock(isBatchAutoRestock);
     if (isBatchAutoRestock) {
       setSupplier("Manual");
@@ -322,7 +402,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
   useEffect(() => {
     if (selectedBatches.length > 0) {
-      setBatchBasis(selectedBatches[0]); // Always set the first batch as the basis
+      setBatchBasis(selectedBatches[0]);
     } else {
       setBatchBasis(undefined);
     }
@@ -340,6 +420,25 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         supplier_unit_id: 0,
       });
     }
+  }, [selectedBatches]);
+
+
+  useEffect(() => {
+    if (selectedBatches.length === 0) {
+      setAvailableUnits([]);
+      return;
+    }
+
+    const hierarchies = selectedBatches.map(batch =>
+        buildHierarchy(batch.supplierUnits)
+    );
+
+    let commonSuffix = hierarchies[0] || [];
+    for (const hierarchy of hierarchies.slice(1)) {
+      commonSuffix = longestCommonSuffix(commonSuffix, hierarchy);
+    }
+
+    setAvailableUnits(commonSuffix.map(node => node.unitId));
   }, [selectedBatches]);
 
   console.log("SelectedUnit:", selectedUnit);

@@ -77,10 +77,12 @@ export const invoiceRouter = createTRPCRouter({
                       orderBy: { conversion_id: 'asc' },
                       select: {
                         conversion_rate: true,
+                        from_unit_id: true,
+                        to_unit_id: true,
                         toUnit: {
                           select: {
-                            
                             name: true,
+                            unit_id: true,
                           },
                         },
                       },

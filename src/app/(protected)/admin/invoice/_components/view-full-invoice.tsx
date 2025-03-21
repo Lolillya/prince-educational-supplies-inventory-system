@@ -1,4 +1,4 @@
-import { ArrowUpRight, Calendar, Printer } from "lucide-react";
+import { ArrowUpRight, Calendar, Printer, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 import {
@@ -138,10 +138,11 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
                 </DialogDescription>
               </div>
             </div>
-            <div className="flex items-center gap-3">
-              {/* <RecordEditor isEditing={isEditing} handleEdit={handleEdit} /> */}
-              <RecordExpand />
-            </div>
+            <DialogClose asChild>
+              <Button variant={"secondary"} className="text-slate-700 w-12 h-12">
+                <X className="!h-6 !w-6 text-slate-400" strokeWidth={2.5} />
+              </Button>
+            </DialogClose>
           </div>
         </DialogHeader>
 

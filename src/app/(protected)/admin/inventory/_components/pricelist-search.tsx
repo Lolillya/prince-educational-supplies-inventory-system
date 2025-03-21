@@ -2,6 +2,7 @@ import { Search } from "lucide-react";
 import React from "react";
 import { Input } from "~/components/ui/input";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "~/components/ui/select";
 import type { RouterOutputs } from "~/trpc/react";
 
 type Inventory = RouterOutputs["inventory"]["listInventory"][0];
@@ -41,8 +42,8 @@ const PriceListSearch = ({
 
   return (
     <div className="relative">
-      <div className="flex w-full items-center rounded-lg bg-slate-100 px-3 focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-        <Search className="text-slate-500" />
+      <div className="flex w-full items-center rounded-lg bg-slate-100 pl-3 focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+        <Search className="text-slate-700" />
         <Input
           ref={inputRef}
           placeholder={"Search..."}
@@ -52,6 +53,17 @@ const PriceListSearch = ({
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
         />
+        <Select defaultValue="variants">
+          <SelectTrigger className="w-40 bg-slate-100 text-slate-600 pl-4 h-8 border-l-4 border-y-0 border-r-0 rounded-none">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent className="bg-slate-100 shadow-none mt-2 border-4">
+            <SelectItem value="variants" className="text-slate-700 hover:bg-slate-200">Variants</SelectItem>
+            <SelectItem value="items" className="text-slate-700 hover:bg-slate-200">Items</SelectItem>
+            <SelectItem value="brands" className="text-slate-700 hover:bg-slate-200">Brands</SelectItem>
+            <SelectItem value="categories" className="text-slate-700 hover:bg-slate-200">Categories</SelectItem>
+          </SelectContent>
+        </Select>
       </div>
 
       {isFocused && (

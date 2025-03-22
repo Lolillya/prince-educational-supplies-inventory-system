@@ -123,7 +123,7 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 													step="0"
 													min="0"
 													className="bg-white text-slate-700 shadow-none rounded-r-none"
-													placeholder='Stock'
+													placeholder='Qty.'
 													value={data.qty}
 													onChange={(e) => {
 														const value = e.target.value.replace(/[^\d]/g, '') || "0";

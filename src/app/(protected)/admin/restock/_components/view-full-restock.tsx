@@ -119,10 +119,10 @@ const ViewFullRestock: React.FC<RestockProps> = ({
               >
                 Save Changes
               </Button>
-              <Button className="bg-green hover:bg-green/80" disabled={isEditing}>
-                <Printer />
-                Print Restock
-              </Button>
+              {/*<Button className="bg-green hover:bg-green/80" disabled={isEditing}>*/}
+              {/*  <Printer />*/}
+              {/*  Print Restock*/}
+              {/*</Button>*/}
             </div>
           </div>
           {showWarning && <p className="text-right text-sm text-orange-400">Whoops! Don't forget to save your changes.</p>}

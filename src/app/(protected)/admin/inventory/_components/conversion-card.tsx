@@ -153,7 +153,7 @@ const ConversionCard = ({
   const handleAddConversion = () => {
     onUpdate({
       ...preset,
-      conversions: [...preset.conversions, { qty: "", unit: "" }],
+      conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
     });
   };
 

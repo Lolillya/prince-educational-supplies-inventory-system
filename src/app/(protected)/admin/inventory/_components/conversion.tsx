@@ -10,15 +10,13 @@ import { api } from "~/trpc/react";
 interface ConversionProps {
   data: {
     id: number;
-    quantity: number;
+    qty: string;
     unit: string;
-    price: number;
+    stock: string;
+    price: string;
   };
   onRemove: () => void;
-  onUpdate: (
-    field: "quantity" | "unit" | "price",
-    value: number | string,
-  ) => void;
+  onUpdate: (data: ConversionProps["data"]) => void;
 }
 
 const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
@@ -37,22 +35,6 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
         name.toLowerCase().includes(inputValue.toLowerCase()),
       )
     : [];
-  useEffect(() => {
-    setInputValue(data.unit);
-  }, [data.unit]);
-
-  const handleUnitChange = (unitName: string) => {
-    onUpdate("unit", unitName);
-    setInputValue(unitName);
-  };
-
-  const handleQtyChange = (value: string) => {
-    onUpdate("quantity", parseInt(value) || 0);
-  };
-
-  const handlePriceChange = (value: string) => {
-    onUpdate("price", parseInt(value) || 0);
-  };
 
   useEffect(() => {
     if (data.unit !== inputValue) {
@@ -234,13 +216,22 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
               <Label className="text-sm text-slate-400">Unit Price</Label>
               <Input
                 type="number"
-                step="0"
+                step="0.25"
                 min="0"
-                className="rounded-r-none bg-white text-slate-700 shadow-none"
-                placeholder="Qty"
+                className="bg-white text-slate-700 shadow-none"
+                placeholder="Price"
                 value={data.price}
                 onChange={(e) => {
-                  const value = e.target.value.replace(/[^\d]/g, "") || "0";
+                  const value = e.target.value || "0.00";
+                  onUpdate({
+                    ...data,
+                    price: value,
+                  });
+                }}
+                onBlur={(e) => {
+                  const value = e.target.value
+                    ? Number(e.target.value).toFixed(2)
+                    : "0.00";
                   onUpdate({
                     ...data,
                     price: value,

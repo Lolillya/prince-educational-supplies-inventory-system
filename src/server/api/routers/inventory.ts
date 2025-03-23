@@ -633,22 +633,75 @@ export const inventoryRouter = createTRPCRouter({
     }),
 
   deleteVariant: publicProcedure
-    .input(
-      z.object({
-        variantId: z.number(),
-      }),
-    )
+    .input(z.object({ variantId: z.number() }))
     .mutation(async ({ input }) => {
       const { variantId } = input;
 
-      // Delete the Variant; related records will be deleted due to cascading deletes
-      await db.variant.delete({
-        where: { variant_id: variantId },
-      });
+      return await db.$transaction(async (prisma) => {
+        // 1. Get variant and its associated item
+        const variant = await prisma.variant.findUnique({
+          where: { variant_id: variantId },
+          include: { item: true },
+        });
 
-      return {
-        message: "Variant and all related records deleted successfully.",
-      };
+        if (!variant) {
+          throw new Error("Variant not found");
+        }
+
+        const itemId = variant.item.item_id;
+
+        // 2. Delete the variant
+        await prisma.variant.delete({
+          where: { variant_id: variantId },
+        });
+
+        // 3. Check if item has any remaining variants
+        const remainingVariants = await prisma.variant.count({
+          where: { item_id: itemId },
+        });
+
+        if (remainingVariants === 0) {
+          // 4. Delete presets first (due to foreign key constraints)
+          await prisma.presetConversion.deleteMany({
+            where: { preset: { item_id: itemId } },
+          });
+
+          await prisma.preset.deleteMany({
+            where: { item_id: itemId },
+          });
+
+          // 5. Delete the item
+          const deletedItem = await prisma.item.delete({
+            where: { item_id: itemId },
+          });
+
+          // 6. Check brand usage
+          const brandUsed = await prisma.item.count({
+            where: { brand_id: deletedItem.brand_id },
+          });
+
+          if (brandUsed === 0) {
+            await prisma.brand.delete({
+              where: { brand_id: deletedItem.brand_id },
+            });
+          }
+
+          // 7. Check category usage
+          const categoryUsed = await prisma.item.count({
+            where: { category_id: deletedItem.category_id },
+          });
+
+          if (categoryUsed === 0) {
+            await prisma.category.delete({
+              where: { category_id: deletedItem.category_id },
+            });
+          }
+        }
+
+        return {
+          message: "Variant and related records deleted successfully.",
+        };
+      });
     }),
 
   verifyPassword: publicProcedure

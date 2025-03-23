@@ -36,22 +36,23 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 <MoreOptions className="!h-1 !w-1 !rounded-lg" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Print
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Print*/}
+                {/*</DropdownMenuItem>*/}
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   Export
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Pin
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Pin*/}
+                {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
-                {/* <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Invoice
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                   className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
                   onClick={handleVoidItem}

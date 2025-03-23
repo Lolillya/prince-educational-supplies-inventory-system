@@ -111,7 +111,7 @@ const RestockDialog = ({ restock, clerkId, activity, context = 'employee' }: Res
 							</div>
 						</div>
 						<div className="flex items-center gap-3">
-							<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+							{/*<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />*/}
 							{/*<RecordExpand />*/}
 						</div>
 					</div>

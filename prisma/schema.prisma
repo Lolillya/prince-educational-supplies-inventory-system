@@ -227,8 +227,6 @@ model Preset {
   item         Item               @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
   main_unit    Unit               @relation(fields: [main_unit_id], references: [unit_id], onDelete: Cascade)
   conversions  PresetConversion[]
-
-  @@unique([item_id, main_unit_id])
 }
 
 model PresetConversion {
@@ -242,8 +240,6 @@ model PresetConversion {
   preset               Preset   @relation(fields: [preset_id], references: [preset_id], onDelete: Cascade)
   from_unit            Unit     @relation("FromUnit", fields: [from_unit_id], references: [unit_id], onDelete: Cascade)
   to_unit              Unit     @relation("ToUnit", fields: [to_unit_id], references: [unit_id], onDelete: Cascade)
-
-  @@unique([preset_id, from_unit_id, to_unit_id])
 }
 
 model Discount {

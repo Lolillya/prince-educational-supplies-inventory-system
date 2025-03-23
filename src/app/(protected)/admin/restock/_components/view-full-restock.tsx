@@ -1,4 +1,4 @@
-import { ArrowUpRight, Calendar, Printer } from "lucide-react";
+import {ArrowUpRight, Calendar, Printer, X} from "lucide-react";
 import { Poppins } from "next/font/google";
 import { useState } from "react";
 import { Button } from "~/components/ui/button";
@@ -81,7 +81,12 @@ const ViewFullRestock: React.FC<RestockProps> = ({
                   <DialogDescription className="text-sm tracking-wide">{date}</DialogDescription>
                 </div>
               </div>
-              <RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
+              <DialogClose asChild>
+                <Button variant={"secondary"} className="text-slate-700 w-12 h-12">
+                  <X className="!h-6 !w-6 text-slate-400" strokeWidth={2.5} />
+                </Button>
+              </DialogClose>
+              {/*<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />*/}
             </div>
           </DialogHeader>
 

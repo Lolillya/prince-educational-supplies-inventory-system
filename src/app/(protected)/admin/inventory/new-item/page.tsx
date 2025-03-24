@@ -45,7 +45,6 @@ type Item = {
     };
 };
 
-
 const NewItem = () => {
     const router = useRouter();
     const utils = api.useUtils();
@@ -101,14 +100,11 @@ const NewItem = () => {
     const [selectedVariant, setSelectedVariant] = useState(null);
     const [selectedVariants, setSelectedVariants] = useState([]);
 
-
     const { data: nextItemId, isLoading: isLoadingItem, isError: isErrorItem } =
         api.inventory.getItemId.useQuery();
 
-
     const { data, isLoading, isError } = api.inventory.listAllData.useQuery();
     const { mutateAsync: createItem } = api.inventory.createItem.useMutation();
-    // Use mutations outside the handleSave function to avoid invalid hook calls.
     const { mutateAsync: createBrandMutation } = api.inventory.createBrand.useMutation();
     const { mutateAsync: createCategoryMutation } = api.inventory.createCategory.useMutation();
     const { mutateAsync: createItemMutation } = api.inventory.createItem.useMutation();
@@ -116,9 +112,8 @@ const NewItem = () => {
     const { mutateAsync: createStockLevelMutation } = api.inventory.createStockLevel.useMutation();
     const { mutateAsync: createInventoryMutation } = api.inventory.createInventory.useMutation();
     const { mutateAsync: updateItemMutation } = api.inventory.updateItem.useMutation();
+    const { mutateAsync: updateVariantMutation } = api.inventory.updateVariant.useMutation();
 
-    // const [cards, setCards] = useState([{ id: Date.now() }]);
-    // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
     const [variants, setVariants] = useState([{
         id: Date.now(),
         variant: "",
@@ -130,16 +125,12 @@ const NewItem = () => {
 
     const [isSaving, setIsSaving] = useState(false);
 
-    const [lowStock, setLowStock] = useState(0);
-    const [veryLowStock, setVeryLowStock] = useState(0);
-
-
-    // Memoized states
     const brands = useMemo(() => data?.brands ?? [], [data]);
     const categories = useMemo(() => data?.categories ?? [], [data]);
     const units = useMemo(() => data?.units ?? [], [data]);
     const items = useMemo(() => data?.items ?? [], [data]);
     const variantsMemo = useMemo(() => data?.variants ?? [], [data]);
+
 
     useEffect(() => {
         if (item) {
@@ -214,7 +205,7 @@ const NewItem = () => {
                     id: v.variant_id,
                     variant: v.name,
                     lowStock: v.StockLevel?.low_stock || 0,
-                    veryLowStock: v.StockLevel?.very_low_stock || 0, // Add comma here
+                    veryLowStock: v.StockLevel?.very_low_stock || 0,
                     isExisting: true
                 }));
                 setVariants(variants.length > 0 ? variants : [{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
@@ -225,6 +216,7 @@ const NewItem = () => {
             setVariants([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
         }
     }, [item, brandSearch, selectedBrand, categorySearch, selectedCategory, items]);
+
     const handleSelect = (type: string, name: string) => {
         switch (type) {
             case "item":
@@ -244,14 +236,6 @@ const NewItem = () => {
                     console.log("Selected Item:", selectedItem);
                 }
                 break;
-            // case "item":
-            //     setItem(name);
-            //     const selectedItem = items.find(item => item.name === name);
-            //     if (selectedItem) {
-            //         setSelectedItem(selectedItem);
-            //         setItemDescription(selectedItem.description || "");
-            //     }
-            //     break;
             case "category":
                 if (categoryOptions.includes(name)) {
                     setCategory(name);
@@ -283,7 +267,6 @@ const NewItem = () => {
 
         setDropdownVisible((prev) => ({ ...prev, [type]: false }));
     };
-
 
     const handleSearchItem = (e: React.ChangeEvent<HTMLInputElement>) => {
         const value = e.target.value;
@@ -353,9 +336,6 @@ const NewItem = () => {
         }
     };
 
-    // const handleAddCard = () => {
-    //     setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
-    // }
     const handleAddVariant = () => {
         setVariants(prev => [...prev, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0, isExisting: false }]);
     };
@@ -402,8 +382,6 @@ const NewItem = () => {
     const handleCancelClear = () => {
         setIsDialogCancelOpen(false);
     };
-
-    const { mutateAsync: updateVariantMutation } = api.inventory.updateVariant.useMutation();
 
     const handleSave = async () => {
         // Check main inputs first
@@ -522,11 +500,13 @@ const NewItem = () => {
 
             utils.inventory.listInventory.invalidate();
 
+            // Show success toast
             toast('✅ Success', {
                 description: 'New item created successfully!',
-                duration: 4000,
+                duration: 2000, // Shorter duration for success message
             });
 
+            // Redirect to Invoice Dashboard after 2 seconds
             setTimeout(() => {
                 router.push("/admin/inventory");
             }, 2000);
@@ -541,6 +521,7 @@ const NewItem = () => {
             setIsSaving(false);
         }
     };
+
     let content = null;
     if (isLoading) {
         content = <p>Loading...</p>;
@@ -642,7 +623,7 @@ const NewItem = () => {
                                             <div
                                                 key={index}
                                                 className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
-                                                    }`}
+                                                }`}
                                                 onMouseDown={() => handleSelect("item", itemName)}
                                             >
                                                 {itemName}
@@ -681,7 +662,7 @@ const NewItem = () => {
                                             <div
                                                 key={index}
                                                 className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
-                                                    }`}
+                                                }`}
                                                 onMouseDown={() => handleSelect("brand", brandName)}
                                             >
                                                 {brandName}
@@ -711,7 +692,6 @@ const NewItem = () => {
                                     onKeyDown={(e) => handleKeyDown(e, "category")}
                                 />
 
-
                                 {dropdownVisible && filteredCategories.length > 0 && (
                                     <div
                                         className="absolute top-full left-0 z-10 mt-1 w-full rounded-md bg-white shadow-lg"
@@ -721,7 +701,7 @@ const NewItem = () => {
                                             <div
                                                 key={categoryName}
                                                 className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
-                                                    }`}
+                                                }`}
                                                 onMouseDown={() => handleSelect("category", categoryName)}
                                             >
                                                 {categoryName}
@@ -806,25 +786,14 @@ const NewItem = () => {
 
             <Separator className="h-px" />
             <div className="flex w-full items-center justify-end bg-white pt-4 gap-4">
-                    {/*<Button*/}
-                    {/*    size={"lg"}*/}
-                    {/*    className="bg-slate-200 text-slate-500 hover:bg-slate-200/70"*/}
-                    {/*    onClick={handleSave}*/}
-                    {/*    disabled={isSaving}*/}
-                    {/*>*/}
-                    {/*    Clear*/}
-                    {/*</Button>*/}
-
-
-
-                    <Button
-                        size={"lg"}
-                        className="hover:bg-green/80 bg-green text-white"
-                        onClick={handleSave}
-                        disabled={isSaving}
-                    >
-                        {isSaving ? "Saving..." : "Save Item"}
-                    </Button>
+                <Button
+                    size={"lg"}
+                    className="hover:bg-green/80 bg-green text-white"
+                    onClick={handleSave}
+                    disabled={isSaving}
+                >
+                    {isSaving ? "Saving..." : "Save Item"}
+                </Button>
             </div>
 
             <Toaster

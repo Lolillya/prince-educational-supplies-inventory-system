@@ -749,6 +749,7 @@ import { api } from "~/trpc/react";
 import { Card, CardContent } from "~/components/ui/card";
 import { useParams, useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
+import { LoadingSpinner } from "~/components/loading";
 
 type Item = {
   variant: {
@@ -869,6 +870,7 @@ const EditItem = () => {
       { id: itemIdAsNumber },
       { enabled: !!itemId },
     );
+
 
   useEffect(() => {
     if (existingItemData?.variant?.item) {
@@ -1303,11 +1305,14 @@ const EditItem = () => {
     }
   };
 
-  let content = null;
-  if (isLoading) {
-    content = <p>Loading...</p>;
+  if (isLoading || isLoadingItem || isLoadingExisting) {
+    return (
+        <section className="flex h-screen w-full items-center justify-center">
+          <LoadingSpinner />
+        </section>
+    );
   } else if (isError) {
-    content = <p>Error loading units</p>;
+    return <p>Error loading units</p>;
   }
 
   return (

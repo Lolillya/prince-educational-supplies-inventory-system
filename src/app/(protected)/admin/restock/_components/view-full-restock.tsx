@@ -76,10 +76,13 @@ const ViewFullRestock: React.FC<RestockProps> = ({
             <div className="flex items-center justify-between">
               <div className="flex flex-col gap-2">
                 <DialogTitle className="text-xl font-normal text-slate-700">#{restockId}</DialogTitle>
-                <div className="flex items-center gap-3 text-slate-400">
-                  <Calendar className="h-4 w-4" />
-                  <DialogDescription className="text-sm tracking-wide">{date}</DialogDescription>
-                </div>
+                <DialogDescription className="text-sm tracking-wide">
+                  {new Date(date).toLocaleDateString("en-US", {
+                    month: "long",
+                    day: "numeric",
+                    year: "numeric",
+                  })}
+                </DialogDescription>
               </div>
               <DialogClose asChild>
                 <Button variant={"secondary"} className="text-slate-700 w-12 h-12">

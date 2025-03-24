@@ -93,14 +93,17 @@ model Category {
 }
 
 model Unit {
-  unit_id             Int              @id @default(autoincrement())
-  name                String           @unique
-  created_at          DateTime         @default(now())
-  updated_at          DateTime         @updatedAt
-  conversionRatesFrom ConversionRate[] @relation("FromUnit")
-  conversionRatesTo   ConversionRate[] @relation("ToUnit")
+  unit_id             Int                @id @default(autoincrement())
+  name                String             @unique
+  created_at          DateTime           @default(now())
+  updated_at          DateTime           @updatedAt
+  conversionRatesFrom ConversionRate[]   @relation("FromUnit")
+  conversionRatesTo   ConversionRate[]   @relation("ToUnit")
   Line_Item           Line_Item[]
   SupplierUnit        SupplierUnit[]
+  Preset              Preset[]
+  PresetConversion    PresetConversion[] @relation("FromUnit")
+  PresetConversionTo  PresetConversion[] @relation("ToUnit")
 }
 
 model Item {
@@ -117,6 +120,7 @@ model Item {
   category      Category        @relation(fields: [category_id], references: [category_id])
   discount      Discount?       @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   variants      Variant[]
+  Preset        Preset[]
 }
 
 model Variant {
@@ -211,6 +215,31 @@ model StockLevel {
   created_at             DateTime  @default(now())
   updated_at             DateTime  @updatedAt
   variant                Variant   @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+}
+
+model Preset {
+  preset_id    Int                @id @default(autoincrement())
+  item_id      Int
+  main_unit_id Int
+  main_price   Float              @default(0.0)
+  created_at   DateTime           @default(now())
+  updated_at   DateTime           @updatedAt
+  item         Item               @relation(fields: [item_id], references: [item_id], onDelete: Cascade)
+  main_unit    Unit               @relation(fields: [main_unit_id], references: [unit_id], onDelete: Cascade)
+  conversions  PresetConversion[]
+}
+
+model PresetConversion {
+  preset_conversion_id Int      @id @default(autoincrement())
+  preset_id            Int
+  from_unit_id         Int
+  to_unit_id           Int
+  conversion_rate      Float
+  created_at           DateTime @default(now())
+  updated_at           DateTime @updatedAt
+  preset               Preset   @relation(fields: [preset_id], references: [preset_id], onDelete: Cascade)
+  from_unit            Unit     @relation("FromUnit", fields: [from_unit_id], references: [unit_id], onDelete: Cascade)
+  to_unit              Unit     @relation("ToUnit", fields: [to_unit_id], references: [unit_id], onDelete: Cascade)
 }
 
 model Discount {

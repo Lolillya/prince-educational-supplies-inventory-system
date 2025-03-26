@@ -14,8 +14,10 @@ import InvoiceRecord from "./_components/invoice-record";
 import { type LineItemsProp } from "~/lib/utils/exportInvoice";
 import { useSearchParams } from "next/navigation";
 import { ScrollArea } from "~/components/ui/scroll-area";
+import { toast } from "~/hooks/use-toast";
 
 export type InvoiceProps = {
+  voidPending: boolean;
   status: string;
   invoice_number: number;
   invoice_id: number;
@@ -39,16 +41,19 @@ const InvoicePage = () => {
     clerkId ? { clerkId } : customerId ? { customerId } : undefined,
   );
 
-  const {
-    mutateAsync: voidInvoice,
-    isPending: voidPending,
-    isSuccess: voidSuccess,
-  } = api.invoice.voidInvoice.useMutation({
-    onSuccess: (data) => {
-      console.log("invoice voided!", data);
-      window.location.reload();
-    },
-  });
+  const { mutateAsync: voidInvoice, isPending: voidPending } =
+    api.invoice.voidInvoice.useMutation({
+      onSuccess: (data) => {
+        console.log("invoice voided!", data);
+        window.location.reload();
+        toast({
+          title: "Success",
+          description: "Invoice Voided successfully!",
+          variant: "default",
+          className: "bg-green text-white",
+        });
+      },
+    });
 
   const handleVoidInvoice = (invoice_id: number) => {
     voidInvoice(invoice_id);
@@ -90,53 +95,56 @@ const InvoicePage = () => {
     );
 
   return (
-    <section className={`flex h-auto w-full flex-col gap-3 pt-10`}>
-      <div className="flex items-center justify-between px-20">
-        <div className="flex items-center gap-3">
-          <SearchBar
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-          />
-          <Filter />
+    <>
+      <section className={`flex h-auto w-full flex-col gap-3 pt-10`}>
+        <div className="flex items-center justify-between px-20">
+          <div className="flex items-center gap-3">
+            <SearchBar
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+            <Filter />
+          </div>
+          <Button
+            onClick={() => router.push("/admin/invoice/new-invoice")}
+            className="bg-green hover:bg-green/80"
+          >
+            <Plus strokeWidth={3} /> New Invoice
+          </Button>
         </div>
-        <Button
-          onClick={() => router.push("/admin/invoice/new-invoice")}
-          className="bg-green hover:bg-green/80"
-        >
-          <Plus strokeWidth={3} /> New Invoice
-        </Button>
-      </div>
 
-      <ScrollArea className="mt-5">
-        <div className="grid grid-cols-2 gap-4 px-20 pb-10">
-          {filteredInvoices
-            ?.sort(
-              (a, b) =>
-                new Date(b.created_at).getTime() -
-                new Date(a.created_at).getTime(),
-            )
-            .map((invoice, index) => (
-              <InvoiceRecord
-                status={invoice.status}
-                voidInvoice={handleVoidInvoice}
-                key={index}
-                invoice_number={invoice.invoice_number}
-                invoice_id={invoice.invoice_id}
-                date={invoice.created_at}
-                customer={invoice.customer.Personal_Details.company ?? ""}
-                invoiceClerk={
-                  invoice.invoiceClerk.Personal_Details.first_name +
-                  " " +
-                  invoice.invoiceClerk.Personal_Details.last_name
-                }
-                grandTotal={invoice.total_amount}
-                line_items={invoice.line_items}
-                notes={invoice.notes ?? "No customer notes."}
-              />
-            ))}
-        </div>
-      </ScrollArea>
-    </section>
+        <ScrollArea className="mt-5">
+          <div className="grid grid-cols-2 gap-4 px-20 pb-10">
+            {filteredInvoices
+              ?.sort(
+                (a, b) =>
+                  new Date(b.created_at).getTime() -
+                  new Date(a.created_at).getTime(),
+              )
+              .map((invoice, index) => (
+                <InvoiceRecord
+                  voidPending={voidPending}
+                  status={invoice.status}
+                  voidInvoice={handleVoidInvoice}
+                  key={index}
+                  invoice_number={invoice.invoice_number}
+                  invoice_id={invoice.invoice_id}
+                  date={invoice.created_at}
+                  customer={invoice.customer.Personal_Details.company ?? ""}
+                  invoiceClerk={
+                    invoice.invoiceClerk.Personal_Details.first_name +
+                    " " +
+                    invoice.invoiceClerk.Personal_Details.last_name
+                  }
+                  grandTotal={invoice.total_amount}
+                  line_items={invoice.line_items}
+                  notes={invoice.notes ?? "No customer notes."}
+                />
+              ))}
+          </div>
+        </ScrollArea>
+      </section>
+    </>
   );
 };
 

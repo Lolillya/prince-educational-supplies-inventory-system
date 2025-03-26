@@ -219,7 +219,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
-  console.log(isAutoRestock);
+  console.log(BatchVariant);
 
   const handleSelectUnitQuantity = () => {
     // Calculate the total quantity

@@ -105,10 +105,10 @@ type SupplierUnit = {
   ConversionRate: {
     conversion_rate: number;
     from_unit_id: number; // Add missing field
-    to_unit_id: number;   // Add missing field
+    to_unit_id: number; // Add missing field
     toUnit: {
       name: string;
-      unit_id: number;    // Add unit_id here
+      unit_id: number; // Add unit_id here
     };
   }[];
 };
@@ -196,23 +196,27 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       });
     });
 
-    console.log('--- buildHierarchy Debug ---');
-    console.log('All conversions:', debugConversions);
-    console.log('Conversion map:', conversionMap);
+    // console.log("--- buildHierarchy Debug ---");
+    // console.log("All conversions:", debugConversions);
+    // console.log("Conversion map:", conversionMap);
 
     const allTargets = new Set(
-        Array.from(conversionMap.values()).flatMap(convs => convs.map(c => c.to))
+      Array.from(conversionMap.values()).flatMap((convs) =>
+        convs.map((c) => c.to),
+      ),
     );
 
-    const rootUnits = Array.from(conversionMap.keys())
-        .filter(unitId => !allTargets.has(unitId));
+    const rootUnits = Array.from(conversionMap.keys()).filter(
+      (unitId) => !allTargets.has(unitId),
+    );
 
-    console.log('Root units:', rootUnits);
+    // console.log("Root units:", rootUnits);
 
     if (rootUnits.length === 0) {
-      const units = [...new Set(supplierUnits.map(su => su.unit.unit_id))]
-          .map(unitId => ({ unitId }));
-      console.log('No conversions hierarchy:', units);
+      const units = [
+        ...new Set(supplierUnits.map((su) => su.unit.unit_id)),
+      ].map((unitId) => ({ unitId }));
+      // console.log("No conversions hierarchy:", units);
       return units;
     }
 
@@ -220,14 +224,16 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     let currentUnitId = rootUnits[0];
     hierarchy.push({ unitId: currentUnitId });
 
-    console.log('Starting hierarchy with root:', currentUnitId);
+    // console.log("Starting hierarchy with root:", currentUnitId);
 
     while (true) {
       const conversions = conversionMap.get(currentUnitId);
       if (!conversions || conversions.length === 0) break;
 
       const conversion = conversions[0];
-      console.log(`Adding conversion: ${currentUnitId} -> ${conversion.to} (rate: ${conversion.rate})`);
+      // console.log(
+      //   `Adding conversion: ${currentUnitId} -> ${conversion.to} (rate: ${conversion.rate})`,
+      // );
 
       hierarchy.push({
         unitId: conversion.to,
@@ -236,21 +242,27 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       currentUnitId = conversion.to;
     }
 
-    console.log('Final hierarchy:', hierarchy);
+    // console.log("Final hierarchy:", hierarchy);
     return hierarchy;
   };
 
   const longestCommonSuffix = (
-      a: HierarchyNode[],
-      b: HierarchyNode[]
+    a: HierarchyNode[],
+    b: HierarchyNode[],
   ): HierarchyNode[] => {
     let i = a.length - 1;
     let j = b.length - 1;
     const suffix: HierarchyNode[] = [];
 
-    console.log('Comparing hierarchies:');
-    console.log('Hierarchy A:', a.map(n => `${n.unitId} (${n.rateFromPrevious})`));
-    console.log('Hierarchy B:', b.map(n => `${n.unitId} (${n.rateFromPrevious})`));
+    // console.log("Comparing hierarchies:");
+    // console.log(
+    //   "Hierarchy A:",
+    //   a.map((n) => `${n.unitId} (${n.rateFromPrevious})`),
+    // );
+    // console.log(
+    //   "Hierarchy B:",
+    //   b.map((n) => `${n.unitId} (${n.rateFromPrevious})`),
+    // );
 
     while (i >= 0 && j >= 0) {
       const nodeA = a[i];
@@ -269,7 +281,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         }
       }
 
-      console.log(`Matched: ${nodeA.unitId} (${nodeA.rateFromPrevious}) <-> ${nodeB.unitId} (${nodeB.rateFromPrevious})`);
+      // console.log(
+      //   `Matched: ${nodeA.unitId} (${nodeA.rateFromPrevious}) <-> ${nodeB.unitId} (${nodeB.rateFromPrevious})`,
+      // );
       suffix.unshift({ ...nodeA });
       i--;
       j--;
@@ -279,28 +293,28 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   };
 
   const getBatchColor = (
-      supplierUnits: SupplierUnit[],
-      currentBatchBasis?: SupplierBatch
+    supplierUnits: SupplierUnit[],
+    currentBatchBasis?: SupplierBatch,
   ) => {
     if (!currentBatchBasis) return "bg-yellow/30";
 
     const basisHierarchy = buildHierarchy(currentBatchBasis.supplierUnits);
     const currentHierarchy = buildHierarchy(supplierUnits);
 
-    console.log('\n--- getBatchColor Debug ---');
-    console.log('Basis hierarchy:', basisHierarchy);
-    console.log('Current hierarchy:', currentHierarchy);
+    // console.log("\n--- getBatchColor Debug ---");
+    // console.log("Basis hierarchy:", basisHierarchy);
+    // console.log("Current hierarchy:", currentHierarchy);
 
     // 1. Check leaf unit match
     const basisLeaf = basisHierarchy[basisHierarchy.length - 1];
     const currentLeaf = currentHierarchy[currentHierarchy.length - 1];
 
-    console.log(`Leaf comparison: 
-    Basis: ${basisLeaf.unitId}
-    Current: ${currentLeaf.unitId}`);
+    // console.log(`Leaf comparison:
+    // Basis: ${basisLeaf.unitId}
+    // Current: ${currentLeaf.unitId}`);
 
     if (basisLeaf.unitId !== currentLeaf.unitId) {
-      console.log('Leaf mismatch - red');
+      // console.log("Leaf mismatch - red");
       return "bg-red/80";
     }
 
@@ -312,19 +326,21 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         const basisNode = basisHierarchy[i];
         const currentNode = currentHierarchy[i];
 
-        if (basisNode.unitId !== currentNode.unitId ||
-            basisNode.rateFromPrevious !== currentNode.rateFromPrevious) {
+        if (
+          basisNode.unitId !== currentNode.unitId ||
+          basisNode.rateFromPrevious !== currentNode.rateFromPrevious
+        ) {
           isExactMatch = false;
           break;
         }
       }
     }
 
-    console.log('Exact match check:', isExactMatch);
+    // console.log("Exact match check:", isExactMatch);
     if (isExactMatch) return "bg-green/50";
 
     const commonSuffix = longestCommonSuffix(basisHierarchy, currentHierarchy);
-    console.log('Common suffix length:', commonSuffix.length);
+    // console.log("Common suffix length:", commonSuffix.length);
 
     return commonSuffix.length > 0 ? "bg-yellow-300" : "bg-red/80";
   };
@@ -363,20 +379,58 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     setTotalPrice(total);
   };
 
-  console.log(BatchVariant);
+  // console.log(selectedUnitQuantity);
 
   const handleSelectUnitQuantity = () => {
-    const total = selectedBatches.reduce((acc, batch) => {
-      return (
-        acc +
-        batch.supplierUnits.reduce((sum, supplier) => {
-          if (selectedUnit.unit_id === supplier.unit_id) {
-            return sum + supplier.quantity_per_unit;
-          }
-          return sum;
-        }, 0)
+    if (!selectedUnit.unit_id) {
+      setSelectedUnitQuantity(0);
+      return;
+    }
+
+    let total = 0;
+
+    selectedBatches.forEach((batch) => {
+      const hierarchy = buildHierarchy(batch.supplierUnits);
+      const unitsInBatch = new Map<number, number>(
+        batch.supplierUnits.map((su) => [
+          su.unit.unit_id,
+          su.quantity_per_unit,
+        ]),
       );
-    }, 0);
+
+      // Find the selected unit's position in the hierarchy
+      const selectedIndex = hierarchy.findIndex(
+        (n) => n.unitId === selectedUnit.unit_id,
+      );
+
+      if (selectedIndex === -1) {
+        // If selected unit not in hierarchy, use direct quantity
+        total += unitsInBatch.get(selectedUnit.unit_id) || 0;
+        return;
+      }
+
+      let accumulatedQuantity = 0;
+
+      // Walk through hierarchy from highest to selected unit
+      for (let i = 0; i <= selectedIndex; i++) {
+        const currentUnitId = hierarchy[i].unitId;
+        const quantity = unitsInBatch.get(currentUnitId) || 0;
+
+        if (i === 0) {
+          // Start with highest unit
+          accumulatedQuantity = quantity;
+        } else {
+          // Convert accumulated quantity from previous unit to current unit
+          const conversionRate = hierarchy[i].rateFromPrevious || 1;
+          accumulatedQuantity *= conversionRate;
+
+          // Add current unit's quantity
+          accumulatedQuantity += quantity;
+        }
+      }
+
+      total += accumulatedQuantity;
+    });
 
     setSelectedUnitQuantity(total);
   };
@@ -422,15 +476,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
     }
   }, [selectedBatches]);
 
-
   useEffect(() => {
     if (selectedBatches.length === 0) {
       setAvailableUnits([]);
       return;
     }
 
-    const hierarchies = selectedBatches.map(batch =>
-        buildHierarchy(batch.supplierUnits)
+    const hierarchies = selectedBatches.map((batch) =>
+      buildHierarchy(batch.supplierUnits),
     );
 
     let commonSuffix = hierarchies[0] || [];
@@ -438,10 +491,10 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       commonSuffix = longestCommonSuffix(commonSuffix, hierarchy);
     }
 
-    setAvailableUnits(commonSuffix.map(node => node.unitId));
+    setAvailableUnits(commonSuffix.map((node) => node.unitId));
   }, [selectedBatches]);
 
-  console.log("SelectedUnit:", selectedUnit);
+  // console.log("SelectedUnit:", selectedUnit);
 
   useEffect(() => {
     handleSelectUnitQuantity();
@@ -498,7 +551,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
           >
             <div className="flex items-center gap-1">
               {selectedBatches.length === 0 ? (
-                <Label className="text-textGray">Add Batch</Label>
+                isBatchAutoRestock ? (
+                  <Label className="text-textGray">Auto Restock</Label>
+                ) : (
+                  <Label className="text-textGray">Add Batch</Label>
+                )
               ) : (
                 selectedBatches.map((batch) => (
                   <Label
@@ -609,9 +666,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {variant.SupplierUnit
-                              .sort((a, b) => a.supplier_unit_id - b.supplier_unit_id)
-                              .map((unit, unitIndex) => (
+                          {variant.SupplierUnit.sort(
+                            (a, b) => a.supplier_unit_id - b.supplier_unit_id,
+                          ).map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
 
@@ -640,29 +697,31 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
               );
             })}
             <Separator orientation="horizontal" className="h-0.5 bg-black" />
-            <Accordion type="single">
-              <AccordionItem
-                value={id.toString()}
-                className="rounded-lg border px-2"
-              >
-                <AccordionTrigger>
-                  <div className="flex w-full">
-                    <div className="flex w-full items-center gap-3">
-                      <Input
-                        type="checkbox"
-                        className="h-4 w-fit"
-                        disabled={BatchVariant.length !== 0}
-                        onChange={(e) =>
-                          setIsBatchAutoRestock(e.target.checked)
-                        }
-                      />
-                      <Label className="">Auto Restock</Label>
+            {BatchVariant.length === 0 && (
+              <Accordion type="single">
+                <AccordionItem
+                  value={id.toString()}
+                  className="rounded-lg border px-2"
+                >
+                  <AccordionTrigger>
+                    <div className="flex w-full">
+                      <div className="flex w-full items-center gap-3">
+                        <Input
+                          type="checkbox"
+                          className="h-4 w-fit"
+                          disabled={BatchVariant.length !== 0}
+                          onChange={(e) =>
+                            setIsBatchAutoRestock(e.target.checked)
+                          }
+                        />
+                        <Label className="">Auto Restock</Label>
+                      </div>
                     </div>
-                  </div>
-                </AccordionTrigger>
-                <AccordionContent></AccordionContent>
-              </AccordionItem>
-            </Accordion>
+                  </AccordionTrigger>
+                  <AccordionContent></AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            )}
             <Button
               variant={"default"}
               onClick={handleContinue}
@@ -742,45 +801,48 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {isBatchAutoRestock && units?.length ? (
-                          units.map((u) => (
-                              <SelectItem
-                                  key={u.unit_id}
-                                  value={JSON.stringify({
-                                    id: u.unit_id,
-                                    name: u.name,
-                                    supplier_unit_id: undefined,
-                                  })}
-                              >
-                                {u.name}
-                              </SelectItem>
+                      {isBatchAutoRestock && units?.length
+                        ? units.map((u) => (
+                            <SelectItem
+                              key={u.unit_id}
+                              value={JSON.stringify({
+                                id: u.unit_id,
+                                name: u.name,
+                                supplier_unit_id: undefined,
+                              })}
+                            >
+                              {u.name}
+                            </SelectItem>
                           ))
-                      ) : selectedBatches?.length ? (
-                          selectedBatches
+                        : selectedBatches?.length
+                          ? selectedBatches
                               .flatMap((batch) =>
-                                  batch.supplierUnits
-                                      .filter((su) => availableUnits.includes(su.unit.unit_id))
-                                      .map((unit) => ({
-                                        supplier_unit_id: unit.supplier_unit_id,
-                                        name: unit.unit.name,
-                                        id: unit.unit.unit_id,
-                                        quantity: unit.quantity_per_unit,
-                                        batch: batch.index + 1,
-                                      }))
+                                batch.supplierUnits
+                                  .filter((su) =>
+                                    availableUnits.includes(su.unit.unit_id),
+                                  )
+                                  .map((unit) => ({
+                                    supplier_unit_id: unit.supplier_unit_id,
+                                    name: unit.unit.name,
+                                    id: unit.unit.unit_id,
+                                    quantity: unit.quantity_per_unit,
+                                    batch: batch.index + 1,
+                                  })),
                               )
                               .filter(
-                                  (unit, index, self) =>
-                                      self.findIndex((u) => u.id === unit.id) === index
+                                (unit, index, self) =>
+                                  self.findIndex((u) => u.id === unit.id) ===
+                                  index,
                               )
                               .map((uniqueUnit) => (
-                                  <SelectItem
-                                      key={uniqueUnit.id}
-                                      value={JSON.stringify(uniqueUnit)}
-                                  >
-                                    {uniqueUnit.name}
-                                  </SelectItem>
+                                <SelectItem
+                                  key={uniqueUnit.id}
+                                  value={JSON.stringify(uniqueUnit)}
+                                >
+                                  {uniqueUnit.name}
+                                </SelectItem>
                               ))
-                      ) : null}
+                          : null}
                     </SelectContent>
                   </Select>
                 </div>

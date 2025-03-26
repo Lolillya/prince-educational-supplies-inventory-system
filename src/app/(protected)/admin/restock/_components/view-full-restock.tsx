@@ -185,7 +185,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
                 {addedStock} items
               </p>
               <div className="flex items-center gap-3 text-slate-400">
-                {/*<p className="text-sm tracking-wide">Total Added Stock</p>*/}
+                <p className="text-sm tracking-wide">Added Stock</p>
               </div>
             </div>
             <div className="flex items-center gap-2">

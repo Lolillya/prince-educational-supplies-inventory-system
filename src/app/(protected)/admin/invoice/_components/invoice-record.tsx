@@ -12,6 +12,7 @@ import MoreOptions from "../../_components/more-options";
 import { type InvoiceProps } from "../page";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
+import DropdownFullInvoice from "~/app/(protected)/admin/invoice/_components/dropdown-full-invoice";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   handleVoidItem,
@@ -46,9 +47,19 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 {/*  Pin*/}
                 {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  View Invoice
-                </DropdownMenuItem>
+                {/* <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  View Invoice*/}
+                {/*</DropdownMenuItem>*/}
+                <DropdownFullInvoice
+                    invoice_number={invoice_number}
+                    invoice_id={invoice_id}
+                    date={date}
+                    customer={customer}
+                    invoiceClerk={invoiceClerk}
+                    grandTotal={grandTotal}
+                    line_items={line_items}
+                    notes={notes}
+                    handleVoidItem={handleVoidItem}/>
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>

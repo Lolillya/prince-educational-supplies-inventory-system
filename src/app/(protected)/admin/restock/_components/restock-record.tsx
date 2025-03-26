@@ -12,6 +12,7 @@ import MoreOptions from "../../_components/more-options";
 import { type RestockProps } from "../page";
 import RestockItem from "./restock-item";
 import ViewFullRestock from "./view-full-restock";
+import DropdownFullRestock from "~/app/(protected)/admin/restock/_components/dropdown-full-restock";
 
 const RestockRecord: React.FC<RestockProps> = ({
   restockId,
@@ -20,6 +21,7 @@ const RestockRecord: React.FC<RestockProps> = ({
   restockClerk,
   addedStock,
   restockItems,
+  notes
 }) => {
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
@@ -40,9 +42,18 @@ const RestockRecord: React.FC<RestockProps> = ({
                 {/*  Export*/}
                 {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  View Restock
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  View Restock*/}
+                {/*</DropdownMenuItem>*/}
+                <DropdownFullRestock
+                    restockId={restockId}
+                    date={date}
+                    supplier={supplier}
+                    restockClerk={restockClerk}
+                    addedStock={addedStock}
+                    restockItems={restockItems}
+                    notes={notes}
+                />
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Supplier
                 </DropdownMenuItem>
@@ -130,7 +141,7 @@ const RestockRecord: React.FC<RestockProps> = ({
               restockClerk={restockClerk}
               addedStock={addedStock}
               restockItems={restockItems}
-            />
+             notes={notes}/>
             {/* <Separator
               orientation="vertical"
               className="h-6 w-[2px] bg-slate-200"

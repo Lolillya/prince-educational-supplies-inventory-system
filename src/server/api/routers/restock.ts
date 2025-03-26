@@ -3,8 +3,9 @@ import {createTRPCRouter, publicProcedure} from "~/server/api/trpc";
 import {db} from "~/server/db";
 
 const restockNotesSchema = z.object({
-    restockId: z.number(),
-    notes: z.string().nullable().optional(),
+    invoice_number: z.number(),
+    invoice_id: z.number(),
+    notes: z.string(),
 });
 export const restockRouter = createTRPCRouter({
     getUnits: publicProcedure.query(async () => {
@@ -70,43 +71,23 @@ export const restockRouter = createTRPCRouter({
         }
     }),
     saveNotes: publicProcedure
-        .input(restockNotesSchema)
+        .input(z.object({ notes: restockNotesSchema }))
         .mutation(async ({ ctx, input }) => {
-            const { restockId, notes } = input;
+            const { notes } = input;
 
-            try {
-                // First verify the restock exists
-                const restockExists = await ctx.db.batch.findUnique({
-                    where: { batch_id: restockId },
-                    select: { batch_id: true }
-                });
-
-                if (!restockExists) {
-                    throw new Error("Restock not found");
-                }
-
-                const result = await ctx.db.batch.update({
+            const result = await ctx.db.$transaction(async () => {
+                await ctx.db.invoice.update({
                     where: {
-                        batch_id: restockId,
+                        invoice_id: notes.invoice_id,
+                        invoice_number: notes.invoice_number,
                     },
                     data: {
-                        notes: notes ?? null, // Explicitly set to null if undefined
+                        notes: notes.notes,
                     },
                 });
+            });
 
-                return {
-                    success: true,
-                    message: "Restock notes updated successfully",
-                    batchId: result.batch_id
-                };
-            } catch (error) {
-                console.error("Error saving restock notes:", error);
-                throw new Error(
-                    error instanceof Error
-                        ? error.message
-                        : "Failed to save restock notes"
-                );
-            }
+            return result;
         }),
     getSuppliers: publicProcedure.query(async () => {
         try {

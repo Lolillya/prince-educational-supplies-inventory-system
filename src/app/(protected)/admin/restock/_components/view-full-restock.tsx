@@ -84,7 +84,7 @@ const ViewFullRestock: React.FC<RestockProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setRestockNotes(newValue);
-    setHasChanges(newValue !== initialNotes);
+    setHasChanges(newValue.trim() !== initialNotes.trim());
   };
 
   useEffect(() => {

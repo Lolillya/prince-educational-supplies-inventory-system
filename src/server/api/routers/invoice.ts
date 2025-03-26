@@ -15,7 +15,7 @@ const invoiceSchema = z.object({
 });
 
 const LineItemSchema = z.object({
-  supplier_unit_id: z.number().optional(),
+  supplier_unit_id: z.number(),
   variant_id: z.number(),
   quantity: z.number(),
   available: z.number(),
@@ -61,7 +61,7 @@ export const invoiceRouter = createTRPCRouter({
                   },
                 },
                 SupplierUnit: {
-                  orderBy: { supplier_unit_id: 'asc' },
+                  orderBy: { supplier_unit_id: "asc" },
                   select: {
                     supplier_unit_id: true,
                     price: true,
@@ -74,7 +74,7 @@ export const invoiceRouter = createTRPCRouter({
                       },
                     },
                     ConversionRate: {
-                      orderBy: { conversion_id: 'asc' },
+                      orderBy: { conversion_id: "asc" },
                       select: {
                         conversion_rate: true,
                         from_unit_id: true,
@@ -128,6 +128,7 @@ export const invoiceRouter = createTRPCRouter({
           ...(input?.customerId && { customer_id: input.customerId }),
         },
         select: {
+          status: true,
           invoice_number: true,
           invoice_id: true,
           created_at: true,
@@ -234,7 +235,7 @@ export const invoiceRouter = createTRPCRouter({
       return result;
     }),
 
-    createInvoiceWithLineItems: publicProcedure
+  createInvoiceWithLineItems: publicProcedure
     .input(
       z.object({
         invoice: invoiceSchema,
@@ -243,9 +244,9 @@ export const invoiceRouter = createTRPCRouter({
     )
     .mutation(async ({ input, ctx }) => {
       const { invoice, lineItems } = input;
-  
+
       console.log("Processing Invoice:", invoice);
-  
+
       try {
         const result = await ctx.db.$transaction(async (tx) => {
           // Step 1: Create Invoice
@@ -260,19 +261,20 @@ export const invoiceRouter = createTRPCRouter({
               notes: invoice.customerNotes,
             },
           });
-  
+
           const invoiceId = createdInvoice.invoice_id;
-  
+
           // Step 2: Handle Auto-Restock cases
           if (invoice.isBatchAutoRestock || invoice.isAutoRestock) {
             console.log(
               invoice.isBatchAutoRestock
                 ? "Batch Auto-Restock Enabled - Skipping stock logic"
-                : "Auto Restock triggered!"
+                : "Auto Restock triggered!",
             );
-  
+
             const createdLineItems = await tx.line_Item.createMany({
               data: lineItems.map((item) => ({
+                supplier_unit_id: item.supplier_unit_id,
                 invoice_id: invoiceId,
                 variant_id: item.variant_id,
                 quantity: item.quantity,
@@ -281,16 +283,14 @@ export const invoiceRouter = createTRPCRouter({
                 unit_id: item.unit_id,
               })),
             });
-  
+
             const generateBatchNumber = () =>
               Math.floor(1000000 + Math.random() * 9000000);
-  
-            const batchQuantity =
-              invoice.isBatchAutoRestock
-                ? lineItems[0]?.quantity ?? 0
-                : (lineItems[0]?.quantity ?? 0) -
-                  (lineItems[0]?.available ?? 0);
-  
+
+            const batchQuantity = invoice.isBatchAutoRestock
+              ? (lineItems[0]?.quantity ?? 0)
+              : (lineItems[0]?.quantity ?? 0) - (lineItems[0]?.available ?? 0);
+
             const batch = await tx.batch.create({
               data: {
                 quantity: batchQuantity,
@@ -298,7 +298,7 @@ export const invoiceRouter = createTRPCRouter({
                 restock_clerk: invoice.invoice_clerk,
               },
             });
-  
+
             if (lineItems[0]?.variant_id !== undefined) {
               const batchVariant = await tx.batchVariant.create({
                 data: {
@@ -307,38 +307,38 @@ export const invoiceRouter = createTRPCRouter({
                   quantity: batchQuantity,
                 },
               });
-  
+
               return { createdInvoice, createdLineItems, batch, batchVariant };
             } else {
               console.warn(
-                "Skipping batchVariant creation due to undefined variant_id"
+                "Skipping batchVariant creation due to undefined variant_id",
               );
               return { createdInvoice, createdLineItems, batch };
             }
           }
-  
+
           // Step 3: Process Line Items when no auto-restock
           const createdLineItems = await Promise.all(
             lineItems.map(async (item) => {
               let invoiceItemQty = item.quantity;
               const unitId = item.unit_id;
               const supplier_unit_id = item.supplier_unit_id;
-  
+
               const supplierUnit = await tx.supplierUnit.findFirst({
                 where: { supplier_unit_id, unit_id: unitId },
               });
-  
+
               if (!supplierUnit) {
                 throw new Error(
-                  `Supplier unit not found for variant ID: ${item.variant_id}`
+                  `Supplier unit not found for variant ID: ${item.variant_id}`,
                 );
               }
-  
+
               const supplierUnitList = await tx.supplierUnit.findMany({
                 where: { batch_variant_id: supplierUnit.batch_variant_id },
                 orderBy: { supplier_unit_id: "desc" },
               });
-  
+
               const conversionList = await tx.conversionRate.findMany({
                 where: {
                   supplier_unit_id: {
@@ -346,9 +346,9 @@ export const invoiceRouter = createTRPCRouter({
                   },
                 },
               });
-  
+
               console.log("Processing Item:", item);
-  
+
               if (invoice.isAutoRestock) {
                 await tx.supplierUnit.update({
                   where: { supplier_unit_id: supplierUnit.supplier_unit_id },
@@ -358,40 +358,45 @@ export const invoiceRouter = createTRPCRouter({
                 while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
                   if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
                     await tx.supplierUnit.update({
-                      where: { supplier_unit_id: supplierUnit.supplier_unit_id },
-                      data: { quantity_per_unit: { decrement: invoiceItemQty } },
+                      where: {
+                        supplier_unit_id: supplierUnit.supplier_unit_id,
+                      },
+                      data: {
+                        quantity_per_unit: { decrement: invoiceItemQty },
+                      },
                     });
                     invoiceItemQty = 0;
                   } else {
                     const conversion = conversionList.find(
-                      (c) => c.to_unit_id === supplierUnit.unit_id
+                      (c) => c.to_unit_id === supplierUnit.unit_id,
                     );
-  
+
                     if (!conversion) {
                       throw new Error(
-                        `Insufficient stock and no higher unit available for variant ID: ${item.variant_id}`
+                        `Insufficient stock and no higher unit available for variant ID: ${item.variant_id}`,
                       );
                     }
-  
+
                     const higherUnit = supplierUnitList.find(
-                      (su) => su.unit_id === conversion.from_unit_id
+                      (su) => su.unit_id === conversion.from_unit_id,
                     );
-  
+
                     if (!higherUnit || higherUnit.quantity_per_unit <= 0) {
                       throw new Error(
-                        `Insufficient stock in higher unit for variant ID: ${item.variant_id}`
+                        `Insufficient stock in higher unit for variant ID: ${item.variant_id}`,
                       );
                     }
-  
+
                     await tx.supplierUnit.update({
                       where: { supplier_unit_id: higherUnit.supplier_unit_id },
                       data: { quantity_per_unit: { decrement: 1 } },
                     });
-  
-                    supplierUnit.quantity_per_unit += conversion.conversion_rate;
+
+                    supplierUnit.quantity_per_unit +=
+                      conversion.conversion_rate;
                   }
                 }
-  
+
                 await tx.supplierUnit.update({
                   where: { supplier_unit_id: supplierUnit.supplier_unit_id },
                   data: {
@@ -400,7 +405,7 @@ export const invoiceRouter = createTRPCRouter({
                   },
                 });
               }
-  
+
               const allZeroQuantity =
                 (await tx.supplierUnit.count({
                   where: {
@@ -408,15 +413,16 @@ export const invoiceRouter = createTRPCRouter({
                     quantity_per_unit: { gt: 0 },
                   },
                 })) === 0;
-  
+
               if (allZeroQuantity) {
                 await tx.batchVariant.delete({
                   where: { batch_variant_id: supplierUnit.batch_variant_id },
                 });
               }
-  
+
               return tx.line_Item.create({
                 data: {
+                  supplier_unit_id: supplier_unit_id,
                   invoice_id: invoiceId,
                   variant_id: item.variant_id,
                   quantity: item.quantity,
@@ -425,19 +431,78 @@ export const invoiceRouter = createTRPCRouter({
                   unit_id: unitId,
                 },
               });
-            })
+            }),
           );
-  
+
           return { createdInvoice, createdLineItems };
         });
-  
+
         return result;
       } catch (error) {
         console.error("Transaction failed, rolling back:", error);
         throw new Error("Invoice creation failed. Please try again.");
       }
-    })
-  
+    }),
 
-    // voidItem: publicProcedure.input()
+  voidInvoice: publicProcedure
+    .input(z.number())
+    .mutation(async ({ input, ctx }) => {
+      try {
+        const result = await ctx.db.$transaction(async (prisma) => {
+          // Find the invoice
+          const invoice = await prisma.invoice.findFirst({
+            where: { invoice_id: input },
+          });
+
+          if (!invoice) {
+            throw new Error("Invoice not found.");
+          }
+
+          // Find all line items for the invoice
+          const line_items = await prisma.line_Item.findMany({
+            where: { invoice_id: input },
+          });
+
+          if (line_items.length === 0) {
+            throw new Error("No line items found for the invoice.");
+          }
+
+          // Update supplier units
+          const supplierUnits = await Promise.all(
+            line_items.map((item) =>
+              prisma.supplierUnit.update({
+                where: {
+                  supplier_unit_id: item.supplier_unit_id,
+                  unit_id: item.unit_id,
+                },
+                data: {
+                  quantity_per_unit: item.quantity,
+                },
+              }),
+            ),
+          );
+
+          // Update invoice status
+          const updatedInvoice = await prisma.invoice.update({
+            where: { invoice_id: input },
+            data: {
+              status: "VOIDED",
+            },
+          });
+
+          return { updatedInvoice, supplierUnits };
+        });
+
+        console.log("Transaction successful:", result);
+        return result.updatedInvoice;
+      } catch (error) {
+        console.error("Transaction failed:", error);
+
+        if (error instanceof Error) {
+          throw new Error(`Transaction failed: ${error.message}`);
+        } else {
+          throw new Error("Transaction failed due to an unknown error.");
+        }
+      }
+    }),
 });

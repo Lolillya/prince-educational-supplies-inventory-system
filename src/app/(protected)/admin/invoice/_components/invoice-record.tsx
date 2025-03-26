@@ -12,9 +12,11 @@ import MoreOptions from "../../_components/more-options";
 import { type InvoiceProps } from "../page";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
+import { Label } from "~/components/ui/label";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
-  handleVoidItem,
+  status,
+  voidInvoice,
   invoice_number,
   invoice_id,
   date,
@@ -46,19 +48,21 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 {/*  Pin*/}
                 {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
-                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Invoice
                 </DropdownMenuItem>
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>
 
-                <DropdownMenuItem
-                  className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
-                  onClick={handleVoidItem}
-                >
-                  Void
-                </DropdownMenuItem>
+                {status !== "VOIDED" && (
+                  <DropdownMenuItem
+                    className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
+                    onClick={() => voidInvoice(invoice_id)}
+                  >
+                    Void
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -81,11 +85,20 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               <Users2 className="h-4 w-4" />
               <p className="text-sm">{customer}</p>
             </div>
+
+            <div className="flex items-center gap-3">
+              <Label>Status: </Label>
+              <Label
+                className={`${status === "PENDING" && "text-orage"} ${status === "VOIDED" && "text-red"} `}
+              >
+                {status}
+              </Label>
+            </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between pl-8">
-          <div className="flex flex-col gap-2 justify-end">
+          <div className="flex flex-col justify-end gap-2">
             <p className="text-right text-xl">
               ₱ {grandTotal.toLocaleString()}
             </p>
@@ -114,6 +127,8 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           )}
           <div className="flex items-center gap-2">
             <ViewFullInvoice
+              status={status}
+              voidInvoice={voidInvoice}
               invoice_number={invoice_number}
               invoice_id={invoice_id}
               date={date}
@@ -122,7 +137,6 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               grandTotal={grandTotal}
               line_items={line_items}
               notes={notes}
-              handleVoidItem={handleVoidItem}
             />
           </div>
         </div>

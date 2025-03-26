@@ -42,10 +42,10 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 										<TooltipProvider>
 											<Tooltip>
 												<TooltipTrigger className="hover:cursor-text line-clamp-1 text-left">
-													{item.brand} - {item.item} - {item.variant}
+													{item.item} - {item.brand} - {item.variant}
 												</TooltipTrigger>
 												<TooltipContent className="shadow-none text-slate-700">
-													{item.brand} - {item.item} - {item.variant}
+													{item.item} - {item.brand} - {item.variant}
 												</TooltipContent>
 											</Tooltip>
 										</TooltipProvider>
@@ -64,61 +64,13 @@ const RestockTable = ({ restockItem, isEditing }: { restockItem: RestockProps['r
 											</HoverCardContent>
 										</HoverCard>
 									</TableCell>
-									{isEditing ? (
-										<>
-											<TableCell>₱{(item.price ?? 0).toFixed(2)}</TableCell>
-											<TableCell className="rounded-r-xl w-20">
-												<Popover>
-													<PopoverTrigger>
-														<MoreOptions className='!w-1 !h-1' />
-													</PopoverTrigger>
-													<PopoverContent className='shadow-none' popoverTarget=''>
-														<p className='text-slate-700 font-medium'>{item.brand} - {item.item} - {item.variant}</p>
-														<div className='mt-4 flex flex-col gap-2'>
-															<div>
-																<Label className="text-slate-400">Quantity</Label>
-																<Input
-																	className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-																	defaultValue={item.quantity}
-																/>
-															</div>
-															<div>
-																<Label className="text-slate-400">Price</Label>
-																<Input
-																	className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-																	defaultValue={item.price ?? 0}
-																/>
-															</div>
-														</div>
-														<div className="mt-4 w-full flex gap-2">
-															<Button className='w-1/2 bg-slate-200 hover:bg-slate-300 text-slate-700'>
-																Cancel
-															</Button>
-															<Button className='w-1/2 bg-teal-100 hover:bg-teal-200 text-green'>
-																Update
-															</Button>
-														</div>
-														<Separator className='mt-4' />
-														<div className="mt-4 w-full">
-															<Button className='w-full bg-rose-100 hover:bg-rose-200 text-red'>
-																Void Item
-															</Button>
-														</div>
-													</PopoverContent>
-												</Popover>
-											</TableCell>
-										</>
-									) : (
-										<TableCell className="rounded-r-xl">₱{(item.price ?? 0).toFixed(2)}</TableCell>
-									)}
+									<TableCell>₱{(item.price ?? 0).toFixed(2)}</TableCell>
 								</TableRow>
-							))
-							) : (
+							))) : (
 								<TableRow>
 									<TableCell colSpan={5} className='rounded-xl text-slate-700'>No items available...</TableCell>
 								</TableRow>
-							)
-						}
+							)}
 					</TableBody>
 				</Table>
 			</ScrollArea>

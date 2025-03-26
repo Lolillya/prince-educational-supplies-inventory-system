@@ -23,7 +23,6 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   grandTotal,
   line_items,
   notes,
-  handleExport,
 }) => {
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
@@ -37,22 +36,23 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 <MoreOptions className="!h-1 !w-1 !rounded-lg" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Print
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Print*/}
+                {/*</DropdownMenuItem>*/}
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   Export
                 </DropdownMenuItem>
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Pin
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Pin*/}
+                {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
-                {/* <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Invoice
-                </DropdownMenuItem> */}
+                </DropdownMenuItem>
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>
+
                 <DropdownMenuItem
                   className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
                   onClick={handleVoidItem}
@@ -85,11 +85,11 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
         </div>
 
         <div className="flex items-center justify-between pl-8">
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 justify-end">
             <p className="text-right text-xl">
               ₱ {grandTotal.toLocaleString()}
             </p>
-            <div className="flex items-center gap-8 text-slate-400">
+            <div className="flex items-center justify-end gap-8 text-slate-400">
               <div className="flex items-center gap-3 text-slate-400">
                 <p className="text-right text-sm">Grand Total</p>
               </div>
@@ -122,7 +122,6 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               grandTotal={grandTotal}
               line_items={line_items}
               notes={notes}
-              handleExport={handleExport}
               handleVoidItem={handleVoidItem}
             />
           </div>

@@ -71,13 +71,13 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 				<DropdownMenuTrigger className='flex justify-center items-center'>
 					<MoreOptions className='!h-[1px] mr-1' />
 				</DropdownMenuTrigger>
-				<DropdownMenuContent className='w-48'>
+				<DropdownMenuContent className='w-48 shadow-none'>
 					<DropdownMenuSub>
 						<DropdownMenuSubTrigger className="hover:!bg-slate-200 focus:!bg-slate-200">
 							Export Masterlist
 						</DropdownMenuSubTrigger>
 						<DropdownMenuPortal>
-							<DropdownMenuSubContent>
+							<DropdownMenuSubContent className='shadow-none'>
 								<DropdownMenuItem
 									onClick={() => handleExport(true)}
 									className="hover:!bg-slate-200 focus:!bg-slate-200"
@@ -99,7 +99,7 @@ const RecordHeader = ({ record, number, data }: RecordHeaderProps) => {
 							Export Stocklist
 						</DropdownMenuSubTrigger>
 						<DropdownMenuPortal>
-							<DropdownMenuSubContent>
+							<DropdownMenuSubContent className='shadow-none'>
 								<DropdownMenuCheckboxItem
 									checked={stockFilters.sufficient}
 									onCheckedChange={() => setStockFilters(prev => ({

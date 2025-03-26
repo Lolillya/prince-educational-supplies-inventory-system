@@ -57,10 +57,10 @@ const InvoiceItem: React.FC<Props> = ({ line_items }: Props) => {
         </div>
 
         <div className="between flex items-center justify-between gap-4 pl-8">
-          <div className="flex flex-col gap-3">
-            <p>₱ {total_price.toLocaleString()}</p>
-            <div className="flex items-center gap-8 text-slate-400">
-              <div className="flex items-center gap-3 text-slate-400">
+          <div className="flex flex-col gap-3 items-right">
+            <p className="text-right">₱ {total_price.toLocaleString()}</p>
+            <div className="flex items-center justify-end text-slate-400">
+              <div className="flex items-right justify-end gap-3 text-slate-400">
                 <p className="text-sm">Subtotal</p>
               </div>
             </div>

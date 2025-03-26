@@ -101,13 +101,31 @@ type SupplierUnit = {
   unit: {
     name: string;
     unit_id: number;
-    supplier_unit_id: number;
   };
+  ConversionRate: {
+    conversion_rate: number;
+    from_unit_id: number; // Add missing field
+    to_unit_id: number;   // Add missing field
+    toUnit: {
+      name: string;
+      unit_id: number;    // Add unit_id here
+    };
+  }[];
 };
 
 type SupplierBatch = {
   index: number;
   supplierUnits: SupplierUnit[];
+};
+
+type HierarchyNode = {
+  unitId: number;
+  rateFromPrevious?: number;
+};
+type ConversionDebug = {
+  fromUnitId: number;
+  toUnitId: number;
+  rate: number;
 };
 
 const InvoiceCard: React.FC<InvoiceCardProps> = ({
@@ -125,6 +143,8 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   isInputFocused,
   units,
 }) => {
+  const [availableUnits, setAvailableUnits] = useState<number[]>([]);
+
   const [unitQuantity, setUnitQuantity] = useState<number>(0);
   const [price, setPrice] = useState({
     price: 0,
@@ -154,35 +174,159 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   );
   const [isBatchAutoRestock, setIsBatchAutoRestock] = useState<boolean>(false);
 
+  const buildHierarchy = (supplierUnits: SupplierUnit[]): HierarchyNode[] => {
+    const conversionMap = new Map<number, { to: number; rate: number }[]>();
+    const debugConversions: ConversionDebug[] = [];
+
+    supplierUnits.forEach((su) => {
+      su.ConversionRate.forEach((cr) => {
+        debugConversions.push({
+          fromUnitId: cr.from_unit_id,
+          toUnitId: cr.to_unit_id,
+          rate: cr.conversion_rate,
+        });
+
+        if (!conversionMap.has(cr.from_unit_id)) {
+          conversionMap.set(cr.from_unit_id, []);
+        }
+        conversionMap.get(cr.from_unit_id)?.push({
+          to: cr.to_unit_id,
+          rate: cr.conversion_rate,
+        });
+      });
+    });
+
+    console.log('--- buildHierarchy Debug ---');
+    console.log('All conversions:', debugConversions);
+    console.log('Conversion map:', conversionMap);
+
+    const allTargets = new Set(
+        Array.from(conversionMap.values()).flatMap(convs => convs.map(c => c.to))
+    );
+
+    const rootUnits = Array.from(conversionMap.keys())
+        .filter(unitId => !allTargets.has(unitId));
+
+    console.log('Root units:', rootUnits);
+
+    if (rootUnits.length === 0) {
+      const units = [...new Set(supplierUnits.map(su => su.unit.unit_id))]
+          .map(unitId => ({ unitId }));
+      console.log('No conversions hierarchy:', units);
+      return units;
+    }
+
+    const hierarchy: HierarchyNode[] = [];
+    let currentUnitId = rootUnits[0];
+    hierarchy.push({ unitId: currentUnitId });
+
+    console.log('Starting hierarchy with root:', currentUnitId);
+
+    while (true) {
+      const conversions = conversionMap.get(currentUnitId);
+      if (!conversions || conversions.length === 0) break;
+
+      const conversion = conversions[0];
+      console.log(`Adding conversion: ${currentUnitId} -> ${conversion.to} (rate: ${conversion.rate})`);
+
+      hierarchy.push({
+        unitId: conversion.to,
+        rateFromPrevious: conversion.rate,
+      });
+      currentUnitId = conversion.to;
+    }
+
+    console.log('Final hierarchy:', hierarchy);
+    return hierarchy;
+  };
+
+  const longestCommonSuffix = (
+      a: HierarchyNode[],
+      b: HierarchyNode[]
+  ): HierarchyNode[] => {
+    let i = a.length - 1;
+    let j = b.length - 1;
+    const suffix: HierarchyNode[] = [];
+
+    console.log('Comparing hierarchies:');
+    console.log('Hierarchy A:', a.map(n => `${n.unitId} (${n.rateFromPrevious})`));
+    console.log('Hierarchy B:', b.map(n => `${n.unitId} (${n.rateFromPrevious})`));
+
+    while (i >= 0 && j >= 0) {
+      const nodeA = a[i];
+      const nodeB = b[j];
+
+      if (nodeA.unitId !== nodeB.unitId) break;
+
+      const isLeafA = i === a.length - 1;
+      const isLeafB = j === b.length - 1;
+      const isRootA = i === 0;
+      const isRootB = j === 0;
+
+      if (!isLeafA && !isLeafB) {
+        if (!isRootA && !isRootB) {
+          if (nodeA.rateFromPrevious !== nodeB.rateFromPrevious) break;
+        }
+      }
+
+      console.log(`Matched: ${nodeA.unitId} (${nodeA.rateFromPrevious}) <-> ${nodeB.unitId} (${nodeB.rateFromPrevious})`);
+      suffix.unshift({ ...nodeA });
+      i--;
+      j--;
+    }
+
+    return suffix;
+  };
+
   const getBatchColor = (
-    supplierUnits: {
-      price: number;
-      quantity_per_unit: number;
-      unit_id: number;
-      unit: { name: string; unit_id: number };
-    }[],
-    currentBatchBasis?: SupplierBatch,
+      supplierUnits: SupplierUnit[],
+      currentBatchBasis?: SupplierBatch
   ) => {
     if (!currentBatchBasis) return "bg-yellow/30";
 
-    const batchBasisUnitIds = currentBatchBasis.supplierUnits.map(
-      (unit) => unit.unit_id,
-    );
-    const currentBatchUnitIds = supplierUnits.map((unit) => unit.unit_id);
+    const basisHierarchy = buildHierarchy(currentBatchBasis.supplierUnits);
+    const currentHierarchy = buildHierarchy(supplierUnits);
 
-    const hasExactSameOrder =
-      batchBasisUnitIds.length === currentBatchUnitIds.length &&
-      batchBasisUnitIds.every((id, index) => id === currentBatchUnitIds[index]);
+    console.log('\n--- getBatchColor Debug ---');
+    console.log('Basis hierarchy:', basisHierarchy);
+    console.log('Current hierarchy:', currentHierarchy);
 
-    const hasAtLeastOneSameUnit = currentBatchUnitIds.some((id) =>
-      batchBasisUnitIds.includes(id),
-    );
+    // 1. Check leaf unit match
+    const basisLeaf = basisHierarchy[basisHierarchy.length - 1];
+    const currentLeaf = currentHierarchy[currentHierarchy.length - 1];
 
-    const hasPartialMatch = hasAtLeastOneSameUnit && !hasExactSameOrder;
+    console.log(`Leaf comparison: 
+    Basis: ${basisLeaf.unitId}
+    Current: ${currentLeaf.unitId}`);
 
-    if (hasExactSameOrder) return "bg-green/50";
-    if (hasPartialMatch) return "bg-yellow-300";
-    return "bg-red/80";
+    if (basisLeaf.unitId !== currentLeaf.unitId) {
+      console.log('Leaf mismatch - red');
+      return "bg-red/80";
+    }
+
+    // 2. Check exact match (all units and rates match except leaf rate)
+    let isExactMatch = basisHierarchy.length === currentHierarchy.length;
+
+    if (isExactMatch) {
+      for (let i = 0; i < basisHierarchy.length - 1; i++) {
+        const basisNode = basisHierarchy[i];
+        const currentNode = currentHierarchy[i];
+
+        if (basisNode.unitId !== currentNode.unitId ||
+            basisNode.rateFromPrevious !== currentNode.rateFromPrevious) {
+          isExactMatch = false;
+          break;
+        }
+      }
+    }
+
+    console.log('Exact match check:', isExactMatch);
+    if (isExactMatch) return "bg-green/50";
+
+    const commonSuffix = longestCommonSuffix(basisHierarchy, currentHierarchy);
+    console.log('Common suffix length:', commonSuffix.length);
+
+    return commonSuffix.length > 0 ? "bg-yellow-300" : "bg-red/80";
   };
 
   const handlePriceInput = (price: number, batch: number) => {
@@ -222,13 +366,11 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
   console.log(BatchVariant);
 
   const handleSelectUnitQuantity = () => {
-    // Calculate the total quantity
     const total = selectedBatches.reduce((acc, batch) => {
       return (
         acc +
         batch.supplierUnits.reduce((sum, supplier) => {
           if (selectedUnit.unit_id === supplier.unit_id) {
-            // console.log("Matching Supplier:", supplier); // ✅ Log supplier details
             return sum + supplier.quantity_per_unit;
           }
           return sum;
@@ -236,7 +378,6 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
       );
     }, 0);
 
-    // Update state once
     setSelectedUnitQuantity(total);
   };
 
@@ -261,7 +402,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
   useEffect(() => {
     if (selectedBatches.length > 0) {
-      setBatchBasis(selectedBatches[0]); // Always set the first batch as the basis
+      setBatchBasis(selectedBatches[0]);
     } else {
       setBatchBasis(undefined);
     }
@@ -279,6 +420,25 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
         supplier_unit_id: 0,
       });
     }
+  }, [selectedBatches]);
+
+
+  useEffect(() => {
+    if (selectedBatches.length === 0) {
+      setAvailableUnits([]);
+      return;
+    }
+
+    const hierarchies = selectedBatches.map(batch =>
+        buildHierarchy(batch.supplierUnits)
+    );
+
+    let commonSuffix = hierarchies[0] || [];
+    for (const hierarchy of hierarchies.slice(1)) {
+      commonSuffix = longestCommonSuffix(commonSuffix, hierarchy);
+    }
+
+    setAvailableUnits(commonSuffix.map(node => node.unitId));
   }, [selectedBatches]);
 
   console.log("SelectedUnit:", selectedUnit);
@@ -449,7 +609,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                           </TableRow>
                         </TableHeader>
                         <TableBody>
-                          {variant.SupplierUnit.map((unit, unitIndex) => (
+                          {variant.SupplierUnit
+                              .sort((a, b) => a.supplier_unit_id - b.supplier_unit_id)
+                              .map((unit, unitIndex) => (
                             <TableRow key={unitIndex}>
                               <TableCell>{unit.unit.name}</TableCell>
 
@@ -460,7 +622,7 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                                 ₱ {unit.price.toFixed(2)}
                               </TableCell>
                               <TableCell className="flex items-center gap-1">
-                                {unit.unit.name !== "Pieces" && (
+                                {unit.ConversionRate.length > 0 && (
                                   <>
                                     <MoveRight size={15} />{" "}
                                     {unit.ConversionRate[0]?.conversion_rate}{" "}
@@ -580,47 +742,45 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       </SelectValue>
                     </SelectTrigger>
                     <SelectContent>
-                      {isBatchAutoRestock && units?.length
-                        ? units.map((u) => (
-                            <SelectItem
-                              key={u.unit_id}
-                              value={JSON.stringify({
-                                id: u.unit_id,
-                                name: u.name,
-                                supplier_unit_id: undefined,
-                              })}
-                            >
-                              {u.name}
-                            </SelectItem>
+                      {isBatchAutoRestock && units?.length ? (
+                          units.map((u) => (
+                              <SelectItem
+                                  key={u.unit_id}
+                                  value={JSON.stringify({
+                                    id: u.unit_id,
+                                    name: u.name,
+                                    supplier_unit_id: undefined,
+                                  })}
+                              >
+                                {u.name}
+                              </SelectItem>
                           ))
-                        : selectedBatches?.length
-                          ? selectedBatches
-                              .flatMap((batch, index) =>
-                                batch.supplierUnits.map((unit) => ({
-                                  supplier_unit_id: unit.supplier_unit_id,
-                                  name: unit.unit.name,
-                                  id: unit.unit.unit_id,
-                                  quantity: unit.quantity_per_unit,
-                                  batch: index + 1,
-                                })),
+                      ) : selectedBatches?.length ? (
+                          selectedBatches
+                              .flatMap((batch) =>
+                                  batch.supplierUnits
+                                      .filter((su) => availableUnits.includes(su.unit.unit_id))
+                                      .map((unit) => ({
+                                        supplier_unit_id: unit.supplier_unit_id,
+                                        name: unit.unit.name,
+                                        id: unit.unit.unit_id,
+                                        quantity: unit.quantity_per_unit,
+                                        batch: batch.index + 1,
+                                      }))
                               )
                               .filter(
-                                (unit, index, self) =>
-                                  self.findIndex(
-                                    (u) =>
-                                      u.name.toLowerCase() ===
-                                      unit.name.toLowerCase(),
-                                  ) === index,
+                                  (unit, index, self) =>
+                                      self.findIndex((u) => u.id === unit.id) === index
                               )
                               .map((uniqueUnit) => (
-                                <SelectItem
-                                  key={uniqueUnit.id}
-                                  value={JSON.stringify(uniqueUnit)}
-                                >
-                                  {uniqueUnit.name}
-                                </SelectItem>
+                                  <SelectItem
+                                      key={uniqueUnit.id}
+                                      value={JSON.stringify(uniqueUnit)}
+                                  >
+                                    {uniqueUnit.name}
+                                  </SelectItem>
                               ))
-                          : null}
+                      ) : null}
                     </SelectContent>
                   </Select>
                 </div>

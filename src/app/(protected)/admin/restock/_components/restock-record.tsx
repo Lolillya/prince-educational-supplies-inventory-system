@@ -33,12 +33,12 @@ const RestockRecord: React.FC<RestockProps> = ({
                 <MoreOptions className="!h-1 !w-1 !rounded-lg" />
               </DropdownMenuTrigger>
               <DropdownMenuContent className="text-slate-700 shadow-none">
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Print
-                </DropdownMenuItem>
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                  Export
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Print*/}
+                {/*</DropdownMenuItem>*/}
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Export*/}
+                {/*</DropdownMenuItem>*/}
                 <DropdownMenuSeparator />
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Restock
@@ -50,16 +50,22 @@ const RestockRecord: React.FC<RestockProps> = ({
                 <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
                   Void
                 </DropdownMenuItem>
-                <DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">
-                  Delete
-                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="text-red hover:!bg-rose-200 hover:!text-red focus:!bg-rose-200 focus:!text-red">*/}
+                {/*  Delete*/}
+                {/*</DropdownMenuItem>*/}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
           <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-3 text-slate-400">
               <Calendar className="h-4 w-4" />
-              <p className="text-sm">{date}</p>
+              <p className="text-sm">
+                {new Date(date).toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </p>
             </div>
             <Separator
               orientation="vertical"

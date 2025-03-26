@@ -61,6 +61,7 @@ export const invoiceRouter = createTRPCRouter({
                   },
                 },
                 SupplierUnit: {
+                  orderBy: { supplier_unit_id: 'asc' },
                   select: {
                     supplier_unit_id: true,
                     price: true,
@@ -73,12 +74,15 @@ export const invoiceRouter = createTRPCRouter({
                       },
                     },
                     ConversionRate: {
+                      orderBy: { conversion_id: 'asc' },
                       select: {
                         conversion_rate: true,
+                        from_unit_id: true,
+                        to_unit_id: true,
                         toUnit: {
                           select: {
-                            
                             name: true,
+                            unit_id: true,
                           },
                         },
                       },

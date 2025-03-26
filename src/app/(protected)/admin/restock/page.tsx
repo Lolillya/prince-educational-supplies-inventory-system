@@ -35,6 +35,7 @@ export interface RestockProps {
     }[];
   }[];
   onViewAll?: (batch: RestockProps) => void;
+  notes: string;
 }
 
 const RestockPage = () => {

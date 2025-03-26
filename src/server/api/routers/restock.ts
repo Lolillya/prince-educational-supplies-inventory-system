@@ -2,6 +2,10 @@ import {z} from "zod";
 import {createTRPCRouter, publicProcedure} from "~/server/api/trpc";
 import {db} from "~/server/db";
 
+const restockNotesSchema = z.object({
+    restockId: z.number(),
+    notes: z.string().nullable().optional(),
+});
 export const restockRouter = createTRPCRouter({
     getUnits: publicProcedure.query(async () => {
         try {
@@ -65,7 +69,45 @@ export const restockRouter = createTRPCRouter({
             throw new Error("Failed to fetch batch_id.");
         }
     }),
+    saveNotes: publicProcedure
+        .input(restockNotesSchema)
+        .mutation(async ({ ctx, input }) => {
+            const { restockId, notes } = input;
 
+            try {
+                // First verify the restock exists
+                const restockExists = await ctx.db.batch.findUnique({
+                    where: { batch_id: restockId },
+                    select: { batch_id: true }
+                });
+
+                if (!restockExists) {
+                    throw new Error("Restock not found");
+                }
+
+                const result = await ctx.db.batch.update({
+                    where: {
+                        batch_id: restockId,
+                    },
+                    data: {
+                        notes: notes ?? null, // Explicitly set to null if undefined
+                    },
+                });
+
+                return {
+                    success: true,
+                    message: "Restock notes updated successfully",
+                    batchId: result.batch_id
+                };
+            } catch (error) {
+                console.error("Error saving restock notes:", error);
+                throw new Error(
+                    error instanceof Error
+                        ? error.message
+                        : "Failed to save restock notes"
+                );
+            }
+        }),
     getSuppliers: publicProcedure.query(async () => {
         try {
             const suppliers = await db.user_Role.findMany({

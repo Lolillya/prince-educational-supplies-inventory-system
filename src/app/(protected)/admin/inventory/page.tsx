@@ -192,30 +192,7 @@ const InventoryPage = () => {
                     )}
                     category={selectedRecord.variant.item.category.name}
                     notes={selectedRecord.variant.item.description ?? undefined}
-                    batchVariants={selectedRecord.variant.BatchVariant.map(
-                      (bv) => ({
-                        batch_variant_id: bv.batch_variant_id.toString(),
-                        variant_id: bv.variant_id,
-                        quantity: bv.quantity,
-                        batch: {
-                          batch_id: bv.batch_variant_id.toString(),
-                          batch_number: bv.batch_variant_id.toString(),
-                          batchVariants: [
-                            {
-                              batch_variant_id: bv.batch_variant_id.toString(),
-                              SupplierUnit: [
-                                {
-                                  supplier_unit_id: "0",
-                                  quantity_per_unit: bv.quantity,
-                                  price: 0,
-                                  unit: { name: "" },
-                                },
-                              ],
-                            },
-                          ],
-                        },
-                      }),
-                    )}
+                    batchVariants={selectedRecord.variant.BatchVariant}
                     onVerifyPassword={handleVerifyPassword}
                   />
                 </div>

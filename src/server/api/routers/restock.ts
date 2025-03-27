@@ -2,6 +2,11 @@ import {z} from "zod";
 import {createTRPCRouter, publicProcedure} from "~/server/api/trpc";
 import {db} from "~/server/db";
 
+const restockNotesSchema = z.object({
+    invoice_number: z.number(),
+    invoice_id: z.number(),
+    notes: z.string(),
+});
 export const restockRouter = createTRPCRouter({
     getUnits: publicProcedure.query(async () => {
         try {
@@ -65,7 +70,25 @@ export const restockRouter = createTRPCRouter({
             throw new Error("Failed to fetch batch_id.");
         }
     }),
+    saveNotes: publicProcedure
+        .input(z.object({ notes: restockNotesSchema }))
+        .mutation(async ({ ctx, input }) => {
+            const { notes } = input;
 
+            const result = await ctx.db.$transaction(async () => {
+                await ctx.db.invoice.update({
+                    where: {
+                        invoice_id: notes.invoice_id,
+                        invoice_number: notes.invoice_number,
+                    },
+                    data: {
+                        notes: notes.notes,
+                    },
+                });
+            });
+
+            return result;
+        }),
     getSuppliers: publicProcedure.query(async () => {
         try {
             const suppliers = await db.user_Role.findMany({

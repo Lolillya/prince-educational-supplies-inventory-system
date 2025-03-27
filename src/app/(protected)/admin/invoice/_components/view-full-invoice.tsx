@@ -89,8 +89,9 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
     setCustomerNotes(newValue);
-    setHasChanges(newValue !== initialNotes);
+    setHasChanges(newValue.trim() !== initialNotes.trim());
   };
+
 
   useEffect(() => {
     setInitialNotes(customerNotes); // Set initial notes when the component mounts

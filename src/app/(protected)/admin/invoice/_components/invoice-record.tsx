@@ -1,5 +1,5 @@
 import { Calendar, Pin, Users2 } from "lucide-react";
-import React, { useState } from "react";
+import React from "react";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -12,6 +12,7 @@ import MoreOptions from "../../_components/more-options";
 import { type InvoiceProps } from "../page";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
+import DropdownFullInvoice from "~/app/(protected)/admin/invoice/_components/dropdown-full-invoice";
 import { Label } from "~/components/ui/label";
 import {
   Dialog,
@@ -23,9 +24,7 @@ import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
-  voidPending,
-  status,
-  voidInvoice,
+  handleVoidItem,
   invoice_number,
   invoice_id,
   date,
@@ -35,161 +34,120 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   line_items,
   notes,
 }) => {
-  const [isDialogOpen, setIsDialogOpen] = useState(false);
   return (
-    <>
-      <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
-        <div className="flex items-center justify-between px-6">
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-3">
-              <p className="text-xl">#{invoice_number}</p>
-              <Pin className="h-5 w-5 rotate-45 text-amber-400" />
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex items-center justify-center">
-                  <MoreOptions className="!h-1 !w-1 !rounded-lg" />
-                </DropdownMenuTrigger>
-                <DropdownMenuContent className="text-slate-700 shadow-none">
-                  {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
-                  {/*  Print*/}
-                  {/*</DropdownMenuItem>*/}
-                  <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                    Export
-                  </DropdownMenuItem>
-                  {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
-                  {/*  Pin*/}
-                  {/*</DropdownMenuItem>*/}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                    View Invoice
-                  </DropdownMenuItem>
-                  <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
-                    View Customer
-                  </DropdownMenuItem>
+    <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
+      <div className="flex items-center justify-between px-6">
+        <div className="flex flex-col gap-2">
+          <div className="flex items-center gap-3">
+            <p className="text-xl">#{invoice_number}</p>
+            <Pin className="h-5 w-5 rotate-45 text-amber-400" />
+            <DropdownMenu>
+              <DropdownMenuTrigger className="flex items-center justify-center">
+                <MoreOptions className="!h-1 !w-1 !rounded-lg" />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="text-slate-700 shadow-none">
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Print*/}
+                {/*</DropdownMenuItem>*/}
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  Export
+                </DropdownMenuItem>
+                {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  Pin*/}
+                {/*</DropdownMenuItem>*/}
+                <DropdownMenuSeparator />
+                {/* <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
+                {/*  View Invoice*/}
+                {/*</DropdownMenuItem>*/}
+                <DropdownFullInvoice
+                    invoice_number={invoice_number}
+                    invoice_id={invoice_id}
+                    date={date}
+                    customer={customer}
+                    invoiceClerk={invoiceClerk}
+                    grandTotal={grandTotal}
+                    line_items={line_items}
+                    notes={notes}
+                    handleVoidItem={handleVoidItem}/>
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                  View Customer
+                </DropdownMenuItem>
 
-                  {status !== "VOIDED" && (
-                    <Dialog
-                      open={isDialogOpen || voidPending}
-                      onOpenChange={setIsDialogOpen}
-                    >
-                      <DialogTrigger asChild>
-                        <DropdownMenuItem
-                          className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
-                          // onClick={() => voidInvoice(invoice_id)}
-                        >
-                          Void
-                        </DropdownMenuItem>
-                      </DialogTrigger>
-                      <DialogContent className="flex h-60 w-full max-w-md items-center justify-center">
-                        {voidPending ? (
-                          <div className="flex flex-col items-center gap-2">
-                            <LoadingSpinner />
-                            <p className="text-gray-600">Voiding invoice...</p>
-                          </div>
-                        ) : (
-                          <div className="flex h-full flex-col items-center justify-between">
-                            <DialogTitle>Void Invoice</DialogTitle>
-                            <p>Are you sure you want to void this invoice?</p>
-                            <div className="flex justify-center gap-3">
-                              <Button
-                                onClick={() => setIsDialogOpen(false)}
-                                disabled={voidPending}
-                              >
-                                Cancel
-                              </Button>
-                              <Button
-                                variant={"destructive"}
-                                onClick={() => voidInvoice(invoice_id)}
-                                disabled={voidPending}
-                              >
-                                Confirm
-                              </Button>
-                            </div>
-                          </div>
-                        )}
-                      </DialogContent>
-                    </Dialog>
-                  )}
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
-            <div className="items text-right-center flex gap-4 text-slate-400">
-              <div className="flex items-center gap-3 text-slate-400">
-                <Calendar className="h-4 w-4" />
-                <p className="text-sm">
-                  {date.toLocaleDateString("en-US", {
-                    month: "long",
-                    day: "numeric",
-                    year: "numeric",
-                  })}
-                </p>
-              </div>
-              <Separator
-                orientation="vertical"
-                className="h-6 w-[2px] bg-slate-200"
-              />
-              <div className="flex items-center gap-3">
-                <Users2 className="h-4 w-4" />
-                <p className="text-sm">{customer}</p>
-              </div>
-
-              <div className="flex items-center gap-3">
-                <Label>Status: </Label>
-                <Label
-                  className={`${status === "PENDING" && "text-orage"} ${status === "VOIDED" && "text-red"} `}
+                <DropdownMenuItem
+                  className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
+                  onClick={handleVoidItem}
                 >
-                  {status}
-                </Label>
-              </div>
-            </div>
+                  Void
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
-
-          <div className="flex items-center justify-between pl-8">
-            <div className="flex flex-col justify-end gap-2">
-              <p className="text-right text-xl">
-                ₱ {grandTotal.toLocaleString()}
+          <div className="items text-right-center flex gap-4 text-slate-400">
+            <div className="flex items-center gap-3 text-slate-400">
+              <Calendar className="h-4 w-4" />
+              <p className="text-sm">
+                {date.toLocaleDateString("en-US", {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
               </p>
-              <div className="flex items-center justify-end gap-8 text-slate-400">
-                <div className="flex items-center gap-3 text-slate-400">
-                  <p className="text-right text-sm">Grand Total</p>
-                </div>
-              </div>
+            </div>
+            <Separator
+              orientation="vertical"
+              className="h-6 w-[2px] bg-slate-200"
+            />
+            <div className="flex items-center gap-3">
+              <Users2 className="h-4 w-4" />
+              <p className="text-sm">{customer}</p>
             </div>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3">
-          {line_items.slice(0, 2).map((item, index) => (
-            <InvoiceItem key={index} line_items={item} />
-          ))}
-
-          <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">
-            {line_items.length > 2 ? (
-              <p>
-                {line_items.length - 2} more item
-                {line_items.length - 2 > 1 ? "s" : ""}...
-              </p>
-            ) : (
-              line_items.length <= 2 && <p>No more items...</p>
-            )}
-            <div className="flex items-center gap-2">
-              <ViewFullInvoice
-                voidPending={voidPending}
-                status={status}
-                voidInvoice={voidInvoice}
-                invoice_number={invoice_number}
-                invoice_id={invoice_id}
-                date={date}
-                customer={customer}
-                invoiceClerk={invoiceClerk}
-                grandTotal={grandTotal}
-                line_items={line_items}
-                notes={notes}
-              />
+        <div className="flex items-center justify-between pl-8">
+          <div className="flex flex-col gap-2 justify-end">
+            <p className="text-right text-xl">
+              ₱ {grandTotal.toLocaleString()}
+            </p>
+            <div className="flex items-center justify-end gap-8 text-slate-400">
+              <div className="flex items-center gap-3 text-slate-400">
+                <p className="text-right text-sm">Grand Total</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
-    </>
+
+      <div className="flex flex-col gap-3">
+        {line_items.slice(0, 2).map((item, index) => (
+          <InvoiceItem key={index} line_items={item} />
+        ))}
+
+        <div className="flex items-center justify-between rounded-lg bg-white/70 px-6 py-3 text-slate-400">
+          {line_items.length > 2 ? (
+            <p>
+              {line_items.length - 2} more item
+              {line_items.length - 2 > 1 ? "s" : ""}...
+            </p>
+          ) : (
+            line_items.length <= 2 && <p>No more items...</p>
+          )}
+          <div className="flex items-center gap-2">
+            <ViewFullInvoice
+              invoice_number={invoice_number}
+              invoice_id={invoice_id}
+              date={date}
+              customer={customer}
+              invoiceClerk={invoiceClerk}
+              grandTotal={grandTotal}
+              line_items={line_items}
+              notes={notes}
+              handleVoidItem={handleVoidItem}
+            />
+          </div>
+        </div>
+      </div>
+    </div>
   );
 };
 

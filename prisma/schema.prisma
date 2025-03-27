@@ -179,6 +179,8 @@ model SupplierUnit {
   discount          Discount?        @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   supplier          User_Role        @relation(fields: [supplier_id], references: [id])
   unit              Unit             @relation(fields: [unit_id], references: [unit_id])
+  Invoice           Invoice[]
+  Line_Item         Line_Item[]
 }
 
 model ConversionRate {
@@ -270,42 +272,48 @@ model Inventory_Log {
 }
 
 model Invoice {
-  invoice_id      Int           @id @default(autoincrement())
-  invoice_number  Int           @unique @default(autoincrement())
+  invoice_id     Int @id @default(autoincrement())
+  invoice_number Int @unique @default(autoincrement())
+
   customer_id     String
   invoice_clerk   String
-  created_at      DateTime      @default(now())
-  updated_at      DateTime      @updatedAt
-  total_amount    Float         @default(0.0)
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
+  total_amount    Float    @default(0.0)
   discount        Float?
   status          String
   payment_term_id Int
   notes           String?
   user_RoleId     String?
-  customer        User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id], onDelete: Cascade)
-  invoiceClerk    User_Role     @relation("InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
-  payment_term    Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
-  User_Role       User_Role?    @relation(fields: [user_RoleId], references: [id], onDelete: Cascade)
-  line_items      Line_Item[]
-  Payment         Payment[]
-  payment_logs    Payment_Log[]
-  Pin             Pin[]
+
+  customer                     User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id], onDelete: Cascade)
+  invoiceClerk                 User_Role     @relation("InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
+  payment_term                 Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
+  User_Role                    User_Role?    @relation(fields: [user_RoleId], references: [id], onDelete: Cascade)
+  line_items                   Line_Item[]
+  Payment                      Payment[]
+  payment_logs                 Payment_Log[]
+  Pin                          Pin[]
+  SupplierUnit                 SupplierUnit? @relation(fields: [supplierUnitSupplier_unit_id], references: [supplier_unit_id])
+  supplierUnitSupplier_unit_id Int?
 }
 
 model Line_Item {
-  line_item_id Int      @id @default(autoincrement())
-  invoice_id   Int
-  variant_id   Int
-  unit_id      Int
-  quantity     Int
-  unit_price   Float
-  total_price  Float
-  created_at   DateTime @default(now())
-  discount     Int      @default(0)
-  sub_total    Float?
-  invoice      Invoice  @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
-  unit         Unit     @relation(fields: [unit_id], references: [unit_id])
-  variant      Variant  @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
+  line_item_id     Int          @id @default(autoincrement())
+  invoice_id       Int
+  variant_id       Int
+  supplier_unit_id Int
+  unit_id          Int
+  quantity         Int
+  unit_price       Float
+  total_price      Float
+  created_at       DateTime     @default(now())
+  discount         Int          @default(0)
+  sub_total        Float?
+  supplier_unit    SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id])
+  invoice          Invoice      @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+  unit             Unit         @relation(fields: [unit_id], references: [unit_id])
+  variant          Variant      @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model Payment_Term {

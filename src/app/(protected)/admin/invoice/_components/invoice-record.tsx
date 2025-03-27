@@ -13,6 +13,15 @@ import { type InvoiceProps } from "../page";
 import InvoiceItem from "./invoice-item";
 import ViewFullInvoice from "./view-full-invoice";
 import DropdownFullInvoice from "~/app/(protected)/admin/invoice/_components/dropdown-full-invoice";
+import { Label } from "~/components/ui/label";
+import {
+  Dialog,
+  DialogContent,
+  DialogTitle,
+  DialogTrigger,
+} from "~/components/ui/dialog";
+import { LoadingSpinner } from "~/components/loading";
+import { Button } from "~/components/ui/button";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   handleVoidItem,

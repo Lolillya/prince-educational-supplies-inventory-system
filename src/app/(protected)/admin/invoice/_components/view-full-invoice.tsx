@@ -22,6 +22,7 @@ import InvoiceTable from "./invoice-table";
 import { handleExport } from "~/lib/utils/exportInvoice";
 
 const ViewFullInvoice: React.FC<InvoiceProps> = ({
+  voidPending,
   invoice_number,
   invoice_id,
   date,
@@ -140,7 +141,10 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
               </div>
             </div>
             <DialogClose asChild>
-              <Button variant={"secondary"} className="text-slate-700 w-12 h-12">
+              <Button
+                variant={"secondary"}
+                className="h-12 w-12 text-slate-700"
+              >
                 <X className="!h-6 !w-6 text-slate-400" strokeWidth={2.5} />
               </Button>
             </DialogClose>
@@ -203,19 +207,23 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
             </div>
           </div>
           <div className="flex items-center gap-2">
-              {!hasChanges ? (
-                <Button
-                  variant={"secondary"}
-                  className="text-slate-700 hover:bg-slate-200"
-                  disabled
-                >
-                  Save Changes
-                </Button>
-              ) : (
-                <Button disabled={isSavingInvoice} onClick={handleSaveInvoice} className="bg-slate-200 hover:bg-slate-200/80 text-slate-600">
-                  Save Changes
-                </Button>
-              )}
+            {!hasChanges ? (
+              <Button
+                variant={"secondary"}
+                className="text-slate-700 hover:bg-slate-200"
+                disabled
+              >
+                Save Changes
+              </Button>
+            ) : (
+              <Button
+                disabled={isSavingInvoice}
+                onClick={handleSaveInvoice}
+                className="bg-slate-200 text-slate-600 hover:bg-slate-200/80"
+              >
+                Save Changes
+              </Button>
+            )}
             <Button
               className="bg-green hover:bg-green/80"
               disabled={isEditing}

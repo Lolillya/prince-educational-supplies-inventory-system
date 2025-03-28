@@ -192,10 +192,27 @@ const NewItem = () => {
   }, [item, data?.items]);
 
   useEffect(() => {
-    if (data?.items) setItemOptions(data.items.map((item) => item.name));
-    if (data?.categories)
-      setCategoryOptions(data.categories.map((category) => category.name));
-    if (data?.brands) setBrandOptions(data.brands.map((brand) => brand.name));
+    if (data?.items) {
+      // Create a Set of unique item names and convert back to array
+      const uniqueItemNames = [...new Set(data.items.map((item) => item.name))];
+      setItemOptions(uniqueItemNames);
+    }
+
+    if (data?.categories) {
+      // Create a Set of unique category names and convert back to array
+      const uniqueCategoryNames = [
+        ...new Set(data.categories.map((category) => category.name)),
+      ];
+      setCategoryOptions(uniqueCategoryNames);
+    }
+
+    if (data?.brands) {
+      // Create a Set of unique brand names and convert back to array
+      const uniqueBrandNames = [
+        ...new Set(data.brands.map((brand) => brand.name)),
+      ];
+      setBrandOptions(uniqueBrandNames);
+    }
   }, [data]);
 
   useEffect(() => {
@@ -386,6 +403,38 @@ const NewItem = () => {
     }
   }, [fetchedPresets]);
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleOutsideClick = (e: MouseEvent) => {
+      // Close all dropdowns if clicking outside their area
+      const dropdownElements = document.querySelectorAll(".dropdown-area");
+      let clickedInsideDropdown = false;
+
+      dropdownElements.forEach((element) => {
+        if (element.contains(e.target as Node)) {
+          clickedInsideDropdown = true;
+        }
+      });
+
+      if (!clickedInsideDropdown) {
+        setDropdownVisible({
+          item: false,
+          brand: false,
+          category: false,
+          variant: false,
+        });
+      }
+    };
+
+    // Add event listener for mousedown to handle clicks outside
+    document.addEventListener("mousedown", handleOutsideClick);
+
+    // Clean up event listener on component unmount
+    return () => {
+      document.removeEventListener("mousedown", handleOutsideClick);
+    };
+  }, []);
+
   const handleSelect = (type: string, name: string) => {
     switch (type) {
       case "item":
@@ -449,6 +498,14 @@ const NewItem = () => {
     const value = e.target.value;
     setItemSearch(value);
 
+    // Check if the current value exactly matches an option
+    const exactMatch = itemOptions.find(
+      (option) => option.toLowerCase() === value.toLowerCase(),
+    );
+    if (exactMatch) {
+      handleSelect("item", exactMatch);
+    }
+
     if (value === "" && !itemOptions.includes(value)) {
       setItem(value);
     }
@@ -457,6 +514,14 @@ const NewItem = () => {
   const handleSearchBrand = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setBrandSearch(value);
+
+    // Check if the current value exactly matches an option
+    const exactMatch = brandOptions.find(
+      (option) => option.toLowerCase() === value.toLowerCase(),
+    );
+    if (exactMatch) {
+      handleSelect("brand", exactMatch);
+    }
 
     if (value === "" && !brandOptions.includes(value)) {
       setBrand(value);
@@ -467,9 +532,79 @@ const NewItem = () => {
     const value = e.target.value;
     setCategorySearch(value);
 
+    // Check if the current value exactly matches an option
+    const exactMatch = categoryOptions.find(
+      (option) => option.toLowerCase() === value.toLowerCase(),
+    );
+    if (exactMatch) {
+      handleSelect("category", exactMatch);
+    }
+
     if (value === "" && !categoryOptions.includes(value)) {
       setCategory(value);
     }
+  };
+
+  // Find best match for input value in options
+  const findBestMatch = (inputValue: string, options: string[]) => {
+    if (!inputValue.trim()) return null;
+
+    // Only look for exact match (case insensitive)
+    const exactMatch = options.find(
+      (option) => option.toLowerCase() === inputValue.toLowerCase(),
+    );
+
+    // Only return exact matches now to prevent unwanted auto-selection
+    return exactMatch || null;
+  };
+
+  // Handle blur for item input
+  const handleItemBlur = () => {
+    // Immediately hide the dropdown
+    setDropdownVisible((prev) => ({ ...prev, item: false }));
+
+    // Then run the matching logic with a small delay
+    setTimeout(() => {
+      // Only auto-select if it's an exact match, otherwise keep the user's input
+      if (itemSearch) {
+        const bestMatch = findBestMatch(itemSearch, itemOptions);
+        if (bestMatch) {
+          handleSelect("item", bestMatch);
+        }
+      }
+    }, 200); // Small delay to allow dropdown click to register if user is clicking an option
+  };
+
+  // Handle blur for brand input
+  const handleBrandBlur = () => {
+    // Immediately hide the dropdown
+    setDropdownVisible((prev) => ({ ...prev, brand: false }));
+
+    setTimeout(() => {
+      // Only auto-select if it's an exact match, otherwise keep the user's input
+      if (brandSearch) {
+        const bestMatch = findBestMatch(brandSearch, brandOptions);
+        if (bestMatch) {
+          handleSelect("brand", bestMatch);
+        }
+      }
+    }, 200);
+  };
+
+  // Handle blur for category input
+  const handleCategoryBlur = () => {
+    // Immediately hide the dropdown
+    setDropdownVisible((prev) => ({ ...prev, category: false }));
+
+    setTimeout(() => {
+      // Only auto-select if it's an exact match, otherwise keep the user's input
+      if (categorySearch) {
+        const bestMatch = findBestMatch(categorySearch, categoryOptions);
+        if (bestMatch) {
+          handleSelect("category", bestMatch);
+        }
+      }
+    }, 200);
   };
 
   const handleKeyDown = (
@@ -852,7 +987,7 @@ const NewItem = () => {
               <Label className="text-slate-500">
                 Item <span className="text-rose-500">*</span>
               </Label>
-              <div className="relative flex flex-col items-start gap-1">
+              <div className="dropdown-area relative flex flex-col items-start gap-1">
                 <Input
                   placeholder="Item"
                   value={itemSearch || item}
@@ -867,13 +1002,11 @@ const NewItem = () => {
                   onFocus={() =>
                     setDropdownVisible((prev) => ({ ...prev, item: true }))
                   }
-                  onBlur={() =>
-                    setDropdownVisible((prev) => ({ ...prev, item: false }))
-                  }
+                  onBlur={handleItemBlur}
                   onKeyDown={(e) => handleKeyDown(e, "item")}
                 />
 
-                {dropdownVisible && filteredItems.length > 0 && (
+                {dropdownVisible.item && filteredItems.length > 0 && (
                   <div
                     className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
                     style={{ maxHeight: "200px", overflowY: "auto" }}
@@ -898,7 +1031,7 @@ const NewItem = () => {
               <Label className="text-slate-500">
                 Brand <span className="text-rose-500">*</span>
               </Label>
-              <div className="relative flex flex-col items-start gap-1">
+              <div className="dropdown-area relative flex flex-col items-start gap-1">
                 <Input
                   placeholder="Brand"
                   value={brandSearch || brand}
@@ -913,13 +1046,11 @@ const NewItem = () => {
                   onFocus={() =>
                     setDropdownVisible((prev) => ({ ...prev, brand: true }))
                   }
-                  onBlur={() =>
-                    setDropdownVisible((prev) => ({ ...prev, brand: false }))
-                  }
+                  onBlur={handleBrandBlur}
                   onKeyDown={(e) => handleKeyDown(e, "brand")}
                 />
 
-                {dropdownVisible && filteredBrands.length > 0 && (
+                {dropdownVisible.brand && filteredBrands.length > 0 && (
                   <div
                     className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
                     style={{ maxHeight: "200px", overflowY: "auto" }}
@@ -944,7 +1075,7 @@ const NewItem = () => {
               <Label className="text-slate-500">
                 Category <span className="text-rose-500">*</span>
               </Label>
-              <div className="relative flex flex-col items-start gap-1">
+              <div className="dropdown-area relative flex flex-col items-start gap-1">
                 <Input
                   placeholder="Category"
                   value={categorySearch || category}
@@ -959,13 +1090,11 @@ const NewItem = () => {
                   onFocus={() =>
                     setDropdownVisible((prev) => ({ ...prev, category: true }))
                   }
-                  onBlur={() =>
-                    setDropdownVisible((prev) => ({ ...prev, category: false }))
-                  }
+                  onBlur={handleCategoryBlur}
                   onKeyDown={(e) => handleKeyDown(e, "category")}
                 />
 
-                {dropdownVisible && filteredCategories.length > 0 && (
+                {dropdownVisible.category && filteredCategories.length > 0 && (
                   <div
                     className="absolute left-0 top-full z-10 mt-1 w-full rounded-md bg-white shadow-lg"
                     style={{ maxHeight: "200px", overflowY: "auto" }}

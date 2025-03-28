@@ -161,13 +161,14 @@ const AdminDashboard = () => {
   const { data: totalStockedOut } = api.getStockedOut.get.useQuery();
   const { data: customers } = api.getAllCustomers.get.useQuery();
   const { data: suppleirs } = api.getAllSuppliers.get.useQuery();
-  const { data: cagetoryList } = api.getCategoryList.get.useQuery();
+  const { data: categoryList } = api.getCategoryList.get.useQuery();
 
   // console.log(cagetoryList);
+  // categoryList?.map((x) => console.log(x.variant.item.category.name));
   const pieChartData: PieChartData[] =
-    cagetoryList?.map((x, index) => ({
-      category: x.name,
-      sales: 275,
+    categoryList?.map((x, index) => ({
+      category: x.category_name,
+      sales: x.total_quantity,
       fill: `hsl(var(--chart-${(index % 5) + 1}))`,
     })) || [];
 

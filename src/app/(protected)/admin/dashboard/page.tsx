@@ -15,6 +15,9 @@ import {
   StockOutStatus,
   SupplierStatus,
 } from "./_components/status-card";
+import { useState } from "react";
+import { api } from "~/trpc/react";
+import { GetCategoryList } from "~/server/api/routers/dashboard/get-cagetory-list";
 
 // ALL OF THE DATA HERE ARE CONSTANTS. KULANG LANG QUERY KAY DI KO KABALO :(
 // PIE CHART DATA
@@ -24,26 +27,13 @@ interface PieChartData {
   fill: string;
 }
 
-type PieChartConfig = Record<string, {
+type PieChartConfig = Record<
+  string,
+  {
     label: string;
     color: string;
-  }>;
-
-const pieChartData: PieChartData[] = [
-  { category: "Stationery", sales: 275, fill: "hsl(var(--chart-1))" },
-  { category: "Computer Items", sales: 200, fill: "hsl(var(--chart-2))" },
-  { category: "Office Supplies", sales: 187, fill: "hsl(var(--chart-3))" },
-  { category: "Electronics", sales: 173, fill: "hsl(var(--chart-4))" },
-  { category: "Furniture", sales: 90, fill: "hsl(var(--chart-5))" },
-];
-
-const pieChartConfig: PieChartConfig = pieChartData.reduce((config, item) => {
-  config[item.category] = {
-    label: item.category.charAt(0).toUpperCase() + item.category.slice(1),
-    color: item.fill,
-  };
-  return config;
-}, {} as PieChartConfig);
+  }
+>;
 
 // AREA CHART DATA
 interface AreaChartData {
@@ -51,10 +41,13 @@ interface AreaChartData {
   sales: number;
 }
 
-type AreaChartConfig = Record<string, {
+type AreaChartConfig = Record<
+  string,
+  {
     label: string;
     color: string;
-  }>;
+  }
+>;
 
 const areaChartData: AreaChartData[] = [
   { month: "January", sales: 123 },
@@ -164,6 +157,28 @@ const AdminDashboard = () => {
   const session = useSession();
   console.log(session);
 
+  const { data: totalStockedIn } = api.getStockedIn.get.useQuery();
+  const { data: totalStockedOut } = api.getStockedOut.get.useQuery();
+  const { data: customers } = api.getAllCustomers.get.useQuery();
+  const { data: suppleirs } = api.getAllSuppliers.get.useQuery();
+  const { data: cagetoryList } = api.getCategoryList.get.useQuery();
+
+  // console.log(cagetoryList);
+  const pieChartData: PieChartData[] =
+    cagetoryList?.map((x, index) => ({
+      category: x.name,
+      sales: 275,
+      fill: `hsl(var(--chart-${(index % 5) + 1}))`,
+    })) || [];
+
+  const pieChartConfig: PieChartConfig = pieChartData.reduce((config, item) => {
+    config[item.category] = {
+      label: item.category.charAt(0).toUpperCase() + item.category.slice(1),
+      color: item.fill,
+    };
+    return config;
+  }, {} as PieChartConfig);
+
   return (
     <section className="flex min-h-screen flex-col px-20 py-10">
       <div className="flex items-center justify-between">
@@ -187,10 +202,10 @@ const AdminDashboard = () => {
       <Separator orientation="horizontal" className="mt-4 h-[2px]" />
 
       <div className="mt-4 flex items-center justify-between gap-4">
-        <StockInStatus percentage={-10} count={1234} />
-        <StockOutStatus percentage={24} count={4567} />
-        <CustomerStatus count={324} />
-        <SupplierStatus count={463} />
+        <StockInStatus percentage={-10} count={totalStockedIn ?? 0} />
+        <StockOutStatus percentage={24} count={totalStockedOut ?? 0} />
+        <CustomerStatus count={customers ?? 0} />
+        <SupplierStatus count={suppleirs ?? 0} />
       </div>
 
       <div className="mt-4 flex h-full w-full items-center justify-between gap-4">

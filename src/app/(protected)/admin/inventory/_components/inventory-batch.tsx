@@ -381,19 +381,31 @@ const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword, in
                   <div className="flex flex-col gap-4">
                     {selectedBatch?.batch?.batchVariants
                       ?.find((bv) => bv.batch_variant_id === selectedBatch.batch_variant_id)
-                      ?.SupplierUnit?.map((supplierUnit) =>
-                        supplierUnit.ConversionRate?.map((conversion) => (
+                      ?.SupplierUnit?.map((supplierUnit, index, array) => {
+                        if (index === 0) return null;
+
+                        // Find the conversion rate where this unit is the "to" unit
+                        const previousConversion = array[index - 1]?.ConversionRate?.find(
+                          conv => conv.toUnit?.name === supplierUnit.unit?.name
+                        );
+
+                        // Find the conversion rate where this unit is the "from" unit
+                        const nextConversion = supplierUnit.ConversionRate?.find(
+                          conv => conv.fromUnit?.name === supplierUnit.unit?.name
+                        );
+
+                        return (
                           <BatchLineItem
-                            key={`${supplierUnit.supplier_unit_id}-${conversion.conversion_id}`}
+                            key={supplierUnit.supplier_unit_id}
                             isEditing={isEditing}
-                            conversionQty={typeof conversion.conversion_rate === 'number' ? conversion.conversion_rate : undefined}
-                            conversionUnit={conversion.toUnit?.name || 'N/A'}
-                            stock={typeof supplierUnit.quantity_per_unit === 'number' ? supplierUnit.quantity_per_unit : undefined}
-                            price={typeof supplierUnit.price === 'number' ? supplierUnit.price : undefined}
+                            conversionQty={previousConversion?.conversion_rate}
+                            conversionUnit={supplierUnit.unit?.name || 'N/A'}
+                            stock={supplierUnit.quantity_per_unit}
+                            price={supplierUnit.price}
                             mainUnit={supplierUnit.unit?.name || 'N/A'}
                           />
-                        ))
-                      )}
+                        );
+                      })}
                     {isEditing && <AddBatchLine />}
                   </div>
                 </ScrollArea>

@@ -102,6 +102,9 @@ export const inventoryRouter = createTRPCRouter({
           },
         },
       },
+      orderBy: {
+        inventory_id: "desc",
+      },
     });
     console.log(inventory);
     return inventory;

@@ -15,9 +15,8 @@ import {
   StockOutStatus,
   SupplierStatus,
 } from "./_components/status-card";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { api } from "~/trpc/react";
-import { GetCategoryList } from "~/server/api/routers/dashboard/get-cagetory-list";
 
 // ALL OF THE DATA HERE ARE CONSTANTS. KULANG LANG QUERY KAY DI KO KABALO :(
 // PIE CHART DATA
@@ -48,23 +47,6 @@ type AreaChartConfig = Record<
     color: string;
   }
 >;
-
-const areaChartData: AreaChartData[] = [
-  { month: "January", sales: 123 },
-  { month: "February", sales: 456 },
-  { month: "March", sales: 254 },
-  { month: "April", sales: 335 },
-  { month: "May", sales: 221 },
-  { month: "June", sales: 165 },
-  { month: "July", sales: 193 },
-];
-
-const areaChartConfig: AreaChartConfig = {
-  mobile: {
-    label: "Sales",
-    color: "hsl(var(--chart-2))",
-  },
-};
 
 // NOTIFICATION DATA
 
@@ -155,16 +137,16 @@ const customerLeaderboard: Leaderboard[] = [
 
 const AdminDashboard = () => {
   const session = useSession();
-  console.log(session);
 
   const { data: totalStockedIn } = api.getStockedIn.get.useQuery();
   const { data: totalStockedOut } = api.getStockedOut.get.useQuery();
   const { data: customers } = api.getAllCustomers.get.useQuery();
   const { data: suppleirs } = api.getAllSuppliers.get.useQuery();
   const { data: categoryList } = api.getCategoryList.get.useQuery();
+  const { data: monthlySales } = api.getMonthlySales.get.useQuery();
 
-  // console.log(cagetoryList);
-  // categoryList?.map((x) => console.log(x.variant.item.category.name));
+  console.log(monthlySales);
+
   const pieChartData: PieChartData[] =
     categoryList?.map((x, index) => ({
       category: x.category_name,
@@ -179,6 +161,64 @@ const AdminDashboard = () => {
     };
     return config;
   }, {} as PieChartConfig);
+
+  const [areaChartData, setAreaChartData] = useState<AreaChartData[]>([]);
+
+  useEffect(() => {
+    if (!monthlySales) return;
+
+    setAreaChartData([
+      {
+        month: "January",
+        sales:
+          monthlySales.find((data) => data.month === "2025-01")?.total_sales ??
+          0,
+      },
+      {
+        month: "February",
+        sales:
+          monthlySales.find((data) => data.month === "2025-02")?.total_sales ??
+          0,
+      },
+      {
+        month: "March",
+        sales:
+          monthlySales.find((data) => data.month === "2025-03")?.total_sales ??
+          0,
+      },
+      {
+        month: "April",
+        sales:
+          monthlySales.find((data) => data.month === "2025-04")?.total_sales ??
+          0,
+      },
+      {
+        month: "May",
+        sales:
+          monthlySales.find((data) => data.month === "2025-05")?.total_sales ??
+          0,
+      },
+      {
+        month: "June",
+        sales:
+          monthlySales.find((data) => data.month === "2025-06")?.total_sales ??
+          0,
+      },
+      {
+        month: "July",
+        sales:
+          monthlySales.find((data) => data.month === "2025-07")?.total_sales ??
+          0,
+      },
+    ]);
+  }, [monthlySales]);
+
+  const areaChartConfig: AreaChartConfig = {
+    mobile: {
+      label: "Sales",
+      color: "hsl(var(--chart-2))",
+    },
+  };
 
   return (
     <section className="flex min-h-screen flex-col px-20 py-10">

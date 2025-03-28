@@ -12,6 +12,7 @@ import { GetStockedOut } from "./routers/dashboard/get-stocked-out";
 import { GetAllCustomers } from "./routers/dashboard/get-all-customers";
 import { GetAllSuppliers } from "./routers/dashboard/get-all-supplierst";
 import { GetCategoryList } from "./routers/dashboard/get-cagetory-list";
+import { GetMonthlySales } from "./routers/dashboard/get-monthly-sales";
 
 /**
  * This is the primary router for your server.
@@ -33,6 +34,7 @@ export const appRouter = createTRPCRouter({
   getAllCustomers: GetAllCustomers,
   getAllSuppliers: GetAllSuppliers,
   getCategoryList: GetCategoryList,
+  getMonthlySales: GetMonthlySales,
 });
 
 // export type definition of API

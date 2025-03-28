@@ -73,6 +73,8 @@ const LoginPage = () => {
           default:
             router.push(DEFAULT_EMPLOYEE_REDIRECT);
         }
+
+
       }
     } catch (error) {
       console.error("Login error: ", error);
@@ -80,6 +82,9 @@ const LoginPage = () => {
     } finally {
       setIsPending(false);
     }
+    setTimeout(() => {
+      window.location.reload();
+    }, 100);
   };
 
   return (

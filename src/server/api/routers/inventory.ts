@@ -707,6 +707,57 @@ export const inventoryRouter = createTRPCRouter({
       });
     }),
 
+  getPresetsByItemId: publicProcedure
+    .input(z.object({ itemId: z.number() }))
+    .query(async ({ input }) => {
+      const { itemId } = input;
+
+      try {
+        // Fetch all presets for the given item ID
+        const presets = await db.preset.findMany({
+          where: { item_id: itemId },
+          include: {
+            main_unit: true,
+            conversions: {
+              include: {
+                from_unit: true,
+                to_unit: true,
+              },
+            },
+          },
+        });
+
+        // Create a lookup map for unit ID to preset
+        const unitToPresetMap = new Map();
+        presets.forEach((preset) => {
+          unitToPresetMap.set(preset.main_unit_id, preset);
+        });
+
+        // Add prices for conversion units by looking up the corresponding preset
+        const presetsWithConversionPrices = presets.map((preset) => {
+          const conversionsWithPrices = preset.conversions.map((conv) => {
+            const targetUnitPreset = unitToPresetMap.get(conv.to_unit_id);
+            return {
+              ...conv,
+              related_price: targetUnitPreset
+                ? targetUnitPreset.main_price
+                : null,
+            };
+          });
+
+          return {
+            ...preset,
+            conversions: conversionsWithPrices,
+          };
+        });
+
+        return presetsWithConversionPrices;
+      } catch (error) {
+        console.error(`Error fetching presets for item ID ${itemId}:`, error);
+        throw new Error("Failed to fetch presets");
+      }
+    }),
+
   verifyPassword: publicProcedure
     .input(
       z.object({

@@ -49,7 +49,8 @@ type PresetData = {
   id: number;
   mainUnit: string;
   mainPrice: string;
-  conversions: Array<{ qty: string; unit: string }>;
+  isExisting?: boolean;
+  conversions: Array<{ qty: string; unit: string; price?: string }>;
 };
 
 const NewItem = () => {
@@ -115,6 +116,7 @@ const NewItem = () => {
   } | null>(null);
   const [selectedVariant, setSelectedVariant] = useState(null);
   const [selectedVariants, setSelectedVariants] = useState([]);
+  const [selectedItemId, setSelectedItemId] = useState<number | null>(null);
 
   const {
     data: nextItemId,
@@ -123,6 +125,16 @@ const NewItem = () => {
   } = api.inventory.getItemId.useQuery();
 
   const { data, isLoading, isError } = api.inventory.listAllData.useQuery();
+
+  // Fetch presets for the selected item if there's an item ID
+  const { data: fetchedPresets, isLoading: isLoadingPresets } =
+    api.inventory.getPresetsByItemId.useQuery(
+      { itemId: selectedItemId! },
+      {
+        enabled: !!selectedItemId, // Only run the query if we have an itemId
+      },
+    );
+
   const { mutateAsync: createItem } = api.inventory.createItem.useMutation();
   const { mutateAsync: createPresetMutation } =
     api.inventory.createPreset.useMutation();
@@ -245,7 +257,7 @@ const NewItem = () => {
           id: v.variant_id,
           variant: v.name,
           lowStock: v.StockLevel?.low_stock || 0,
-          veryLowStock: v.StockLevel?.very_low_stock || 0, // Add comma here
+          veryLowStock: v.StockLevel?.very_low_stock || 0,
           isExisting: true,
         }));
         setVariants(
@@ -261,6 +273,11 @@ const NewItem = () => {
                 },
               ],
         );
+
+        // Set the selected item ID to trigger the preset fetch
+        if (matchingItem.item_id) {
+          setSelectedItemId(matchingItem.item_id);
+        }
       } else {
         setVariants([
           {
@@ -271,6 +288,7 @@ const NewItem = () => {
             isExisting: false,
           },
         ]);
+        setSelectedItemId(null);
       }
     } else {
       setVariants([
@@ -282,6 +300,7 @@ const NewItem = () => {
           isExisting: false,
         },
       ]);
+      setSelectedItemId(null);
     }
   }, [
     item,
@@ -291,6 +310,82 @@ const NewItem = () => {
     selectedCategory,
     items,
   ]);
+
+  // Process fetched presets when they arrive
+  useEffect(() => {
+    if (fetchedPresets && fetchedPresets.length > 0) {
+      console.log("Raw presets from API:", fetchedPresets);
+
+      // Only include presets that have conversions (these are the main ones created by the user)
+      const mainPresets = fetchedPresets.filter(
+        (preset) => preset.conversions && preset.conversions.length > 0,
+      );
+
+      console.log("Filtered presets with conversions:", mainPresets);
+
+      // Use a Map to ensure we only have one preset per main unit
+      const uniquePresetsMap = new Map();
+
+      // First pass - build a map of unit name to preset
+      mainPresets.forEach((preset) => {
+        const unitName = preset.main_unit.name;
+        // Only add if not already present or if this has more conversions
+        if (
+          !uniquePresetsMap.has(unitName) ||
+          uniquePresetsMap.get(unitName).conversions.length <
+            preset.conversions.length
+        ) {
+          uniquePresetsMap.set(unitName, preset);
+        }
+      });
+
+      console.log("Unique presets map:", Array.from(uniquePresetsMap.values()));
+
+      // Map DB presets to component format
+      const formattedPresets = Array.from(uniquePresetsMap.values()).map(
+        (preset) => ({
+          id: preset.preset_id,
+          mainUnit: preset.main_unit.name,
+          mainPrice: preset.main_price.toString(),
+          isExisting: true,
+          conversions: preset.conversions.map((conv: any) => ({
+            qty: conv.conversion_rate.toString(),
+            unit: conv.to_unit.name,
+            price: conv.related_price ? conv.related_price.toString() : "",
+          })),
+        }),
+      );
+
+      console.log("Formatted presets for UI:", formattedPresets);
+
+      // If we have formatted presets, use them; otherwise use the default
+      if (formattedPresets.length > 0) {
+        setPresets(formattedPresets);
+      } else {
+        setPresets([
+          {
+            id: Date.now(),
+            mainUnit: "",
+            mainPrice: "",
+            isExisting: false,
+            conversions: [],
+          },
+        ]);
+      }
+    } else if (fetchedPresets && fetchedPresets.length === 0) {
+      // If no presets found, reset to default
+      setPresets([
+        {
+          id: Date.now(),
+          mainUnit: "",
+          mainPrice: "",
+          isExisting: false,
+          conversions: [],
+        },
+      ]);
+    }
+  }, [fetchedPresets]);
+
   const handleSelect = (type: string, name: string) => {
     switch (type) {
       case "item":
@@ -531,7 +626,13 @@ const NewItem = () => {
           variant.veryLowStock > 0,
       );
 
-      if (validVariants.length === 0) {
+      // Check if there are any existing variants
+      const hasExistingVariants = variants.some(
+        (variant) => variant.isExisting,
+      );
+
+      // Only require new variants if there are no existing ones
+      if (validVariants.length === 0 && !hasExistingVariants) {
         toast("❌ Missing input", {
           description:
             "Please fill out at least one variant with all required fields",
@@ -614,35 +715,21 @@ const NewItem = () => {
         });
       }
 
-      for (const preset of presets) {
-        if (
-          !preset.mainUnit ||
-          !preset.mainPrice ||
-          preset.conversions.length === 0
-        )
-          continue;
+      // Filter out existing presets
+      const newPresets = presets.filter(
+        (preset) =>
+          !preset.isExisting &&
+          preset.mainUnit &&
+          preset.mainPrice &&
+          preset.conversions.length > 0,
+      );
 
-        // In your handleSave function, before the API call:
-        console.log("Saving presets with following inputs:");
-        presets.forEach((preset, index) => {
-          console.group(`Preset #${index + 1}`);
-          console.log("Main Unit:", preset.mainUnit);
-          console.log("Main Price:", preset.mainPrice);
-          console.log("Conversions:");
-          preset.conversions.forEach((conv, convIndex) => {
-            console.group(`Conversion #${convIndex + 1}`);
-            console.log("Qty:", conv.qty);
-            console.log("Unit:", conv.unit);
-            console.log("Price:", conv.price); // Make sure this is included
-            console.groupEnd();
-          });
-          console.groupEnd();
-        });
+      if (newPresets.length > 0) {
+        console.log("Saving new presets:", newPresets);
 
-        // Then in your mutation call:
         try {
           const results = await Promise.all(
-            presets.map((preset) =>
+            newPresets.map((preset) =>
               createPresetMutation({
                 itemId: item.item_id!,
                 mainUnit: preset.mainUnit,
@@ -650,7 +737,7 @@ const NewItem = () => {
                 conversions: preset.conversions.map((conv) => ({
                   qty: parseFloat(conv.qty),
                   unit: conv.unit,
-                  price: parseFloat(conv.price),
+                  price: conv.price ? parseFloat(conv.price) : 0,
                 })),
               }),
             ),
@@ -660,6 +747,8 @@ const NewItem = () => {
         } catch (error) {
           console.error("Preset creation error:", error);
         }
+      } else {
+        console.log("No new presets to create - using existing ones");
       }
 
       utils.inventory.listInventory.invalidate();

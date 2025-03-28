@@ -25,11 +25,14 @@ import { api } from "~/trpc/react";
 interface PresetData {
   id: number;
   mainUnit: string;
-  mainPrice: number; // Change to number
+  mainPrice: number | string; // Allow both number and string
   conversions: Array<{
-    quantity: number;
-    unit: string;
-    price: number;
+    qty?: string;
+    unit?: string;
+    price?: string | number;
+    quantity?: number; // For backward compatibility
+    unit?: string;
+    price?: number | string;
   }>;
 }
 

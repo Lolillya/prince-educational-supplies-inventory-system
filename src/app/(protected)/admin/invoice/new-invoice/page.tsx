@@ -518,12 +518,15 @@ const NewInvoice = () => {
               size="lg"
               className="bg-green py-8 text-sm font-bold text-white hover:cursor-pointer"
               disabled={
-                selectedItems.length === 0 ||
-                Object.keys(activeCards).length === 0 ||
-                Object.values(activeCards).some(
-                  (card) => card.quantity === 0 || card.unitPrice === 0,
-                )
+                  selectedItems.length === 0 ||
+                  Object.keys(activeCards).length === 0 ||
+                  Object.values(activeCards).some(
+                      (card) => card.quantity === 0 || card.unitPrice === 0,
+                  ) ||
+                  supplierSearchTerm.trim() === "" || // Ensures business name is not empty
+                  term.trim() === "" // Ensures term is not empty
               }
+
             >
               Confirm Invoice
             </Button>

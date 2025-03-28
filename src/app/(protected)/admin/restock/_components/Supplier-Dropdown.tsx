@@ -70,11 +70,15 @@ const SupplierDropdown = ({ suppliers, selectedSupplier, setSelectedSupplier }: 
 
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(e.target.value);
-        if (e.target.value.trim() === "") {
+        const newValue = e.target.value;
+        setSearchTerm(newValue);
+
+        if (newValue.trim() === "") {
             setDropdownVisible(false); // Hide dropdown when input is cleared
+            setSelectedSupplier(null); // Reset selected supplier
         }
     };
+
 
     const handleBlur = () => {
         // Close the dropdown after a short delay to allow clicks to register

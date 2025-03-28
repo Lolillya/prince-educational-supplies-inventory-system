@@ -635,7 +635,11 @@ const NewInvoice = () => {
                         size={"lg"}
                         onClick={handleSaveInvoice}
                         disabled={
-                          !selectedSupplier || isInvoicePending || !term
+                            !selectedSupplier ||
+                            isInvoicePending ||
+                            !term ||
+                            supplierSearchTerm.trim() === "" ||
+                            term.trim() === ""
                         }
                       >
                         Save

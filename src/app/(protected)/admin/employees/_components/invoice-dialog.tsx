@@ -38,7 +38,7 @@ interface InvoiceDialogProps {
     };
   };
   id: string;
-  activity: any;
+  activity: any;  
   context: string;
 }
 
@@ -81,7 +81,7 @@ const InvoiceDialog = ({ activity }: InvoiceDialogProps) => {
         }
       }}
     >
-      <DialogTrigger>
+      <DialogTrigger asChild>
         <EmployeeActivityCard
           type="invoice"
           activity={{

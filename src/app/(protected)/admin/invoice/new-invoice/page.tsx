@@ -123,6 +123,7 @@ const NewInvoice = () => {
   const [isInputFocused, setIsInputFocused] = useState<string | undefined>(
     undefined,
   );
+  const [showSearchDropdown, setShowSearchDropdown] = useState(true);
 
   const {
     data: inventoryItems,
@@ -409,11 +410,22 @@ const NewInvoice = () => {
             placeholder="Search"
             className="bg-gray p-5 pl-10"
             value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            onFocus={handleOnFocus}
-            onBlur={handleOnMouseLeave}
+            onChange={(e) => {
+              setSearchTerm(e.target.value);
+              setShowSearchDropdown(true);
+            }}
+            onFocus={() => {
+              handleOnFocus();
+              setShowSearchDropdown(true);
+            }}
+            onBlur={(e) => {
+              handleOnMouseLeave();
+              setTimeout(() => {
+                setShowSearchDropdown(false);
+              }, 200);
+            }}
           />
-          {searchTerm && filteredItems.length > 0 && (
+          {searchTerm && filteredItems.length > 0 && showSearchDropdown && (
             <div className="absolute top-full z-10 mt-2 w-full rounded-lg bg-white p-3 shadow-md">
               <ul className="max-h-64 overflow-auto">
                 {filteredItems.map((item) => (
@@ -452,7 +464,6 @@ const NewInvoice = () => {
           return (
             <InvoiceCard
               isInputFocused={isInputFocused}
-              // setIsInputFocused={setIsInputFocused}
               key={index}
               id={item.inventory_id}
               itemName={item.variant.item.name}
@@ -482,9 +493,6 @@ const NewInvoice = () => {
           <span>TOTAL: ₱ {grandTotal.toFixed(2)}</span>
           <div className="ml-20 flex">
             <div className="relative flex items-center justify-end">
-              {/* <Label className="absolute mr-2 font-light text-textGray">
-                Discount
-              </Label> */}
               <Input
                 className="rounded-r-none border font-light shadow-none placeholder:font-light"
                 placeholder="Discount"
@@ -518,15 +526,14 @@ const NewInvoice = () => {
               size="lg"
               className="bg-green py-8 text-sm font-bold text-white hover:cursor-pointer"
               disabled={
-                  selectedItems.length === 0 ||
-                  Object.keys(activeCards).length === 0 ||
-                  Object.values(activeCards).some(
-                      (card) => card.quantity === 0 || card.unitPrice === 0,
-                  ) ||
-                  supplierSearchTerm.trim() === "" || // Ensures business name is not empty
-                  term.trim() === "" // Ensures term is not empty
+                selectedItems.length === 0 ||
+                Object.keys(activeCards).length === 0 ||
+                Object.values(activeCards).some(
+                  (card) => card.quantity === 0 || card.unitPrice === 0,
+                ) ||
+                supplierSearchTerm.trim() === "" ||
+                term.trim() === ""
               }
-
             >
               Confirm Invoice
             </Button>
@@ -571,14 +578,13 @@ const NewInvoice = () => {
                         </div>
                       )}
                       <Input
-                          placeholder="30"
-                          className="w-[10%] rounded-l-none"
-                          value={term}
-                          onChange={(e) => setTerm(e.target.value)}
-                          onInput={(e) => {
-                            // Allow only numbers
-                            e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
-                          }}
+                        placeholder="30"
+                        className="w-[10%] rounded-l-none"
+                        value={term}
+                        onChange={(e) => setTerm(e.target.value)}
+                        onInput={(e) => {
+                          e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+                        }}
                       />
                     </div>
                   </div>
@@ -635,11 +641,11 @@ const NewInvoice = () => {
                         size={"lg"}
                         onClick={handleSaveInvoice}
                         disabled={
-                            !selectedSupplier ||
-                            isInvoicePending ||
-                            !term ||
-                            supplierSearchTerm.trim() === "" ||
-                            term.trim() === ""
+                          !selectedSupplier ||
+                          isInvoicePending ||
+                          !term ||
+                          supplierSearchTerm.trim() === "" ||
+                          term.trim() === ""
                         }
                       >
                         Save

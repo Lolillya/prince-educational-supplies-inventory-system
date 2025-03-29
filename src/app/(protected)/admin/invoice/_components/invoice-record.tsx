@@ -22,6 +22,7 @@ import {
 } from "~/components/ui/dialog";
 import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
+import {handleExport} from "~/lib/utils/exportInvoice";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   handleVoidItem,
@@ -49,7 +50,16 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
                 {/*  Print*/}
                 {/*</DropdownMenuItem>*/}
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200"
+                                  onClick={() =>
+                                      handleExport({
+                                        line_items,
+                                        invoice_number: invoice_number.toString(),
+                                        customer,
+                                        date,
+                                        grandTotal: grandTotal.toString(),
+                                      })
+                                  }>
                   Export
                 </DropdownMenuItem>
                 {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}

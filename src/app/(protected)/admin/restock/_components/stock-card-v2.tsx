@@ -29,6 +29,12 @@ interface StockCardV2Props {
 	onPriceChange: (inventoryId: number, price: string) => void;
 	onUnitChange: (inventoryId: number, unit: string) => void;
 	onConversionChange: (conversions: { qty: string; unit: string; price: string; }[]) => void;
+	onErrorChange: (inventoryId: number, hasError: boolean, errorDetails: {
+		mainUnit: boolean;
+		stock: boolean;
+		price: boolean;
+		conversions: boolean;
+	}) => void;
 }
 
 interface ConversionData {
@@ -39,20 +45,31 @@ interface ConversionData {
 	price: string;
 }
 
-const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChange, onConversionChange }: StockCardV2Props) => {
-	const [mainStock, setMainStock] = useState("0")
-	const [mainPrice, setMainPrice] = useState("0.00")
-	const [inputValue, setInputValue] = useState("")
-	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1)
-	const [conversions, setConversions] = useState<ConversionData[]>([])
-	const [nextId, setNextId] = useState(1)
-	const [isDropdownVisible, setIsDropdownVisible] = useState(false)
-
+const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChange, onConversionChange, onErrorChange }: StockCardV2Props) => {
 	const { data: units } = api.restock.getUnits.useQuery()
 	const unitOptions = units?.map(unit => unit.name) ?? []
 
 	const inputRef = React.useRef<HTMLInputElement>(null)
 	const dropdownRef = React.useRef<HTMLDivElement>(null)
+
+	// Single state object to track input values and their validity
+	const [errors, setErrors] = useState({
+		mainUnit: true, // Default to true (invalid)
+		stock: true,    // Default to true (invalid)
+		price: true,    // Default to true (invalid)
+		conversions: false // Default to false (valid) since conversions are optional
+	});
+
+	const [mainStock, setMainStock] = useState("")
+	const [mainPrice, setMainPrice] = useState("")
+	const [inputValue, setInputValue] = useState("")
+	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1)
+	const [conversions, setConversions] = useState<ConversionData[]>([])
+	const [nextId, setNextId] = useState(1)
+	const [isDropdownVisible, setIsDropdownVisible] = useState(false)
+	const [showError, setShowError] = useState(false)
+	const [mainStockError, setMainStockError] = useState<string>("")
+	const [mainPriceError, setMainPriceError] = useState<string>("")
 
 	// Compute filtered units directly without state
 	const filteredUnits = inputValue
@@ -115,6 +132,85 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 		}
 	}
 
+	// Use effect to notify parent of error status changes
+	useEffect(() => {
+		const hasError = errors.mainUnit || errors.stock || errors.price || errors.conversions;
+
+		// Debounce error reporting to prevent excessive updates
+		const timeoutId = setTimeout(() => {
+			onErrorChange(item.inventory_id, hasError, errors);
+		}, 300);
+
+		return () => clearTimeout(timeoutId);
+	}, [errors, item.inventory_id, onErrorChange]);
+
+	// Validate main unit input
+	const validateMainUnit = useCallback((value: string) => {
+		const isValid = value.trim() !== "";
+		setErrors(prev => ({ ...prev, mainUnit: !isValid }));
+		return isValid;
+	}, []);
+
+	// Validate stock input
+	const validateStock = useCallback((value: string) => {
+		const isValid = value.trim() !== "";
+		setErrors(prev => ({ ...prev, stock: !isValid }));
+		return isValid;
+	}, []);
+
+	// Validate price input
+	const validatePrice = useCallback((value: string) => {
+		const isValid = value.trim() !== "";
+		setErrors(prev => ({ ...prev, price: !isValid }));
+		return isValid;
+	}, []);
+
+	// Validate conversions
+	const validateConversions = useCallback(() => {
+		if (conversions.length === 0) {
+			setErrors(prev => ({ ...prev, conversions: false })); // No conversions is valid
+			return true;
+		}
+
+		const hasInvalidConversion = conversions.some(conv => {
+			const hasQty = conv.qty?.trim() !== "";
+			const hasUnit = conv.unit?.trim() !== "";
+			return (hasQty && !hasUnit) || (!hasQty && hasUnit);
+		});
+
+		setErrors(prev => ({ ...prev, conversions: hasInvalidConversion }));
+		return !hasInvalidConversion;
+	}, [conversions]);
+
+	// Handle main unit input change
+	const handleMainUnitChange = (value: string) => {
+		setInputValue(value);
+		setHighlightedIndex(-1);
+		setIsDropdownVisible(true);
+		setShowError(false);
+		validateMainUnit(value);
+		onUnitChange(item.inventory_id, value);
+	};
+
+	// Handle stock input change
+	const handleStockChange = (value: string) => {
+		const normalizedValue = value.replace(/[^\d]/g, '');
+		setMainStock(normalizedValue);
+		setMainStockError("");
+		validateStock(normalizedValue);
+	};
+
+	// Handle price input change
+	const handlePriceChange = (value: string) => {
+		const numericValue = value.replace(/[^\d.]/g, '');
+		const parts = value.split('.');
+		const formattedValue = parts.length > 2 ? `${parts[0]}.${parts.slice(1).join('')}` : numericValue;
+		setMainPrice(formattedValue);
+		setMainPriceError("");
+		validatePrice(formattedValue);
+	};
+
+	// Handle conversion updates with validation
 	const handleUpdateConversion = useCallback((updatedData: ConversionData) => {
 		setConversions(prev => {
 			const newConversions = prev.map(conv =>
@@ -122,7 +218,10 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 			);
 			return newConversions;
 		});
-	}, []);
+
+		// Schedule validation after state update
+		setTimeout(() => validateConversions(), 0);
+	}, [validateConversions]);
 
 	// Move the conversion data update to a separate effect with a debounce
 	useEffect(() => {
@@ -159,10 +258,16 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 			price: "0.00"
 		}]);
 		setNextId(prev => prev + 1);
+
+		// Schedule validation after state update
+		setTimeout(() => validateConversions(), 0);
 	};
 
 	const handleRemoveConversion = (id: number) => {
 		setConversions(prev => prev.filter(conv => conv.id !== id));
+
+		// Schedule validation after state update
+		setTimeout(() => validateConversions(), 0);
 	};
 
 	return (
@@ -191,14 +296,7 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 								className="bg-white shadow-none text-slate-700"
 								placeholder='Unit'
 								value={inputValue}
-								onChange={(e) => {
-									const value = e.target.value
-									if (/^[a-zA-Z ]*$/.test(value)) {
-										setInputValue(value)
-										setHighlightedIndex(-1)
-										setIsDropdownVisible(true)
-									}
-								}}
+								onChange={(e) => handleMainUnitChange(e.target.value)}
 								onFocus={() => {
 									if (inputValue && filteredUnits.length > 0) {
 										setIsDropdownVisible(true)
@@ -208,11 +306,15 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 									setTimeout(() => {
 										if (!dropdownRef.current?.contains(document.activeElement)) {
 											setIsDropdownVisible(false)
+											setShowError(!inputValue)
 										}
 									}, 100)
 								}}
 								onKeyDown={handleKeyDown}
 							/>
+							{showError && (
+								<p className="text-red-500 text-sm text-rose-400 mt-1">Please fill in the main unit.</p>
+							)}
 
 							{isDropdownVisible && inputValue && filteredUnits.length > 0 && (
 								<div
@@ -234,7 +336,7 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 								</div>
 							)}
 
-							<div className="absolute right-2 top-1/2 -translate-y-1/2">
+							<div className="absolute right-2 top-5 -translate-y-1/2">
 								<DropdownMenu>
 									<DropdownMenuTrigger className="rounded-full p-1 cursor-pointer border-2 border-dashed border-slate-400">
 										<Plus className="h-4 w-4 text-slate-400" strokeWidth={2.5} />
@@ -252,7 +354,7 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 					</div>
 					<Separator orientation="vertical" className="h-auto w-px bg-slate-300" />
 					<div className="w-1/2 flex flex-col gap-2">
-						<div className="flex gap-2 items-end">
+						<div className="flex gap-2 items-start">
 							<div className="flex flex-col gap-1">
 								<Label className="text-sm text-slate-400">Stock</Label>
 								<Input
@@ -267,16 +369,20 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 											e.preventDefault();
 										}
 									}}
-									onChange={(e) => {
-										const value = e.target.value.replace(/[^\d]/g, '');
-										setMainStock(value || "1");
-									}}
+									onChange={(e) => handleStockChange(e.target.value)}
 									onBlur={(e) => {
-										if (!e.target.value) {
-											setMainStock("1");
+										const value = e.target.value;
+										if (!value) {
+											setMainStockError("Field cannot be empty");
+										} else {
+											const normalizedValue = String(Number(value));
+											setMainStock(normalizedValue);
 										}
 									}}
 								/>
+								{mainStockError && (
+									<p className="text-sm text-rose-400 mt-1">{mainStockError}</p>
+								)}
 							</div>
 							<div className="flex flex-col gap-1">
 								<Label className="text-sm text-slate-400">Unit Price</Label>
@@ -287,25 +393,22 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 									className="bg-white text-slate-700 shadow-none"
 									placeholder='Price'
 									value={mainPrice}
-									onChange={(e) => {
-										const value = e.target.value || "0.00";
-										setMainPrice(value);
-										onPriceChange(item.inventory_id, value);
-									}}
+									onChange={(e) => handlePriceChange(e.target.value)}
 									onBlur={(e) => {
-										if (!e.target.value) {
-											const value = "0.00";
-											setMainPrice(value);
-											onPriceChange(item.inventory_id, value);
+										const value = e.target.value;
+										if (!value) {
+											setMainPriceError("Field cannot be empty");
 										} else {
-											const value = Number.parseFloat(e.target.value).toFixed(2);
-											setMainPrice(value);
-											onPriceChange(item.inventory_id, value);
+											const normalizedValue = Number(value).toFixed(2);
+											setMainPrice(normalizedValue);
 										}
 									}}
 								/>
+								{mainPriceError && (
+									<p className="text-sm text-rose-400 mt-1">{mainPriceError}</p>
+								)}
 							</div>
-							<div className="flex h-10 w-12 items-center justify-center !p-1">
+							<div className="flex h-10 w-12 items-center justify-center !p-1 mt-6">
 								<TooltipProvider>
 									<Tooltip delayDuration={300}>
 										<TooltipTrigger asChild>

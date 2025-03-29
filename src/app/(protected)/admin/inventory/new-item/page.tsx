@@ -281,14 +281,14 @@ const NewItem = () => {
           variants.length > 0
             ? variants
             : [
-                {
-                  id: Date.now(),
-                  variant: "",
-                  lowStock: 0,
-                  veryLowStock: 0,
-                  isExisting: false,
-                },
-              ],
+              {
+                id: Date.now(),
+                variant: "",
+                lowStock: 0,
+                veryLowStock: 0,
+                isExisting: false,
+              },
+            ],
         );
 
         // Set the selected item ID to trigger the preset fetch
@@ -350,7 +350,7 @@ const NewItem = () => {
         if (
           !uniquePresetsMap.has(unitName) ||
           uniquePresetsMap.get(unitName).conversions.length <
-            preset.conversions.length
+          preset.conversions.length
         ) {
           uniquePresetsMap.set(unitName, preset);
         }
@@ -614,7 +614,7 @@ const NewItem = () => {
     let filteredOptions = [];
     let setHighlightedIndexFn = (
       index: number | ((prev: number) => number),
-    ) => {};
+    ) => { };
 
     switch (field) {
       case "item":
@@ -780,14 +780,14 @@ const NewItem = () => {
       const brandId = selectedBrand
         ? selectedBrand.brand_id
         : await createBrandMutation({ name: brandSearch }).then(
-            (res) => res.brand_id,
-          );
+          (res) => res.brand_id,
+        );
 
       const categoryId = selectedCategory
         ? selectedCategory.category_id
         : await createCategoryMutation({ name: categorySearch }).then(
-            (res) => res.category_id,
-          );
+          (res) => res.category_id,
+        );
 
       let item;
 
@@ -1014,9 +1014,8 @@ const NewItem = () => {
                     {filteredItems.map((itemName, index) => (
                       <div
                         key={index}
-                        className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                          highlightedIndex === index ? "bg-emerald-200" : ""
-                        }`}
+                        className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                          }`}
                         onMouseDown={() => handleSelect("item", itemName)}
                       >
                         {itemName}
@@ -1058,9 +1057,8 @@ const NewItem = () => {
                     {filteredBrands.map((brandName, index) => (
                       <div
                         key={index}
-                        className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                          highlightedIndex === index ? "bg-emerald-200" : ""
-                        }`}
+                        className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                          }`}
                         onMouseDown={() => handleSelect("brand", brandName)}
                       >
                         {brandName}
@@ -1102,9 +1100,8 @@ const NewItem = () => {
                     {filteredCategories.map((categoryName, index) => (
                       <div
                         key={categoryName}
-                        className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${
-                          highlightedIndex === index ? "bg-emerald-200" : ""
-                        }`}
+                        className={`cursor-pointer px-4 py-2 hover:bg-emerald-100 ${highlightedIndex === index ? "bg-emerald-200" : ""
+                          }`}
                         onMouseDown={() =>
                           handleSelect("category", categoryName)
                         }
@@ -1157,14 +1154,12 @@ const NewItem = () => {
                   }}
                 />
               ))}
-              {variants.length < 9 && (
-                <Button
-                  className="h-48 rounded-lg border-4 border-dashed bg-slate-100/50 p-3 text-slate-400 hover:bg-slate-100"
-                  onClick={handleAddVariant}
-                >
-                  + Add a Variant
-                </Button>
-              )}
+              <Button
+                className="h-48 rounded-lg border-4 border-dashed bg-slate-100/50 p-3 text-slate-400 hover:bg-slate-100"
+                onClick={handleAddVariant}
+              >
+                + Add a Variant
+              </Button>
             </div>
 
             <div className="mt-8">

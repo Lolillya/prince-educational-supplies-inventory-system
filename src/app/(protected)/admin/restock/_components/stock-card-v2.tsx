@@ -43,6 +43,7 @@ interface ConversionData {
 	unit: string;
 	stock: string;
 	price: string;
+	level: number;
 }
 
 const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChange, onConversionChange, onErrorChange }: StockCardV2Props) => {
@@ -250,12 +251,16 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 	}, [mainStock, conversions, item.inventory_id, onStockChange]);
 
 	const handleAddConversion = () => {
+		// Get the next level number
+		const nextLevel = conversions.length + 1;
+
 		setConversions(prev => [...prev, {
 			id: nextId,
 			qty: "",
 			unit: "",
 			stock: "0",
-			price: "0.00"
+			price: "0.00",
+			level: nextLevel // Add level property
 		}]);
 		setNextId(prev => prev + 1);
 
@@ -436,12 +441,13 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 							No conversions
 						</p>
 					) : (
-						conversions.map(conversion => (
+						conversions.map((conversion, index) => (
 							<Conversion
 								key={conversion.id}
 								data={conversion}
+								level={index + 1} // Pass the level (1-based index)
 								onRemove={() => handleRemoveConversion(conversion.id)}
-								onUpdate={handleUpdateConversion}
+								onUpdate={(data) => handleUpdateConversion({ ...data, level: index + 1 })}
 							/>
 						))
 					)}

@@ -433,6 +433,11 @@ const NewInvoice = () => {
                     key={item.inventory_id}
                     className="flex cursor-pointer items-center rounded-lg p-3 hover:bg-gray"
                     onClick={() => handleSelectItem(item)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" || e.key === " ") {
+                        handleSelectItem(item);
+                      }
+                    }}
                   >
                     <div className="flex w-full items-center justify-between gap-1">
                       <div className="flex items-center gap-1">

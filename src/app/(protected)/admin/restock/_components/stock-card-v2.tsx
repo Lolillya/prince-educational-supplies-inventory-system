@@ -1,5 +1,5 @@
 import { ArrowDownRight, ArrowLeft, CornerDownRight, Plus, X } from 'lucide-react'
-import React, { useState, useEffect, useCallback } from 'react'
+import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { Button } from '~/components/ui/button'
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '~/components/ui/dropdown-menu'
 import { Input } from '~/components/ui/input'
@@ -250,8 +250,11 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 		return () => clearTimeout(timeoutId);
 	}, [mainStock, conversions, item.inventory_id, onStockChange]);
 
+	// Add a ref for the ScrollArea content
+	const scrollAreaRef = useRef<HTMLDivElement>(null);
+
+	// Modify the handleAddConversion function to include scrolling
 	const handleAddConversion = () => {
-		// Get the next level number
 		const nextLevel = conversions.length + 1;
 
 		setConversions(prev => [...prev, {
@@ -260,12 +263,21 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 			unit: "",
 			stock: "0",
 			price: "0.00",
-			level: nextLevel // Add level property
+			level: nextLevel
 		}]);
 		setNextId(prev => prev + 1);
 
 		// Schedule validation after state update
 		setTimeout(() => validateConversions(), 0);
+
+		// Scroll to bottom after the conversion is added
+		setTimeout(() => {
+			const scrollArea = document.querySelector(`[data-conversion-scroll="${item.inventory_id}"]`);
+			const scrollViewport = scrollArea?.querySelector('[data-radix-scroll-area-viewport]');
+			if (scrollViewport) {
+				scrollViewport.scrollTop = scrollViewport.scrollHeight;
+			}
+		}, 100);
 	};
 
 	const handleRemoveConversion = (id: number) => {
@@ -434,8 +446,14 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 			</div>
 			<div className="mt-4 h-[1px] border-t-[3px] border-dashed border-slate-300" />
 
-			<ScrollArea className='h-40'>
-				<div className="px-1 pb-1">
+			<ScrollArea
+				className='h-40'
+				data-conversion-scroll={item.inventory_id}
+			>
+				<div
+					ref={scrollAreaRef}
+					className="px-1 pb-1"
+				>
 					{conversions.length === 0 ? (
 						<p className='text-slate-400 text-sm text-center mt-6 italic'>
 							No conversions
@@ -445,7 +463,7 @@ const StockCardV2 = ({ item, onRemove, onStockChange, onPriceChange, onUnitChang
 							<Conversion
 								key={conversion.id}
 								data={conversion}
-								level={index + 1} // Pass the level (1-based index)
+								level={index + 1}
 								onRemove={() => handleRemoveConversion(conversion.id)}
 								onUpdate={(data) => handleUpdateConversion({ ...data, level: index + 1 })}
 							/>

@@ -81,8 +81,8 @@ const InvoiceTable: React.FC<Props> = ({ line_items, isEditing }) => {
                         {item.variant.item.brand.name} - {item.variant.name}
                       </TooltipTrigger>
                       <TooltipContent className="text-slate-700 shadow-none">
-                        {item.variant.item.brand.name} -{" "}
-                        {item.variant.item.name} - {item.variant.name}
+                        {item.variant.item.name} -{" "}
+                        {item.variant.item.brand.name} - {item.variant.name}
                       </TooltipContent>
                     </Tooltip>
                   </TooltipProvider>

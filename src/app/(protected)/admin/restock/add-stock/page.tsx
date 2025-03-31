@@ -89,6 +89,12 @@ interface StockCardV2Props {
     unit: string;
     price: string;
   }[]) => void;
+  onErrorChange: (inventoryId: number, hasError: boolean, errorDetails: {
+    mainUnit: boolean;
+    stock: boolean;
+    price: boolean;
+    conversions: boolean;
+  }) => void;
 }
 
 const InvoiceAddStock = () => {
@@ -109,6 +115,17 @@ const InvoiceAddStock = () => {
     unit: string;
     price: string;
   }[]>>({});
+
+  // Add state to track errors for each item
+  const [itemErrors, setItemErrors] = useState<Record<number, {
+    hasError: boolean;
+    errorDetails: {
+      mainUnit: boolean;
+      stock: boolean;
+      price: boolean;
+      conversions: boolean;
+    };
+  }>>({});
 
   const {
     data: inventoryItems,
@@ -209,7 +226,7 @@ const InvoiceAddStock = () => {
     ).length;
   };
 
-// Note: this only rounds off to the second decimal at the console
+  // Note: this only rounds off to the second decimal at the console
   const handlePriceChange = (inventoryId: number, value: string) => {
     // Step 1: Allow only numeric input and a single decimal point
     const numericValue = value.replace(/[^0-9.]/g, "");
@@ -350,6 +367,23 @@ const InvoiceAddStock = () => {
     }));
   };
 
+  // Add error states and notify parent
+  const handleItemError = (
+    inventoryId: number,
+    hasError: boolean,
+    errorDetails: {
+      mainUnit: boolean;
+      stock: boolean;
+      price: boolean;
+      conversions: boolean;
+    }
+  ) => {
+    setItemErrors(prev => ({
+      ...prev,
+      [inventoryId]: { hasError, errorDetails }
+    }));
+  };
+
   if (isLoading || isLoadingBatch) {
     return (
       <section className="flex h-screen w-full items-center justify-center">
@@ -391,42 +425,48 @@ const InvoiceAddStock = () => {
     };
   };
 
-  const handleConfirmRestock = () => {
-    const { isValid, invalidItems } = getFormValidation();
+  const handleConfirmRestock = (e: React.MouseEvent) => {
+    // Get items with errors
+    const itemsWithErrors = selectedItems.filter(item =>
+      itemErrors[item.inventory_id]?.hasError
+    );
 
-    if (!isValid) {
-      // Show one toast for each item that has any missing inputs
-      for (const item of invalidItems) {
+    if (itemsWithErrors.length > 0) {
+      e.preventDefault(); // Prevent dialog from opening
+
+      // Track which items we've shown toasts for to avoid duplicates
+      const shownToasts = new Set<number>();
+
+      // Show error toasts for each item with errors
+      for (const item of itemsWithErrors) {
+        const errors = itemErrors[item.inventory_id]?.errorDetails;
+        if (!errors) continue;
+
+        const itemId = item.inventory_id;
         const itemName = `${item.variant.item.name} - ${item.variant.item.brand.name} - ${item.variant.name || "N/A"}`;
-        const itemConversions = conversionStates[item.inventory_id] || [];
 
-        // Check main inputs
-        if (!stock[item.inventory_id] || !price[item.inventory_id] || !unit[item.inventory_id]) {
+        // Main inputs errors
+        if ((errors.mainUnit || errors.stock || errors.price) && !shownToasts.has(itemId)) {
           toast('❌ Missing main inputs', {
             description: `Please fill in all main fields for:\n${itemName}`,
             duration: 4000,
           });
+          shownToasts.add(itemId);
         }
 
-        // Check conversion inputs
-        const hasEmptyConversions = itemConversions.some(conv => {
-          const hasQty = conv.qty?.trim() !== "";
-          const hasUnit = conv.unit?.trim() !== "";
-          return (hasQty && !hasUnit) || (!hasQty && hasUnit) || (!hasQty && !hasUnit);
-        });
-
-        if (hasEmptyConversions) {
+        // Conversion errors
+        if (errors.conversions && !shownToasts.has(itemId)) {
           toast('❌ Incomplete conversions', {
             description: `Please complete or remove empty conversions for:\n${itemName}`,
             duration: 4000,
           });
+          shownToasts.add(itemId);
         }
       }
-      return;
+      return false; // Indicate that there were errors
     }
 
-    // If valid, don't open the status dialog, let the Dialog component handle it
-    // The Dialog component will open because we're not preventing the default behavior
+    return true; // Indicate that validation passed
   };
 
   if (isLoading) {
@@ -537,6 +577,7 @@ const InvoiceAddStock = () => {
                 onPriceChange={handlePriceChange}
                 onUnitChange={handleUnitChange}
                 onConversionChange={(conversions) => handleConversionChange(item.inventory_id, conversions)}
+                onErrorChange={handleItemError}
               />
             ))}
           </div>
@@ -585,12 +626,10 @@ const InvoiceAddStock = () => {
               size={"lg"}
               className={`hover:bg-green/80 bg-green text-white ${selectedItems.length === 0 ? "cursor-not-allowed opacity-50" : ""}`}
               onClick={(e) => {
-                const { isValid } = getFormValidation();
-                if (!isValid) {
-                  e.preventDefault(); // Prevent dialog from opening if validation fails
-                  handleConfirmRestock();
+                const validationPassed = handleConfirmRestock(e);
+                if (!validationPassed) {
+                  e.preventDefault(); // Prevent dialog from opening if validation failed
                 }
-                // If valid, let the dialog open naturally
               }}
               disabled={selectedItems.length === 0}
             >

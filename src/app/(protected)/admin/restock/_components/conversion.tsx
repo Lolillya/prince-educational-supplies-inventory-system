@@ -15,11 +15,12 @@ interface ConversionProps {
 		stock: string;
 		price: string;
 	};
+	level: number;
 	onRemove: () => void;
 	onUpdate: (data: ConversionProps['data']) => void;
 }
 
-const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
+const Conversion = ({ data, level, onRemove, onUpdate }: ConversionProps) => {
 	const [inputValue, setInputValue] = useState(data.unit)
 	const [highlightedIndex, setHighlightedIndex] = useState<number>(-1)
 	const [isDropdownVisible, setIsDropdownVisible] = useState(false)
@@ -115,7 +116,9 @@ const Conversion = ({ data, onRemove, onUpdate }: ConversionProps) => {
 							<div className="flex flex-col gap-2">
 								<div className="flex gap-2">
 									<div className="flex flex-col gap-1">
-										<Label className="text-sm text-slate-400">Conversion</Label>
+										<Label className="text-sm text-slate-400 flex items-center">
+											Conversion {level}
+										</Label>
 										<div className="flex w-full">
 											<div className="w-1/2">
 												<Input

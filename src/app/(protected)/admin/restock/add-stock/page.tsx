@@ -3,7 +3,7 @@
 import { ArrowLeft, ArrowRight, Search, CornerDownRight } from "lucide-react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 import {
@@ -34,7 +34,7 @@ import StockCardV2 from "../_components/stock-card-v2";
 import SupplierDropdown from "../_components/Supplier-Dropdown";
 import { Separator } from "~/components/ui/separator";
 import { Toaster } from "~/components/ui/sonner";
-import { toast } from 'sonner';
+import { toast } from "sonner";
 
 // Define the data structure for inventory items
 
@@ -84,17 +84,23 @@ interface StockCardV2Props {
   onStockChange: (inventoryId: number, totalStock: string) => void;
   onPriceChange: (inventoryId: number, price: string) => void;
   onUnitChange: (inventoryId: number, unit: string) => void;
-  onConversionChange: (conversions: {
-    qty: string;
-    unit: string;
-    price: string;
-  }[]) => void;
-  onErrorChange: (inventoryId: number, hasError: boolean, errorDetails: {
-    mainUnit: boolean;
-    stock: boolean;
-    price: boolean;
-    conversions: boolean;
-  }) => void;
+  onConversionChange: (
+    conversions: {
+      qty: string;
+      unit: string;
+      price: string;
+    }[],
+  ) => void;
+  onErrorChange: (
+    inventoryId: number,
+    hasError: boolean,
+    errorDetails: {
+      mainUnit: boolean;
+      stock: boolean;
+      price: boolean;
+      conversions: boolean;
+    },
+  ) => void;
 }
 
 const InvoiceAddStock = () => {
@@ -109,23 +115,36 @@ const InvoiceAddStock = () => {
   const [isDialogOpen, setIsDialogOpen] = useState(false); // Dialog open state
   const [dialogMessage, setDialogMessage] = useState(""); // Message to display in the dialog
   const [dialogType, setDialogType] = useState("");
-  const [accordionStates, setAccordionStates] = useState<Record<number, boolean>>({});
-  const [conversionStates, setConversionStates] = useState<Record<number, {
-    qty: string;
-    unit: string;
-    price: string;
-  }[]>>({});
+  const [accordionStates, setAccordionStates] = useState<
+    Record<number, boolean>
+  >({});
+  const [conversionStates, setConversionStates] = useState<
+    Record<
+      number,
+      {
+        qty: string;
+        unit: string;
+        price: string;
+        stock: string;
+      }[]
+    >
+  >({});
 
   // Add state to track errors for each item
-  const [itemErrors, setItemErrors] = useState<Record<number, {
-    hasError: boolean;
-    errorDetails: {
-      mainUnit: boolean;
-      stock: boolean;
-      price: boolean;
-      conversions: boolean;
-    };
-  }>>({});
+  const [itemErrors, setItemErrors] = useState<
+    Record<
+      number,
+      {
+        hasError: boolean;
+        errorDetails: {
+          mainUnit: boolean;
+          stock: boolean;
+          price: boolean;
+          conversions: boolean;
+        };
+      }
+    >
+  >({});
 
   const {
     data: inventoryItems,
@@ -143,7 +162,9 @@ const InvoiceAddStock = () => {
   const { data: suppliers } = api.restock.getSuppliers.useQuery();
 
   // Update the state type
-  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(null);
+  const [selectedSupplier, setSelectedSupplier] = useState<Supplier | null>(
+    null,
+  );
 
   // Handle selecting an item
   const handleSelectItem = (item: InventoryItem) => {
@@ -169,27 +190,38 @@ const InvoiceAddStock = () => {
     });
   };
 
-  const handleStockChange = useCallback((inventoryId: number, newStock: string) => {
-    setStock((prev) => ({
-      ...prev,
-      [inventoryId]: newStock,
-    }));
-  }, []); // Empty dependencies since it doesn't depend on any values
+  const handleStockChange = useCallback(
+    (inventoryId: number, newStock: string) => {
+      setStock((prev) => ({
+        ...prev,
+        [inventoryId]: newStock,
+      }));
+    },
+    [],
+  ); // Empty dependencies since it doesn't depend on any values
 
   const totalStock = (inventoryId: number) => {
-    const stockValue = Number(stock[inventoryId] || 0);
-    const itemStockUnits = stockUnits[inventoryId] || [];
+    // Get the main stock value
+    const mainStockValue = Number(stock[inventoryId] || 0);
 
-    // Make sure itemStockUnits is treated as an array and add type annotations
-    return (Array.isArray(itemStockUnits) ? itemStockUnits : [])
-      .slice(1)
-      .reduce((acc: number, unit: StockUnit) => {
-        const unitStock = Number(unit.stock || 0);
-        return acc + unitStock;
-      }, stockValue);
+    // Get conversions for this item
+    const itemConversions = conversionStates[inventoryId] || [];
+
+    // Sum all the conversion stock values using the actual stock field
+    const conversionStockTotal = itemConversions.reduce((sum, conv) => {
+      // Only include conversions with valid units and stock values
+      if (conv.unit?.trim() && conv.stock?.trim()) {
+        return sum + Number(conv.stock || 0);
+      }
+      return sum;
+    }, 0);
+
+    // Return the total
+    return mainStockValue + conversionStockTotal;
   };
 
-  const overAllTotalStock = selectedItems.reduce((sum, item) => sum + totalStock(item.inventory_id),
+  const overAllTotalStock = selectedItems.reduce(
+    (sum, item) => sum + totalStock(item.inventory_id),
     0,
   );
 
@@ -200,17 +232,31 @@ const InvoiceAddStock = () => {
 
     return (
       <div className="flex flex-col gap-1">
-        <div className='flex justify-between items-end w-full'>
-          <p className='text-slate-500 text-sm'>{mainUnit} <span className='ml-2 text-slate-400 text-sm'>main</span></p>
-          <p className='text-slate-500 text-sm'>₱{Number(mainPrice).toFixed(2)}</p>
+        <div className="flex w-full items-end justify-between">
+          <p className="text-sm text-slate-500">
+            {mainUnit} <span className="ml-2 text-sm text-slate-400">main</span>
+          </p>
+          <p className="text-sm text-slate-500">
+            ₱{Number(mainPrice).toFixed(2)}
+          </p>
         </div>
         {itemConversions.map((conv) => (
-          <div key={`${conv.qty}-${conv.unit}-${conv.price}`} className='flex justify-between items-end w-full'>
+          <div
+            key={`${conv.qty}-${conv.unit}-${conv.price}`}
+            className="flex w-full items-end justify-between"
+          >
             <div className="flex items-center gap-2">
-              <CornerDownRight className='h-3 w-3 text-slate-400' strokeWidth={2.5} />
-              <p className='text-slate-500 text-sm'>{conv.qty} {conv.unit}</p>
+              <CornerDownRight
+                className="h-3 w-3 text-slate-400"
+                strokeWidth={2.5}
+              />
+              <p className="text-sm text-slate-500">
+                {conv.qty} {conv.unit}
+              </p>
             </div>
-            <p className='text-slate-500 text-sm'>₱{Number(conv.price || 0).toFixed(2)}</p>
+            <p className="text-sm text-slate-500">
+              ₱{Number(conv.price || 0).toFixed(2)}
+            </p>
           </div>
         ))}
       </div>
@@ -221,8 +267,8 @@ const InvoiceAddStock = () => {
   const getConversionCount = (inventoryId: number) => {
     const itemConversions = conversionStates[inventoryId] || [];
     // Only count rows where both qty and unit are filled
-    return itemConversions.filter(conv =>
-      conv.qty?.trim() !== "" && conv.unit?.trim() !== ""
+    return itemConversions.filter(
+      (conv) => conv.qty?.trim() !== "" && conv.unit?.trim() !== "",
     ).length;
   };
 
@@ -286,32 +332,70 @@ const InvoiceAddStock = () => {
 
   const logData = () => {
     for (const item of selectedItems) {
-      console.log(`Inventory ID: ${item.inventory_id}`); // Log inventory ID
+      console.log(`Inventory ID: ${item.inventory_id}`);
       console.log(`StockUnit for item ${item.variant.item.name}:`);
-      console.log(`Stock Value: ${stock[item.inventory_id] || ""}`);
-      console.log(`Price: ${price[item.inventory_id] || "undefined"}`);
-      console.log(`Unit: ${unit[item.inventory_id] || "undefined"}`);
 
-      const totalItemStock = totalStock(item.inventory_id); // Get the total stock for the item
+      // Main unit data
+      const mainStock = stock[item.inventory_id] || "";
+      const mainPrice = price[item.inventory_id] || "";
+      const mainUnit = unit[item.inventory_id] || "";
+
+      console.log(`Stock Value: ${mainStock}`);
+      console.log(`Price: ${mainPrice}`);
+      console.log(`Unit: ${mainUnit}`);
+
+      // Calculate and display total stock
+      const totalItemStock = totalStock(item.inventory_id);
       console.log(
         `Total Stock for ${item.variant.item.name}: ${totalItemStock}`,
       );
 
-      const itemStockUnits = stockUnits[item.inventory_id] || [];
+      // Get conversions for this item
+      const itemConversions = conversionStates[item.inventory_id] || [];
+
+      // Create stockUnits array that properly represents the conversion chain
+      const stockUnitsData: StockUnit[] = [];
+
+      // Create the main unit entry with conversion to the first conversion unit
+      stockUnitsData.push({
+        unit: mainUnit,
+        stock: mainStock,
+        price: mainPrice,
+        conversionQty: itemConversions[0]?.qty || "",
+        conversionUnit: itemConversions[0]?.unit || "",
+      });
+
+      // Add each conversion linked to the next one in the chain
+      for (let i = 0; i < itemConversions.length; i++) {
+        const currentConv = itemConversions[i];
+        if (!currentConv) continue; // Skip if undefined
+
+        const nextConv = itemConversions[i + 1];
+        stockUnitsData.push({
+          unit: currentConv.unit,
+          stock: currentConv.stock || "", // Use the actual stock value, not qty
+          price: currentConv.price,
+          conversionQty: nextConv?.qty || "",
+          conversionUnit: nextConv?.unit || "",
+        });
+      }
+
       console.log("StockUnits Data:");
-      itemStockUnits.forEach((unit, index) => {
-        if (!unit.unit) {
-          unit.unit =
-            index > 0 ? itemStockUnits[index - 1]?.conversionUnit ?? unit.unit : unit.unit;
-        }
+      stockUnitsData.forEach((unit, index) => {
         console.log(`StockUnit ${index + 1}: `, unit);
       });
-    };
+
+      // Update the stockUnits state for this item
+      handleStockUnitsChange(item.inventory_id, stockUnitsData);
+    }
   };
 
   const { mutateAsync: saveRestock, isPending: test } =
     api.restock.saveRestock.useMutation();
-  const handleSave = async (selectedItems: InventoryItem[], supplierId: string) => {
+  const handleSave = async (
+    selectedItems: InventoryItem[],
+    supplierId: string,
+  ) => {
     if (!supplierId) {
       setDialogMessage("Supplier ID is missing. Please select a supplier.");
       setDialogType("error");
@@ -320,17 +404,57 @@ const InvoiceAddStock = () => {
     }
 
     try {
+      // First, ensure all stockUnits data is up-to-date
+      for (const item of selectedItems) {
+        const inventoryId = item.inventory_id;
+        const mainUnit = unit[inventoryId] || "";
+        const mainStock = stock[inventoryId] || "";
+        const mainPrice = price[inventoryId] || "";
+        const itemConversions = conversionStates[inventoryId] || [];
+
+        // Create stockUnits array with proper conversions
+        const updatedStockUnits: StockUnit[] = [];
+
+        // Main unit
+        updatedStockUnits.push({
+          unit: mainUnit,
+          stock: mainStock,
+          price: mainPrice,
+          conversionQty: itemConversions[0]?.qty || "",
+          conversionUnit: itemConversions[0]?.unit || "",
+        });
+
+        // Conversion units
+        for (let i = 0; i < itemConversions.length; i++) {
+          const currentConv = itemConversions[i];
+          if (!currentConv) continue;
+
+          const nextConv = itemConversions[i + 1];
+          updatedStockUnits.push({
+            unit: currentConv.unit,
+            stock: currentConv.stock, // Use the actual stock value, not qty
+            price: currentConv.price,
+            conversionQty: nextConv?.qty || "",
+            conversionUnit: nextConv?.unit || "",
+          });
+        }
+
+        // Update stockUnits state
+        handleStockUnitsChange(inventoryId, updatedStockUnits);
+      }
+
+      // Now proceed with creating the payload with total stock accurately calculated
       const payload = selectedItems.map((item) => ({
         inventory_id: item.inventory_id,
         variant_id: item.variant_id,
         totalStock: totalStock(item.inventory_id),
-        stockValue: Number(stock[item.inventory_id]) || 0, // Ensure it's a number here
+        stockValue: Number(stock[item.inventory_id]) || 0,
         stockUnits:
           stockUnits[item.inventory_id]?.map((stockUnit) => ({
-            stock: Number(stockUnit.stock), // Ensure numeric values
-            price: Number(stockUnit.price),
+            stock: Number(stockUnit.stock),
+            price: Number(stockUnit.price) || 0,
             unit: stockUnit.unit,
-            conversionQty: Number(stockUnit.conversionQty),
+            conversionQty: Number(stockUnit.conversionQty) || 0,
             conversionUnit: stockUnit.conversionUnit,
           })) || [],
       }));
@@ -360,10 +484,13 @@ const InvoiceAddStock = () => {
     }
   };
 
-  const handleConversionChange = (inventoryId: number, conversions: { qty: string; unit: string; price: string; }[]) => {
-    setConversionStates(prev => ({
+  const handleConversionChange = (
+    inventoryId: number,
+    conversions: { qty: string; unit: string; price: string; stock: string }[],
+  ) => {
+    setConversionStates((prev) => ({
       ...prev,
-      [inventoryId]: conversions
+      [inventoryId]: conversions,
     }));
   };
 
@@ -376,11 +503,11 @@ const InvoiceAddStock = () => {
       stock: boolean;
       price: boolean;
       conversions: boolean;
-    }
+    },
   ) => {
-    setItemErrors(prev => ({
+    setItemErrors((prev) => ({
       ...prev,
-      [inventoryId]: { hasError, errorDetails }
+      [inventoryId]: { hasError, errorDetails },
     }));
   };
 
@@ -401,19 +528,22 @@ const InvoiceAddStock = () => {
   }
 
   const getFormValidation = () => {
-    const invalidItems = selectedItems.filter(item => {
+    const invalidItems = selectedItems.filter((item) => {
       // Check main inputs
-      const hasMissingMainInputs = !stock[item.inventory_id] ||
+      const hasMissingMainInputs =
+        !stock[item.inventory_id] ||
         !price[item.inventory_id] ||
         !unit[item.inventory_id];
 
       // Check conversion fields
       const itemConversions = conversionStates[item.inventory_id] || [];
-      const hasInvalidConversions = itemConversions.some(conv => {
+      const hasInvalidConversions = itemConversions.some((conv) => {
         // Check if either qty or unit is filled but not both
         const hasQty = conv.qty?.trim() !== "";
         const hasUnit = conv.unit?.trim() !== "";
-        return (hasQty && !hasUnit) || (!hasQty && hasUnit) || (!hasQty && !hasUnit);
+        return (
+          (hasQty && !hasUnit) || (!hasQty && hasUnit) || (!hasQty && !hasUnit)
+        );
       });
 
       return hasMissingMainInputs || hasInvalidConversions;
@@ -421,14 +551,14 @@ const InvoiceAddStock = () => {
 
     return {
       isValid: invalidItems.length === 0,
-      invalidItems
+      invalidItems,
     };
   };
 
   const handleConfirmRestock = (e: React.MouseEvent) => {
     // Get items with errors
-    const itemsWithErrors = selectedItems.filter(item =>
-      itemErrors[item.inventory_id]?.hasError
+    const itemsWithErrors = selectedItems.filter(
+      (item) => itemErrors[item.inventory_id]?.hasError,
     );
 
     if (itemsWithErrors.length > 0) {
@@ -446,8 +576,11 @@ const InvoiceAddStock = () => {
         const itemName = `${item.variant.item.name} - ${item.variant.item.brand.name} - ${item.variant.name || "N/A"}`;
 
         // Main inputs errors
-        if ((errors.mainUnit || errors.stock || errors.price) && !shownToasts.has(itemId)) {
-          toast('❌ Missing main inputs', {
+        if (
+          (errors.mainUnit || errors.stock || errors.price) &&
+          !shownToasts.has(itemId)
+        ) {
+          toast("❌ Missing main inputs", {
             description: `Please fill in all main fields for:\n${itemName}`,
             duration: 4000,
           });
@@ -456,7 +589,7 @@ const InvoiceAddStock = () => {
 
         // Conversion errors
         if (errors.conversions && !shownToasts.has(itemId)) {
-          toast('❌ Incomplete conversions', {
+          toast("❌ Incomplete conversions", {
             description: `Please complete or remove empty conversions for:\n${itemName}`,
             duration: 4000,
           });
@@ -567,7 +700,7 @@ const InvoiceAddStock = () => {
 
       {selectedItems.length > 0 ? (
         <ScrollArea className="h-full">
-          <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="mt-4 grid grid-cols-2 gap-4">
             {selectedItems.map((item) => (
               <StockCardV2
                 key={item.inventory_id}
@@ -576,7 +709,9 @@ const InvoiceAddStock = () => {
                 onStockChange={handleStockChange}
                 onPriceChange={handlePriceChange}
                 onUnitChange={handleUnitChange}
-                onConversionChange={(conversions) => handleConversionChange(item.inventory_id, conversions)}
+                onConversionChange={(conversions) =>
+                  handleConversionChange(item.inventory_id, conversions)
+                }
                 onErrorChange={handleItemError}
               />
             ))}
@@ -584,24 +719,26 @@ const InvoiceAddStock = () => {
           <Toaster
             toastOptions={{
               style: {
-                width: '500px',
-                padding: '12px',
-                color: '#475569',
-                fontSize: '16px',
-                bottom: '80px',
-                right: '12px',
-                background: 'white',
-                border: '1px solid #E5E7EB',
-                boxShadow: 'none'
+                width: "500px",
+                padding: "12px",
+                color: "#475569",
+                fontSize: "16px",
+                bottom: "80px",
+                right: "12px",
+                background: "white",
+                border: "1px solid #E5E7EB",
+                boxShadow: "none",
               },
             }}
           />
         </ScrollArea>
       ) : (
-        <div className="h-full flex items-center justify-center">
+        <div className="flex h-full items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Search className="h-20 w-20 text-slate-400" />
-            <p className="text-slate-400">Search and select an item to get started.</p>
+            <p className="text-slate-400">
+              Search and select an item to get started.
+            </p>
           </div>
         </div>
       )}
@@ -610,21 +747,91 @@ const InvoiceAddStock = () => {
       <div className="right-0 z-[5] flex w-full items-center justify-between bg-white">
         <div className="flex flex-col">
           <p className="text-xl text-slate-500">{overAllTotalStock} </p>
-          <span className="text-sm text-slate-400 italic">Total Stock</span>
+          <span className="text-sm italic text-slate-400">Total Stock</span>
         </div>
-        {/*<Button*/}
-        {/*    size={"lg"}*/}
-        {/*    className="bg-green py-8 text-sm font-bold text-white"*/}
-        {/*    onClick={logData} // Trigger the log function*/}
-        {/*>*/}
-        {/*  Show Logs*/}
-        {/*</Button>*/}
+        <Button
+          size={"lg"}
+          className="bg-green py-8 text-sm font-bold text-white"
+          onClick={() => {
+            // Update stockUnits with actual conversion and stock data
+            for (const item of selectedItems) {
+              const inventoryId = item.inventory_id;
+              const mainUnit = unit[inventoryId] || "";
+              const mainStock = stock[inventoryId] || "";
+              const mainPrice = price[inventoryId] || "";
+              const itemConversions = conversionStates[inventoryId] || [];
+
+              // Ensure all conversion items have stock values
+              const validatedConversions = itemConversions.map((conv) => {
+                // Make sure stock is initialized to at least "0" if it's empty
+                if (
+                  conv.stock === undefined ||
+                  conv.stock === null ||
+                  conv.stock === ""
+                ) {
+                  return {
+                    ...conv,
+                    stock: "0",
+                  };
+                }
+                return conv;
+              });
+
+              // Update conversion states if any changes were made
+              if (
+                validatedConversions.some(
+                  (conv, i) => conv.stock !== itemConversions[i]?.stock,
+                )
+              ) {
+                setConversionStates((prev) => ({
+                  ...prev,
+                  [inventoryId]: validatedConversions,
+                }));
+              }
+
+              // Create stockUnits array that properly represents the conversion chain
+              const stockUnitsData: StockUnit[] = [];
+
+              // Main unit with conversion to the first conversion unit
+              stockUnitsData.push({
+                unit: mainUnit,
+                stock: mainStock,
+                price: mainPrice,
+                conversionQty: validatedConversions[0]?.qty || "",
+                conversionUnit: validatedConversions[0]?.unit || "",
+              });
+
+              // Add each conversion with link to the next one
+              for (let i = 0; i < validatedConversions.length; i++) {
+                const currentConv = validatedConversions[i];
+                if (!currentConv) continue;
+
+                const nextConv = validatedConversions[i + 1];
+                stockUnitsData.push({
+                  unit: currentConv.unit,
+                  stock: currentConv.stock || "0", // Use the actual stock value with fallback
+                  price: currentConv.price,
+                  conversionQty: nextConv?.qty || "",
+                  conversionUnit: nextConv?.unit || "",
+                });
+              }
+
+              // Update stockUnits state
+              handleStockUnitsChange(inventoryId, stockUnitsData);
+            }
+
+            // Now show logs with the updated data
+            logData();
+          }}
+        >
+          Show Logs
+        </Button>
 
         <Dialog>
           <DialogTrigger asChild>
             <Button
               size={"lg"}
-              className={`hover:bg-green/80 bg-green text-white ${selectedItems.length === 0 ? "cursor-not-allowed opacity-50" : ""}`}
+              className={`bg-green text-white hover:bg-green/80 ${selectedItems.length === 0 ? "cursor-not-allowed opacity-50" : ""}`}
               onClick={(e) => {
                 const validationPassed = handleConfirmRestock(e);
                 if (!validationPassed) {

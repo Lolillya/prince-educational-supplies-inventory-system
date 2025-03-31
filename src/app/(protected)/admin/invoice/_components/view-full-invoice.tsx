@@ -92,7 +92,6 @@ const ViewFullInvoice: React.FC<InvoiceProps> = ({
     setHasChanges(newValue.trim() !== initialNotes.trim());
   };
 
-
   useEffect(() => {
     setInitialNotes(customerNotes); // Set initial notes when the component mounts
   }, []);

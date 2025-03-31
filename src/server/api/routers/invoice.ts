@@ -135,6 +135,11 @@ export const invoiceRouter = createTRPCRouter({
           total_amount: true,
           discount: true,
           notes: true,
+          payment_term: {
+            select: {
+              description: true,
+            },
+          },
           invoiceClerk: {
             select: {
               Personal_Details: {

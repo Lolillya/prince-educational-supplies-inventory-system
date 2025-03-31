@@ -22,9 +22,12 @@ import {
 } from "~/components/ui/dialog";
 import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
-import {handleExport} from "~/lib/utils/exportInvoice";
+import { handleExport } from "~/lib/utils/exportInvoice";
+import { Badge } from "~/components/ui/badge";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
+  status,
+  payment_term,
   handleVoidItem,
   invoice_number,
   invoice_id,
@@ -42,6 +45,9 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           <div className="flex items-center gap-3">
             <p className="text-xl">#{invoice_number}</p>
             <Pin className="h-5 w-5 rotate-45 text-amber-400" />
+            <Badge variant={status === "PENDING" ? "default" : "destructive"}>
+              {status}
+            </Badge>
             <DropdownMenu>
               <DropdownMenuTrigger className="flex items-center justify-center">
                 <MoreOptions className="!h-1 !w-1 !rounded-lg" />
@@ -50,16 +56,18 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
                 {/*  Print*/}
                 {/*</DropdownMenuItem>*/}
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200"
-                                  onClick={() =>
-                                      handleExport({
-                                        line_items,
-                                        invoice_number: invoice_number.toString(),
-                                        customer,
-                                        date,
-                                        grandTotal: grandTotal.toString(),
-                                      })
-                                  }>
+                <DropdownMenuItem
+                  className="hover:!bg-slate-200 focus:!bg-slate-200"
+                  onClick={() =>
+                    handleExport({
+                      line_items,
+                      invoice_number: invoice_number.toString(),
+                      customer,
+                      date,
+                      grandTotal: grandTotal.toString(),
+                    })
+                  }
+                >
                   Export
                 </DropdownMenuItem>
                 {/*<DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">*/}
@@ -70,25 +78,27 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 {/*  View Invoice*/}
                 {/*</DropdownMenuItem>*/}
                 <DropdownFullInvoice
-                    invoice_number={invoice_number}
-                    invoice_id={invoice_id}
-                    date={date}
-                    customer={customer}
-                    invoiceClerk={invoiceClerk}
-                    grandTotal={grandTotal}
-                    line_items={line_items}
-                    notes={notes}
-                    handleVoidItem={handleVoidItem}/>
+                  invoice_number={invoice_number}
+                  invoice_id={invoice_id}
+                  date={date}
+                  customer={customer}
+                  invoiceClerk={invoiceClerk}
+                  grandTotal={grandTotal}
+                  line_items={line_items}
+                  notes={notes}
+                  handleVoidItem={handleVoidItem}
+                />
                 <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
                   View Customer
                 </DropdownMenuItem>
-
-                <DropdownMenuItem
-                  className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
-                  onClick={handleVoidItem}
-                >
-                  Void
-                </DropdownMenuItem>
+                {status !== "VOIDED" && (
+                  <DropdownMenuItem
+                    className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
+                    onClick={handleVoidItem}
+                  >
+                    Void
+                  </DropdownMenuItem>
+                )}
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
@@ -111,11 +121,20 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               <Users2 className="h-4 w-4" />
               <p className="text-sm">{customer}</p>
             </div>
+            <Separator
+              orientation="vertical"
+              className="h-6 w-[2px] bg-slate-200"
+            />
+
+            <div className="flex items-center gap-3">
+              <Label>Term: {payment_term.description}</Label>
+              <p>{}</p>
+            </div>
           </div>
         </div>
 
         <div className="flex items-center justify-between pl-8">
-          <div className="flex flex-col gap-2 justify-end">
+          <div className="flex flex-col justify-end gap-2">
             <p className="text-right text-xl">
               ₱ {grandTotal.toLocaleString()}
             </p>
@@ -144,6 +163,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           )}
           <div className="flex items-center gap-2">
             <ViewFullInvoice
+              payment_term={payment_term}
               invoice_number={invoice_number}
               invoice_id={invoice_id}
               date={date}

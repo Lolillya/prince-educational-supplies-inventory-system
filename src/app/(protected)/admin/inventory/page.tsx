@@ -97,7 +97,7 @@ const InventoryPage = () => {
     inventoryQuantity: number,
   ): string => {
     if (!stockLevel) return "good";
-    if (inventoryQuantity === 0) return "empty";
+    if (inventoryQuantity <= 0) return "empty";
     if (inventoryQuantity <= stockLevel.very_low_stock) return "very low";
     if (inventoryQuantity <= stockLevel.low_stock) return "low";
     return "good";

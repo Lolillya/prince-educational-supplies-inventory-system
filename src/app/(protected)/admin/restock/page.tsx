@@ -45,18 +45,16 @@ const RestockPage = () => {
   const [searchQuery, setSearchQuery] = useState("");
 
   const searchParams = useSearchParams();
-  const clerkId = searchParams.get('clerkId');
-  const supplierId = searchParams.get('supplierId');
-
+  const clerkId = searchParams.get("clerkId");
+  const supplierId = searchParams.get("supplierId");
 
   const {
     data: restockData,
     isLoading,
     error,
   } = api.restock.getRestockData.useQuery(
-    clerkId ? { clerkId } : supplierId ? { supplierId } : undefined
+    clerkId ? { clerkId } : supplierId ? { supplierId } : undefined,
   );
-
 
   if (isLoading)
     return (
@@ -110,7 +108,7 @@ const RestockPage = () => {
       </div>
 
       <ScrollArea className="mt-5">
-        <div className="grid grid-cols-2 px-20 gap-4">
+        <div className="grid grid-cols-2 gap-4 px-20">
           {filteredRestocks?.map((restock: RestockProps) => (
             <RestockRecord
               key={restock.restockId}

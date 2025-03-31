@@ -535,9 +535,7 @@ const NewInvoice = () => {
                 Object.keys(activeCards).length === 0 ||
                 Object.values(activeCards).some(
                   (card) => card.quantity === 0 || card.unitPrice === 0,
-                ) ||
-                supplierSearchTerm.trim() === "" ||
-                term.trim() === ""
+                )
               }
             >
               Confirm Invoice
@@ -553,7 +551,10 @@ const NewInvoice = () => {
             ) : (
               <>
                 <DialogTitle>
-                  ORDER CONFIRMATION <span className="text-gray-400 ml-3 text-m font-light">#{nextInvoiceId}</span>
+                  ORDER CONFIRMATION{" "}
+                  <span className="text-gray-400 text-m ml-3 font-light">
+                    #{nextInvoiceId}
+                  </span>
                 </DialogTitle>
                 <div className="flex w-full flex-col gap-3">
                   <div className="text-gray-400 flex flex-col gap-1">
@@ -588,7 +589,10 @@ const NewInvoice = () => {
                         value={term}
                         onChange={(e) => setTerm(e.target.value)}
                         onInput={(e) => {
-                          e.currentTarget.value = e.currentTarget.value.replace(/[^0-9]/g, "");
+                          e.currentTarget.value = e.currentTarget.value.replace(
+                            /[^0-9]/g,
+                            "",
+                          );
                         }}
                       />
                     </div>

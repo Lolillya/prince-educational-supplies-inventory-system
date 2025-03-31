@@ -25,15 +25,15 @@ model Personal_Details {
   contact             String?
   email               String?
   company             String?
-  term                Int?
   notes               String?
   location_id         Int?
+  term                Int?
   auth                Authentication?
   Authentication_Log  Authentication_Log[]
-  location            Location?            @relation(fields: [location_id], references: [location_id], onDelete: Cascade)
-  User_Role           User_Role?
   Batch               Batch[]
   Inventory           Inventory[]
+  location            Location?            @relation(fields: [location_id], references: [location_id], onDelete: Cascade)
+  User_Role           User_Role?
 }
 
 model Role {
@@ -100,10 +100,10 @@ model Unit {
   conversionRatesFrom ConversionRate[]   @relation("FromUnit")
   conversionRatesTo   ConversionRate[]   @relation("ToUnit")
   Line_Item           Line_Item[]
-  SupplierUnit        SupplierUnit[]
   Preset              Preset[]
   PresetConversion    PresetConversion[] @relation("FromUnit")
   PresetConversionTo  PresetConversion[] @relation("ToUnit")
+  SupplierUnit        SupplierUnit[]
 }
 
 model Item {
@@ -119,8 +119,8 @@ model Item {
   brand         Brand           @relation(fields: [brand_id], references: [brand_id])
   category      Category        @relation(fields: [category_id], references: [category_id])
   discount      Discount?       @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
-  variants      Variant[]
   Preset        Preset[]
+  variants      Variant[]
 }
 
 model Variant {
@@ -175,12 +175,12 @@ model SupplierUnit {
   created_at        DateTime         @default(now())
   updated_at        DateTime         @updatedAt
   ConversionRate    ConversionRate[]
+  Invoice           Invoice[]
+  Line_Item         Line_Item[]
   batchVariant      BatchVariant     @relation(fields: [batch_variant_id], references: [batch_variant_id], onDelete: Cascade)
   discount          Discount?        @relation(fields: [discount_id], references: [discount_id], onDelete: Cascade)
   supplier          User_Role        @relation(fields: [supplier_id], references: [id])
   unit              Unit             @relation(fields: [unit_id], references: [unit_id])
-  Invoice           Invoice[]
-  Line_Item         Line_Item[]
 }
 
 model ConversionRate {
@@ -202,8 +202,8 @@ model Inventory {
   inventory_number Int              @unique @default(autoincrement())
   quantity         Int
   inventory_clerk  String
-  Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
   last_updated     DateTime         @default(now())
+  Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
   variant          Variant          @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
@@ -232,15 +232,15 @@ model Preset {
 }
 
 model PresetConversion {
-  preset_conversion_id Int      @id @default(autoincrement())
   preset_id            Int
-  from_unit_id         Int
-  to_unit_id           Int
-  conversion_rate      Float
   created_at           DateTime @default(now())
   updated_at           DateTime @updatedAt
-  preset               Preset   @relation(fields: [preset_id], references: [preset_id], onDelete: Cascade)
+  conversion_rate      Float
+  from_unit_id         Int
+  preset_conversion_id Int      @id @default(autoincrement())
+  to_unit_id           Int
   from_unit            Unit     @relation("FromUnit", fields: [from_unit_id], references: [unit_id], onDelete: Cascade)
+  preset               Preset   @relation(fields: [preset_id], references: [preset_id], onDelete: Cascade)
   to_unit              Unit     @relation("ToUnit", fields: [to_unit_id], references: [unit_id], onDelete: Cascade)
 }
 
@@ -272,37 +272,33 @@ model Inventory_Log {
 }
 
 model Invoice {
-  invoice_id     Int @id @default(autoincrement())
-  invoice_number Int @unique @default(autoincrement())
-
-  customer_id     String
-  invoice_clerk   String
-  created_at      DateTime @default(now())
-  updated_at      DateTime @updatedAt
-  total_amount    Float    @default(0.0)
-  discount        Float?
-  status          String
-  payment_term_id Int
-  notes           String?
-  user_RoleId     String?
-
+  invoice_id                   Int           @id @default(autoincrement())
+  invoice_number               Int           @unique @default(autoincrement())
+  customer_id                  String
+  invoice_clerk                String
+  created_at                   DateTime      @default(now())
+  updated_at                   DateTime      @updatedAt
+  total_amount                 Float         @default(0.0)
+  discount                     Float?
+  status                       String
+  notes                        String?
+  user_RoleId                  String?
+  supplierUnitSupplier_unit_id Int?
+  term                         String
   customer                     User_Role     @relation("CustomerRelation", fields: [customer_id], references: [Personal_Details_Id], onDelete: Cascade)
   invoiceClerk                 User_Role     @relation("InvoiceClerkRelation", fields: [invoice_clerk], references: [Personal_Details_Id])
-  payment_term                 Payment_Term  @relation(fields: [payment_term_id], references: [payment_term_id])
+  SupplierUnit                 SupplierUnit? @relation(fields: [supplierUnitSupplier_unit_id], references: [supplier_unit_id])
   User_Role                    User_Role?    @relation(fields: [user_RoleId], references: [id], onDelete: Cascade)
   line_items                   Line_Item[]
   Payment                      Payment[]
   payment_logs                 Payment_Log[]
   Pin                          Pin[]
-  SupplierUnit                 SupplierUnit? @relation(fields: [supplierUnitSupplier_unit_id], references: [supplier_unit_id])
-  supplierUnitSupplier_unit_id Int?
 }
 
 model Line_Item {
   line_item_id     Int          @id @default(autoincrement())
   invoice_id       Int
   variant_id       Int
-  supplier_unit_id Int
   unit_id          Int
   quantity         Int
   unit_price       Float
@@ -310,19 +306,19 @@ model Line_Item {
   created_at       DateTime     @default(now())
   discount         Int          @default(0)
   sub_total        Float?
-  supplier_unit    SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id])
+  supplier_unit_id Int
   invoice          Invoice      @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
+  supplier_unit    SupplierUnit @relation(fields: [supplier_unit_id], references: [supplier_unit_id])
   unit             Unit         @relation(fields: [unit_id], references: [unit_id])
   variant          Variant      @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
 
 model Payment_Term {
-  payment_term_id Int       @id @default(autoincrement())
-  term_name       String    @unique
+  payment_term_id Int      @id @default(autoincrement())
+  term_name       String   @unique
   description     String?
-  created_at      DateTime  @default(now())
-  updated_at      DateTime  @updatedAt
-  invoices        Invoice[]
+  created_at      DateTime @default(now())
+  updated_at      DateTime @updatedAt
 }
 
 model Payment {
@@ -330,10 +326,10 @@ model Payment {
   invoice_id     Int
   amount         Float
   payment_date   DateTime      @default(now())
-  payment_method PaymentMethod
-  reference      String?
   created_at     DateTime      @default(now())
   updated_at     DateTime      @updatedAt
+  reference      String?
+  payment_method PaymentMethod
   invoice        Invoice       @relation(fields: [invoice_id], references: [invoice_id], onDelete: Cascade)
   PaymentLog     Payment_Log[]
 
@@ -392,50 +388,6 @@ model Pin {
   @@unique([user_id, batch_id])
   @@unique([user_id, invoice_id])
 }
-
-// model FavoriteInventory {
-//   favorite_id String @id @default(uuid())
-//   user        User   @relation(fields: [user_id], references: [id])
-//   variant     Variant @relation(fields: [variant_id], references: [variant_id])
-//   created_at  DateTime @default(now())
-//   updated_at  DateTime @updatedAt
-//
-//   user_id    String
-//   variant_id Int
-// }
-//
-// model FavoriteContact {
-//   favorite_id String @id @default(uuid())
-//   user        User   @relation(fields: [user_id], references: [id])
-//   contact     Personal_Details @relation(fields: [contact_id], references: [personal_details_id])
-//   created_at  DateTime @default(now())
-//   updated_at  DateTime @updatedAt
-//
-//   user_id    String
-//   contact_id String
-// }
-
-// model PinRestock {
-//   pin_id     String   @id @default(uuid())
-//   user       User     @relation(fields: [user_id], references: [id])
-//   batch      Batch    @relation(fields: [batch_id], references: [batch_id])
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-//
-//   user_id  String
-//   batch_id Int
-// }
-//
-// model PinInvoice {
-//   pin_id     String   @id @default(uuid())
-//   user       User     @relation(fields: [user_id], references: [id])
-//   invoice    Invoice  @relation(fields: [invoice_id], references: [invoice_id])
-//   created_at DateTime @default(now())
-//   updated_at DateTime @updatedAt
-//
-//   user_id    String
-//   invoice_id Int
-// }
 
 enum Roles {
   ADMIN

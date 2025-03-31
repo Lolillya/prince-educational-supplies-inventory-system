@@ -75,6 +75,7 @@ type SupplierProps = {
   Personal_Details: {
     company: string | null;
     personal_details_id: string;
+    term: string;
   };
 };
 
@@ -131,7 +132,7 @@ const NewInvoice = () => {
     isError,
   } = api.invoice.getItems.useQuery();
 
-  const { data: supplierList, isLoading: loadingCustomers } =
+  const { data: customerList, isLoading: loadingCustomers } =
     api.invoice.getCustomers.useQuery();
   const { data: nextInvoiceId, isLoading: loadingInvoiceId } =
     api.invoice.getInvoiceId.useQuery();
@@ -223,6 +224,7 @@ const NewInvoice = () => {
 
     const invoiceData = {
       invoice: {
+        term: term,
         customerNotes: customerNotes,
         customer_id:
           selectedSupplier?.Personal_Details.personal_details_id ?? "",
@@ -230,7 +232,7 @@ const NewInvoice = () => {
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",
-        payment_term_id: 1,
+        payment_term_id: term,
         isAutoRestock: isAutoRestock,
         isBatchAutoRestock,
       },
@@ -289,6 +291,7 @@ const NewInvoice = () => {
   const handleSelectedSupplier = (supplier: SupplierProps) => {
     setSupplierSearchTerm(supplier.Personal_Details.company ?? "");
     setSelectedSupplier(supplier);
+    setTerm(supplier.Personal_Details.term);
   };
 
   const handleSelectItem = (item: InventoryItem) => {
@@ -340,8 +343,8 @@ const NewInvoice = () => {
 
     if (supplierSearchTerm) {
       const result =
-        supplierList?.filter((supplier) =>
-          supplier.Personal_Details.company
+        customerList?.filter((customer) =>
+          customer.Personal_Details.company
             ?.toLowerCase()
             .includes(supplierSearchTerm),
         ) ?? [];
@@ -586,7 +589,7 @@ const NewInvoice = () => {
                       <Input
                         placeholder="30"
                         className="w-[10%] rounded-l-none"
-                        value={term}
+                        value={selectedSupplier?.Personal_Details.term ?? 0}
                         onChange={(e) => setTerm(e.target.value)}
                         onInput={(e) => {
                           e.currentTarget.value = e.currentTarget.value.replace(
@@ -650,11 +653,7 @@ const NewInvoice = () => {
                         size={"lg"}
                         onClick={handleSaveInvoice}
                         disabled={
-                          !selectedSupplier ||
-                          isInvoicePending ||
-                          !term ||
-                          supplierSearchTerm.trim() === "" ||
-                          term.trim() === ""
+                          !selectedSupplier || isInvoicePending || !term
                         }
                       >
                         Save

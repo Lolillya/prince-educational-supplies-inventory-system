@@ -9,7 +9,7 @@ const invoiceSchema = z.object({
   total_amount: z.number(),
   discount: z.number(),
   status: z.string(),
-  payment_term_id: z.number(),
+  term: z.string(),
   isAutoRestock: z.boolean(),
   isBatchAutoRestock: z.boolean(),
 });
@@ -135,11 +135,7 @@ export const invoiceRouter = createTRPCRouter({
           total_amount: true,
           discount: true,
           notes: true,
-          payment_term: {
-            select: {
-              description: true,
-            },
-          },
+          term: true,
           invoiceClerk: {
             select: {
               Personal_Details: {
@@ -205,6 +201,7 @@ export const invoiceRouter = createTRPCRouter({
           select: {
             company: true,
             personal_details_id: true,
+            term: true,
           },
         },
       },
@@ -262,7 +259,7 @@ export const invoiceRouter = createTRPCRouter({
               total_amount: invoice.total_amount,
               discount: invoice.discount,
               status: invoice.status,
-              payment_term_id: invoice.payment_term_id,
+              term: invoice.term,
               notes: invoice.customerNotes,
             },
           });

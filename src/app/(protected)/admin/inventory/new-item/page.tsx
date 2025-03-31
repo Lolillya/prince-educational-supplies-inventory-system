@@ -749,6 +749,50 @@ const NewItem = () => {
       return;
     }
 
+    // Check for variants with missing stock levels
+    const variantsWithName = variants.filter(v => v.variant.trim() !== '');
+    const missingStockLevels = variantsWithName.filter(
+      variant => !variant.lowStock || !variant.veryLowStock
+    );
+
+    if (missingStockLevels.length > 0) {
+      toast("❌ Missing stock levels", {
+        description: "Each variant must have both low stock and very low stock levels set",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for duplicate variant names
+    const variantNames = variantsWithName.map(v => v.variant.trim().toLowerCase());
+    const duplicateVariants = variantNames.filter(
+      (name, index) => variantNames.indexOf(name) !== index
+    );
+
+    if (duplicateVariants.length > 0) {
+      toast("❌ Duplicate variants", {
+        description: "Each variant must have a unique name",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for stock level errors
+    const stockLevelErrors = variants.filter(
+      variant => 
+        variant.lowStock > 0 && 
+        variant.veryLowStock > 0 && 
+        variant.lowStock <= variant.veryLowStock
+    );
+
+    if (stockLevelErrors.length > 0) {
+      toast("❌ Invalid stock levels", {
+        description: "Very low stock must be less than low stock for all variants",
+        duration: 4000,
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
@@ -1155,7 +1199,7 @@ const NewItem = () => {
                 />
               ))}
               <Button
-                className="h-48 rounded-lg border-4 border-dashed bg-slate-100/50 p-3 text-slate-400 hover:bg-slate-100"
+                className="min-h-48 h-full rounded-lg border-4 border-dashed bg-slate-100/50 p-3 text-slate-400 hover:bg-slate-100"
                 onClick={handleAddVariant}
               >
                 + Add a Variant

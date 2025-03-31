@@ -145,6 +145,25 @@ const AdminDashboard = () => {
   const { data: categoryList } = api.getCategoryList.get.useQuery();
   const { data: monthlySales } = api.getMonthlySales.get.useQuery();
 
+  const result = api.useQueries((t) => [
+    t.getStockedIn.get(),
+    t.getStockedOut.get(),
+    t.getAllCustomers.get(),
+    t.getAllSuppliers.get(),
+    t.getCategoryList.get(),
+    t.getMonthlySales.get(),
+  ]);
+
+  // TO BE COMPLETED
+  // const [
+  //   totalStockedIn,
+  //   totalStockedOut,
+  //   customers,
+  //   suppliers,
+  //   categoryList,
+  //   monthlySales,
+  // ] = result.map((r) => r.data);
+
   console.log(monthlySales);
 
   const pieChartData: PieChartData[] =

@@ -758,7 +758,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       className="rounded-r-none border shadow-none"
                       placeholder="Enter Quantity"
                       value={unitQuantity}
-                      disabled={selectedBatches.length === 0}
+                      disabled={
+                        selectedBatches.length === 0 && !isBatchAutoRestock
+                      }
                       onChange={(e) => setUnitQuantity(Number(e.target.value))}
                       onInput={(e) => {
                         e.currentTarget.value = e.currentTarget.value.replace(
@@ -769,7 +771,9 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                     />
                   </div>
                   <Select
-                    disabled={selectedBatches.length === 0}
+                    disabled={
+                      selectedBatches.length === 0 && !isBatchAutoRestock
+                    }
                     value={
                       selectedUnit.unit_id === 0
                         ? undefined

@@ -15,7 +15,7 @@ interface ConversionProps {
     stock: string;
     price: string;
   };
-  position: number; // Add this line
+  position: number;
   onRemove: () => void;
   onUpdate: (data: ConversionProps["data"]) => void;
   onPriceBlur?: (price: string) => void;
@@ -31,10 +31,11 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
+  const conversionRef = useRef<HTMLDivElement>(null);  // New ref for scrolling
 
   const filteredUnits = inputValue
       ? unitOptions.filter((name) =>
-          name.toLowerCase().includes(inputValue.toLowerCase()),
+          name.toLowerCase().includes(inputValue.toLowerCase())
       )
       : [];
 
@@ -82,7 +83,7 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-          prev < filteredUnits.length - 1 ? prev + 1 : prev,
+          prev < filteredUnits.length - 1 ? prev + 1 : prev
       );
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
@@ -101,17 +102,17 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
 
   const handlePriceChange = (value: string) => {
     // Remove any non-digit or non-dot characters
-    let numericValue = value.replace(/[^\d.]/g, '');
+    let numericValue = value.replace(/[^\d.]/g, "");
 
     // Ensure only one decimal point
-    const parts = numericValue.split('.');
+    const parts = numericValue.split(".");
     if (parts.length > 2) {
-      numericValue = parts[0] + '.' + parts.slice(1).join('');
+      numericValue = parts[0] + "." + parts.slice(1).join("");
     }
 
     // Limit to 2 decimal places
     if (parts.length === 2) {
-      numericValue = parts[0] + '.' + parts[1].slice(0, 2);
+      numericValue = parts[0] + "." + parts[1].slice(0, 2);
     }
 
     onUpdate({
@@ -125,9 +126,9 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     let formattedValue = "0.00";
 
     if (value) {
-      if (value.includes('.')) {
-        const [whole, decimal] = value.split('.');
-        formattedValue = `${whole}.${decimal.padEnd(2, '0').slice(0, 2)}`;
+      if (value.includes(".")) {
+        const [whole, decimal] = value.split(".");
+        formattedValue = `${whole}.${decimal.padEnd(2, "0").slice(0, 2)}`;
       } else {
         formattedValue = `${value}.00`;
       }
@@ -143,8 +144,15 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     }
   };
 
+  // Auto scroll to the last added conversion when it's updated
+  useEffect(() => {
+    if (conversionRef.current) {
+      conversionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+  }, [data]); // This effect runs when the data changes (when a new conversion is added)
+
   return (
-      <div className="mt-4">
+      <div className="mt-4" ref={conversionRef}>
         <div className="flex gap-4">
           <div className="flex w-3/5 flex-col gap-1">
             <div className="flex">
@@ -160,7 +168,8 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                     <div className="flex flex-col gap-1">
                       <Label className="text-sm text-slate-400">
                         Conversion {position}
-                      </Label>                      <div className="flex w-full">
+                      </Label>
+                      <div className="flex w-full">
                         <div className="w-1/2">
                           <Input
                               type="number"
@@ -179,10 +188,7 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                               }}
                           />
                         </div>
-                        <Separator
-                            orientation="vertical"
-                            className="h-auto w-1 bg-slate-200"
-                        />
+                        <Separator orientation="vertical" className="h-auto w-1 bg-slate-200" />
                         <div className="relative w-1/2">
                           <Input
                               ref={inputRef}
@@ -223,8 +229,12 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                                       ref={dropdownRef}
                                       className="fixed z-[9999] mt-1"
                                       style={{
-                                        top: `${(inputRef.current?.getBoundingClientRect().bottom || 0) + 4}px`,
-                                        left: `${inputRef.current?.getBoundingClientRect().left || 0}px`,
+                                        top: `${
+                                            (inputRef.current?.getBoundingClientRect().bottom || 0) + 4
+                                        }px`,
+                                        left: `${
+                                            inputRef.current?.getBoundingClientRect().left || 0
+                                        }px`,
                                         width: `${inputRef.current?.offsetWidth || 0}px`,
                                       }}
                                   >
@@ -234,9 +244,7 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                                             <div
                                                 key={unitName}
                                                 className={`cursor-pointer px-4 py-2 hover:bg-slate-100 ${highlightedIndex === index ? "bg-slate-200" : ""}`}
-                                                onMouseDown={() =>
-                                                    handleSelectUnit(unitName)
-                                                }
+                                                onMouseDown={() => handleSelectUnit(unitName)}
                                             >
                                               {unitName}
                                             </div>
@@ -253,25 +261,21 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
               </div>
             </div>
           </div>
-          <Separator
-              orientation="vertical"
-              className="h-auto w-px bg-slate-300"
-          />
+          <Separator orientation="vertical" className="h-auto w-px bg-slate-300" />
           <div className="flex w-2/5 flex-col gap-2">
             <div className="flex items-end gap-2">
               <div className="flex flex-col gap-1">
                 <Label className="text-sm text-slate-400">Unit Price</Label>
                 <Input
-                    type="text" // Changed from "number" to "text" for better control
-                    inputMode="decimal" // Shows numeric keyboard on mobile
+                    type="text"
+                    inputMode="decimal"
                     className="bg-white text-slate-700 shadow-none"
                     placeholder="Price"
                     value={data.price}
                     onChange={(e) => handlePriceChange(e.target.value)}
                     onBlur={handlePriceBlur}
                     onKeyDown={(e) => {
-                      // Prevent entering more than 2 decimal places
-                      if (e.key === '.' && data.price.includes('.')) {
+                      if (e.key === "." && data.price.includes(".")) {
                         e.preventDefault();
                       }
                     }}

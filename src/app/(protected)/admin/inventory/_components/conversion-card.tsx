@@ -135,16 +135,66 @@ const ConversionCard = ({
     onUpdate({ ...preset, mainUnit: value });
   };
 
-  // Handle main price change
+  // Replace the existing handleMainPriceChange with this:
   const handleMainPriceChange = (value: string) => {
-    onUpdate({ ...preset, mainPrice: value });
+    // Remove any non-digit or non-dot characters
+    let numericValue = value.replace(/[^\d.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = numericValue.split('.');
+    if (parts.length > 2) {
+      numericValue = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Limit to 2 decimal places
+    if (parts.length === 2) {
+      numericValue = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+
+    onUpdate({ ...preset, mainPrice: numericValue });
+  };
+  // Add this blur handler
+  const handleMainPriceBlur = (e: React.FocusEvent<HTMLInputElement>) => {
+    const value = e.target.value;
+    if (!value) {
+      onUpdate({ ...preset, mainPrice: '0.00' });
+      return;
+    }
+
+    // Format to exactly 2 decimal places
+    let formattedValue = value;
+    if (value.includes('.')) {
+      const [whole, decimal] = value.split('.');
+      const paddedDecimal = decimal.padEnd(2, '0').slice(0, 2);
+      formattedValue = `${whole}.${paddedDecimal}`;
+    } else if (value) {
+      formattedValue = `${value}.00`;
+    }
+
+    onUpdate({ ...preset, mainPrice: formattedValue });
   };
 
   // Handle conversion changes
   const handleConversionChange = (
-    index: number,
-    newData: { qty?: string; unit?: string; price?: string },
+      index: number,
+      newData: { qty?: string; unit?: string; price?: string },
   ) => {
+    // Format price to 2 decimal places if it exists
+    if (newData.price) {
+      let priceValue = newData.price.replace(/[^\d.]/g, '');
+      const parts = priceValue.split('.');
+
+      if (parts.length > 2) {
+        priceValue = parts[0] + '.' + parts.slice(1).join('');
+      }
+
+      if (parts.length === 2) {
+        priceValue = parts[0] + '.' + parts[1].slice(0, 2);
+      }
+
+      newData.price = priceValue;
+    }
+
     const newConversions = [...preset.conversions];
     newConversions[index] = {
       ...newConversions[index],
@@ -153,6 +203,23 @@ const ConversionCard = ({
     onUpdate({ ...preset, conversions: newConversions });
   };
 
+// Add this blur handler for conversion prices
+  const handleConversionPriceBlur = (index: number, price: string) => {
+    let formattedPrice = price;
+    if (price.includes('.')) {
+      const [whole, decimal] = price.split('.');
+      formattedPrice = `${whole}.${decimal.padEnd(2, '0').slice(0, 2)}`;
+    } else if (price) {
+      formattedPrice = `${price}.00`;
+    }
+
+    const newConversions = [...preset.conversions];
+    newConversions[index] = {
+      ...newConversions[index],
+      price: formattedPrice
+    };
+    onUpdate({ ...preset, conversions: newConversions });
+  };
   const handleAddConversion = () => {
     onUpdate({
       ...preset,
@@ -254,20 +321,22 @@ const ConversionCard = ({
             <div className="flex flex-col gap-1">
               <Label className="text-sm text-slate-400">Unit Price</Label>
               <Input
-                type="number"
-                step="0.25"
-                min="0"
-                className="bg-white text-slate-700 shadow-none"
-                placeholder="Price"
-                value={preset.mainPrice}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  onUpdate({ ...preset, mainPrice: value });
-                }}
-                onBlur={(e) => {
-                  const value = parseFloat(e.target.value).toFixed(2);
-                  onUpdate({ ...preset, mainPrice: value });
-                }}
+                  type="text" // Changed from "number" to "text" for better control
+                  inputMode="decimal" // Shows numeric keyboard on mobile
+                  className="bg-white text-slate-700 shadow-none"
+                  placeholder="Price"
+                  value={typeof preset.mainPrice === 'number'
+                      ? preset.mainPrice.toFixed(2)
+                      : preset.mainPrice}
+                  onChange={(e) => handleMainPriceChange(e.target.value)}
+                  onBlur={handleMainPriceBlur}
+                  onKeyDown={(e) => {
+                    // Prevent entering more than 2 decimal places
+                    if (e.key === '.' && (preset.mainPrice.toString().includes('.') ||
+                        (e.key === '.' && e.currentTarget.value.includes('.')))) {
+                      e.preventDefault();
+                    }
+                  }}
               />
             </div>
             <div className="flex h-10 w-12 items-center justify-center !p-1">
@@ -298,18 +367,21 @@ const ConversionCard = ({
             </p>
           ) : (
             preset.conversions.map((conv, index) => (
-              <Conversion
-                key={index}
-                data={{
-                  id: index,
-                  qty: conv.qty,
-                  unit: conv.unit,
-                  stock: "0",
-                  price: conv.price,
-                }}
-                onUpdate={(newData) => handleConversionChange(index, newData)}
-                onRemove={() => handleRemoveConversion(index)}
-              />
+                <Conversion
+                    key={index}
+                    data={{
+                      id: index,
+                      qty: conv.qty || '',
+                      unit: conv.unit || '',
+                      stock: "0",
+                      price: typeof conv.price === 'number'
+                          ? conv.price.toFixed(2)
+                          : conv.price || '0.00'
+                    }}
+                    onUpdate={(newData) => handleConversionChange(index, newData)}
+                    onRemove={() => handleRemoveConversion(index)}
+                    onPriceBlur={(price) => handleConversionPriceBlur(index, price)}
+                />
             ))
           )}
         </div>

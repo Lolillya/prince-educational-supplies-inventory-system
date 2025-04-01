@@ -748,6 +748,19 @@ const NewItem = () => {
       });
       return;
     }
+    const invalidPresets = presets.filter(preset =>
+        preset.mainPrice === "0.00" ||
+        preset.mainPrice === "0" ||
+        parseFloat(preset.mainPrice) <= 0
+    );
+
+    if (invalidPresets.length > 0) {
+      toast("❌ Invalid price", {
+        description: "Main Price cannot be zero or negative",
+        duration: 4000,
+      });
+      return;
+    }
 
     // Check for variants with missing stock levels
     const variantsWithName = variants.filter(v => v.variant.trim() !== '');

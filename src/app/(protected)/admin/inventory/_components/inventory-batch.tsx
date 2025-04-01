@@ -304,10 +304,10 @@ const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword, in
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <RecordEditor
+                    {/* <RecordEditor
                       isEditing={isEditing}
                       handleEdit={handleEdit}
-                    />
+                    /> */}
                   </div>
                 </div>
               </DialogHeader>
@@ -433,7 +433,7 @@ const InventoryBatch = ({ batchVariants, selectedVariantId, onVerifyPassword, in
                       Close
                     </Button>
                   </DialogClose>
-                  <OutToOffice isEditing={isEditing} />
+                  {/* <OutToOffice isEditing={isEditing} /> */}
                 </div>
               </div>
               {showWarning && (

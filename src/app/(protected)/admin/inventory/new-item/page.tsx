@@ -748,6 +748,7 @@ const NewItem = () => {
       });
       return;
     }
+    // Handle save presets
     // Check for invalid presets (main price zero/negative)
     const invalidMainPrices = presets.filter(preset =>
         preset.mainPrice === "0.00" ||
@@ -784,7 +785,28 @@ const NewItem = () => {
       });
       return;
     }
+    // In your handleSave function, add this validation:
 
+// Check for invalid unit selections
+    const invalidUnits = presets.some(preset => {
+      // Check main unit
+      const mainUnitInvalid = !units.some(unit => unit.name === preset.mainUnit);
+
+      // Check conversion units
+      const conversionUnitsInvalid = preset.conversions.some(conv =>
+          !units.some(unit => unit.name === conv.unit)
+      );
+
+      return mainUnitInvalid || conversionUnitsInvalid;
+    });
+
+    if (invalidUnits) {
+      toast("❌ Invalid unit selection", {
+        description: "Please select units from the dropdown list",
+        duration: 4000,
+      });
+      return;
+    }
 
     // Check for variants with missing stock levels
     const variantsWithName = variants.filter(v => v.variant.trim() !== '');

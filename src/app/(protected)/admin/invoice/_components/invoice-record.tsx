@@ -24,6 +24,8 @@ import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 import { handleExport } from "~/lib/utils/exportInvoice";
 import { Badge } from "~/components/ui/badge";
+import { useRouter } from "next/navigation";
+import { api } from "~/trpc/react";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   status,
@@ -37,6 +39,20 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   line_items,
   notes,
 }) => {
+  const router = useRouter();
+  const { data: customerData } = api.customers.getByName.useQuery(
+    { companyName: customer },
+    { enabled: !!customer, staleTime: Infinity },
+  );
+
+  const handleViewCustomer = () => {
+    if (customerData?.personal_details_id) {
+      router.push(
+        `/admin/customers?customerId=${customerData.personal_details_id}`,
+      );
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
       <div className="flex items-center justify-between px-6">
@@ -87,7 +103,10 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                   notes={notes}
                   handleVoidItem={handleVoidItem}
                 />
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                <DropdownMenuItem
+                  className="hover:!bg-slate-200 focus:!bg-slate-200"
+                  onClick={handleViewCustomer}
+                >
                   View Customer
                 </DropdownMenuItem>
                 {status !== "VOIDED" && (

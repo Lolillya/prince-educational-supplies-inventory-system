@@ -2,8 +2,8 @@
 
 import { Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Toaster } from "~/components/ui/sonner";
@@ -15,7 +15,6 @@ import RecordItem from "../_components/record-item";
 import SearchBar from "../_components/search-bar";
 import SelectRecordMessage from "../_components/select-record-message";
 import SelectedCustomer from "./_components/selected-customer";
-
 
 interface PersonalDetails {
   personal_details_id: string;
@@ -31,7 +30,6 @@ interface PersonalDetails {
     username: string;
   } | null;
 }
-
 
 interface Customer {
   id: string;
@@ -64,10 +62,24 @@ interface Location {
 
 const CustomersPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRecord, setSelectedRecord] = useState<Customer | null>(null);
 
   const { data: customerData } = api.customers.list.useQuery();
+  const customerIdParam = searchParams.get("customerId");
+
+  // Effect to select customer when data is loaded and customerId is present
+  useEffect(() => {
+    if (customerData && customerIdParam) {
+      const customer = customerData.find(
+        (customer) => customer.Personal_Details_Id === customerIdParam,
+      );
+      if (customer) {
+        setSelectedRecord(customer as Customer);
+      }
+    }
+  }, [customerData, customerIdParam]);
 
   const utils = api.useUtils();
   const { data: session } = useSession();
@@ -75,8 +87,8 @@ const CustomersPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: invoiceActivity } = api.customers.getCustomerInvoices.useQuery(
-      { customerId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { customerId: selectedRecord?.Personal_Details_Id ?? "" },
+    { enabled: !!selectedRecord },
   );
 
   const activityCustomerData = {
@@ -85,19 +97,17 @@ const CustomersPage = () => {
 
   // Add unpaid invoices query
   const { data: unpaidInvoices } = api.customers.unpaidInvoices.useQuery(
-      { customerId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { customerId: selectedRecord?.Personal_Details_Id ?? "" },
+    { enabled: !!selectedRecord },
   );
 
-// Calculate sum correctly
-  const unpaidSum = unpaidInvoices?.reduce(
-      (sum, invoice) => sum + invoice.remaining,
-      0
-  ) ?? 0;
+  // Calculate sum correctly
+  const unpaidSum =
+    unpaidInvoices?.reduce((sum, invoice) => sum + invoice.remaining, 0) ?? 0;
 
   const { refetch } = api.customers.unpaidInvoices.useQuery(
-      { customerId: selectedRecord?.Personal_Details_Id ?? '' },
-      { enabled: !!selectedRecord }
+    { customerId: selectedRecord?.Personal_Details_Id ?? "" },
+    { enabled: !!selectedRecord },
   );
 
   const verifyPasswordMutation = api.customers.verifyPassword.useMutation();
@@ -177,16 +187,17 @@ const CustomersPage = () => {
           <RecordHeader
             record="Customers"
             number={filteredCustomers?.length ?? 0}
-
-            data={filteredCustomers?.map(customer => ({
-              ...customer,
-              Personal_Details: {
-                ...customer.Personal_Details,
-                personal_details_id: customer.Personal_Details_Id,
-                location_id: customer.Personal_Details.location?.location_id ?? 0,
-              }
-            })) ?? []}
-
+            data={
+              filteredCustomers?.map((customer) => ({
+                ...customer,
+                Personal_Details: {
+                  ...customer.Personal_Details,
+                  personal_details_id: customer.Personal_Details_Id,
+                  location_id:
+                    customer.Personal_Details.location?.location_id ?? 0,
+                },
+              })) ?? []
+            }
           />
           <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredCustomers?.length ?? 0) > 0 ? (
@@ -231,7 +242,9 @@ const CustomersPage = () => {
               <ScrollArea className="h-full w-full">
                 <div className="flex h-40 w-full flex-col">
                   <SelectedCustomer
-                    first_name={selectedRecord.Personal_Details.first_name ?? ""}
+                    first_name={
+                      selectedRecord.Personal_Details.first_name ?? ""
+                    }
                     last_name={selectedRecord.Personal_Details.last_name ?? ""}
                     id={selectedRecord.Personal_Details_Id}
                     role_Id={selectedRecord.role_Id}
@@ -239,11 +252,10 @@ const CustomersPage = () => {
                     company={selectedRecord.Personal_Details.company ?? ""}
                     representative={[
                       selectedRecord.Personal_Details.first_name,
-                      selectedRecord.Personal_Details.last_name
+                      selectedRecord.Personal_Details.last_name,
                     ]
                       .filter((line) => line)
-                      .join(" ")
-                    }
+                      .join(" ")}
                     contact={selectedRecord.Personal_Details.contact ?? ""}
                     email={selectedRecord.Personal_Details.email ?? ""}
                     invoiceData={selectedRecord.customerInvoices}

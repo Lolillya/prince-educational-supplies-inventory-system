@@ -4,7 +4,12 @@ import { db } from "~/server/db";
 
 const customerInputSchema = z.object({
   company: z.string().min(1, "Company is required"),
-  term: z.number().int().min(2, "Term must be at least 2 days").optional().nullable(),
+  term: z
+    .number()
+    .int()
+    .min(2, "Term must be at least 2 days")
+    .optional()
+    .nullable(),
   firstName: z.string().optional(),
   lastName: z.string().optional(),
   contact: z
@@ -87,6 +92,20 @@ export const customerRouter = createTRPCRouter({
       return customerData ?? null; // If not found, return null
     }),
 
+  getByName: publicProcedure
+    .input(z.object({ companyName: z.string() }))
+    .query(async ({ input }) => {
+      const { companyName } = input;
+      const customerData = await db.personal_Details.findFirst({
+        where: { company: companyName },
+        include: {
+          User_Role: true,
+          location: true,
+        },
+      });
+      return customerData ?? null; // If not found, return null
+    }),
+
   create: publicProcedure
     .input(customerInputSchema)
     .mutation(async ({ input }) => {
@@ -139,7 +158,7 @@ export const customerRouter = createTRPCRouter({
         data: {
           Personal_Details_Id: personalDetails.personal_details_id,
           role_Id: 3,
-          emoji: '🏬',
+          emoji: "🏬",
         },
       });
 
@@ -229,118 +248,122 @@ export const customerRouter = createTRPCRouter({
     }),
 
   delete: publicProcedure
-      .input(z.object({ id: z.string().uuid() }))
-      .mutation(async ({ input }) => {
-        const { id } = input;
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ input }) => {
+      const { id } = input;
 
-        // Cascade will handle related records automatically
-        await db.personal_Details.delete({
-          where: { personal_details_id: id },
-          include: {
-            User_Role: {
-              include: {
-                customerInvoices: true
-              }
-            }
-          }
-        });
+      // Cascade will handle related records automatically
+      await db.personal_Details.delete({
+        where: { personal_details_id: id },
+        include: {
+          User_Role: {
+            include: {
+              customerInvoices: true,
+            },
+          },
+        },
+      });
 
-        return { success: true };
-      }),
+      return { success: true };
+    }),
 
   verifyPassword: publicProcedure
-      .input(
-          z.object({
-            personalDetailsId: z.string(),
-            password: z.string(),
-          })
-      )
-      .mutation(async ({ input }) => {
-        const { personalDetailsId, password } = input;
-
-        const authRecord = await db.authentication.findUnique({
-          where: { personal_details_id: personalDetailsId },
-        });
-
-        if (!authRecord) {
-          return { success: false, message: "User not found" };
-        }
-
-        if (authRecord.password !== password) {
-          return { success: false, message: "Incorrect password" };
-        }
-
-        return { success: true, message: "Password verified" };
+    .input(
+      z.object({
+        personalDetailsId: z.string(),
+        password: z.string(),
       }),
+    )
+    .mutation(async ({ input }) => {
+      const { personalDetailsId, password } = input;
+
+      const authRecord = await db.authentication.findUnique({
+        where: { personal_details_id: personalDetailsId },
+      });
+
+      if (!authRecord) {
+        return { success: false, message: "User not found" };
+      }
+
+      if (authRecord.password !== password) {
+        return { success: false, message: "Incorrect password" };
+      }
+
+      return { success: true, message: "Password verified" };
+    }),
 
   getCustomerInvoices: publicProcedure
-      .input(z.object({ customerId: z.string() }))
-      .query(async ({ input }) => {
-        return await db.invoice.findMany({
-          where: { customer_id: input.customerId },
-          include: {
-            line_items: {
-              include: {
-                variant: {
-                  include: {
-                    item: {
-                      include: {
-                        brand: true
-                      }
-                    }
-                  }
+    .input(z.object({ customerId: z.string() }))
+    .query(async ({ input }) => {
+      return await db.invoice.findMany({
+        where: { customer_id: input.customerId },
+        include: {
+          line_items: {
+            include: {
+              variant: {
+                include: {
+                  item: {
+                    include: {
+                      brand: true,
+                    },
+                  },
                 },
-                unit: true
-              }
+              },
+              unit: true,
             },
-            Payment: true,
-            invoiceClerk: {
-              include: {
-                Personal_Details: true
-              }
-            }
           },
-          orderBy: { created_at: "desc" }
-        });
-      }),
+          Payment: true,
+          invoiceClerk: {
+            include: {
+              Personal_Details: true,
+            },
+          },
+        },
+        orderBy: { created_at: "desc" },
+      });
+    }),
 
   unpaidInvoices: publicProcedure
-      .input(z.object({ customerId: z.string() }))
-      .query(async ({ input }) => {
-        const invoices = await db.invoice.findMany({
-          where: {
-            customer_id: input.customerId,
-            status: 'PENDING'
-          },
-          include: {
-            Payment: true,
-            line_items: {
-              include: {
-                variant: {
-                  include: {
-                    item: {
-                      include: {
-                        brand: true
-                      }
-                    }
-                  }
+    .input(z.object({ customerId: z.string() }))
+    .query(async ({ input }) => {
+      const invoices = await db.invoice.findMany({
+        where: {
+          customer_id: input.customerId,
+          status: "PENDING",
+        },
+        include: {
+          Payment: true,
+          line_items: {
+            include: {
+              variant: {
+                include: {
+                  item: {
+                    include: {
+                      brand: true,
+                    },
+                  },
                 },
-                unit: true
-              }
+              },
+              unit: true,
             },
-            invoiceClerk: {
-              include: {
-                Personal_Details: true
-              }
-            }
-          }
-        });
+          },
+          invoiceClerk: {
+            include: {
+              Personal_Details: true,
+            },
+          },
+        },
+      });
 
-        return invoices.map(invoice => ({
-          ...invoice,
-          paid_amount: invoice.Payment.reduce((sum, p) => sum + (p.amount || 0), 0),
-          remaining: (invoice.total_amount || 0) -
-              invoice.Payment.reduce((sum, p) => sum + (p.amount || 0), 0)
-        }));
-      }),
+      return invoices.map((invoice) => ({
+        ...invoice,
+        paid_amount: invoice.Payment.reduce(
+          (sum, p) => sum + (p.amount || 0),
+          0,
+        ),
+        remaining:
+          (invoice.total_amount || 0) -
+          invoice.Payment.reduce((sum, p) => sum + (p.amount || 0), 0),
+      }));
+    }),
 });

@@ -3,7 +3,7 @@ import { useRouter } from "next/navigation";
 import React, { useState } from "react";
 import { Avatar, AvatarFallback } from "~/components/ui/avatar";
 import { Separator } from "~/components/ui/separator";
-import Edit from '../../_components/edit';
+import Edit from "../../_components/edit";
 import RecordInfo from "../../_components/record-info";
 import RecordNotes from "../../_components/record-notes";
 import CustomerInvoice from "./customer-invoice";
@@ -82,20 +82,16 @@ const SelectedCustomer = ({
               {emoji}
             </AvatarFallback>
           </Avatar>
-          <div className='flex flex-col gap-2'>
+          <div className="flex flex-col gap-2">
             <div className="flex items-center gap-2">
-              <p className='text-slate-700 text-lg'>
-                {company}
-              </p>
+              <p className="text-lg text-slate-700">{company}</p>
               {role_Id === 3 && (
-                <p className="rounded-full px-2 py-[3px] text-sm tracking-wide bg-cyan-200 text-cyan-700">
+                <p className="rounded-full bg-cyan-200 px-2 py-[3px] text-sm tracking-wide text-cyan-700">
                   Customer
                 </p>
               )}
             </div>
-            <p className='text-slate-400 text-sm'>
-              {id}
-            </p>
+            <p className="text-sm text-slate-400">{id}</p>
           </div>
         </div>
         <div onClick={handleEditCustomer} className="cursor-pointer">
@@ -107,11 +103,11 @@ const SelectedCustomer = ({
 
       <div className="mt-5 flex flex-col gap-3">
         <Payables
-            sum={unpaidSum}
-            unpaidInvoices={unpaidInvoices}
-            emoji={emoji}
-            company={company}
-            onPaymentSuccess={onPaymentSuccess}
+          sum={unpaidSum}
+          unpaidInvoices={unpaidInvoices}
+          emoji={emoji}
+          company={company}
+          onPaymentSuccess={onPaymentSuccess}
         />
 
         <RecordInfo
@@ -134,6 +130,7 @@ const SelectedCustomer = ({
           customerId={id}
           first_name={first_name}
           last_name={last_name}
+          company={company}
         />
       </div>
     </div>

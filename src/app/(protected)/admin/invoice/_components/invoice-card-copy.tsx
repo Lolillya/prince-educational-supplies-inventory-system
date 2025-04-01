@@ -708,13 +708,14 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                       {!isBatchAutoRestock && (
                         <div className="flex w-full items-center gap-3">
                           {!(unitQuantity > selectedUnitQuantity) && (
-                            <div className="flex items-center">
+                            <div className="flex items-center gap-1">
                               <Input
                                 type="checkbox"
                                 className="h-4 w-fit"
                                 onChange={(e) =>
-                                  handleAutoRestock?.(e.target.checked)
+                                  setIsBatchAutoRestock?.(e.target.checked)
                                 }
+                                checked={isBatchAutoRestock}
                               />
                               <Label className="">Auto Restock</Label>
                               <Info

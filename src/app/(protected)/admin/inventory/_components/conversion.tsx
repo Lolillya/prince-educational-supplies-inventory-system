@@ -15,12 +15,13 @@ interface ConversionProps {
     stock: string;
     price: string;
   };
+  position: number; // Add this line
   onRemove: () => void;
   onUpdate: (data: ConversionProps["data"]) => void;
-  onPriceBlur?: (price: string) => void; // Add this new prop
+  onPriceBlur?: (price: string) => void;
 }
 
-const Conversion = ({ data, onRemove, onUpdate, onPriceBlur }: ConversionProps) => {
+const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: ConversionProps) => {
   const [inputValue, setInputValue] = useState(data.unit);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
@@ -157,8 +158,9 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur }: ConversionProps) 
                 <div className="flex flex-col gap-2">
                   <div className="flex gap-2">
                     <div className="flex flex-col gap-1">
-                      <Label className="text-sm text-slate-400">Conversion</Label>
-                      <div className="flex w-full">
+                      <Label className="text-sm text-slate-400">
+                        Conversion {position}
+                      </Label>                      <div className="flex w-full">
                         <div className="w-1/2">
                           <Input
                               type="number"

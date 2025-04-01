@@ -857,6 +857,28 @@ const NewItem = () => {
       });
       return;
     }
+    const hasEmptyMainUnit = presets.some(preset => !preset.mainUnit);
+    if (hasEmptyMainUnit) {
+      toast("❌ Missing main unit", {
+        description: "Please fill in the Main Unit field for all presets",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for at least one valid conversion
+    const hasNoValidConversions = presets.every(preset =>
+        preset.conversions.length === 0 ||
+        preset.conversions.every(conv => !conv.qty || !conv.unit)
+    );
+
+    if (hasNoValidConversions) {
+      toast("❌ Missing conversions", {
+        description: "Please add at least one valid conversion (with quantity and unit)",
+        duration: 4000,
+      });
+      return;
+    }
 
     // Check for variants with missing stock levels
     const variantsWithName = variants.filter(v => v.variant.trim() !== '');

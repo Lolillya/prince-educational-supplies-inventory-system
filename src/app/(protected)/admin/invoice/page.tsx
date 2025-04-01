@@ -15,6 +15,7 @@ import { type LineItemsProp } from "~/lib/utils/exportInvoice";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "~/hooks/use-toast";
 export type InvoiceProps = {
+  term: number;
   voidPending: boolean;
   status: string;
   invoice_number: number;
@@ -139,6 +140,7 @@ const InvoicePage = () => {
                   invoice_number={invoice.invoice_number}
                   invoice_id={invoice.invoice_id}
                   date={invoice.created_at}
+                  term={invoice.term}
                   customer={invoice.customer.Personal_Details.company ?? ""}
                   invoiceClerk={
                     invoice.invoiceClerk.Personal_Details.first_name +

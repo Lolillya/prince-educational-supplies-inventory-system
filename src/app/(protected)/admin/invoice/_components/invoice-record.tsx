@@ -26,6 +26,7 @@ import { handleExport } from "~/lib/utils/exportInvoice";
 import { Badge } from "~/components/ui/badge";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
+  term,
   status,
   handleVoidItem,
   invoice_number,
@@ -126,7 +127,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             />
 
             <div className="flex items-center gap-3">
-              <Label>Term: {status}</Label>
+              <Label>Term: {term} Days</Label>
               <p>{}</p>
             </div>
           </div>

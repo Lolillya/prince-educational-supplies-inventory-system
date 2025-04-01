@@ -74,7 +74,15 @@ const NewItem = () => {
   const [itemSearch, setItemSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
+  const hasDuplicateUnits = (preset: PresetData): boolean => {
+    const allUnits = [
+      preset.mainUnit,
+      ...preset.conversions.map(conv => conv.unit)
+    ].filter(unit => unit); // Filter out empty strings
 
+    // Check for duplicates by comparing array length with Set size
+    return new Set(allUnits).size !== allUnits.length;
+  };
   const [item, setItem] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
@@ -803,6 +811,31 @@ const NewItem = () => {
     if (invalidUnits) {
       toast("❌ Invalid unit selection", {
         description: "Please select units from the dropdown list",
+        duration: 4000,
+      });
+      return;
+    }
+
+// Check for empty conversion rows
+    const hasEmptyConversions = presets.some(preset =>
+        preset.conversions.some(conv =>
+            !conv.qty && !conv.unit && !conv.price
+        )
+    );
+
+    if (hasEmptyConversions) {
+      toast("❌ Empty conversion rows", {
+        description: "Please fill in or remove empty conversion rows",
+        duration: 4000,
+      });
+      return;
+    }
+    // Check for duplicate units in presets
+    const hasDuplicates = presets.some(preset => hasDuplicateUnits(preset));
+
+    if (hasDuplicates) {
+      toast("❌ Duplicate units", {
+        description: "Each unit in a preset must be unique",
         duration: 4000,
       });
       return;

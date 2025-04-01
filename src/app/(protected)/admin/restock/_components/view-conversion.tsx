@@ -29,6 +29,15 @@ const ViewConversion = ({
   conversionCount,
   onSelect,
 }: ViewConversionProps) => {
+  console.log(
+    `ViewConversion: ${mainUnit} with ${conversions.length} conversions (conversionCount: ${conversionCount})`,
+  );
+  conversions.forEach((conv, i) => {
+    console.log(
+      `  [${i}]: ${conv.fromUnit} → ${conv.toUnit}, Rate: ${conv.conversionRate}, Price: ${conv.price}`,
+    );
+  });
+
   return (
     <HoverCard openDelay={0} closeDelay={0}>
       <HoverCardTrigger asChild>

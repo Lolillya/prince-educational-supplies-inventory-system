@@ -303,17 +303,17 @@ const StockCardV2 = ({
   // Handle price input change
   const handlePriceChange = (value: string) => {
     // Remove any non-digit or non-dot characters
-    let numericValue = value.replace(/[^\d.]/g, '');
+    let numericValue = value.replace(/[^\d.]/g, "");
 
     // Ensure only one decimal point
-    const parts = numericValue.split('.');
+    const parts = numericValue.split(".");
     if (parts.length > 2) {
-      numericValue = parts[0] + '.' + parts.slice(1).join('');
+      numericValue = parts[0] + "." + parts.slice(1).join("");
     }
 
     // Limit to 2 decimal places
     if (parts.length === 2) {
-      numericValue = parts[0] + '.' + parts[1].slice(0, 2);
+      numericValue = parts[0] + "." + parts[1].slice(0, 2);
     }
 
     setMainPrice(numericValue);
@@ -331,9 +331,9 @@ const StockCardV2 = ({
 
     // Format to exactly 2 decimal places
     let formattedValue = value;
-    if (value.includes('.')) {
-      const [whole, decimal] = value.split('.');
-      const paddedDecimal = decimal.padEnd(2, '0').slice(0, 2);
+    if (value.includes(".")) {
+      const [whole, decimal] = value.split(".");
+      const paddedDecimal = decimal.padEnd(2, "0").slice(0, 2);
       formattedValue = `${whole}.${paddedDecimal}`;
     } else if (value) {
       formattedValue = `${value}.00`;
@@ -500,6 +500,11 @@ const StockCardV2 = ({
 
     console.log("Applying preset:", preset);
     console.log("Preset has", preset.conversions.length, "conversions");
+    preset.conversions.forEach((conv, i) => {
+      console.log(
+        `Conversion ${i + 1}: ${conv.fromUnit} → ${conv.toUnit} (${conv.conversionRate}) Price: ${conv.price}`,
+      );
+    });
 
     // Update main unit and price
     setInputValue(preset.mainUnit);
@@ -507,7 +512,7 @@ const StockCardV2 = ({
     onUnitChange(item.inventory_id, preset.mainUnit);
     onPriceChange(item.inventory_id, preset.mainPrice.toFixed(2));
 
-    // Create conversions from preset data - we trust the server has sorted them properly
+    // Create conversions from preset data - we trust the server has provided all conversions
     const newConversions: ConversionData[] = preset.conversions.map(
       (conv, index) => {
         // Format the price with 2 decimal places
@@ -524,7 +529,12 @@ const StockCardV2 = ({
       },
     );
 
-    console.log("Final newConversions:", newConversions);
+    console.log("Created newConversions:", newConversions.length);
+    newConversions.forEach((conv, i) => {
+      console.log(
+        `New conversion ${i + 1}: ${conv.qty} ${conv.unit}, Price: ${conv.price}`,
+      );
+    });
 
     // Update state
     setConversions(newConversions);
@@ -693,19 +703,19 @@ const StockCardV2 = ({
               <div className="flex flex-col gap-1">
                 <Label className="text-sm text-slate-400">Unit Price</Label>
                 <Input
-                    type="text" // Change from "number" to "text" for better control
-                    inputMode="decimal" // Shows numeric keyboard on mobile
-                    className="bg-white text-slate-700 shadow-none"
-                    placeholder="Price"
-                    value={mainPrice}
-                    onChange={(e) => handlePriceChange(e.target.value)}
-                    onBlur={handlePriceBlur}
-                    onKeyDown={(e) => {
-                      // Prevent entering more than 2 decimal places
-                      if (e.key === '.' && mainPrice.includes('.')) {
-                        e.preventDefault();
-                      }
-                    }}
+                  type="text" // Change from "number" to "text" for better control
+                  inputMode="decimal" // Shows numeric keyboard on mobile
+                  className="bg-white text-slate-700 shadow-none"
+                  placeholder="Price"
+                  value={mainPrice}
+                  onChange={(e) => handlePriceChange(e.target.value)}
+                  onBlur={handlePriceBlur}
+                  onKeyDown={(e) => {
+                    // Prevent entering more than 2 decimal places
+                    if (e.key === "." && mainPrice.includes(".")) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
                 {mainPriceError && (
                   <p className="mt-1 text-sm text-rose-400">{mainPriceError}</p>

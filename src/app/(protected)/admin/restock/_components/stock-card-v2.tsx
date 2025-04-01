@@ -39,8 +39,10 @@ interface StockCardV2Props {
         brand: {
           name: string;
         };
+        item_id?: number;
       };
     };
+    variant_id: number;
   };
   onRemove: () => void;
   onStockChange: (inventoryId: number, totalStock: string) => void;
@@ -70,6 +72,20 @@ interface ConversionData {
   level: number; // Position in the conversion chain
 }
 
+// Add this interface for preset data
+interface Preset {
+  presetId: number;
+  mainUnit: string;
+  mainPrice: number;
+  conversions: {
+    fromUnit: string;
+    toUnit: string;
+    conversionRate: number;
+    price: number;
+  }[];
+  conversionCount: number;
+}
+
 const StockCardV2 = ({
   item,
   onRemove,
@@ -80,6 +96,54 @@ const StockCardV2 = ({
   onErrorChange,
 }: StockCardV2Props) => {
   const { data: units } = api.restock.getUnits.useQuery();
+
+  // Get the item ID for querying presets
+  const itemId = item.variant.item.item_id;
+
+  // Fetch presets for the current item
+  const { data: presets } = api.restock.getItemPresets.useQuery(
+    { itemId: itemId || 0 },
+    { enabled: !!itemId },
+  );
+
+  // Filter out duplicate presets that might have the same structure
+  const uniquePresets = React.useMemo(() => {
+    if (!presets || !Array.isArray(presets)) return [];
+
+    // Define a type guard function to check valid presets
+    const isValidPreset = (p: any): p is Preset => {
+      return (
+        p !== null &&
+        typeof p === "object" &&
+        "conversionCount" in p &&
+        p.conversionCount > 0 &&
+        "mainUnit" in p &&
+        "conversions" in p &&
+        Array.isArray(p.conversions)
+      );
+    };
+
+    // First filter out presets with zero conversions or invalid presets
+    const validPresets = presets.filter(isValidPreset);
+
+    // Create a unique key for each preset based on its structure
+    const presetMap = new Map<string, Preset>();
+
+    validPresets.forEach((preset) => {
+      // Create a signature for this preset that combines main unit and all conversions
+      const signature = `${preset.mainUnit}-${preset.conversions
+        .map((c) => `${c.fromUnit}-${c.toUnit}-${c.conversionRate}`)
+        .join("|")}`;
+
+      // Only keep the first preset with this signature
+      if (!presetMap.has(signature)) {
+        presetMap.set(signature, preset);
+      }
+    });
+
+    return Array.from(presetMap.values());
+  }, [presets]);
+
   const unitOptions = units?.map((unit) => unit.name) ?? [];
 
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -103,6 +167,9 @@ const StockCardV2 = ({
   const [showError, setShowError] = useState(false);
   const [mainStockError, setMainStockError] = useState<string>("");
   const [mainPriceError, setMainPriceError] = useState<string>("");
+
+  // Applied preset ID
+  const [appliedPresetId, setAppliedPresetId] = useState<number | null>(null);
 
   // Compute filtered units directly without state
   const filteredUnits = inputValue
@@ -405,6 +472,72 @@ const StockCardV2 = ({
     setTimeout(() => validateConversions(), 0);
   };
 
+  // Handle applying a preset
+  const handleApplyPreset = (preset: Preset | null) => {
+    if (
+      !preset ||
+      typeof preset !== "object" ||
+      !preset.mainUnit ||
+      !Array.isArray(preset.conversions)
+    ) {
+      console.error("Invalid preset:", preset);
+      return;
+    }
+
+    // Update main unit and price
+    setInputValue(preset.mainUnit);
+    setMainPrice(preset.mainPrice.toFixed(2));
+    onUnitChange(item.inventory_id, preset.mainUnit);
+    onPriceChange(item.inventory_id, preset.mainPrice.toFixed(2));
+
+    // Create conversions from preset data
+    const newConversions: ConversionData[] = [];
+    let currentFromUnit = preset.mainUnit;
+
+    // Process conversions in the order they should be applied
+    preset.conversions.forEach((conv, index) => {
+      // Make sure the fromUnit matches our current unit in the chain
+      if (conv.fromUnit === currentFromUnit) {
+        // Format the price with 2 decimal places
+        const priceValue = conv.price ? conv.price.toFixed(2) : "0.00";
+
+        newConversions.push({
+          id: nextId + index,
+          qty: conv.conversionRate.toString(),
+          unit: conv.toUnit,
+          stock: "0", // Default stock value
+          price: priceValue, // Use the formatted preset price
+          level: index + 1,
+        });
+
+        // Update current unit for the next conversion in the chain
+        currentFromUnit = conv.toUnit;
+      }
+    });
+
+    // Update state
+    setConversions(newConversions);
+    setNextId(nextId + newConversions.length);
+    setAppliedPresetId(preset.presetId);
+
+    // Notify parent component of conversions change
+    const conversionData = newConversions.map((conv) => ({
+      qty: conv.qty,
+      unit: conv.unit,
+      price: conv.price,
+      stock: conv.stock,
+    }));
+
+    onConversionChange(conversionData);
+
+    // Validate after applying preset
+    setTimeout(() => {
+      validateMainUnit(preset.mainUnit);
+      validatePrice(preset.mainPrice.toString());
+      validateConversions();
+    }, 0);
+  };
+
   return (
     <div className="rounded-lg bg-slate-100 p-4">
       <div className="flex items-center justify-between">
@@ -484,15 +617,28 @@ const StockCardV2 = ({
                   </DropdownMenuTrigger>
                   <DropdownMenuContent
                     align="end"
-                    className="mt-2 w-48 shadow-none"
+                    className="mt-2 w-56 shadow-none"
                   >
                     <DropdownMenuLabel className="text-slate-700">
                       Preset Conversions
                     </DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <ViewConversion />
-                    <ViewConversion />
-                    <ViewConversion />
+                    {uniquePresets && uniquePresets.length > 0 ? (
+                      uniquePresets.map((preset) => (
+                        <ViewConversion
+                          key={preset.presetId}
+                          mainUnit={preset.mainUnit}
+                          mainPrice={preset.mainPrice}
+                          conversions={preset.conversions}
+                          conversionCount={preset.conversionCount}
+                          onSelect={() => handleApplyPreset(preset)}
+                        />
+                      ))
+                    ) : (
+                      <DropdownMenuItem disabled className="text-slate-400">
+                        No presets available
+                      </DropdownMenuItem>
+                    )}
                   </DropdownMenuContent>
                 </DropdownMenu>
               </div>

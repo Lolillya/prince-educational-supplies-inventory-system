@@ -53,6 +53,7 @@ type InventoryItem = {
     name: string | undefined;
     item: {
       name: string;
+      item_id: number;
       brand: {
         name: string;
       };
@@ -173,6 +174,9 @@ const InvoiceAddStock = () => {
         (selected) => selected.inventory_id === item.inventory_id,
       )
     ) {
+      // Make sure item has all the necessary properties including item_id
+      console.log("Selected item:", item); // Debug log to verify item structure
+
       setSelectedItems([...selectedItems, item]);
       setStock((prev) => ({ ...prev, [item.inventory_id]: "" })); // Initialize stock
     }

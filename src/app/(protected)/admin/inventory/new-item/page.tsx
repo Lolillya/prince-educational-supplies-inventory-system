@@ -187,6 +187,23 @@ const NewItem = () => {
   const units = useMemo(() => data?.units ?? [], [data]);
   const items = useMemo(() => data?.items ?? [], [data]);
   const variantsMemo = useMemo(() => data?.variants ?? [], [data]);
+  const formatPriceInput = (value: string): string => {
+    // Remove any non-digit or non-dot characters
+    let formatted = value.replace(/[^\d.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = formatted.split('.');
+    if (parts.length > 2) {
+      formatted = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Limit to 2 decimal places
+    if (parts.length === 2) {
+      formatted = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+
+    return formatted;
+  };
 
   useEffect(() => {
     if (item) {

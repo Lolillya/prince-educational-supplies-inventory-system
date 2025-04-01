@@ -705,17 +705,27 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
                 >
                   <AccordionTrigger>
                     <div className="flex w-full">
-                      <div className="flex w-full items-center gap-3">
-                        <Input
-                          type="checkbox"
-                          className="h-4 w-fit"
-                          disabled={BatchVariant.length !== 0}
-                          onChange={(e) =>
-                            setIsBatchAutoRestock(e.target.checked)
-                          }
-                        />
-                        <Label className="">Auto Restock</Label>
-                      </div>
+                      {!isBatchAutoRestock && (
+                        <div className="flex w-full items-center gap-3">
+                          {!(unitQuantity > selectedUnitQuantity) && (
+                            <div className="flex items-center">
+                              <Input
+                                type="checkbox"
+                                className="h-4 w-fit"
+                                onChange={(e) =>
+                                  handleAutoRestock?.(e.target.checked)
+                                }
+                              />
+                              <Label className="">Auto Restock</Label>
+                              <Info
+                                size={18}
+                                className="transition-all duration-300 hover:scale-110 hover:cursor-pointer"
+                                color="gray"
+                              />
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </AccordionTrigger>
                   <AccordionContent></AccordionContent>
@@ -983,11 +993,12 @@ const InvoiceCard: React.FC<InvoiceCardProps> = ({
 
               <div className="flex w-full">
                 {!isBatchAutoRestock && (
-                  <div className="flex w-full items-center gap-3">
+                  <div
+                    className={`flex w-full items-center gap-3 ${!(unitQuantity > selectedUnitQuantity) && "hidden"}`}
+                  >
                     <Input
                       type="checkbox"
-                      // disabled={!(unitQuantity > selectedUnitQuantity)}
-                      className={`h-4 w-fit ${!(unitQuantity > selectedUnitQuantity) && "hidden"}`}
+                      className={`h-4 w-fit`}
                       onChange={(e) => handleAutoRestock?.(e.target.checked)}
                     />
                     <Label className="">Auto Restock</Label>

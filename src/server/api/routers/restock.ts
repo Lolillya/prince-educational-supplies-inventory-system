@@ -454,11 +454,52 @@ export const restockRouter = createTRPCRouter({
               return null;
             }
 
+            // Sort conversions to ensure they form a proper chain
+            // We'll create a proper chain by ordering them correctly
+            const sortedConversions = [];
+            const fromUnitToConversion = new Map();
+
+            // First, create a map of from_unit_id to conversion
+            preset.conversions.forEach((conv) => {
+              if (!fromUnitToConversion.has(conv.from_unit_id)) {
+                fromUnitToConversion.set(conv.from_unit_id, []);
+              }
+              fromUnitToConversion.get(conv.from_unit_id).push(conv);
+            });
+
+            // Start with conversions from the main unit
+            let currentUnitId = preset.main_unit_id;
+
+            // Keep track of processed unit IDs to avoid infinite loops
+            const processedUnitIds = new Set();
+
+            // Build the chain
+            while (
+              fromUnitToConversion.has(currentUnitId) &&
+              !processedUnitIds.has(currentUnitId)
+            ) {
+              processedUnitIds.add(currentUnitId);
+
+              const nextConversions = fromUnitToConversion.get(currentUnitId);
+              if (nextConversions && nextConversions.length > 0) {
+                // Sort by creation date in case there are multiple options
+                const nextConversion = nextConversions[0];
+                sortedConversions.push(nextConversion);
+                currentUnitId = nextConversion.to_unit_id;
+              } else {
+                break;
+              }
+            }
+
+            console.log(
+              `Sorted ${sortedConversions.length} conversions for preset ${preset.preset_id}`,
+            );
+
             const result = {
               presetId: preset.preset_id,
               mainUnit: preset.main_unit.name,
               mainPrice: preset.main_price,
-              conversions: preset.conversions.map((conversion) => {
+              conversions: sortedConversions.map((conversion) => {
                 // Get the price from the map using the to_unit_id
                 const conversionPrice =
                   unitPriceMap.get(conversion.to_unit_id) || 0;
@@ -470,15 +511,15 @@ export const restockRouter = createTRPCRouter({
                   price: conversionPrice,
                 };
               }),
-              conversionCount: preset.conversions.length,
+              conversionCount: sortedConversions.length,
             };
 
             console.log(
-              `Formatted preset: ${preset.main_unit.name} with ${preset.conversions.length} conversions`,
+              `Formatted preset: ${preset.main_unit.name} with ${sortedConversions.length} conversions`,
             );
-            result.conversions.forEach((c) => {
+            result.conversions.forEach((c, i) => {
               console.log(
-                `  Conversion: ${c.fromUnit} -> ${c.toUnit} (${c.conversionRate}), Price: ${c.price}`,
+                `  Conversion ${i + 1}: ${c.fromUnit} -> ${c.toUnit} (${c.conversionRate}), Price: ${c.price}`,
               );
             });
 

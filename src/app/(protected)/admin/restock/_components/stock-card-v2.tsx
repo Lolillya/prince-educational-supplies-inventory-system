@@ -484,36 +484,33 @@ const StockCardV2 = ({
       return;
     }
 
+    console.log("Applying preset:", preset);
+    console.log("Preset has", preset.conversions.length, "conversions");
+
     // Update main unit and price
     setInputValue(preset.mainUnit);
     setMainPrice(preset.mainPrice.toFixed(2));
     onUnitChange(item.inventory_id, preset.mainUnit);
     onPriceChange(item.inventory_id, preset.mainPrice.toFixed(2));
 
-    // Create conversions from preset data
-    const newConversions: ConversionData[] = [];
-    let currentFromUnit = preset.mainUnit;
-
-    // Process conversions in the order they should be applied
-    preset.conversions.forEach((conv, index) => {
-      // Make sure the fromUnit matches our current unit in the chain
-      if (conv.fromUnit === currentFromUnit) {
+    // Create conversions from preset data - we trust the server has sorted them properly
+    const newConversions: ConversionData[] = preset.conversions.map(
+      (conv, index) => {
         // Format the price with 2 decimal places
         const priceValue = conv.price ? conv.price.toFixed(2) : "0.00";
 
-        newConversions.push({
+        return {
           id: nextId + index,
           qty: conv.conversionRate.toString(),
           unit: conv.toUnit,
           stock: "0", // Default stock value
           price: priceValue, // Use the formatted preset price
           level: index + 1,
-        });
+        };
+      },
+    );
 
-        // Update current unit for the next conversion in the chain
-        currentFromUnit = conv.toUnit;
-      }
-    });
+    console.log("Final newConversions:", newConversions);
 
     // Update state
     setConversions(newConversions);

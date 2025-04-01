@@ -57,6 +57,20 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
       inputRef.current.blur();
     }
   };
+  const handleQtyChange = (value: string) => {
+    const numericValue = value.replace(/[^\d]/g, "") || "0";
+    onUpdate({
+      ...data,
+      qty: numericValue,
+    });
+  };
+
+  const handleUnitChange = (value: string) => {
+    onUpdate({
+      ...data,
+      unit: value,
+    });
+  };
 
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {

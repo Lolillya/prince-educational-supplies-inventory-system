@@ -221,10 +221,12 @@ const ConversionCard = ({
     onUpdate({ ...preset, conversions: newConversions });
   };
   const handleAddConversion = () => {
-    onUpdate({
-      ...preset,
-      conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
-    });
+    if (preset.conversions.length < 5) {
+      onUpdate({
+        ...preset,
+        conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
+      });
+    }
   };
 
   const handleRemoveConversion = (index: number) => {

@@ -302,18 +302,25 @@ const StockCardV2 = ({
 
   // Handle price input change
   const handlePriceChange = (value: string) => {
-    const numericValue = value.replace(/[^\d.]/g, "");
-    const parts = value.split(".");
-    const formattedValue =
-      parts.length > 2
-        ? `${parts[0]}.${parts.slice(1).join("")}`
-        : numericValue;
-    setMainPrice(formattedValue);
-    setMainPriceError("");
-    validatePrice(formattedValue);
-    onPriceChange(item.inventory_id, formattedValue);
-  };
+    // Remove any non-digit or non-dot characters
+    let numericValue = value.replace(/[^\d.]/g, "");
 
+    // Ensure only one decimal point
+    const parts = numericValue.split(".");
+    if (parts.length > 2) {
+      numericValue = parts[0] + "." + parts.slice(1).join("");
+    }
+
+    // Limit to 2 decimal places
+    if (parts.length === 2) {
+      numericValue = parts[0] + "." + parts[1].slice(0, 2);
+    }
+
+    setMainPrice(numericValue);
+    setMainPriceError("");
+    validatePrice(numericValue);
+    onPriceChange(item.inventory_id, numericValue);
+  };
   // Handle showing dialog on blur for price
   const handlePriceBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const value = e.target.value;
@@ -322,12 +329,19 @@ const StockCardV2 = ({
       return;
     }
 
-    // Format to 2 decimal places
-    const normalizedValue = Number(value).toFixed(2);
-    setMainPrice(normalizedValue);
-    onPriceChange(item.inventory_id, normalizedValue);
-  };
+    // Format to exactly 2 decimal places
+    let formattedValue = value;
+    if (value.includes(".")) {
+      const [whole, decimal] = value.split(".");
+      const paddedDecimal = decimal.padEnd(2, "0").slice(0, 2);
+      formattedValue = `${whole}.${paddedDecimal}`;
+    } else if (value) {
+      formattedValue = `${value}.00`;
+    }
 
+    setMainPrice(formattedValue);
+    onPriceChange(item.inventory_id, formattedValue);
+  };
   // Add effect to initialize conversion stock with default values
   useEffect(() => {
     if (conversions.length > 0) {
@@ -484,35 +498,42 @@ const StockCardV2 = ({
       return;
     }
 
+    console.log("Applying preset:", preset);
+    console.log("Preset has", preset.conversions.length, "conversions");
+    preset.conversions.forEach((conv, i) => {
+      console.log(
+        `Conversion ${i + 1}: ${conv.fromUnit} → ${conv.toUnit} (${conv.conversionRate}) Price: ${conv.price}`,
+      );
+    });
+
     // Update main unit and price
     setInputValue(preset.mainUnit);
     setMainPrice(preset.mainPrice.toFixed(2));
     onUnitChange(item.inventory_id, preset.mainUnit);
     onPriceChange(item.inventory_id, preset.mainPrice.toFixed(2));
 
-    // Create conversions from preset data
-    const newConversions: ConversionData[] = [];
-    let currentFromUnit = preset.mainUnit;
-
-    // Process conversions in the order they should be applied
-    preset.conversions.forEach((conv, index) => {
-      // Make sure the fromUnit matches our current unit in the chain
-      if (conv.fromUnit === currentFromUnit) {
+    // Create conversions from preset data - we trust the server has provided all conversions
+    const newConversions: ConversionData[] = preset.conversions.map(
+      (conv, index) => {
         // Format the price with 2 decimal places
         const priceValue = conv.price ? conv.price.toFixed(2) : "0.00";
 
-        newConversions.push({
+        return {
           id: nextId + index,
           qty: conv.conversionRate.toString(),
           unit: conv.toUnit,
           stock: "0", // Default stock value
           price: priceValue, // Use the formatted preset price
           level: index + 1,
-        });
+        };
+      },
+    );
 
-        // Update current unit for the next conversion in the chain
-        currentFromUnit = conv.toUnit;
-      }
+    console.log("Created newConversions:", newConversions.length);
+    newConversions.forEach((conv, i) => {
+      console.log(
+        `New conversion ${i + 1}: ${conv.qty} ${conv.unit}, Price: ${conv.price}`,
+      );
     });
 
     // Update state
@@ -682,14 +703,19 @@ const StockCardV2 = ({
               <div className="flex flex-col gap-1">
                 <Label className="text-sm text-slate-400">Unit Price</Label>
                 <Input
-                  type="number"
-                  step="0.25"
-                  min="0"
+                  type="text" // Change from "number" to "text" for better control
+                  inputMode="decimal" // Shows numeric keyboard on mobile
                   className="bg-white text-slate-700 shadow-none"
                   placeholder="Price"
                   value={mainPrice}
                   onChange={(e) => handlePriceChange(e.target.value)}
                   onBlur={handlePriceBlur}
+                  onKeyDown={(e) => {
+                    // Prevent entering more than 2 decimal places
+                    if (e.key === "." && mainPrice.includes(".")) {
+                      e.preventDefault();
+                    }
+                  }}
                 />
                 {mainPriceError && (
                   <p className="mt-1 text-sm text-rose-400">{mainPriceError}</p>

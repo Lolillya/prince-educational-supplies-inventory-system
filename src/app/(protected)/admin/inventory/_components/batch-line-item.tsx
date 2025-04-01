@@ -1,30 +1,30 @@
-import { X } from 'lucide-react'
-import { Button } from '~/components/ui/button'
-import { Input } from '~/components/ui/input'
-import { Label } from '~/components/ui/label'
-import { Separator } from '~/components/ui/separator'
-import OutToOfficeSm from './out-to-office-sm'
+import { X } from "lucide-react";
+import { Button } from "~/components/ui/button";
+import { Input } from "~/components/ui/input";
+import { Label } from "~/components/ui/label";
+import { Separator } from "~/components/ui/separator";
+import OutToOfficeSm from "./out-to-office-sm";
 
 interface BatchLineItemProps {
-	isEditing: boolean;
-	conversionQty?: number;
-	conversionUnit?: string;
-	stock?: number;
-	price?: number;
-	mainUnit?: string;
+  isEditing: boolean;
+  conversionQty?: number;
+  conversionUnit?: string;
+  stock?: number;
+  price?: number;
+  mainUnit?: string;
 }
 
 const BatchLineItem = ({
-						   isEditing,
-						   conversionQty,
-						   conversionUnit,
-						   stock,
-						   price,
-						   mainUnit
-					   }: BatchLineItemProps) => {
-	return (
-		<div className="flex gap-3 items-center">
-			{/* <div className="group flex w-4/12 items-center gap-2">
+  isEditing,
+  conversionQty,
+  conversionUnit,
+  stock,
+  price,
+  mainUnit,
+}: BatchLineItemProps) => {
+  return (
+    <div className="flex items-center gap-3">
+      {/* <div className="group flex w-4/12 items-center gap-2">
 				<div className="flex flex-col gap-1 w-1/2">
 					<Label className="text-slate-400">Stock</Label>
 					<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
@@ -89,55 +89,55 @@ const BatchLineItem = ({
 				</div>
 			</div> */}
 
-			<div className="group flex w-1/2 gap-2">
-				<div className="flex flex-col gap-1">
-					<Label className="text-slate-400">Conversion</Label>
-					<div className="flex justify-end gap-2">
-						<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none rounded-r-none w-1/3"
-								disabled={!isEditing}
-								// value={mainUnit || ''}
-								value={conversionQty || ''}
-								placeholder={'Qty'}
-							/>
-							<Separator orientation="vertical" className="h-10 w-1" />
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none rounded-l-none w-2/3"
-								disabled={!isEditing}
-								value={conversionUnit || ''}
-								// value={conversionQty ? `${conversionQty} ${conversionUnit}` : ''}
-								placeholder={'Unit'}
-							/>
-						</div>
-					</div>
-				</div>
-			</div>
-			<Separator orientation="vertical" className="h-14 w-[1px]" />
-			<div className="group flex w-1/2 items-end gap-2">
-				<div className="flex flex-col gap-1 w-1/2">
-					<Label className="text-slate-400">Stock</Label>
-					<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-						<Input
-							className="bg-slate-100 text-slate-700 shadow-none"
-							disabled={!isEditing}
-							value={stock?.toLocaleString() || ''}
-							placeholder='Stock'
-						/>
-					</div>
-				</div>
-				<div className="flex flex-col gap-1 w-1/2">
-					<Label className="text-slate-400">Price per unit</Label>
-					<div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
-						<Input
-							className="bg-slate-100 text-slate-700 shadow-none"
-							disabled={!isEditing}
-							value={price?.toFixed(2) || ''}
-							placeholder='Price'
-						/>
-					</div>
-				</div>
-				{isEditing && (
+      <div className="group flex w-1/2 gap-2">
+        <div className="flex flex-col gap-1">
+          <Label className="text-slate-400">Conversion</Label>
+          <div className="flex justify-end gap-2">
+            <div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+              <Input
+                className="w-1/3 rounded-r-none bg-slate-100 text-slate-700 shadow-none"
+                disabled={!isEditing}
+                // value={mainUnit || ''}
+                value={conversionQty || ""}
+                placeholder={"Qty"}
+              />
+              <Separator orientation="vertical" className="h-10 w-1" />
+              <Input
+                className="w-2/3 rounded-l-none bg-slate-100 text-slate-700 shadow-none"
+                disabled={!isEditing}
+                value={conversionUnit || ""}
+                // value={conversionQty ? `${conversionQty} ${conversionUnit}` : ''}
+                placeholder={"Unit"}
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+      <Separator orientation="vertical" className="h-14 w-[1px]" />
+      <div className="group flex w-1/2 items-end gap-2">
+        <div className="flex w-1/2 flex-col gap-1">
+          <Label className="text-slate-400">Stock</Label>
+          <div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+            <Input
+              className="bg-slate-100 text-slate-700 shadow-none"
+              disabled={!isEditing}
+              value={stock?.toLocaleString() || ""}
+              placeholder="Stock"
+            />
+          </div>
+        </div>
+        <div className="flex w-1/2 flex-col gap-1">
+          <Label className="text-slate-400">Price per unit</Label>
+          <div className="flex items-center rounded-lg focus-within:outline focus-within:outline-2 focus-within:outline-slate-200">
+            <Input
+              className="bg-slate-100 text-slate-700 shadow-none"
+              disabled={!isEditing}
+              value={price?.toFixed(2) || ""}
+              placeholder="Price"
+            />
+          </div>
+        </div>
+        {/* {isEditing && (
 					<Button asChild>
 						<div className='!p-1 w-12 h-10 bg-slate-100 hover:bg-slate-200 cursor-pointer'>
 							<X className='!w-5 !h-5 text-slate-500' strokeWidth={2.5} />
@@ -146,11 +146,10 @@ const BatchLineItem = ({
 				)}
 				{!isEditing && (
 					<OutToOfficeSm />
-				)}
-			</div>
+				)} */}
+      </div>
+    </div>
+  );
+};
 
-		</div>
-	)
-}
-
-export default BatchLineItem
+export default BatchLineItem;

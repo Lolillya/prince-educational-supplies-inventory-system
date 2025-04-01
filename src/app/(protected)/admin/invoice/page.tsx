@@ -1,8 +1,8 @@
 "use client";
 
 import { Plus } from "lucide-react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "~/components/ui/button";
 
 import { LoadingSpinner } from "~/components/loading";
@@ -12,7 +12,6 @@ import SearchBar from "../_components/search-bar";
 import InvoiceRecord from "./_components/invoice-record";
 
 import { type LineItemsProp } from "~/lib/utils/exportInvoice";
-import { useSearchParams } from "next/navigation";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "~/hooks/use-toast";
 export type InvoiceProps = {
@@ -31,10 +30,21 @@ export type InvoiceProps = {
 
 const InvoicePage = () => {
   const router = useRouter();
-  const [searchTerm, setSearchTerm] = useState<string>("");
   const searchParams = useSearchParams();
+
+  // Get search query from URL if available
+  const searchQueryParam = searchParams.get("searchQuery");
+  const [searchTerm, setSearchTerm] = useState(searchQueryParam || "");
+
   const clerkId = searchParams.get("clerkId");
   const customerId = searchParams.get("customerId");
+
+  // Update searchTerm when URL parameter changes
+  useEffect(() => {
+    if (searchQueryParam) {
+      setSearchTerm(searchQueryParam);
+    }
+  }, [searchQueryParam]);
 
   const { data: invoiceData, isLoading } = api.invoice.getInvoice.useQuery(
     clerkId ? { clerkId } : customerId ? { customerId } : undefined,

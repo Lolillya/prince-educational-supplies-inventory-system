@@ -454,11 +454,127 @@ export const restockRouter = createTRPCRouter({
               return null;
             }
 
+            console.log(`\n\n---- Processing preset ${preset.preset_id} ----`);
+            console.log(
+              `Main unit: ${preset.main_unit.name} (ID: ${preset.main_unit_id})`,
+            );
+            console.log(`Raw conversions (${preset.conversions.length}):`);
+            preset.conversions.forEach((conv, i) => {
+              console.log(
+                `  [${i}] ID: ${conv.preset_conversion_id}, From: ${conv.from_unit.name} (${conv.from_unit_id}) → To: ${conv.to_unit.name} (${conv.to_unit_id}), Rate: ${conv.conversion_rate}`,
+              );
+            });
+
+            // Sort conversions to ensure they form a proper chain
+            // We'll create a proper chain by ordering them correctly
+            const sortedConversions = [];
+            const fromUnitToConversion = new Map();
+
+            // First, create a map of from_unit_id to conversion
+            preset.conversions.forEach((conv) => {
+              if (!fromUnitToConversion.has(conv.from_unit_id)) {
+                fromUnitToConversion.set(conv.from_unit_id, []);
+              }
+              fromUnitToConversion.get(conv.from_unit_id).push(conv);
+            });
+
+            console.log("Created map of from_unit_id to conversions:");
+            fromUnitToConversion.forEach((convs, unitId) => {
+              console.log(
+                `  Unit ID ${unitId} has ${convs.length} outgoing conversions`,
+              );
+              convs.forEach((c: any, i: number) => {
+                console.log(
+                  `    [${i}] To: ${c.to_unit.name} (${c.to_unit_id}), Rate: ${c.conversion_rate}`,
+                );
+              });
+            });
+
+            // Start with conversions from the main unit
+            let currentUnitId = preset.main_unit_id;
+            console.log(
+              `Starting with main unit ID: ${currentUnitId} (${preset.main_unit.name})`,
+            );
+
+            // Keep track of processed unit IDs to avoid infinite loops
+            const processedUnitIds = new Set();
+
+            // Build the chain
+            let iterationCount = 0;
+            while (
+              fromUnitToConversion.has(currentUnitId) &&
+              !processedUnitIds.has(currentUnitId) &&
+              iterationCount < 10 // Safety limit
+            ) {
+              iterationCount++;
+              console.log(
+                `Iteration ${iterationCount}: Processing unit ID ${currentUnitId}`,
+              );
+              processedUnitIds.add(currentUnitId);
+
+              const nextConversions = fromUnitToConversion.get(currentUnitId);
+              if (nextConversions && nextConversions.length > 0) {
+                // Sort by creation date in case there are multiple options
+                const nextConversion = nextConversions[0];
+                console.log(
+                  `  Adding conversion: ${nextConversion.from_unit.name} → ${nextConversion.to_unit.name}, Rate: ${nextConversion.conversion_rate}`,
+                );
+                sortedConversions.push(nextConversion);
+                currentUnitId = nextConversion.to_unit_id;
+                console.log(`  Next unit ID: ${currentUnitId}`);
+              } else {
+                console.log(
+                  `  No more conversions from unit ID ${currentUnitId}`,
+                );
+                break;
+              }
+            }
+
+            // Check for missing conversions and add them if they exist
+            if (sortedConversions.length < preset.conversions.length) {
+              console.log(
+                `WARNING: ${preset.conversions.length - sortedConversions.length} conversions were not included in chain`,
+              );
+
+              // Use a Set to keep track of included conversion IDs
+              const includedIds = new Set(
+                sortedConversions.map((c) => c.preset_conversion_id),
+              );
+
+              // Find all missing conversions
+              const missingConversions = preset.conversions.filter(
+                (c) => !includedIds.has(c.preset_conversion_id),
+              );
+
+              console.log(
+                `Adding ${missingConversions.length} missing conversions to the chain`,
+              );
+              missingConversions.forEach((c, i) => {
+                console.log(
+                  `  Adding missing conversion [${i}]: From: ${c.from_unit.name} (${c.from_unit_id}) → To: ${c.to_unit.name} (${c.to_unit_id}), Rate: ${c.conversion_rate}`,
+                );
+                sortedConversions.push(c);
+              });
+            }
+
+            if (iterationCount >= 10) {
+              console.log(
+                "WARNING: Reached maximum iteration count, possible circular dependency",
+              );
+            }
+
+            console.log(`Sorted conversions (${sortedConversions.length}):`);
+            sortedConversions.forEach((conv, i) => {
+              console.log(
+                `  [${i}] From: ${conv.from_unit.name} → To: ${conv.to_unit.name}, Rate: ${conv.conversion_rate}`,
+              );
+            });
+
             const result = {
               presetId: preset.preset_id,
               mainUnit: preset.main_unit.name,
               mainPrice: preset.main_price,
-              conversions: preset.conversions.map((conversion) => {
+              conversions: sortedConversions.map((conversion) => {
                 // Get the price from the map using the to_unit_id
                 const conversionPrice =
                   unitPriceMap.get(conversion.to_unit_id) || 0;
@@ -470,15 +586,15 @@ export const restockRouter = createTRPCRouter({
                   price: conversionPrice,
                 };
               }),
-              conversionCount: preset.conversions.length,
+              conversionCount: sortedConversions.length,
             };
 
             console.log(
-              `Formatted preset: ${preset.main_unit.name} with ${preset.conversions.length} conversions`,
+              `Final result: Preset with ${result.conversions.length} conversions`,
             );
-            result.conversions.forEach((c) => {
+            result.conversions.forEach((c, i) => {
               console.log(
-                `  Conversion: ${c.fromUnit} -> ${c.toUnit} (${c.conversionRate}), Price: ${c.price}`,
+                `  Conversion ${i + 1}: ${c.fromUnit} → ${c.toUnit} (${c.conversionRate}), Price: ${c.price}`,
               );
             });
 

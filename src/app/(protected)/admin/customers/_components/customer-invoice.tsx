@@ -28,12 +28,15 @@ interface CustomerInvoiceProps {
   first_name: string;
   last_name: string;
   customerId: string;
+  company?: string;
 }
 
 export default function CustomerInvoice({
   invoiceData,
-
   customerId,
+  first_name,
+  last_name,
+  company,
 }: CustomerInvoiceProps) {
   const router = useRouter();
 
@@ -42,12 +45,16 @@ export default function CustomerInvoice({
   const totalCount = invoiceData.length;
   const shownCount = displayedData.length;
 
+  // Create the search term - prefer company name if available, otherwise use full name
+  const searchTerm = company || `${first_name} ${last_name}`.trim();
+
   // const [isEditing, setIsEditing] = useState(false);
   // const [isDialogOpen, setIsDialogOpen] = useState(false);
   // const [showWarning, setShowWarning] = useState(false);
 
   const handleInvoiceDoubleClick = () => {
-    router.push(`/admin/invoice?customerId=${customerId}`);
+    const url = `/admin/invoice?customerId=${customerId}${searchTerm ? `&searchQuery=${encodeURIComponent(searchTerm)}` : ""}`;
+    router.push(url);
   };
   // const handleEdit = () => {
   //     setIsEditing((prev) => !prev);
@@ -65,7 +72,7 @@ export default function CustomerInvoice({
     <div className="rounded-lg bg-white/60 p-5 text-slate-400">
       <div className="flex items-center justify-between">
         <Link
-          href={`/admin/invoice${customerId ? `?customerId=${customerId}` : ""}`}
+          href={`/admin/invoice?customerId=${customerId}${searchTerm ? `&searchQuery=${encodeURIComponent(searchTerm)}` : ""}`}
         >
           <div className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
             Invoices

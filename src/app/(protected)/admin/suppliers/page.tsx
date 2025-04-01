@@ -1,20 +1,20 @@
-"use client"
+"use client";
 
-import { Plus } from 'lucide-react'
-import { useSession } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useState } from 'react'
-import { Button } from '~/components/ui/button'
-import { ScrollArea } from '~/components/ui/scroll-area'
-import { Toaster } from '~/components/ui/sonner'
-import { api } from "~/trpc/react"
-import Filter from '../_components/filter'
-import NoRecordsMessage from '../_components/no-records-message'
-import RecordHeader from '../_components/record-header'
-import RecordItem from '../_components/record-item'
-import SearchBar from '../_components/search-bar'
-import SelectRecordMessage from '../_components/select-record-message'
-import SelectedSupplier from './_components/selected-supplier'
+import { Plus } from "lucide-react";
+import { useSession } from "next-auth/react";
+import { useRouter } from "next/navigation";
+import { useState } from "react";
+import { Button } from "~/components/ui/button";
+import { ScrollArea } from "~/components/ui/scroll-area";
+import { Toaster } from "~/components/ui/sonner";
+import { api } from "~/trpc/react";
+import Filter from "../_components/filter";
+import NoRecordsMessage from "../_components/no-records-message";
+import RecordHeader from "../_components/record-header";
+import RecordItem from "../_components/record-item";
+import SearchBar from "../_components/search-bar";
+import SelectRecordMessage from "../_components/select-record-message";
+import SelectedSupplier from "./_components/selected-supplier";
 
 interface Supplier {
   id: string;
@@ -62,12 +62,12 @@ const SuppliersPage = () => {
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
 
   const { data: restockActivity } = api.suppliers.getSupplierRestocks.useQuery(
-    { supplierId: selectedRecord?.id ?? '' }, // Use selectedRecord.id (User_Role's id)
-    { enabled: !!selectedRecord }
+    { supplierId: selectedRecord?.id ?? "" }, // Use selectedRecord.id (User_Role's id)
+    { enabled: !!selectedRecord },
   );
 
   const activityData = {
-    restocks: restockActivity ?? []
+    restocks: restockActivity ?? [],
   };
 
   const verifyPasswordMutation = api.suppliers.verifyPassword.useMutation();
@@ -96,26 +96,24 @@ const SuppliersPage = () => {
   });
 
   const checkAdminRole = () => {
-    if (userRole !== 'ADMIN') {
-      alert('Only ADMIN users can delete suppliers');
+    if (userRole !== "ADMIN") {
+      alert("Only ADMIN users can delete suppliers");
       return false;
     }
     return true;
   };
 
-  const filteredSuppliers = supplierData?.filter(
-    (supplier) => {
-      const company = supplier.Personal_Details.company?.toLowerCase() ?? "";
-      const contact = supplier.Personal_Details.contact?.toLowerCase() ?? "";
-      const email = supplier.Personal_Details.email?.toLowerCase() ?? "";
+  const filteredSuppliers = supplierData?.filter((supplier) => {
+    const company = supplier.Personal_Details.company?.toLowerCase() ?? "";
+    const contact = supplier.Personal_Details.contact?.toLowerCase() ?? "";
+    const email = supplier.Personal_Details.email?.toLowerCase() ?? "";
 
-      return (
-        company.includes(searchTerm.toLowerCase()) ??
-        contact.includes(searchTerm.toLowerCase()) ??
-        email.includes(searchTerm.toLowerCase())
-      );
-    }
-  );
+    return (
+      company.includes(searchTerm.toLowerCase()) ??
+      contact.includes(searchTerm.toLowerCase()) ??
+      email.includes(searchTerm.toLowerCase())
+    );
+  });
 
   //TODO: Change reference to ID becuase companies might have the same name
   // const supplierRestockData = selectedRecord
@@ -133,9 +131,9 @@ const SuppliersPage = () => {
   };
 
   return (
-    <section className='px-20 py-10 text-base min-h-screen flex flex-col'>
-      <div className="flex justify-between items-center">
-        <div className="flex gap-3 items-center">
+    <section className="flex min-h-screen flex-col px-20 py-10 text-base">
+      <div className="flex items-center justify-between">
+        <div className="flex items-center gap-3">
           <SearchBar
             value={searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
@@ -144,21 +142,22 @@ const SuppliersPage = () => {
         </div>
         <Button
           onClick={() => router.push("/admin/suppliers/new-supplier")}
-          className="bg-green hover:bg-green/80">
+          className="bg-green hover:bg-green/80"
+        >
           <Plus strokeWidth={3} /> New Supplier
         </Button>
       </div>
-      <div className="mt-8 flex gap-3 flex-grow">
-        <div className="flex flex-col gap-3 w-3/5 flex-grow">
+      <div className="mt-8 flex flex-grow gap-3">
+        <div className="flex w-3/5 flex-grow flex-col gap-3">
           <RecordHeader
             record="Suppliers"
             number={filteredSuppliers?.length ?? 0}
             data={filteredSuppliers ?? []}
           />
-          <div className="flex flex-grow rounded-lg h-full overflow-hidden">
+          <div className="flex h-full flex-grow overflow-hidden rounded-lg">
             {(filteredSuppliers?.length ?? 0) > 0 ? (
-              <ScrollArea className="w-full h-full">
-                <div className="flex flex-col items-center w-full h-40">
+              <ScrollArea className="h-full w-full">
+                <div className="flex h-40 w-full flex-col items-center">
                   {filteredSuppliers?.map((supplier) => (
                     <RecordItem
                       key={supplier.Personal_Details_Id}
@@ -166,12 +165,15 @@ const SuppliersPage = () => {
                       id={supplier.Personal_Details_Id}
                       emoji={supplier.emoji}
                       onClick={() => setSelectedRecord(supplier)}
-                      isSelected={selectedRecord?.Personal_Details_Id === supplier.Personal_Details_Id}
-                      recordType={'Suppliers'}
+                      isSelected={
+                        selectedRecord?.Personal_Details_Id ===
+                        supplier.Personal_Details_Id
+                      }
+                      recordType={"Suppliers"}
                       onVerifyPassword={handleVerifyPassword}
-                      onDelete={(id) => {
+                      onDelete={async (id) => {
                         if (!checkAdminRole()) return;
-                        handleDelete(id);
+                        await handleDelete(id);
                       }}
                       userRole={userRole}
                     />
@@ -179,18 +181,22 @@ const SuppliersPage = () => {
                 </div>
               </ScrollArea>
             ) : (
-              <NoRecordsMessage records={'suppliers'} link={'/admin/suppliers/new-supplier'} item={'supplier'} />
+              <NoRecordsMessage
+                records={"suppliers"}
+                link={"/admin/suppliers/new-supplier"}
+                item={"supplier"}
+              />
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-3 w-2/5 flex-grow">
-          <div className="bg-slate-100 w-full rounded-lg text-lg px-6 py-3">
+        <div className="flex w-2/5 flex-grow flex-col gap-3">
+          <div className="w-full rounded-lg bg-slate-100 px-6 py-3 text-lg">
             <p className="text-slate-500">Details</p>
           </div>
-          <div className="bg-slate-100 flex flex-grow rounded-lg">
+          <div className="flex flex-grow rounded-lg bg-slate-100">
             {selectedRecord ? (
-              <ScrollArea className="w-full h-full">
-                <div className="flex flex-col w-full h-40">
+              <ScrollArea className="h-full w-full">
+                <div className="flex h-40 w-full flex-col">
                   <SelectedSupplier
                     id={selectedRecord.Personal_Details_Id}
                     role_Id={selectedRecord.role_Id}
@@ -207,17 +213,15 @@ const SuppliersPage = () => {
                     }
                     contact={selectedRecord.Personal_Details.contact}
                     email={selectedRecord.Personal_Details.email}
-                    location={
-                      [
-                        selectedRecord.Personal_Details.location?.address_line,
-                        selectedRecord.Personal_Details.location?.city,
-                        selectedRecord.Personal_Details.location?.region,
-                        selectedRecord.Personal_Details.location?.country,
-                        selectedRecord.Personal_Details.location?.postal_code,
-                      ]
-                        .filter((line) => line)
-                        .join("\n")
-                    }
+                    location={[
+                      selectedRecord.Personal_Details.location?.address_line,
+                      selectedRecord.Personal_Details.location?.city,
+                      selectedRecord.Personal_Details.location?.region,
+                      selectedRecord.Personal_Details.location?.country,
+                      selectedRecord.Personal_Details.location?.postal_code,
+                    ]
+                      .filter((line) => line)
+                      .join("\n")}
                     notes={selectedRecord.Personal_Details.notes}
                     auth={selectedRecord.Personal_Details.auth}
                     // activityData={activityData}
@@ -225,8 +229,7 @@ const SuppliersPage = () => {
                     // TODO: reflect restock data based on selected supplier
                     // restockData={supplierRestockData}
                     restockData={activityData}
-                    clerkId={selectedRecord.id ?? ''}
-
+                    clerkId={selectedRecord.id ?? ""}
                   />
                 </div>
               </ScrollArea>
@@ -238,7 +241,7 @@ const SuppliersPage = () => {
       </div>
       <Toaster />
     </section>
-  )
-}
+  );
+};
 
-export default SuppliersPage
+export default SuppliersPage;

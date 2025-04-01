@@ -3,7 +3,7 @@
 import { Plus } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { useRouter, useSearchParams } from "next/navigation";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LoadingSpinner } from "~/components/loading";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
@@ -42,11 +42,21 @@ const RestockPage = () => {
   const router = useRouter();
   const [isOpen, setIsOpen] = useState(false);
   const [selectedBatch, setSelectedBatch] = useState<RestockProps | null>(null);
-  const [searchQuery, setSearchQuery] = useState("");
-
   const searchParams = useSearchParams();
+
+  // Get search query from URL if available
+  const searchQueryParam = searchParams.get("searchQuery");
+  const [searchQuery, setSearchQuery] = useState(searchQueryParam || "");
+
   const clerkId = searchParams.get("clerkId");
   const supplierId = searchParams.get("supplierId");
+
+  // Update searchQuery when URL parameter changes
+  useEffect(() => {
+    if (searchQueryParam) {
+      setSearchQuery(searchQueryParam);
+    }
+  }, [searchQueryParam]);
 
   const {
     data: restockData,
@@ -69,22 +79,36 @@ const RestockPage = () => {
     setIsOpen(true);
   };
 
+  // Ensure each restock record has all required properties
+  const ensureRestockProps = (data: any[]): RestockProps[] => {
+    return data.map((item) => ({
+      restockId: item.restockId,
+      date: item.date,
+      supplier: item.supplier,
+      restockClerk: item.restockClerk,
+      addedStock: item.addedStock,
+      restockItems: item.restockItems,
+      notes: item.notes ?? "", // Add default empty string for notes if not present
+    }));
+  };
+
   // Filtering Restock Data
-  const filteredRestocks = restockData?.filter((restock) => {
-    const query = searchQuery.toLowerCase();
+  const filteredRestocks = restockData
+    ? ensureRestockProps(restockData).filter((restock) => {
+        const query = searchQuery.toLowerCase();
+        const restockId = restock.restockId?.toString()?.toLowerCase() ?? "";
+        const supplier = restock.supplier?.toLowerCase() ?? "";
+        const restockClerk = restock.restockClerk?.toLowerCase() ?? "";
+        const date = restock.date?.toLowerCase() ?? "";
 
-    const restockId = restock.restockId?.toString()?.toLowerCase() ?? "";
-    const supplier = restock.supplier?.toLowerCase() ?? "";
-    const restockClerk = restock.restockClerk?.toLowerCase() ?? "";
-    const date = restock.date?.toLowerCase() ?? "";
-
-    return (
-      restockId.includes(query) ||
-      supplier.includes(query) ||
-      restockClerk.includes(query) ||
-      date.includes(query)
-    );
-  });
+        return (
+          restockId.includes(query) ||
+          supplier.includes(query) ||
+          restockClerk.includes(query) ||
+          date.includes(query)
+        );
+      })
+    : [];
 
   return (
     <section
@@ -109,7 +133,7 @@ const RestockPage = () => {
 
       <ScrollArea className="mt-5">
         <div className="grid grid-cols-2 gap-4 px-20">
-          {filteredRestocks?.map((restock: RestockProps) => (
+          {filteredRestocks.map((restock) => (
             <RestockRecord
               key={restock.restockId}
               restockId={restock.restockId}
@@ -118,6 +142,7 @@ const RestockPage = () => {
               restockClerk={restock.restockClerk}
               addedStock={restock.addedStock}
               restockItems={restock.restockItems}
+              notes={restock.notes}
               onViewAll={handleViewAll}
             />
           ))}

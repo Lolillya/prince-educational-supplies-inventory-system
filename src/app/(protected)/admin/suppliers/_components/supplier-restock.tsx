@@ -1,257 +1,481 @@
-import { TooltipContent } from '@radix-ui/react-tooltip'
-import { ArrowUpRight, Box, Calendar, IdCard } from 'lucide-react'
-import { Poppins } from 'next/font/google'
-import Link from 'next/link'
-import { useState } from 'react'
-import RestockDialog from "~/app/(protected)/admin/employees/_components/restock-dialog"
-import { Separator } from '~/components/ui/separator'
-import { Tooltip, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
+import { TooltipContent } from "@radix-ui/react-tooltip";
+import { ArrowUpRight, Box, Calendar, IdCard } from "lucide-react";
+import { Poppins } from "next/font/google";
+import Link from "next/link";
+import { useState } from "react";
+import RestockDialog from "~/app/(protected)/admin/employees/_components/restock-dialog";
+import { Separator } from "~/components/ui/separator";
+import {
+  Tooltip,
+  TooltipProvider,
+  TooltipTrigger,
+} from "~/components/ui/tooltip";
 
 const poppins = Poppins({
-	subsets: ["latin"],
-	weight: ["400", "700"],
+  subsets: ["latin"],
+  weight: ["400", "700"],
 });
 
 interface SupplierRestockProps {
-	restockData: any[] | undefined;
-	clerkId: string;
+  restockData: any[] | undefined;
+  clerkId: string;
+  company?: string | null | undefined;
 }
 
-const SupplierRestock = ({ restockData = [], clerkId }: SupplierRestockProps) => {
-	const [showAll, setShowAll] = useState(false);
-	const displayedData = showAll ? restockData : restockData.slice(0, 3);
-	const totalCount = restockData.length;
-	const shownCount = displayedData.length;
+const SupplierRestock = ({
+  restockData = [],
+  clerkId,
+  company,
+}: SupplierRestockProps) => {
+  const [showAll, setShowAll] = useState(false);
+  const displayedData = showAll ? restockData : restockData.slice(0, 3);
+  const totalCount = restockData.length;
+  const shownCount = displayedData.length;
 
-	const [isEditing, setIsEditing] = useState(false);
-	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const [showWarning, setShowWarning] = useState(false);
+  const [isEditing, setIsEditing] = useState(false);
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [showWarning, setShowWarning] = useState(false);
 
-	const handleEdit = () => {
-		setIsEditing((prev) => !prev);
-		setShowWarning(false);
-	};
+  const handleEdit = () => {
+    setIsEditing((prev) => !prev);
+    setShowWarning(false);
+  };
 
-	const handleKeyDown = (event: React.KeyboardEvent) => {
-		if (event.key === "Escape" && isEditing) {
-			setShowWarning(true);
-			event.preventDefault();
-		}
-	};
+  const handleKeyDown = (event: React.KeyboardEvent) => {
+    if (event.key === "Escape" && isEditing) {
+      setShowWarning(true);
+      event.preventDefault();
+    }
+  };
 
-	return (
-		<div className='p-5 bg-white/60 rounded-lg text-slate-400'>
-			<div className='flex items-center justify-between'>
-				<Link href={`/admin/restock${clerkId ? `?supplierId=${clerkId}` : ''}`}>
-					<div className='w-fit flex items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500'>
-						Restocks
-						<ArrowUpRight className='w-4 h-4' />
-					</div>
-				</Link>
-				{totalCount > 0 && (
-					<p className='text-slate-400 text-sm pr-5'>
-						{shownCount} of {totalCount}
-					</p>
-				)}
-			</div>
-			<div className='mt-2'>
-				<div className="flex flex-col gap-1">
-					{/* //TODO: map restock data based on selected supplier */}
+  // Create URL with parameters for supplierId and searchQuery
+  const restockUrl = `/admin/restock${clerkId ? `?supplierId=${clerkId}` : ""}${company ? `${clerkId ? "&" : "?"}searchQuery=${encodeURIComponent(company)}` : ""}`;
 
-					{displayedData.map((restock) => (
-						<RestockDialog
-							key={restock.batch_id}
-							restock={restock}
-							clerkId={clerkId}
-							activity={restock}
-							context="supplier"
-						/>
-					))}
-					{totalCount === 0 && (
-						<p className="text-center py-4 text-slate-400">No restocks found</p>
-					)}
-				</div>
-			</div>
+  return (
+    <div className="rounded-lg bg-white/60 p-5 text-slate-400">
+      <div className="flex items-center justify-between">
+        <Link href={restockUrl}>
+          <div className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
+            Restocks
+            <ArrowUpRight className="h-4 w-4" />
+          </div>
+        </Link>
+        {totalCount > 0 && (
+          <p className="pr-5 text-sm text-slate-400">
+            {shownCount} of {totalCount}
+          </p>
+        )}
+      </div>
+      <div className="mt-2">
+        <div className="flex flex-col gap-1">
+          {/* //TODO: map restock data based on selected supplier */}
 
-			{totalCount > 3 && (
-				<div className='mt-4'>
-					<p
-						className='text-center hover:underline cursor-pointer'
-						onClick={() => setShowAll(!showAll)}
-					>
-						{showAll ? 'Show less' : 'Show more'}
-					</p>
-				</div>
-			)}
-		</div>
-	);
+          {displayedData.map((restock) => (
+            <RestockDialog
+              key={restock.batch_id}
+              restock={restock}
+              clerkId={clerkId}
+              activity={restock}
+              context="supplier"
+            />
+          ))}
+          {totalCount === 0 && (
+            <p className="py-4 text-center text-slate-400">No restocks found</p>
+          )}
+        </div>
+      </div>
+
+      {totalCount > 3 && (
+        <div className="mt-4">
+          <p
+            className="cursor-pointer text-center hover:underline"
+            onClick={() => setShowAll(!showAll)}
+          >
+            {showAll ? "Show less" : "Show more"}
+          </p>
+        </div>
+      )}
+    </div>
+  );
 };
-{/*<Dialog*/ }
-{/*	open={isDialogOpen}*/ }
-{/*	onOpenChange={(open) => {*/ }
-{/*		if (!open) {*/ }
-{/*			if (isEditing) {*/ }
-{/*				setShowWarning(true);*/ }
-{/*				return;*/ }
-{/*			}*/ }
-{/*		}*/ }
-{/*		setIsDialogOpen(open);*/ }
-{/*		if (!open) {*/ }
-{/*			setShowWarning(false);*/ }
-{/*		}*/ }
-{/*	}}*/ }
-{/*>*/ }
-{/*	<DialogTrigger>*/ }
-{/*		<SupplierRestockCard />*/ }
-{/*		<SupplierRestockCard />*/ }
-{/*		<SupplierRestockCard />*/ }
-{/*		<SupplierRestockCard />*/ }
-{/*		<SupplierRestockCard />*/ }
-{/*	</DialogTrigger>*/ }
-{/*	<DialogContent*/ }
-{/*		className="!w-full !max-w-3xl [&>button]:hidden"*/ }
-{/*		onKeyDown={handleKeyDown}*/ }
-{/*	>*/ }
-{/*		<DialogHeader className={`text-xl ${poppins.className} font-normal`}>*/ }
-{/*			<div className="flex items-center justify-between">*/ }
-{/*				<div className="flex flex-col gap-2">*/ }
-{/*					<DialogTitle className="text-xl font-normal text-slate-700">*/ }
-{/*						#12345678 /!** Please pass real data here *!/*/ }
-{/*					</DialogTitle>*/ }
-{/*					<div className="flex items-center gap-3 text-slate-400">*/ }
-{/*						<Calendar className="h-4 w-4" />*/ }
-{/*						<DialogDescription className="text-sm tracking-wide">*/ }
-{/*							2025-01-13 /!** Please pass real data here *!/*/ }
-{/*						</DialogDescription>*/ }
-{/*					</div>*/ }
-{/*				</div>*/ }
-{/*				<div className="flex items-center gap-3">*/ }
-{/*					<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />*/ }
-{/*					<RecordExpand />*/ }
-{/*				</div>*/ }
-{/*			</div>*/ }
-{/*		</DialogHeader>*/ }
+{
+  /*<Dialog*/
+}
+{
+  /*	open={isDialogOpen}*/
+}
+{
+  /*	onOpenChange={(open) => {*/
+}
+{
+  /*		if (!open) {*/
+}
+{
+  /*			if (isEditing) {*/
+}
+{
+  /*				setShowWarning(true);*/
+}
+{
+  /*				return;*/
+}
+{
+  /*			}*/
+}
+{
+  /*		}*/
+}
+{
+  /*		setIsDialogOpen(open);*/
+}
+{
+  /*		if (!open) {*/
+}
+{
+  /*			setShowWarning(false);*/
+}
+{
+  /*		}*/
+}
+{
+  /*	}}*/
+}
+{
+  /*>*/
+}
+{
+  /*	<DialogTrigger>*/
+}
+{
+  /*		<SupplierRestockCard />*/
+}
+{
+  /*		<SupplierRestockCard />*/
+}
+{
+  /*		<SupplierRestockCard />*/
+}
+{
+  /*		<SupplierRestockCard />*/
+}
+{
+  /*		<SupplierRestockCard />*/
+}
+{
+  /*	</DialogTrigger>*/
+}
+{
+  /*	<DialogContent*/
+}
+{
+  /*		className="!w-full !max-w-3xl [&>button]:hidden"*/
+}
+{
+  /*		onKeyDown={handleKeyDown}*/
+}
+{
+  /*	>*/
+}
+{
+  /*		<DialogHeader className={`text-xl ${poppins.className} font-normal`}>*/
+}
+{
+  /*			<div className="flex items-center justify-between">*/
+}
+{
+  /*				<div className="flex flex-col gap-2">*/
+}
+{
+  /*					<DialogTitle className="text-xl font-normal text-slate-700">*/
+}
+{
+  /*						#12345678 /!** Please pass real data here *!/*/
+}
+{
+  /*					</DialogTitle>*/
+}
+{
+  /*					<div className="flex items-center gap-3 text-slate-400">*/
+}
+{
+  /*						<Calendar className="h-4 w-4" />*/
+}
+{
+  /*						<DialogDescription className="text-sm tracking-wide">*/
+}
+{
+  /*							2025-01-13 /!** Please pass real data here *!/*/
+}
+{
+  /*						</DialogDescription>*/
+}
+{
+  /*					</div>*/
+}
+{
+  /*				</div>*/
+}
+{
+  /*				<div className="flex items-center gap-3">*/
+}
+{
+  /*					<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />*/
+}
+{
+  /*					<RecordExpand />*/
+}
+{
+  /*				</div>*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*		</DialogHeader>*/
+}
 
-{/*		<Separator orientation="horizontal" className="h-[2px]" />*/ }
+{
+  /*		<Separator orientation="horizontal" className="h-[2px]" />*/
+}
 
-{/*		<div className="flex gap-3">*/ }
-{/*			<div className="flex w-1/2 flex-col gap-2">*/ }
-{/*				<Label className="text-slate-400">Supplier</Label>*/ }
-{/*				<Input*/ }
-{/*					className="bg-slate-100 text-slate-700 shadow-none"*/ }
-{/*					disabled={!isEditing}*/ }
-{/*					value={'supplier'}*/ }
-{/*				/> /!** Please pass real data here *!/*/ }
-{/*			</div>*/ }
-{/*			<div className="flex w-1/2 flex-col gap-2">*/ }
-{/*				<Label className="text-slate-400">Recorded by</Label>*/ }
-{/*				<Input*/ }
-{/*					className="bg-slate-100 text-slate-700 shadow-none"*/ }
-{/*					disabled={!isEditing}*/ }
-{/*				/>*/ }
-{/*			</div>*/ }
-{/*		</div>*/ }
+{
+  /*		<div className="flex gap-3">*/
+}
+{
+  /*			<div className="flex w-1/2 flex-col gap-2">*/
+}
+{
+  /*				<Label className="text-slate-400">Supplier</Label>*/
+}
+{
+  /*				<Input*/
+}
+{
+  /*					className="bg-slate-100 text-slate-700 shadow-none"*/
+}
+{
+  /*					disabled={!isEditing}*/
+}
+{
+  /*					value={'supplier'}*/
+}
+{
+  /*				/> /!** Please pass real data here *!/*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*			<div className="flex w-1/2 flex-col gap-2">*/
+}
+{
+  /*				<Label className="text-slate-400">Recorded by</Label>*/
+}
+{
+  /*				<Input*/
+}
+{
+  /*					className="bg-slate-100 text-slate-700 shadow-none"*/
+}
+{
+  /*					disabled={!isEditing}*/
+}
+{
+  /*				/>*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*		</div>*/
+}
 
-{/*		/!* <RestockTable restockItem={} isEditing={isEditing} /> * Please pass real data here *!/*/ }
-{/*		<p>*/ }
-{/*			Note: Gi tanggal ko ang RestockTable component for now kay di ko sure kung tama ang pag reference sa db......... but this is how it should look like oke?*/ }
-{/*		</p>*/ }
+{
+  /*		/!* <RestockTable restockItem={} isEditing={isEditing} /> * Please pass real data here *!/*/
+}
+{
+  /*		<p>*/
+}
+{
+  /*			Note: Gi tanggal ko ang RestockTable component for now kay di ko sure kung tama ang pag reference sa db......... but this is how it should look like oke?*/
+}
+{
+  /*		</p>*/
+}
 
-{/*		<Separator orientation="horizontal" className="h-[2px]" />*/ }
+{
+  /*		<Separator orientation="horizontal" className="h-[2px]" />*/
+}
 
-{/*		<Textarea*/ }
-{/*			className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"*/ }
-{/*			placeholder="Your record notes..."*/ }
-{/*			disabled={!isEditing}*/ }
-{/*		/>*/ }
+{
+  /*		<Textarea*/
+}
+{
+  /*			className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"*/
+}
+{
+  /*			placeholder="Your record notes..."*/
+}
+{
+  /*			disabled={!isEditing}*/
+}
+{
+  /*		/>*/
+}
 
-{/*		<div className="flex items-center justify-between">*/ }
-{/*			<div className="flex flex-col">*/ }
-{/*				<p className="text-base font-normal text-slate-700">{300}</p> /!** Please pass real data here *!/*/ }
-{/*				<p className="text-sm text-slate-400">Added Stock</p>*/ }
-{/*			</div>*/ }
-{/*			<div className="flex items-center gap-2">*/ }
-{/*				<DialogClose asChild disabled={isEditing}>*/ }
-{/*					<Button variant="secondary" className="text-slate-700 hover:bg-slate-200" disabled={isEditing}>*/ }
-{/*						Close*/ }
-{/*					</Button>*/ }
-{/*				</DialogClose>*/ }
-{/*				<Button className="bg-green hover:bg-green/80" disabled={isEditing}>*/ }
-{/*					<Printer />*/ }
-{/*					Print Restock*/ }
-{/*				</Button>*/ }
-{/*			</div>*/ }
-{/*		</div>*/ }
-{/*		{showWarning && (*/ }
-{/*			<p className="text-right text-sm text-orange-400">*/ }
-{/*				Whoops! Don't forget to save your changes.*/ }
-{/*			</p>*/ }
-{/*		)}*/ }
-{/*	</DialogContent>*/ }
-{/*</Dialog>*/ }
+{
+  /*		<div className="flex items-center justify-between">*/
+}
+{
+  /*			<div className="flex flex-col">*/
+}
+{
+  /*				<p className="text-base font-normal text-slate-700">{300}</p> /!** Please pass real data here *!/*/
+}
+{
+  /*				<p className="text-sm text-slate-400">Added Stock</p>*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*			<div className="flex items-center gap-2">*/
+}
+{
+  /*				<DialogClose asChild disabled={isEditing}>*/
+}
+{
+  /*					<Button variant="secondary" className="text-slate-700 hover:bg-slate-200" disabled={isEditing}>*/
+}
+{
+  /*						Close*/
+}
+{
+  /*					</Button>*/
+}
+{
+  /*				</DialogClose>*/
+}
+{
+  /*				<Button className="bg-green hover:bg-green/80" disabled={isEditing}>*/
+}
+{
+  /*					<Printer />*/
+}
+{
+  /*					Print Restock*/
+}
+{
+  /*				</Button>*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*		</div>*/
+}
+{
+  /*		{showWarning && (*/
+}
+{
+  /*			<p className="text-right text-sm text-orange-400">*/
+}
+{
+  /*				Whoops! Don't forget to save your changes.*/
+}
+{
+  /*			</p>*/
+}
+{
+  /*		)}*/
+}
+{
+  /*	</DialogContent>*/
+}
+{
+  /*</Dialog>*/
+}
 
-{/*					<Separator orientation="horizontal" className="h-[1px]" />*/ }
-{/*				</div>*/ }
-{/*			</div>*/ }
-{/*			<div className='mt-4'>*/ }
-{/*				<p className='text-center hover:underline cursor-pointer'>Show more</p>*/ }
-{/*			</div>*/ }
-{/*		</div>*/ }
-{/*	)*/ }
-{/*}*/ }
+{
+  /*					<Separator orientation="horizontal" className="h-[1px]" />*/
+}
+{
+  /*				</div>*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*			<div className='mt-4'>*/
+}
+{
+  /*				<p className='text-center hover:underline cursor-pointer'>Show more</p>*/
+}
+{
+  /*			</div>*/
+}
+{
+  /*		</div>*/
+}
+{
+  /*	)*/
+}
+{
+  /*}*/
+}
 
 const SupplierRestockCard = () => {
-	// TODO: reflect restock data based on selected supplier
-	return (
-		<div className='p-5 flex flex-col gap-4 hover:bg-slate-200/50 rounded-lg cursor-pointer transition-all duration-300'>
-			<p className='text-slate-600 text-left'>#1234567</p>
-			<div className="flex items-center gap-3 flex-grow overflow-hidden">
-				<TooltipProvider>
-					<Tooltip>
-						<TooltipTrigger asChild>
-							<IdCard className="h-4 w-4" />
-						</TooltipTrigger>
-						<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-							Recorded by Stacey Andrew Moralidad Gonzaga
-						</TooltipContent>
-					</Tooltip>
-				</TooltipProvider>
-				<p className="text-sm truncate">Stacey Andrew Moralidad Gonzaga</p>
-			</div>
-			<div className="flex items-center gap-4 text-slate-400">
-				<div className="flex items-center gap-3 text-slate-400">
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Calendar className="h-4 w-4" />
-							</TooltipTrigger>
-							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-								Recorded on 2025-01-13
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-					<p className="text-sm">2025-01-13</p>
-				</div>
-				<Separator
-					orientation="vertical"
-					className="h-6 w-[2px] bg-slate-200"
-				/>
-				<div className="flex items-center gap-3">
-					<TooltipProvider>
-						<Tooltip>
-							<TooltipTrigger asChild>
-								<Box className="h-4 w-4" />
-							</TooltipTrigger>
-							<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-								300 total added stock
-							</TooltipContent>
-						</Tooltip>
-					</TooltipProvider>
-					<p className="text-sm">300 Bundles</p>
-				</div>
-			</div>
-		</div>
-	)
-}
+  // TODO: reflect restock data based on selected supplier
+  return (
+    <div className="flex cursor-pointer flex-col gap-4 rounded-lg p-5 transition-all duration-300 hover:bg-slate-200/50">
+      <p className="text-left text-slate-600">#1234567</p>
+      <div className="flex flex-grow items-center gap-3 overflow-hidden">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <IdCard className="h-4 w-4" />
+            </TooltipTrigger>
+            <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+              Recorded by Stacey Andrew Moralidad Gonzaga
+            </TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
+        <p className="truncate text-sm">Stacey Andrew Moralidad Gonzaga</p>
+      </div>
+      <div className="flex items-center gap-4 text-slate-400">
+        <div className="flex items-center gap-3 text-slate-400">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Calendar className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+                Recorded on 2025-01-13
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <p className="text-sm">2025-01-13</p>
+        </div>
+        <Separator
+          orientation="vertical"
+          className="h-6 w-[2px] bg-slate-200"
+        />
+        <div className="flex items-center gap-3">
+          <TooltipProvider>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Box className="h-4 w-4" />
+              </TooltipTrigger>
+              <TooltipContent className="my-4 rounded-lg border border-slate-200 bg-white p-2 text-sm text-slate-700 shadow-none">
+                300 total added stock
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+          <p className="text-sm">300 Bundles</p>
+        </div>
+      </div>
+    </div>
+  );
+};
 
-export default SupplierRestock
+export default SupplierRestock;

@@ -127,10 +127,10 @@ model Variant {
   variant_id   Int            @id @default(autoincrement())
   item_id      Int
   name         String
+  description  String?
   discount_id  Int?
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
-  description  String?
   BatchVariant BatchVariant[]
   Favorite     Favorite[]
   inventory    Inventory[]
@@ -142,12 +142,12 @@ model Variant {
 
 model Batch {
   batch_id         Int              @id @default(autoincrement())
-  batch_number     Int              @unique @default(autoincrement())
   quantity         Int
-  created_at       DateTime         @default(now())
-  updated_at       DateTime         @updatedAt
   notes            String?
   restock_clerk    String
+  created_at       DateTime         @default(now())
+  updated_at       DateTime         @updatedAt
+  batch_number     Int              @unique @default(autoincrement())
   Personal_Details Personal_Details @relation(fields: [restock_clerk], references: [personal_details_id])
   batchVariants    BatchVariant[]
   Pin              Pin[]
@@ -199,10 +199,10 @@ model ConversionRate {
 model Inventory {
   inventory_id     Int              @id @default(autoincrement())
   variant_id       Int
-  inventory_number Int              @unique @default(autoincrement())
   quantity         Int
-  inventory_clerk  String
   last_updated     DateTime         @default(now())
+  inventory_clerk  String
+  inventory_number Int              @unique @default(autoincrement())
   Personal_Details Personal_Details @relation(fields: [inventory_clerk], references: [personal_details_id])
   variant          Variant          @relation(fields: [variant_id], references: [variant_id], onDelete: Cascade)
 }
@@ -274,6 +274,7 @@ model Inventory_Log {
 model Invoice {
   invoice_id                   Int           @id @default(autoincrement())
   invoice_number               Int           @unique @default(autoincrement())
+  notes                        String?
   customer_id                  String
   invoice_clerk                String
   created_at                   DateTime      @default(now())
@@ -281,7 +282,6 @@ model Invoice {
   total_amount                 Float         @default(0.0)
   discount                     Float?
   status                       String
-  notes                        String?
   user_RoleId                  String?
   supplierUnitSupplier_unit_id Int?
   term                         String

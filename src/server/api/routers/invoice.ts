@@ -250,9 +250,9 @@ export const invoiceRouter = createTRPCRouter({
       console.log("Processing Invoice:", invoice);
 
       try {
-        const result = await ctx.db.$transaction(async (tx) => {
+        const result = await ctx.db.$transaction(async () => {
           // Step 1: Create Invoice
-          const createdInvoice = await tx.invoice.create({
+          const createdInvoice = await ctx.db.invoice.create({
             data: {
               customer_id: invoice.customer_id,
               invoice_clerk: invoice.invoice_clerk,
@@ -274,7 +274,7 @@ export const invoiceRouter = createTRPCRouter({
                 : "Auto Restock triggered!",
             );
 
-            const createdLineItems = await tx.line_Item.createMany({
+            const createdLineItems = await ctx.db.line_Item.createMany({
               data: lineItems.map((item) => ({
                 supplier_unit_id: item.supplier_unit_id,
                 invoice_id: invoiceId,
@@ -293,7 +293,7 @@ export const invoiceRouter = createTRPCRouter({
               ? (lineItems[0]?.quantity ?? 0)
               : (lineItems[0]?.quantity ?? 0) - (lineItems[0]?.available ?? 0);
 
-            const batch = await tx.batch.create({
+            const batch = await ctx.db.batch.create({
               data: {
                 quantity: batchQuantity,
                 batch_number: generateBatchNumber(),
@@ -302,7 +302,7 @@ export const invoiceRouter = createTRPCRouter({
             });
 
             if (lineItems[0]?.variant_id !== undefined) {
-              const batchVariant = await tx.batchVariant.create({
+              const batchVariant = await ctx.db.batchVariant.create({
                 data: {
                   batch_id: batch.batch_id,
                   variant_id: lineItems[0].variant_id,
@@ -326,7 +326,7 @@ export const invoiceRouter = createTRPCRouter({
               const unitId = item.unit_id;
               const supplier_unit_id = item.supplier_unit_id;
 
-              const supplierUnit = await tx.supplierUnit.findFirst({
+              const supplierUnit = await ctx.db.supplierUnit.findFirst({
                 where: { supplier_unit_id, unit_id: unitId },
               });
 
@@ -336,12 +336,12 @@ export const invoiceRouter = createTRPCRouter({
                 );
               }
 
-              const supplierUnitList = await tx.supplierUnit.findMany({
+              const supplierUnitList = await ctx.db.supplierUnit.findMany({
                 where: { batch_variant_id: supplierUnit.batch_variant_id },
                 orderBy: { supplier_unit_id: "desc" },
               });
 
-              const conversionList = await tx.conversionRate.findMany({
+              const conversionList = await ctx.db.conversionRate.findMany({
                 where: {
                   supplier_unit_id: {
                     in: supplierUnitList.map((unit) => unit.supplier_unit_id),
@@ -352,14 +352,14 @@ export const invoiceRouter = createTRPCRouter({
               console.log("Processing Item:", item);
 
               if (invoice.isAutoRestock) {
-                await tx.supplierUnit.update({
+                await ctx.db.supplierUnit.update({
                   where: { supplier_unit_id: supplierUnit.supplier_unit_id },
                   data: { quantity_per_unit: 0 },
                 });
               } else {
                 while (supplierUnit.quantity_per_unit - invoiceItemQty < 0) {
                   if (supplierUnit.quantity_per_unit >= invoiceItemQty) {
-                    await tx.supplierUnit.update({
+                    await ctx.db.supplierUnit.update({
                       where: {
                         supplier_unit_id: supplierUnit.supplier_unit_id,
                       },
@@ -389,7 +389,7 @@ export const invoiceRouter = createTRPCRouter({
                       );
                     }
 
-                    await tx.supplierUnit.update({
+                    await ctx.db.supplierUnit.update({
                       where: { supplier_unit_id: higherUnit.supplier_unit_id },
                       data: { quantity_per_unit: { decrement: 1 } },
                     });
@@ -399,7 +399,7 @@ export const invoiceRouter = createTRPCRouter({
                   }
                 }
 
-                await tx.supplierUnit.update({
+                await ctx.db.supplierUnit.update({
                   where: { supplier_unit_id: supplierUnit.supplier_unit_id },
                   data: {
                     quantity_per_unit:
@@ -409,7 +409,7 @@ export const invoiceRouter = createTRPCRouter({
               }
 
               const allZeroQuantity =
-                (await tx.supplierUnit.count({
+                (await ctx.db.supplierUnit.count({
                   where: {
                     batch_variant_id: supplierUnit.batch_variant_id,
                     quantity_per_unit: { gt: 0 },
@@ -417,12 +417,12 @@ export const invoiceRouter = createTRPCRouter({
                 })) === 0;
 
               if (allZeroQuantity) {
-                await tx.batchVariant.delete({
+                await ctx.db.batchVariant.delete({
                   where: { batch_variant_id: supplierUnit.batch_variant_id },
                 });
               }
 
-              return tx.line_Item.create({
+              return ctx.db.line_Item.create({
                 data: {
                   supplier_unit_id: supplier_unit_id,
                   invoice_id: invoiceId,

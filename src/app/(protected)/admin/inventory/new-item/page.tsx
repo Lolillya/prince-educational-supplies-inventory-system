@@ -74,7 +74,15 @@ const NewItem = () => {
   const [itemSearch, setItemSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
+  const hasDuplicateUnits = (preset: PresetData): boolean => {
+    const allUnits = [
+      preset.mainUnit,
+      ...preset.conversions.map(conv => conv.unit)
+    ].filter(unit => unit); // Filter out empty strings
 
+    // Check for duplicates by comparing array length with Set size
+    return new Set(allUnits).size !== allUnits.length;
+  };
   const [item, setItem] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
@@ -179,6 +187,23 @@ const NewItem = () => {
   const units = useMemo(() => data?.units ?? [], [data]);
   const items = useMemo(() => data?.items ?? [], [data]);
   const variantsMemo = useMemo(() => data?.variants ?? [], [data]);
+  const formatPriceInput = (value: string): string => {
+    // Remove any non-digit or non-dot characters
+    let formatted = value.replace(/[^\d.]/g, '');
+
+    // Ensure only one decimal point
+    const parts = formatted.split('.');
+    if (parts.length > 2) {
+      formatted = parts[0] + '.' + parts.slice(1).join('');
+    }
+
+    // Limit to 2 decimal places
+    if (parts.length === 2) {
+      formatted = parts[0] + '.' + parts[1].slice(0, 2);
+    }
+
+    return formatted;
+  };
 
   useEffect(() => {
     if (item) {
@@ -744,6 +769,90 @@ const NewItem = () => {
     if (!categorySearch && !selectedCategory) {
       toast("❌ Missing input", {
         description: "Please fill in the Category field",
+        duration: 4000,
+      });
+      return;
+    }
+    // Handle save presets
+    // Check for invalid presets (main price zero/negative)
+    const invalidMainPrices = presets.filter(preset =>
+        preset.mainPrice === "0.00" ||
+        preset.mainPrice === "0" ||
+        parseFloat(preset.mainPrice) <= 0
+    );
+
+// Check for invalid conversions (qty or price zero/negative)
+    const invalidConversions = presets.some(preset =>
+        preset.conversions.some(conv =>
+            conv.qty === "0.00" ||
+            conv.qty === "0" ||
+            parseFloat(conv.qty) <= 0 ||
+            (conv.price && (
+                conv.price === "0.00" ||
+                conv.price === "0" ||
+                parseFloat(conv.price) <= 0
+            ))
+        )
+    );
+
+    if (invalidMainPrices.length > 0) {
+      toast("❌ Invalid price", {
+        description: "Main Price cannot be zero or negative",
+        duration: 4000,
+      });
+      return;
+    }
+
+    if (invalidConversions) {
+      toast("❌ Invalid conversion values", {
+        description: "Quantity and Price in conversions cannot be zero or negative",
+        duration: 4000,
+      });
+      return;
+    }
+    // In your handleSave function, add this validation:
+
+// Check for invalid unit selections
+    const invalidUnits = presets.some(preset => {
+      // Check main unit
+      const mainUnitInvalid = !units.some(unit => unit.name === preset.mainUnit);
+
+      // Check conversion units
+      const conversionUnitsInvalid = preset.conversions.some(conv =>
+          !units.some(unit => unit.name === conv.unit)
+      );
+
+      return mainUnitInvalid || conversionUnitsInvalid;
+    });
+
+    if (invalidUnits) {
+      toast("❌ Invalid unit selection", {
+        description: "Please select units from the dropdown list",
+        duration: 4000,
+      });
+      return;
+    }
+
+// Check for empty conversion rows
+    const hasEmptyConversions = presets.some(preset =>
+        preset.conversions.some(conv =>
+            !conv.qty && !conv.unit && !conv.price
+        )
+    );
+
+    if (hasEmptyConversions) {
+      toast("❌ Empty conversion rows", {
+        description: "Please fill in or remove empty conversion rows",
+        duration: 4000,
+      });
+      return;
+    }
+    // Check for duplicate units in presets
+    const hasDuplicates = presets.some(preset => hasDuplicateUnits(preset));
+
+    if (hasDuplicates) {
+      toast("❌ Duplicate units", {
+        description: "Each unit in a preset must be unique",
         duration: 4000,
       });
       return;

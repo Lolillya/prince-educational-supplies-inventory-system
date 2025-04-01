@@ -748,19 +748,43 @@ const NewItem = () => {
       });
       return;
     }
-    const invalidPresets = presets.filter(preset =>
+    // Check for invalid presets (main price zero/negative)
+    const invalidMainPrices = presets.filter(preset =>
         preset.mainPrice === "0.00" ||
         preset.mainPrice === "0" ||
         parseFloat(preset.mainPrice) <= 0
     );
 
-    if (invalidPresets.length > 0) {
+// Check for invalid conversions (qty or price zero/negative)
+    const invalidConversions = presets.some(preset =>
+        preset.conversions.some(conv =>
+            conv.qty === "0.00" ||
+            conv.qty === "0" ||
+            parseFloat(conv.qty) <= 0 ||
+            (conv.price && (
+                conv.price === "0.00" ||
+                conv.price === "0" ||
+                parseFloat(conv.price) <= 0
+            ))
+        )
+    );
+
+    if (invalidMainPrices.length > 0) {
       toast("❌ Invalid price", {
         description: "Main Price cannot be zero or negative",
         duration: 4000,
       });
       return;
     }
+
+    if (invalidConversions) {
+      toast("❌ Invalid conversion values", {
+        description: "Quantity and Price in conversions cannot be zero or negative",
+        duration: 4000,
+      });
+      return;
+    }
+
 
     // Check for variants with missing stock levels
     const variantsWithName = variants.filter(v => v.variant.trim() !== '');

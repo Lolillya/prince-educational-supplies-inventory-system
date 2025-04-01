@@ -27,7 +27,6 @@ import { Badge } from "~/components/ui/badge";
 
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   status,
-  payment_term,
   handleVoidItem,
   invoice_number,
   invoice_id,
@@ -127,7 +126,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
             />
 
             <div className="flex items-center gap-3">
-              <Label>Term: {payment_term.description}</Label>
+              <Label>Term: {status}</Label>
               <p>{}</p>
             </div>
           </div>
@@ -163,7 +162,6 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
           )}
           <div className="flex items-center gap-2">
             <ViewFullInvoice
-              payment_term={payment_term}
               invoice_number={invoice_number}
               invoice_id={invoice_id}
               date={date}

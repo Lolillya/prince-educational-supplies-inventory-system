@@ -75,14 +75,13 @@ type SupplierProps = {
   Personal_Details: {
     company: string | null;
     personal_details_id: string;
-    term: string;
+    term: number | null;
   };
 };
 
 const NewInvoice = () => {
   const router = useRouter();
   const session = useSession();
-
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [supplierSearchTerm, setSupplierSearchTerm] = useState<string>("");
   const [selectedSupplier, setSelectedSupplier] = useState<SupplierProps>();
@@ -232,7 +231,6 @@ const NewInvoice = () => {
         total_amount: grandTotal,
         discount: 0,
         status: "PENDING",
-        payment_term_id: term,
         isAutoRestock: isAutoRestock,
         isBatchAutoRestock,
       },
@@ -291,7 +289,8 @@ const NewInvoice = () => {
   const handleSelectedSupplier = (supplier: SupplierProps) => {
     setSupplierSearchTerm(supplier.Personal_Details.company ?? "");
     setSelectedSupplier(supplier);
-    setTerm(supplier.Personal_Details.term);
+    setTerm(supplier.Personal_Details.term?.toString() ?? "");
+    // console.log(supplier.Personal_Details.term);
   };
 
   const handleSelectItem = (item: InventoryItem) => {
@@ -589,7 +588,7 @@ const NewInvoice = () => {
                       <Input
                         placeholder="30"
                         className="w-[10%] rounded-l-none"
-                        value={selectedSupplier?.Personal_Details.term ?? 0}
+                        value={term}
                         onChange={(e) => setTerm(e.target.value)}
                         onInput={(e) => {
                           e.currentTarget.value = e.currentTarget.value.replace(

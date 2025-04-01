@@ -14,8 +14,6 @@ import InvoiceRecord from "./_components/invoice-record";
 import { type LineItemsProp } from "~/lib/utils/exportInvoice";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "~/hooks/use-toast";
-import { ZodNull } from "zod";
-
 export type InvoiceProps = {
   voidPending: boolean;
   status: string;
@@ -26,9 +24,6 @@ export type InvoiceProps = {
   invoiceClerk: string;
   grandTotal: number;
   notes: string;
-  payment_term: {
-    description: string | null;
-  };
   line_items: LineItemsProp["line_items"];
   voidInvoice: (invoice_id: number) => void;
 };
@@ -137,7 +132,6 @@ const InvoicePage = () => {
               )
               .map((invoice, index) => (
                 <InvoiceRecord
-                  payment_term={invoice.payment_term}
                   voidPending={voidPending}
                   status={invoice.status}
                   voidInvoice={handleVoidInvoice}

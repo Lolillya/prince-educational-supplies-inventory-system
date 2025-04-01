@@ -2,8 +2,8 @@
 
 import { Plus } from "lucide-react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/navigation";
-import { useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
+import { useState, useEffect } from "react";
 import { Button } from "~/components/ui/button";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Toaster } from "~/components/ui/sonner";
@@ -50,6 +50,7 @@ interface Location {
 
 const SuppliersPage = () => {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRecord, setSelectedRecord] = useState<Supplier | null>(null);
 
@@ -60,6 +61,22 @@ const SuppliersPage = () => {
   const { data: session } = useSession();
   const userRole = session?.user?.role;
   const personalDetailsId = session?.user?.id; // Get the personal_details_id from the session
+
+  // Get the selected supplier ID from URL if available
+  const selectedSupplierId = searchParams.get("selected");
+
+  // When supplier data is loaded, find and select the supplier with the matching ID
+  useEffect(() => {
+    if (selectedSupplierId && supplierData && !selectedRecord) {
+      const supplierToSelect = supplierData.find(
+        (supplier) => supplier.id === selectedSupplierId,
+      );
+
+      if (supplierToSelect) {
+        setSelectedRecord(supplierToSelect);
+      }
+    }
+  }, [selectedSupplierId, supplierData, selectedRecord]);
 
   const { data: restockActivity } = api.suppliers.getSupplierRestocks.useQuery(
     { supplierId: selectedRecord?.id ?? "" }, // Use selectedRecord.id (User_Role's id)

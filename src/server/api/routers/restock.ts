@@ -329,6 +329,8 @@ export const restockRouter = createTRPCRouter({
             ? batch.batchVariants[0]?.SupplierUnit[0]?.supplier.Personal_Details
                 .company
             : "Unknown", // Get supplier's name from personal details
+          supplierId:
+            batch.batchVariants[0]?.SupplierUnit[0]?.supplier?.id || null, // Include supplier ID
           restockClerk: batch.Personal_Details
             ? `${batch.Personal_Details.first_name} ${batch.Personal_Details.last_name}` // Get clerk's full name
             : "Unknown", // Fallback if clerk details are missing

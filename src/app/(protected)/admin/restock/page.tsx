@@ -36,6 +36,7 @@ export interface RestockProps {
   }[];
   onViewAll?: (batch: RestockProps) => void;
   notes: string;
+  supplierId?: string;
 }
 
 const RestockPage = () => {
@@ -85,6 +86,7 @@ const RestockPage = () => {
       restockId: item.restockId,
       date: item.date,
       supplier: item.supplier,
+      supplierId: item.supplierId,
       restockClerk: item.restockClerk,
       addedStock: item.addedStock,
       restockItems: item.restockItems,
@@ -139,6 +141,7 @@ const RestockPage = () => {
               restockId={restock.restockId}
               date={restock.date}
               supplier={restock.supplier}
+              supplierId={restock.supplierId}
               restockClerk={restock.restockClerk}
               addedStock={restock.addedStock}
               restockItems={restock.restockItems}

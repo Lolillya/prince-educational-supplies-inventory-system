@@ -8,6 +8,8 @@ import {
   DropdownMenuTrigger,
 } from "~/components/ui/dropdown-menu";
 import { Separator } from "~/components/ui/separator";
+import { useRouter } from "next/navigation";
+import { api } from "~/trpc/react";
 import MoreOptions from "../../_components/more-options";
 import { type RestockProps } from "../page";
 import RestockItem from "./restock-item";
@@ -21,8 +23,28 @@ const RestockRecord: React.FC<RestockProps> = ({
   restockClerk,
   addedStock,
   restockItems,
-  notes
+  notes,
+  supplierId,
 }) => {
+  const router = useRouter();
+  const { data: supplierData } = api.suppliers.getByName.useQuery(
+    { supplierName: supplier ?? "" },
+    { enabled: !!supplier },
+  );
+
+  const handleViewSupplier = () => {
+    if (supplierId) {
+      // If we have the supplierId directly, use it
+      router.push(`/admin/suppliers?selected=${supplierId}`);
+    } else if (supplierData?.id) {
+      // Otherwise use the supplier data we fetched
+      router.push(`/admin/suppliers?selected=${supplierData.id}`);
+    } else {
+      // If we can't find a supplier, just go to the suppliers page
+      router.push("/admin/suppliers");
+    }
+  };
+
   return (
     <div className="flex flex-col gap-8 rounded-lg bg-slate-100 p-6 text-slate-700">
       <div className="flex items-center justify-between px-6">
@@ -46,15 +68,21 @@ const RestockRecord: React.FC<RestockProps> = ({
                 {/*  View Restock*/}
                 {/*</DropdownMenuItem>*/}
                 <DropdownFullRestock
-                    restockId={restockId}
-                    date={date}
-                    supplier={supplier}
-                    restockClerk={restockClerk}
-                    addedStock={addedStock}
-                    restockItems={restockItems}
-                    notes={notes}
+                  restockId={restockId}
+                  date={date}
+                  supplier={supplier}
+                  restockClerk={restockClerk}
+                  addedStock={addedStock}
+                  restockItems={restockItems}
+                  notes={notes}
                 />
-                <DropdownMenuItem className="hover:!bg-slate-200 focus:!bg-slate-200">
+                <DropdownMenuItem
+                  className="hover:!bg-slate-200 focus:!bg-slate-200"
+                  onSelect={(e) => {
+                    e.preventDefault();
+                    handleViewSupplier();
+                  }}
+                >
                   View Supplier
                 </DropdownMenuItem>
                 <DropdownMenuSeparator />
@@ -71,11 +99,13 @@ const RestockRecord: React.FC<RestockProps> = ({
             <div className="flex items-center gap-3 text-slate-400">
               <Calendar className="h-4 w-4" />
               <p className="text-sm">
-                {new Date(date).toLocaleDateString("en-US", {
-                  month: "long",
-                  day: "numeric",
-                  year: "numeric",
-                })}
+                {date
+                  ? new Date(date).toLocaleDateString("en-US", {
+                      month: "long",
+                      day: "numeric",
+                      year: "numeric",
+                    })
+                  : "Unknown date"}
               </p>
             </div>
             <Separator
@@ -96,8 +126,8 @@ const RestockRecord: React.FC<RestockProps> = ({
 
         <div className="flex items-center justify-between pl-8">
           <div className="flex flex-col gap-2">
-            <p className="text-xl text-right">{addedStock.toLocaleString()}</p>
-            <p className="text-sm text-right text-slate-400">Added Stock</p>
+            <p className="text-right text-xl">{addedStock.toLocaleString()}</p>
+            <p className="text-right text-sm text-slate-400">Added Stock</p>
           </div>
           {/* <div>
           </div> */}
@@ -114,11 +144,11 @@ const RestockRecord: React.FC<RestockProps> = ({
               brand={item.brand}
               quantity={item.quantity}
               mainUnit={item.mainUnit}
-              unitConversion={item.unitConversion.map(conv => ({
+              unitConversion={item.unitConversion.map((conv) => ({
                 from: conv.from,
                 count: conv.count,
                 to: conv.to,
-                price: conv.price ?? 0 // Use nullish coalescing for price
+                price: conv.price ?? 0, // Use nullish coalescing for price
               }))}
             />
           );
@@ -141,12 +171,13 @@ const RestockRecord: React.FC<RestockProps> = ({
               restockClerk={restockClerk}
               addedStock={addedStock}
               restockItems={restockItems}
-             notes={notes}/>
+              notes={notes}
+              supplierId={supplierId}
+            />
             {/* <Separator
               orientation="vertical"
               className="h-6 w-[2px] bg-slate-200"
             /> */}
-
           </div>
         </div>
       </div>

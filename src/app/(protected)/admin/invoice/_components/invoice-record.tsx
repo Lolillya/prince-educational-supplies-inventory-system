@@ -30,7 +30,7 @@ import { api } from "~/trpc/react";
 const InvoiceRecord: React.FC<InvoiceProps> = ({
   term,
   status,
-  handleVoidItem,
+  handleVoidInvoice,
   invoice_number,
   invoice_id,
   date,
@@ -39,6 +39,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
   grandTotal,
   line_items,
   notes,
+  voidPending,
 }) => {
   const router = useRouter();
   const { data: customerData } = api.customers.getByName.useQuery(
@@ -102,7 +103,10 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                   grandTotal={grandTotal}
                   line_items={line_items}
                   notes={notes}
-                  handleVoidItem={handleVoidItem}
+                  handleVoidInvoice={handleVoidInvoice}
+                  term={term}
+                  voidPending={voidPending}
+                  status={status}
                 />
                 <DropdownMenuItem
                   className="hover:!bg-slate-200 focus:!bg-slate-200"
@@ -113,7 +117,7 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
                 {status !== "VOIDED" && (
                   <DropdownMenuItem
                     className="text-red hover:bg-red/30 hover:!text-red focus:!bg-rose-200 focus:!text-red"
-                    onClick={handleVoidItem}
+                    onClick={() => handleVoidInvoice(invoice_id)}
                   >
                     Void
                   </DropdownMenuItem>
@@ -190,7 +194,10 @@ const InvoiceRecord: React.FC<InvoiceProps> = ({
               grandTotal={grandTotal}
               line_items={line_items}
               notes={notes}
-              handleVoidItem={handleVoidItem}
+              handleVoidInvoice={handleVoidInvoice}
+              term={term}
+              voidPending={voidPending}
+              status={status}
             />
           </div>
         </div>

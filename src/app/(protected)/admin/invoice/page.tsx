@@ -15,7 +15,7 @@ import { type LineItemsProp } from "~/lib/utils/exportInvoice";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "~/hooks/use-toast";
 export type InvoiceProps = {
-  term: number;
+  term: string;
   voidPending: boolean;
   status: string;
   invoice_number: number;
@@ -26,7 +26,7 @@ export type InvoiceProps = {
   grandTotal: number;
   notes: string;
   line_items: LineItemsProp["line_items"];
-  voidInvoice: (invoice_id: number) => void;
+  handleVoidInvoice: (invoice_id: number) => void;
 };
 
 const InvoicePage = () => {
@@ -135,7 +135,7 @@ const InvoicePage = () => {
                 <InvoiceRecord
                   voidPending={voidPending}
                   status={invoice.status}
-                  voidInvoice={handleVoidInvoice}
+                  handleVoidInvoice={handleVoidInvoice}
                   key={index}
                   invoice_number={invoice.invoice_number}
                   invoice_id={invoice.invoice_id}

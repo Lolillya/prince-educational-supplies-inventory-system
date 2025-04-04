@@ -31,6 +31,7 @@ const DropdownFullInvoice: React.FC<InvoiceProps> = ({
   grandTotal,
   line_items,
   notes,
+  handleVoidInvoice,
 }) => {
   const [isEditing, setIsEditing] = useState(false);
   const [isDialogOpen, setIsDialogOpen] = useState(false);

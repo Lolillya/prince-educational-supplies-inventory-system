@@ -221,10 +221,12 @@ const ConversionCard = ({
     onUpdate({ ...preset, conversions: newConversions });
   };
   const handleAddConversion = () => {
-    onUpdate({
-      ...preset,
-      conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
-    });
+    if (preset.conversions.length < 5) {
+      onUpdate({
+        ...preset,
+        conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
+      });
+    }
   };
 
   const handleRemoveConversion = (index: number) => {
@@ -378,6 +380,7 @@ const ConversionCard = ({
                           ? conv.price.toFixed(2)
                           : conv.price || '0.00'
                     }}
+                    position={index + 1} // Add this line to show position number
                     onUpdate={(newData) => handleConversionChange(index, newData)}
                     onRemove={() => handleRemoveConversion(index)}
                     onPriceBlur={(price) => handleConversionPriceBlur(index, price)}
@@ -389,11 +392,13 @@ const ConversionCard = ({
 
       <div className="mt-4 flex flex-col gap-2">
         <Button
-          className="w-full rounded-lg border-[3px] border-dashed border-slate-300 bg-slate-100 p-2 text-slate-400 hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-400"
-          onClick={handleAddConversion}
-          disabled={preset.conversions.length >= 5}
+            className="w-full rounded-lg border-[3px] border-dashed border-slate-300 bg-slate-100 p-2 text-slate-400 hover:border-emerald-300 hover:bg-emerald-100 hover:text-emerald-400"
+            onClick={handleAddConversion}
+            disabled={preset.conversions.length >= 5}
         >
-          + Add a conversion
+          {preset.conversions.length >= 5
+              ? "Maximum 5 conversions reached"
+              : "+ Add a conversion"}
         </Button>
         {onRemove && (
           <Button

@@ -20,7 +20,7 @@ interface VariantProps {
 const Variant = ({
   onRemove,
   isOnlyVariant,
-  value,
+  value = { variant: "", lowStock: 0, veryLowStock: 0 },
   onChange,
 }: VariantProps) => {
   const hasStockError = value?.lowStock !== undefined && 
@@ -34,10 +34,12 @@ const Variant = ({
       <Input
         placeholder="Variant Name"
         className="bg-white text-slate-700 placeholder-slate-300 shadow-none"
-        value={value?.variant}
+        value={value.variant}
         onChange={(e) => {
-          const filteredValue = e.target.value.replace(/[^a-zA-Z0-9 ]/g, "");
-          onChange?.({ ...value, variant: filteredValue });
+          onChange?.({ 
+            ...value,
+            variant: e.target.value,
+          });
         }}
       />
       <div className="flex flex-col gap-4">
@@ -51,12 +53,15 @@ const Variant = ({
                 placeholder="Low Stock Level"
                 className="w-full rounded-l-none bg-white text-slate-700 placeholder-slate-300 shadow-none"
                 value={
-                  value?.lowStock === 0 || value?.lowStock === undefined
+                  value.lowStock === 0
                     ? ""
-                    : value?.lowStock
+                    : value.lowStock
                 }
                 onChange={(e) =>
-                  onChange?.({ ...value, lowStock: Number(e.target.value) || 0 })
+                  onChange?.({ 
+                    ...value, 
+                    lowStock: Number(e.target.value) || 0 
+                  })
                 }
               />
             </div>
@@ -70,9 +75,9 @@ const Variant = ({
                 placeholder="Very Low Stock Level"
                 className="w-full rounded-l-none bg-white text-slate-700 placeholder-slate-300 shadow-none"
                 value={
-                  value?.veryLowStock === 0 || value?.veryLowStock === undefined
+                  value.veryLowStock === 0
                     ? ""
-                    : value?.veryLowStock
+                    : value.veryLowStock
                 }
                 onChange={(e) =>
                   onChange?.({
@@ -86,7 +91,7 @@ const Variant = ({
         </div>
         {hasStockError && (
           <p className="text-sm text-rose-500">
-            {value?.lowStock === value?.veryLowStock
+            {value.lowStock === value.veryLowStock
               ? "Low stock and Very Low Stock cannot have same value"
               : "Very low stock level must be less than low stock level"}
           </p>

@@ -4,6 +4,31 @@ import { z } from "zod";
 import { createTRPCRouter, publicProcedure } from "~/server/api/trpc";
 import { db } from "~/server/db";
 
+// TypeScript types for preset conversions with related prices
+type ProcessedPresetConversion = {
+  preset_conversion_id: number;
+  preset_id: number;
+  conversion_rate: number;
+  from_unit_id: number;
+  to_unit_id: number;
+  created_at: Date;
+  updated_at: Date;
+  from_unit: { name: string; created_at: Date; updated_at: Date; unit_id: number; };
+  to_unit: { name: string; created_at: Date; updated_at: Date; unit_id: number; };
+  related_price?: number | null;
+}
+
+type ProcessedPreset = {
+  preset_id: number;
+  item_id: number;
+  main_unit_id: number;
+  main_price: number;
+  created_at: Date;
+  updated_at: Date;
+  main_unit: { name: string; created_at: Date; updated_at: Date; unit_id: number; };
+  conversions: ProcessedPresetConversion[];
+}
+
 const normalizeInput = (value: any) =>
   typeof value === "string" && value.trim() === "" ? null : value;
 
@@ -405,16 +430,41 @@ export const inventoryRouter = createTRPCRouter({
         update: {},
       });
 
-      // Create main preset
-      const preset = await ctx.db.preset.create({
-        data: {
+      // Check if a preset with this main unit already exists for this item
+      const existingMainPreset = await ctx.db.preset.findFirst({
+        where: {
           item_id: itemId,
           main_unit_id: mainUnitRecord.unit_id,
-          main_price: mainPrice,
         },
       });
 
-      // Create conversions
+      // Create or update main preset
+      let preset;
+      if (existingMainPreset) {
+        // Update existing preset instead of creating a new one
+        preset = await ctx.db.preset.update({
+          where: { preset_id: existingMainPreset.preset_id },
+          data: {
+            main_price: mainPrice,
+          },
+        });
+        
+        // Delete existing conversions to avoid duplicates
+        await ctx.db.presetConversion.deleteMany({
+          where: { preset_id: existingMainPreset.preset_id },
+        });
+      } else {
+        // Create new preset if one doesn't exist
+        preset = await ctx.db.preset.create({
+          data: {
+            item_id: itemId,
+            main_unit_id: mainUnitRecord.unit_id,
+            main_price: mainPrice,
+          },
+        });
+      }
+
+      // Create conversions with prices stored in special presets
       for (const conversion of conversions) {
         // Get/create conversion unit
         const toUnit = await ctx.db.unit.upsert({
@@ -423,8 +473,8 @@ export const inventoryRouter = createTRPCRouter({
           update: {},
         });
 
-        // Create preset conversion
-        await ctx.db.presetConversion.create({
+        // Create the conversion
+        const createdConversion = await ctx.db.presetConversion.create({
           data: {
             preset_id: preset.preset_id,
             from_unit_id: mainUnitRecord.unit_id,
@@ -433,11 +483,21 @@ export const inventoryRouter = createTRPCRouter({
           },
         });
 
-        // Create linked preset for conversion unit (if needed)
+        // Store the price in a special preset with a unique name pattern
+        const pricePresetName = `${mainUnit}_to_${conversion.unit}_${preset.preset_id}`;
+        
+        // Create unit for price
+        const priceUnit = await ctx.db.unit.upsert({
+          where: { name: pricePresetName },
+          create: { name: pricePresetName },
+          update: {},
+        });
+
+        // Create price preset
         await ctx.db.preset.create({
           data: {
             item_id: itemId,
-            main_unit_id: toUnit.unit_id,
+            main_unit_id: priceUnit.unit_id,
             main_price: conversion.price,
           },
         });
@@ -447,6 +507,148 @@ export const inventoryRouter = createTRPCRouter({
         where: { preset_id: preset.preset_id },
         include: { conversions: true },
       });
+    }),
+
+  updatePreset: publicProcedure
+    .input(
+      z.object({
+        presetId: z.number(),
+        mainUnit: z.string(),
+        mainPrice: z.number(),
+        conversions: z.array(
+          z.object({
+            qty: z.number(),
+            unit: z.string(),
+            price: z.number(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { presetId, mainUnit, mainPrice, conversions } = input;
+      
+      console.log("Updating preset with data:", JSON.stringify({
+        presetId, mainUnit, mainPrice, conversions
+      }, null, 2));
+
+      // Get the existing preset
+      const existingPreset = await ctx.db.preset.findUnique({
+        where: { preset_id: presetId },
+        include: { 
+          conversions: {
+            include: {
+              to_unit: true,
+              from_unit: true
+            }
+          }
+        },
+      });
+
+      if (!existingPreset) {
+        throw new Error(`Preset with ID ${presetId} not found`);
+      }
+
+      // Update or create main unit
+      const mainUnitRecord = await ctx.db.unit.upsert({
+        where: { name: mainUnit },
+        create: { name: mainUnit },
+        update: {},
+      });
+
+      // Update main preset
+      const updatedPreset = await ctx.db.preset.update({
+        where: { preset_id: presetId },
+        data: {
+          main_unit_id: mainUnitRecord.unit_id,
+          main_price: mainPrice,
+        },
+      });
+
+      // Get the item_id from the preset
+      const itemId = existingPreset.item_id;
+
+      // Delete existing conversions for this preset to avoid duplicates
+      await ctx.db.presetConversion.deleteMany({
+        where: { preset_id: presetId },
+      });
+
+      // Create conversions with new technique to store prices
+      const conversionPromises = conversions.map(async (conversion) => {
+        // Get/create conversion unit
+        const toUnit = await ctx.db.unit.upsert({
+          where: { name: conversion.unit },
+          create: { name: conversion.unit },
+          update: {},
+        });
+
+        // Create conversion with a specific unique name pattern
+        const conversionRate = await ctx.db.presetConversion.create({
+          data: {
+            preset_id: updatedPreset.preset_id,
+            from_unit_id: mainUnitRecord.unit_id,
+            to_unit_id: toUnit.unit_id,
+            conversion_rate: conversion.qty,
+          },
+        });
+
+        // Store the conversion price in a separate custom preset just for this conversion
+        // We use a naming convention to link this price to the specific conversion
+        // Format: preset-{presetId}-conversion-{conversionId}
+        const pricePresetName = `${mainUnit}_to_${conversion.unit}_${presetId}`;
+        
+        // Generate a hash for this specific conversion to ensure uniqueness
+        const conversionHash = `${presetId}_${toUnit.unit_id}_${new Date().getTime()}`;
+        
+        // Create or update a custom unit just for storing this price
+        const priceUnit = await ctx.db.unit.upsert({
+          where: { name: pricePresetName },
+          create: { name: pricePresetName },
+          update: {},
+        });
+
+        // Store the price in a preset linked to this specific conversion
+        const customPreset = await ctx.db.preset.upsert({
+          where: {
+            // Find by item and this special unit
+            preset_id: await ctx.db.preset.findFirst({
+              where: {
+                item_id: itemId,
+                main_unit_id: priceUnit.unit_id,
+              },
+            }).then(p => p?.preset_id ?? -1)
+          },
+          create: {
+            item_id: itemId,
+            main_unit_id: priceUnit.unit_id,
+            main_price: conversion.price,
+          },
+          update: {
+            main_price: conversion.price,
+          },
+        });
+
+        return {
+          conversion: conversionRate,
+          priceUnit: priceUnit,
+          price: conversion.price,
+        };
+      });
+
+      await Promise.all(conversionPromises);
+
+      const result = await ctx.db.preset.findUnique({
+        where: { preset_id: updatedPreset.preset_id },
+        include: { 
+          conversions: {
+            include: {
+              to_unit: true,
+              from_unit: true
+            }
+          }
+        },
+      });
+
+      return result;
     }),
 
   editItem: publicProcedure
@@ -723,35 +925,73 @@ export const inventoryRouter = createTRPCRouter({
                 from_unit: true,
                 to_unit: true,
               },
+              // Add explicit ordering by the preset_conversion_id to maintain consistent order
+              orderBy: {
+                preset_conversion_id: 'asc'
+              }
             },
           },
         });
 
-        // Create a lookup map for unit ID to preset
-        const unitToPresetMap = new Map();
-        presets.forEach((preset) => {
-          unitToPresetMap.set(preset.main_unit_id, preset);
-        });
+        // Filter out special price-storing presets (they have distinctive unit names)
+        const mainPresets = presets.filter(preset => 
+          !preset.main_unit.name.includes('_to_')
+        );
 
-        // Add prices for conversion units by looking up the corresponding preset
-        const presetsWithConversionPrices = presets.map((preset) => {
-          const conversionsWithPrices = preset.conversions.map((conv) => {
-            const targetUnitPreset = unitToPresetMap.get(conv.to_unit_id);
+        // Process each preset to recover prices from special presets
+        const presetsWithPrices: ProcessedPreset[] = await Promise.all(
+          mainPresets.map(async (preset): Promise<ProcessedPreset> => {
+            if (preset.conversions.length === 0) {
+              return {
+                ...preset,
+                conversions: []
+              } as ProcessedPreset;
+            }
+            
+            // Find prices for each conversion
+            const conversionsWithPrices: ProcessedPresetConversion[] = await Promise.all(
+              preset.conversions.map(async (conv): Promise<ProcessedPresetConversion> => {
+                // Look for a price preset with the matching pattern
+                const pricePresetName = `${preset.main_unit.name}_to_${conv.to_unit.name}_${preset.preset_id}`;
+                
+                // Find the unit with this name
+                const priceUnit = await db.unit.findFirst({
+                  where: { name: pricePresetName }
+                });
+                
+                // If we found the unit, look for the preset with this unit as its main unit
+                let price = null;
+                if (priceUnit) {
+                  const pricePreset = await db.preset.findFirst({
+                    where: {
+                      item_id: itemId,
+                      main_unit_id: priceUnit.unit_id
+                    }
+                  });
+                  
+                  if (pricePreset) {
+                    price = pricePreset.main_price;
+                  }
+                }
+                
+                // Return the conversion with the related price added
+                return {
+                  ...conv,
+                  related_price: price
+                } as ProcessedPresetConversion;
+              })
+            );
+            
+            // Return the preset with enhanced conversions, maintaining original order
             return {
-              ...conv,
-              related_price: targetUnitPreset
-                ? targetUnitPreset.main_price
-                : null,
-            };
-          });
+              ...preset,
+              conversions: conversionsWithPrices
+            } as ProcessedPreset;
+          })
+        );
 
-          return {
-            ...preset,
-            conversions: conversionsWithPrices,
-          };
-        });
-
-        return presetsWithConversionPrices;
+        // Return only presets with conversions (main presets)
+        return presetsWithPrices.filter(preset => preset.conversions.length > 0);
       } catch (error) {
         console.error(`Error fetching presets for item ID ${itemId}:`, error);
         throw new Error("Failed to fetch presets");

@@ -1,5 +1,5 @@
 import { CornerDownRight, X } from "lucide-react";
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button } from "~/components/ui/button";
 import { Input } from "~/components/ui/input";
 import { Label } from "~/components/ui/label";
@@ -19,25 +19,41 @@ interface ConversionProps {
   onRemove: () => void;
   onUpdate: (data: ConversionProps["data"]) => void;
   onPriceBlur?: (price: string) => void;
+  usedUnits?: string[]; // Array of units that are already in use
 }
 
-const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: ConversionProps) => {
+const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position, usedUnits = [] }: ConversionProps) => {
   const [inputValue, setInputValue] = useState(data.unit);
   const [highlightedIndex, setHighlightedIndex] = useState<number>(-1);
   const [isDropdownVisible, setIsDropdownVisible] = useState(false);
+  const [showError, setShowError] = useState(false);
+  const [showQtyError, setShowQtyError] = useState(false);
+  const [showPriceError, setShowPriceError] = useState(false);
+  const [rawPriceInput, setRawPriceInput] = useState("");
+  
+  // Use a ref instead of state to track dropdown selection - refs update immediately
+  const wasSelectedFromDropdown = useRef(false);
 
   const { data: units } = api.restock.getUnits.useQuery();
   const unitOptions = units?.map((unit) => unit.name) ?? [];
+  
+  // Filter out units that are already in use, except for the current unit
+  const availableUnitOptions = useMemo(() => {
+    return unitOptions.filter(unit => 
+      !usedUnits.includes(unit) || unit === data.unit
+    );
+  }, [unitOptions, usedUnits, data.unit]);
 
   const inputRef = useRef<HTMLInputElement>(null);
   const dropdownRef = useRef<HTMLDivElement>(null);
   const conversionRef = useRef<HTMLDivElement>(null);  // New ref for scrolling
 
+  // Filter units for dropdown - show all available units or filtered by input
   const filteredUnits = inputValue
-      ? unitOptions.filter((name) =>
+      ? availableUnitOptions.filter((name) =>
           name.toLowerCase().includes(inputValue.toLowerCase())
       )
-      : [];
+      : availableUnitOptions;
 
   useEffect(() => {
     if (data.unit !== inputValue) {
@@ -45,7 +61,18 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     }
   }, [data.unit, inputValue]);
 
+  // If unit is in the valid options, consider it selected from dropdown
+  useEffect(() => {
+    if (data.unit && unitOptions.includes(data.unit)) {
+      wasSelectedFromDropdown.current = true;
+    }
+  }, [data.unit, unitOptions]);
+
   const handleSelectUnit = (unitName: string) => {
+    // Mark as selected from dropdown using the ref (immediate update)
+    wasSelectedFromDropdown.current = true;
+    
+    // Update the input value and data
     setInputValue(unitName);
     setHighlightedIndex(-1);
     setIsDropdownVisible(false);
@@ -53,12 +80,14 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
       ...data,
       unit: unitName,
     });
+    
     if (inputRef.current) {
       inputRef.current.blur();
     }
   };
+
   const handleQtyChange = (value: string) => {
-    const numericValue = value.replace(/[^\d]/g, "") || "0";
+    const numericValue = value.replace(/[^\d]/g, "") || "";
     onUpdate({
       ...data,
       qty: numericValue,
@@ -81,9 +110,20 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
           !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownVisible(false);
-        if (!unitOptions.includes(inputValue)) {
+        
+        // Only clear if not in valid options AND not selected from dropdown
+        const isValidUnit = unitOptions.includes(data.unit);
+        
+        if (!isValidUnit && data.unit && !wasSelectedFromDropdown.current) {
           setInputValue("");
+          onUpdate({
+            ...data,
+            unit: "",
+          });
         }
+        
+        // Show error if quantity exists but no unit
+        setShowError(!data.unit && data.qty !== "");
       }
     };
 
@@ -91,7 +131,7 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     return () => {
       document.removeEventListener("mousedown", handleClickOutside);
     };
-  }, [inputValue, unitOptions]);
+  }, [data, onUpdate, unitOptions]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "ArrowDown") {
@@ -114,6 +154,20 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     }
   };
 
+  // Utility function to format prices consistently
+  const formatPrice = (price: string | number | undefined): string => {
+    if (!price && price !== 0) return "";
+    
+    const priceStr = typeof price === 'number' ? price.toString() : (price || "");
+    
+    if (priceStr.includes('.')) {
+      const [whole, decimal = ''] = priceStr.split('.');
+      return `${whole}.${decimal.padEnd(2, '0').slice(0, 2)}`;
+    }
+    
+    return priceStr ? `${priceStr}.00` : "";
+  };
+
   const handlePriceChange = (value: string) => {
     // Remove any non-digit or non-dot characters
     let numericValue = value.replace(/[^\d.]/g, "");
@@ -126,8 +180,11 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
 
     // Limit to 2 decimal places
     if (parts.length === 2) {
-      numericValue = parts[0] + "." + parts[1].slice(0, 2);
+      numericValue = parts[0] + "." + (parts[1] || "").slice(0, 2);
     }
+
+    // Keep track of the raw input for display during typing
+    setRawPriceInput(numericValue);
 
     onUpdate({
       ...data,
@@ -135,19 +192,33 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
     });
   };
 
+  // Add focus handler
+  const handlePriceFocus = () => {
+    // When focusing, use the current value for raw input
+    setRawPriceInput(data.price);
+  };
+
   const handlePriceBlur = (e: React.FocusEvent<HTMLInputElement>) => {
     const value = e.target.value;
-    let formattedValue = "0.00";
-
-    if (value) {
-      if (value.includes(".")) {
-        const [whole, decimal] = value.split(".");
-        formattedValue = `${whole}.${decimal.padEnd(2, "0").slice(0, 2)}`;
-      } else {
-        formattedValue = `${value}.00`;
+    
+    // If value is empty, just keep it empty
+    if (!value || value.trim() === '') {
+      setRawPriceInput("");
+      onUpdate({
+        ...data,
+        price: '',
+      });
+      
+      if (onPriceBlur) {
+        onPriceBlur('');
       }
+      return;
     }
-
+    
+    // Format using utility function
+    const formattedValue = formatPrice(value);
+    setRawPriceInput(""); // Clear raw input since we're not editing anymore
+    
     onUpdate({
       ...data,
       price: formattedValue,
@@ -160,10 +231,29 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
 
   // Auto scroll to the last added conversion when it's updated
   useEffect(() => {
-    if (conversionRef.current) {
+    // Only scroll into view when newly added and not on every data change
+    // This prevents the annoying scrolling behavior when clicking anywhere
+    if (conversionRef.current && position === 1 && data.qty === "" && data.unit === "" && data.price === "") {
       conversionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
     }
-  }, [data]); // This effect runs when the data changes (when a new conversion is added)
+  }, []); // Empty dependency array means this only runs once when component mounts
+
+  // Check for incomplete fields when any field is touched 
+  const checkIncompleteFields = useCallback(() => {
+    // Only show qty error if unit or price has value but qty is empty
+    setShowQtyError(!!((data.qty === '') && (data.unit !== '' || data.price !== '')));
+    
+    // Only show unit error if qty or price has value but unit is empty
+    setShowError(!!((data.unit === '') && (data.qty !== '' || data.price !== '')));
+    
+    // Only show price error if qty or unit has value but price is empty
+    setShowPriceError(!!((data.price === '') && (data.qty !== '' || data.unit !== '')));
+  }, [data.qty, data.unit, data.price]);
+
+  // Add effect to check fields when data changes
+  useEffect(() => {
+    checkIncompleteFields();
+  }, [data, checkIncompleteFields]);
 
   return (
       <div className="mt-4" ref={conversionRef}>
@@ -194,13 +284,20 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                               value={data.qty}
                               onChange={(e) => {
                                 const value =
-                                    e.target.value.replace(/[^\d]/g, "") || "0";
+                                    e.target.value.replace(/[^\d]/g, "") || "";
                                 onUpdate({
                                   ...data,
                                   qty: value,
                                 });
                               }}
+                              onBlur={() => checkIncompleteFields()}
                           />
+                          
+                          {showQtyError && (
+                            <p className="mt-1 text-sm text-rose-400">
+                              Quantity required.
+                            </p>
+                          )}
                         </div>
                         <Separator orientation="vertical" className="h-auto w-1 bg-slate-200" />
                         <div className="relative w-1/2">
@@ -215,11 +312,16 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                                   setInputValue(value);
                                   setHighlightedIndex(-1);
                                   setIsDropdownVisible(true);
+                                  // Reset selection flag when manually typing
+                                  wasSelectedFromDropdown.current = false;
                                   onUpdate({
                                     ...data,
                                     unit: value,
                                   });
                                 }
+                              }}
+                              onFocus={() => {
+                                setIsDropdownVisible(true);
                               }}
                               onBlur={(e) => {
                                 if (
@@ -227,46 +329,69 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                                 ) {
                                   setTimeout(() => {
                                     setIsDropdownVisible(false);
-                                    if (!unitOptions.includes(inputValue)) {
-                                      setInputValue(data.unit);
+                                    
+                                    // Only clear if it wasn't selected and isn't valid
+                                    const isValidUnit = unitOptions.includes(data.unit);
+                                    
+                                    if (!isValidUnit && data.unit && !wasSelectedFromDropdown.current) {
+                                      setInputValue("");
+                                      onUpdate({
+                                        ...data,
+                                        unit: "",
+                                      });
                                     }
+                                    
+                                    // Show error if quantity exists but no unit
+                                    setShowError(!data.unit && data.qty !== "");
                                   }, 200);
                                 }
                               }}
                               onKeyDown={handleKeyDown}
                           />
 
-                          {isDropdownVisible &&
-                              inputValue &&
-                              filteredUnits.length > 0 && (
-                                  <div
-                                      ref={dropdownRef}
-                                      className="fixed z-[9999] mt-1"
-                                      style={{
-                                        top: `${
-                                            (inputRef.current?.getBoundingClientRect().bottom || 0) + 4
-                                        }px`,
-                                        left: `${
-                                            inputRef.current?.getBoundingClientRect().left || 0
-                                        }px`,
-                                        width: `${inputRef.current?.offsetWidth || 0}px`,
-                                      }}
-                                  >
-                                    <div className="rounded-md border border-slate-200 bg-white shadow-lg">
-                                      <ScrollArea className="max-h-[200px]">
-                                        {filteredUnits.map((unitName, index) => (
-                                            <div
-                                                key={unitName}
-                                                className={`cursor-pointer px-4 py-2 hover:bg-slate-100 ${highlightedIndex === index ? "bg-slate-200" : ""}`}
-                                                onMouseDown={() => handleSelectUnit(unitName)}
-                                            >
-                                              {unitName}
-                                            </div>
-                                        ))}
-                                      </ScrollArea>
-                                    </div>
-                                  </div>
-                              )}
+                          {showError && (
+                            <p className="mt-1 text-sm text-rose-400">
+                              Please select a unit.
+                            </p>
+                          )}
+
+                          {isDropdownVisible && (
+                              <div
+                                  ref={dropdownRef}
+                                  className="fixed z-[9999] mt-1"
+                                  style={{
+                                    top: `${
+                                        (inputRef.current?.getBoundingClientRect().bottom || 0) + 4
+                                    }px`,
+                                    left: `${
+                                        inputRef.current?.getBoundingClientRect().left || 0
+                                    }px`,
+                                    width: `${inputRef.current?.offsetWidth || 0}px`,
+                                  }}
+                              >
+                                <div className="rounded-md border border-slate-200 bg-white shadow-lg">
+                                  <ScrollArea className="max-h-[200px]">
+                                    {filteredUnits.length > 0 ? (
+                                      filteredUnits.map((unitName, index) => (
+                                          <div
+                                              key={unitName}
+                                              className={`cursor-pointer px-4 py-2 hover:bg-slate-100 ${highlightedIndex === index ? "bg-slate-200" : ""}`}
+                                              onMouseDown={() => handleSelectUnit(unitName)}
+                                          >
+                                            {unitName}
+                                          </div>
+                                      ))
+                                    ) : (
+                                      <div className="px-4 py-2 text-slate-400 italic">
+                                        {inputValue 
+                                          ? "No matching units found" 
+                                          : "All units are already in use"}
+                                      </div>
+                                    )}
+                                  </ScrollArea>
+                                </div>
+                              </div>
+                          )}
                         </div>
                       </div>
                     </div>
@@ -285,15 +410,25 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position }: Convers
                     inputMode="decimal"
                     className="bg-white text-slate-700 shadow-none"
                     placeholder="Price"
-                    value={data.price}
+                    value={rawPriceInput || (data.price ? formatPrice(data.price) : data.price)}
                     onChange={(e) => handlePriceChange(e.target.value)}
-                    onBlur={handlePriceBlur}
+                    onFocus={handlePriceFocus}
+                    onBlur={(e) => {
+                      handlePriceBlur(e);
+                      checkIncompleteFields();
+                    }}
                     onKeyDown={(e) => {
                       if (e.key === "." && data.price.includes(".")) {
                         e.preventDefault();
                       }
                     }}
                 />
+                
+                {showPriceError && (
+                  <p className="mt-1 text-sm text-rose-400">
+                    Price required.
+                  </p>
+                )}
               </div>
               <Button
                   className="flex h-10 w-12 items-center justify-center bg-slate-100 !p-1 hover:!bg-slate-200/50"

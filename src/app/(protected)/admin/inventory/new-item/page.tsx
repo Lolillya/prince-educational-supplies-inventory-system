@@ -33,16 +33,13 @@ import {
 import { Separator } from "~/components/ui/separator";
 import { toast } from "sonner";
 
-type Item = {
-  variant: {
-    item: {
-      name: string;
-      brand: {
-        name: string;
-      };
-    };
-    name?: string;
-  };
+// Define a type for a variant
+type VariantData = {
+  id: number;
+  variant: string;
+  lowStock: number;
+  veryLowStock: number;
+  isExisting: boolean;
 };
 
 type PresetData = {
@@ -74,15 +71,6 @@ const NewItem = () => {
   const [itemSearch, setItemSearch] = useState("");
   const [categorySearch, setCategorySearch] = useState("");
   const [brandSearch, setBrandSearch] = useState("");
-  const hasDuplicateUnits = (preset: PresetData): boolean => {
-    const allUnits = [
-      preset.mainUnit,
-      ...preset.conversions.map(conv => conv.unit)
-    ].filter(unit => unit); // Filter out empty strings
-
-    // Check for duplicates by comparing array length with Set size
-    return new Set(allUnits).size !== allUnits.length;
-  };
   const [item, setItem] = useState("");
   const [brand, setBrand] = useState("");
   const [category, setCategory] = useState("");
@@ -163,9 +151,11 @@ const NewItem = () => {
   const { mutateAsync: updateItemMutation } =
     api.inventory.updateItem.useMutation();
 
-  // const [cards, setCards] = useState([{ id: Date.now() }]);
-  // const [cards, setCards] = useState([{ id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
-  const [variants, setVariants] = useState([
+  const { mutateAsync: updatePresetMutation } =
+    api.inventory.updatePreset.useMutation();
+
+  // Update variants state definition with proper type
+  const [variants, setVariants] = useState<VariantData[]>([
     {
       id: Date.now(),
       variant: "",
@@ -174,6 +164,7 @@ const NewItem = () => {
       isExisting: false,
     },
   ]);
+
   const [conversions, setConversions] = useState([{ id: Date.now() }]);
 
   const [isSaving, setIsSaving] = useState(false);
@@ -384,16 +375,16 @@ const NewItem = () => {
       console.log("Unique presets map:", Array.from(uniquePresetsMap.values()));
 
       // Map DB presets to component format
-      const formattedPresets = Array.from(uniquePresetsMap.values()).map(
+      const formattedPresets: PresetData[] = Array.from(uniquePresetsMap.values()).map(
         (preset) => ({
           id: preset.preset_id,
           mainUnit: preset.main_unit.name,
-          mainPrice: preset.main_price.toString(),
+          mainPrice: formatPriceWithTwoDecimals(preset.main_price),
           isExisting: true,
           conversions: preset.conversions.map((conv: any) => ({
             qty: conv.conversion_rate.toString(),
             unit: conv.to_unit.name,
-            price: conv.related_price ? conv.related_price.toString() : "",
+            price: conv.related_price ? formatPriceWithTwoDecimals(conv.related_price) : "",
           })),
         }),
       );
@@ -479,14 +470,6 @@ const NewItem = () => {
           console.log("Selected Item:", selectedItem);
         }
         break;
-      // case "item":
-      //     setItem(name);
-      //     const selectedItem = items.find(item => item.name === name);
-      //     if (selectedItem) {
-      //         setSelectedItem(selectedItem);
-      //         setItemDescription(selectedItem.description || "");
-      //     }
-      //     break;
       case "category":
         if (categoryOptions.includes(name)) {
           setCategory(name);
@@ -678,9 +661,6 @@ const NewItem = () => {
     }
   };
 
-  // const handleAddCard = () => {
-  //     setCards([...cards, { id: Date.now(), variant: "", lowStock: 0, veryLowStock: 0 }]);
-  // }
   const handleAddVariant = () => {
     setVariants((prev) => [
       ...prev,
@@ -773,112 +753,6 @@ const NewItem = () => {
       });
       return;
     }
-    // Handle save presets
-    // Check for invalid presets (main price zero/negative)
-    const invalidMainPrices = presets.filter(preset =>
-        preset.mainPrice === "0.00" ||
-        preset.mainPrice === "0" ||
-        parseFloat(preset.mainPrice) <= 0
-    );
-
-// Check for invalid conversions (qty or price zero/negative)
-    const invalidConversions = presets.some(preset =>
-        preset.conversions.some(conv =>
-            conv.qty === "0.00" ||
-            conv.qty === "0" ||
-            parseFloat(conv.qty) <= 0 ||
-            (conv.price && (
-                conv.price === "0.00" ||
-                conv.price === "0" ||
-                parseFloat(conv.price) <= 0
-            ))
-        )
-    );
-
-    if (invalidMainPrices.length > 0) {
-      toast("❌ Invalid price", {
-        description: "Main Price cannot be zero or negative",
-        duration: 4000,
-      });
-      return;
-    }
-
-    if (invalidConversions) {
-      toast("❌ Invalid conversion values", {
-        description: "Quantity and Price in conversions cannot be zero or negative",
-        duration: 4000,
-      });
-      return;
-    }
-    // In your handleSave function, add this validation:
-
-// Check for invalid unit selections
-    const invalidUnits = presets.some(preset => {
-      // Check main unit
-      const mainUnitInvalid = !units.some(unit => unit.name === preset.mainUnit);
-
-      // Check conversion units
-      const conversionUnitsInvalid = preset.conversions.some(conv =>
-          !units.some(unit => unit.name === conv.unit)
-      );
-
-      return mainUnitInvalid || conversionUnitsInvalid;
-    });
-
-    if (invalidUnits) {
-      toast("❌ Invalid unit selection", {
-        description: "Please select units from the dropdown list",
-        duration: 4000,
-      });
-      return;
-    }
-
-// Check for empty conversion rows
-    const hasEmptyConversions = presets.some(preset =>
-        preset.conversions.some(conv =>
-            !conv.qty && !conv.unit && !conv.price
-        )
-    );
-
-    if (hasEmptyConversions) {
-      toast("❌ Empty conversion rows", {
-        description: "Please fill in or remove empty conversion rows",
-        duration: 4000,
-      });
-      return;
-    }
-    // Check for duplicate units in presets
-    const hasDuplicates = presets.some(preset => hasDuplicateUnits(preset));
-
-    if (hasDuplicates) {
-      toast("❌ Duplicate units", {
-        description: "Each unit in a preset must be unique",
-        duration: 4000,
-      });
-      return;
-    }
-    const hasEmptyMainUnit = presets.some(preset => !preset.mainUnit);
-    if (hasEmptyMainUnit) {
-      toast("❌ Missing main unit", {
-        description: "Please fill in the Main Unit field for all presets",
-        duration: 4000,
-      });
-      return;
-    }
-
-    // Check for at least one valid conversion
-    const hasNoValidConversions = presets.every(preset =>
-        preset.conversions.length === 0 ||
-        preset.conversions.every(conv => !conv.qty || !conv.unit)
-    );
-
-    if (hasNoValidConversions) {
-      toast("❌ Missing conversions", {
-        description: "Please add at least one valid conversion (with quantity and unit)",
-        duration: 4000,
-      });
-      return;
-    }
 
     // Check for variants with missing stock levels
     const variantsWithName = variants.filter(v => v.variant.trim() !== '');
@@ -924,34 +798,167 @@ const NewItem = () => {
       return;
     }
 
+    // Filter out empty variants and existing ones
+    const validVariants = variants.filter(
+      (variant) =>
+        !variant.isExisting &&
+        variant.variant?.trim() !== "" &&
+        variant.lowStock > 0 &&
+        variant.veryLowStock > 0,
+    );
+
+    // Check if there are any existing variants
+    const hasExistingVariants = variants.some(
+      (variant) => variant.isExisting,
+    );
+
+    // Only require new variants if there are no existing ones
+    if (validVariants.length === 0 && !hasExistingVariants) {
+      toast("❌ Missing input", {
+        description:
+          "Please fill out at least one variant with all required fields",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Now check preset validations
+    // Check for invalid presets (main price zero/negative)
+    const invalidMainPrices = presets.filter(preset =>
+        !preset.mainPrice || 
+        preset.mainPrice === "" ||
+        preset.mainPrice === "0.00" ||
+        preset.mainPrice === "0" ||
+        parseFloat(preset.mainPrice) <= 0
+    );
+
+    if (invalidMainPrices.length > 0) {
+      toast("❌ Invalid price", {
+        description: "Main Price cannot be empty, zero, or negative",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for invalid conversions (qty or price zero/negative)
+    const invalidConversions = presets.some(preset =>
+        preset.conversions.some(conv => {
+            const qty = parseFloat(conv.qty);
+            // Check if qty is invalid
+            if (isNaN(qty) || qty <= 0) {
+                return true;
+            }
+            
+            // If price exists, check if it's invalid
+            if (conv.price !== undefined && conv.price !== '') {
+                const price = parseFloat(conv.price);
+                if (isNaN(price) || price <= 0) {
+                    return true;
+                }
+            }
+            
+            return false;
+        })
+    );
+
+    if (invalidConversions) {
+      toast("❌ Invalid conversion values", {
+        description: "Quantity and Price in conversions cannot be zero or negative",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for invalid unit selections
+    const invalidUnits = presets.some(preset => {
+      // Check main unit
+      const mainUnitInvalid = !units.some(unit => unit.name === preset.mainUnit);
+
+      // Check conversion units
+      const conversionUnitsInvalid = preset.conversions.some(conv =>
+          !units.some(unit => unit.name === conv.unit)
+      );
+
+      return mainUnitInvalid || conversionUnitsInvalid;
+    });
+
+    if (invalidUnits) {
+      toast("❌ Invalid unit selection", {
+        description: "Please select units from the dropdown list",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for empty conversion rows
+    const hasEmptyConversions = presets.some(preset =>
+        preset.conversions.some(conv =>
+            !conv.qty && !conv.unit && !conv.price
+        )
+    );
+
+    if (hasEmptyConversions) {
+      toast("❌ Empty conversion rows", {
+        description: "Please fill in or remove empty conversion rows",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for incomplete conversion rows (some fields filled, others empty)
+    const hasIncompleteConversions = presets.some(preset =>
+        preset.conversions.some(conv =>
+            // At least one field is empty AND at least one field has a value
+            (!conv.qty || !conv.unit || !conv.price) && 
+            (conv.qty || conv.unit || conv.price)
+        )
+    );
+
+    if (hasIncompleteConversions) {
+      toast("❌ Incomplete conversions", {
+        description: "Please complete all fields in each conversion row (Qty, Unit, and Price)",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for duplicate units in presets
+    const hasDuplicates = presets.some(preset => hasDuplicateUnits(preset));
+
+    if (hasDuplicates) {
+      toast("❌ Duplicate units", {
+        description: "Each unit in a preset must be unique",
+        duration: 4000,
+      });
+      return;
+    }
+    
+    const hasEmptyMainUnit = presets.some(preset => !preset.mainUnit);
+    if (hasEmptyMainUnit) {
+      toast("❌ Missing main unit", {
+        description: "Please fill in the Main Unit field for all presets",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // Check for at least one valid conversion
+    const hasNoValidConversions = presets.every(preset =>
+        preset.conversions.length === 0 ||
+        preset.conversions.every(conv => !conv.qty || !conv.unit)
+    );
+
+    if (hasNoValidConversions) {
+      toast("❌ Missing preset conversions", {
+        description: "Please add at least one preset conversion with at least one complete conversion row",
+        duration: 4000,
+      });
+      return;
+    }
+
     setIsSaving(true);
 
     try {
-      // Filter out empty variants and existing ones
-      const validVariants = variants.filter(
-        (variant) =>
-          !variant.isExisting &&
-          variant.variant?.trim() !== "" &&
-          variant.lowStock > 0 &&
-          variant.veryLowStock > 0,
-      );
-
-      // Check if there are any existing variants
-      const hasExistingVariants = variants.some(
-        (variant) => variant.isExisting,
-      );
-
-      // Only require new variants if there are no existing ones
-      if (validVariants.length === 0 && !hasExistingVariants) {
-        toast("❌ Missing input", {
-          description:
-            "Please fill out at least one variant with all required fields",
-          duration: 4000,
-        });
-        setIsSaving(false);
-        return;
-      }
-
       const brandId = selectedBrand
         ? selectedBrand.brand_id
         : await createBrandMutation({ name: brandSearch }).then(
@@ -967,23 +974,20 @@ const NewItem = () => {
       let item;
 
       if (selectedItem) {
-        if (
-          selectedItem.brand_id === brandId &&
-          selectedItem.category_id === categoryId &&
-          selectedItem.item_id
-        ) {
-          if (selectedItem.description !== itemDescription) {
-            item = await updateItemMutation({
-              item_id: selectedItem.item_id,
-              description: itemDescription,
-              brand_id: brandId,
-              category_id: categoryId,
-              name: selectedItem.name,
-            });
-          } else {
-            item = selectedItem;
-          }
+        // Always update the selected item instead of creating a new one
+        if (selectedItem.item_id) {
+          // Update existing item
+          item = await updateItemMutation({
+            item_id: selectedItem.item_id,
+            description: itemDescription,
+            brand_id: brandId,
+            category_id: categoryId,
+            name: selectedItem.name,
+          });
+          
+          console.log("Updated existing item:", item);
         } else {
+          // Create new item if no item_id exists
           item = await createItemMutation({
             name: selectedItem.name,
             brand_id: brandId,
@@ -992,6 +996,7 @@ const NewItem = () => {
           });
         }
       } else {
+        // Create new item if no item was selected
         item = await createItemMutation({
           name: itemSearch,
           brand_id: brandId,
@@ -1000,35 +1005,57 @@ const NewItem = () => {
         });
       }
 
-      // Create variants and their associated data
-      for (const variant of validVariants) {
+      // Process variants - both new and updates to existing ones
+      for (const variant of variants) {
         if (!item.item_id) {
           throw new Error("Item ID is required");
         }
 
-        const createdVariant = await createVariantMutation({
-          item_id: item.item_id,
-          name: variant.variant,
-        });
+        if (variant.isExisting && variant.id) {
+          // Update existing variant
+          await updateVariantMutation({
+            variantId: variant.id,
+            name: variant.variant,
+            lowStock: variant.lowStock,
+            veryLowStock: variant.veryLowStock,
+          });
+        } else {
+          // Create new variant
+          const createdVariant = await createVariantMutation({
+            item_id: item.item_id,
+            name: variant.variant,
+          });
 
-        await createStockLevelMutation({
-          variant_id: createdVariant.variant_id,
-          low_stock: variant.lowStock,
-          very_low_stock: variant.veryLowStock,
-        });
+          await createStockLevelMutation({
+            variant_id: createdVariant.variant_id,
+            low_stock: variant.lowStock,
+            very_low_stock: variant.veryLowStock,
+          });
 
-        await createInventoryMutation({
-          variant_id: createdVariant.variant_id,
-          quantity: 0,
-          inventory_clerk: session.data?.user.id ?? "",
-          inventory_number: Math.floor(1000000 + Math.random() * 9000000),
-        });
+          await createInventoryMutation({
+            variant_id: createdVariant.variant_id,
+            quantity: 0,
+            inventory_clerk: session.data?.user.id ?? "",
+            inventory_number: Math.floor(1000000 + Math.random() * 9000000),
+          });
+        }
       }
 
-      // Filter out existing presets
+      // Handle preset conversions - both new and updates to existing ones
+      // Handle new presets (ones without isExisting flag)
       const newPresets = presets.filter(
         (preset) =>
           !preset.isExisting &&
+          preset.mainUnit &&
+          preset.mainPrice &&
+          preset.conversions.length > 0,
+      );
+      
+      // Handle existing presets that need to be updated
+      const existingPresets = presets.filter(
+        (preset) =>
+          preset.isExisting &&
+          preset.id && 
           preset.mainUnit &&
           preset.mainPrice &&
           preset.conversions.length > 0,
@@ -1057,14 +1084,37 @@ const NewItem = () => {
         } catch (error) {
           console.error("Preset creation error:", error);
         }
-      } else {
-        console.log("No new presets to create - using existing ones");
+      }
+      
+      if (existingPresets.length > 0) {
+        console.log("Updating existing presets:", existingPresets);
+        
+        try {
+          const updateResults = await Promise.all(
+            existingPresets.map((preset) =>
+              updatePresetMutation({
+                presetId: preset.id!,
+                mainUnit: preset.mainUnit,
+                mainPrice: parseFloat(preset.mainPrice),
+                conversions: preset.conversions.map((conv) => ({
+                  qty: parseFloat(conv.qty),
+                  unit: conv.unit,
+                  price: conv.price ? parseFloat(conv.price) : 0,
+                })),
+              }),
+            ),
+          );
+          
+          console.log("Updated presets:", updateResults);
+        } catch (error) {
+          console.error("Preset update error:", error);
+        }
       }
 
       utils.inventory.listInventory.invalidate();
 
       toast("✅ Success", {
-        description: "New item created successfully!",
+        description: selectedItem?.item_id ? "Item updated successfully!" : "New item created successfully!",
         duration: 4000,
       });
 
@@ -1081,6 +1131,36 @@ const NewItem = () => {
       setIsSaving(false);
     }
   };
+
+  // Add this utility function to the component to ensure consistent price formatting
+  const formatPriceWithTwoDecimals = (price: number | string | null | undefined): string => {
+    if (price === null || price === undefined || price === "") return "";
+    
+    // Convert to string first
+    const priceStr = price.toString();
+    
+    // If it's already in decimal format
+    if (priceStr.includes('.')) {
+      const [whole, decimal = ''] = priceStr.split('.');
+      return `${whole}.${decimal.padEnd(2, '0').slice(0, 2)}`;
+    }
+    
+    // If it's just a whole number
+    return `${priceStr}.00`;
+  };
+
+  // Fix hasDuplicateUnits function to handle undefined units properly
+  const hasDuplicateUnits = (preset: PresetData): boolean => {
+    // Get all non-empty units
+    const allUnits = [
+      preset.mainUnit,
+      ...preset.conversions.map(conv => conv.unit || '')
+    ].filter(unit => unit !== ''); // Filter out empty strings
+    
+    // Check for duplicates by comparing array length with Set size
+    return new Set(allUnits).size !== allUnits.length;
+  };
+
   let content = null;
   if (isLoading) {
     content = <p>Loading...</p>;
@@ -1352,9 +1432,8 @@ const NewItem = () => {
                         ),
                       )
                     }
-                    onRemove={() =>
-                      setPresets(presets.filter((p) => p.id !== preset.id))
-                    }
+                    onRemove={presets.length > 1 ? () =>
+                      setPresets(presets.filter((p) => p.id !== preset.id)) : undefined}
                   />
                 ))}
                 {conversions.length < 9 && (
@@ -1383,15 +1462,6 @@ const NewItem = () => {
 
       <Separator className="h-px" />
       <div className="flex w-full items-center justify-end gap-4 bg-white pt-4">
-        {/*<Button*/}
-        {/*    size={"lg"}*/}
-        {/*    className="bg-slate-200 text-slate-500 hover:bg-slate-200/70"*/}
-        {/*    onClick={handleSave}*/}
-        {/*    disabled={isSaving}*/}
-        {/*>*/}
-        {/*    Clear*/}
-        {/*</Button>*/}
-
         <Button
           size={"lg"}
           className="bg-green text-white hover:bg-green/80"

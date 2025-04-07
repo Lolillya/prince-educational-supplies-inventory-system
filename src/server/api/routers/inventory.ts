@@ -548,6 +548,38 @@ export const inventoryRouter = createTRPCRouter({
         throw new Error(`Preset with ID ${presetId} not found`);
       }
 
+      // Get the item_id from the preset
+      const itemId = existingPreset.item_id;
+
+      // IMPORTANT: First, delete ALL existing conversions for this preset
+      // This ensures that deleted rows are properly removed
+      await ctx.db.presetConversion.deleteMany({
+        where: { preset_id: presetId },
+      });
+
+      // Also delete any custom price presets for this preset
+      const customPriceUnits = await ctx.db.unit.findMany({
+        where: {
+          name: {
+            contains: `_${presetId}`,
+            startsWith: `${mainUnit}_to_`
+          }
+        },
+      });
+
+      // Delete any custom presets that might have been used for prices
+      if (customPriceUnits.length > 0) {
+        const unitIds = customPriceUnits.map(unit => unit.unit_id);
+        await ctx.db.preset.deleteMany({
+          where: {
+            item_id: itemId,
+            main_unit_id: {
+              in: unitIds
+            }
+          }
+        });
+      }
+
       // Update or create main unit
       const mainUnitRecord = await ctx.db.unit.upsert({
         where: { name: mainUnit },
@@ -562,14 +594,6 @@ export const inventoryRouter = createTRPCRouter({
           main_unit_id: mainUnitRecord.unit_id,
           main_price: mainPrice,
         },
-      });
-
-      // Get the item_id from the preset
-      const itemId = existingPreset.item_id;
-
-      // Delete existing conversions for this preset to avoid duplicates
-      await ctx.db.presetConversion.deleteMany({
-        where: { preset_id: presetId },
       });
 
       // Create conversions with new technique to store prices

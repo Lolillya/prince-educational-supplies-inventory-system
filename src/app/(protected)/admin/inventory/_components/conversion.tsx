@@ -229,15 +229,6 @@ const Conversion = ({ data, onRemove, onUpdate, onPriceBlur, position, usedUnits
     }
   };
 
-  // Auto scroll to the last added conversion when it's updated
-  useEffect(() => {
-    // Only scroll into view when newly added and not on every data change
-    // This prevents the annoying scrolling behavior when clicking anywhere
-    if (conversionRef.current && position === 1 && data.qty === "" && data.unit === "" && data.price === "") {
-      conversionRef.current.scrollIntoView({ behavior: "smooth", block: "start" });
-    }
-  }, []); // Empty dependency array means this only runs once when component mounts
-
   // Check for incomplete fields when any field is touched 
   const checkIncompleteFields = useCallback(() => {
     // Only show qty error if unit or price has value but qty is empty

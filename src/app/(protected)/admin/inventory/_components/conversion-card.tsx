@@ -68,6 +68,9 @@ const ConversionCard = ({
   
   // Add ref to track if unit was selected from dropdown
   const wasMainUnitSelectedFromDropdown = useRef(false);
+  
+  // Add ref for scroll area to enable auto-scrolling
+  const scrollAreaContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: units } = api.restock.getUnits.useQuery();
   const unitOptions = units?.map((unit) => unit.name) ?? [];
@@ -111,6 +114,9 @@ const ConversionCard = ({
     setHighlightedIndex(-1);
     setIsDropdownVisible(false);
     
+    // Clear main unit error immediately since we now have a valid unit
+    setShowMainUnitError(false);
+    
     // Update preset with new main unit
     onUpdate({ ...preset, mainUnit: unitName });
     
@@ -129,6 +135,8 @@ const ConversionCard = ({
   useEffect(() => {
     if (preset.mainUnit && unitOptions.includes(preset.mainUnit)) {
       wasMainUnitSelectedFromDropdown.current = true;
+      // Also clear any main unit error if there's a valid unit
+      setShowMainUnitError(false);
     }
   }, [preset.mainUnit, unitOptions]);
 
@@ -308,8 +316,19 @@ const ConversionCard = ({
         ...preset,
         conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
       });
+      
       // Reset dropdown state to show updated available units
       setIsDropdownVisible(false);
+      
+      // Scroll to the bottom of the conversion area
+      setTimeout(() => {
+        if (scrollAreaContainerRef.current) {
+          const scrollContainer = scrollAreaContainerRef.current.querySelector('[data-radix-scroll-area-viewport]');
+          if (scrollContainer) {
+            scrollContainer.scrollTop = scrollContainer.scrollHeight;
+          }
+        }
+      }, 100); // Small delay to ensure the new row is rendered
     }
   };
 
@@ -363,6 +382,11 @@ const ConversionCard = ({
                   setIsDropdownVisible(true);
                   // Reset selection flag when manually typing
                   wasMainUnitSelectedFromDropdown.current = false;
+                  
+                  // Clear error if they've entered a valid unit
+                  if (unitOptions.includes(value)) {
+                    setShowMainUnitError(false);
+                  }
                 }
               }}
               onFocus={() => {
@@ -479,46 +503,48 @@ const ConversionCard = ({
       </div>
       <div className="mt-4 h-[1px] border-t-[3px] border-dashed border-slate-300" />
 
-      <ScrollArea className="h-40">
-        <div className="px-1 pb-1">
-          {preset.conversions.length === 0 ? (
-            <p className="mt-6 text-center text-sm italic text-slate-400">
-              No conversions
-            </p>
-          ) : (
-            preset.conversions.map((conv, index) => {
-                // Collect all units used in this preset except the current conversion's unit
-                const usedUnits = preset.conversions
-                    .filter((_, i) => i !== index)
-                    .map(c => c.unit || '')
-                    .filter(Boolean);
-                
-                // Include the main unit in used units if it exists
-                if (preset.mainUnit) {
-                    usedUnits.push(preset.mainUnit);
-                }
-                
-                return (
-                    <Conversion
-                        key={index}
-                        data={{
-                          id: index,
-                          qty: conv.qty || '',
-                          unit: conv.unit || '',
-                          stock: "0",
-                          price: formatPrice(conv.price)
-                        }}
-                        position={index + 1}
-                        onUpdate={(newData) => handleConversionChange(index, newData)}
-                        onRemove={() => handleRemoveConversion(index)}
-                        onPriceBlur={(price) => handleConversionPriceBlur(index, price)}
-                        usedUnits={usedUnits}
-                    />
-                );
-            })
-          )}
-        </div>
-      </ScrollArea>
+      <div ref={scrollAreaContainerRef} className="relative">
+        <ScrollArea className="h-40">
+          <div className="px-1 pb-1">
+            {preset.conversions.length === 0 ? (
+              <p className="mt-6 text-center text-sm italic text-slate-400">
+                No conversions
+              </p>
+            ) : (
+              preset.conversions.map((conv, index) => {
+                  // Collect all units used in this preset except the current conversion's unit
+                  const usedUnits = preset.conversions
+                      .filter((_, i) => i !== index)
+                      .map(c => c.unit || '')
+                      .filter(Boolean);
+                  
+                  // Include the main unit in used units if it exists
+                  if (preset.mainUnit) {
+                      usedUnits.push(preset.mainUnit);
+                  }
+                  
+                  return (
+                      <Conversion
+                          key={index}
+                          data={{
+                            id: index,
+                            qty: conv.qty || '',
+                            unit: conv.unit || '',
+                            stock: "0",
+                            price: formatPrice(conv.price)
+                          }}
+                          position={index + 1}
+                          onUpdate={(newData) => handleConversionChange(index, newData)}
+                          onRemove={() => handleRemoveConversion(index)}
+                          onPriceBlur={(price) => handleConversionPriceBlur(index, price)}
+                          usedUnits={usedUnits}
+                      />
+                  );
+              })
+            )}
+          </div>
+        </ScrollArea>
+      </div>
 
       <div className="mt-4 flex flex-col gap-2">
         <Button

@@ -9,19 +9,74 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from "~/components/ui/popover";
+import { api } from "~/trpc/react";
+import { useSession } from "next-auth/react";
+import { AlertCircle } from "lucide-react";
+import { toast } from "~/hooks/use-toast";
 
 interface RefundProps {
   className?: string;
-  onClick?: () => void;
+  paymentId: number;
+  onRefundSuccess?: () => void;
 }
 
-const Refund: React.FC<RefundProps> = ({ className, onClick }) => {
+const Refund: React.FC<RefundProps> = ({
+  className,
+  paymentId,
+  onRefundSuccess,
+}) => {
   const [password, setPassword] = useState("");
+  const [error, setError] = useState<string | null>(null);
+  const { data: session } = useSession();
+  const personalDetailsId = session?.user?.id;
+
+  const { mutate: refundPayment, isPending } = api.payment.refund.useMutation({
+    onSuccess: () => {
+      // Show success toast
+      toast({
+        title: "Refund Successful",
+        description:
+          "The payment has been refunded and the amount has been added back to the unpaid balance.",
+        variant: "default",
+      });
+
+      if (onRefundSuccess) {
+        onRefundSuccess();
+      }
+      // Close the popover
+      const popoverTrigger = document.querySelector(
+        "[data-radix-popper-content-wrapper]",
+      );
+      if (popoverTrigger instanceof HTMLElement) {
+        popoverTrigger.click();
+      }
+    },
+    onError: (error) => {
+      setError(error.message);
+      toast({
+        title: "Refund Failed",
+        description: error.message,
+        variant: "destructive",
+      });
+    },
+  });
 
   const handleRefund = () => {
-    if (onClick) {
-      onClick();
+    if (!personalDetailsId) {
+      setError("User session not found");
+      return;
     }
+
+    if (!password) {
+      setError("Please enter your password");
+      return;
+    }
+
+    refundPayment({
+      paymentId,
+      personalDetailsId,
+      password,
+    });
   };
 
   return (
@@ -46,9 +101,19 @@ const Refund: React.FC<RefundProps> = ({ className, onClick }) => {
           <Input
             className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
             placeholder="Password"
+            type="password"
             value={password}
-            onChange={(e) => setPassword(e.target.value)}
+            onChange={(e) => {
+              setPassword(e.target.value);
+              setError(null);
+            }}
           />
+          {error && (
+            <div className="mt-2 flex items-center gap-2 text-rose-500">
+              <AlertCircle className="h-4 w-4" />
+              <p className="text-sm">{error}</p>
+            </div>
+          )}
         </div>
         <div className="mt-4 flex w-full gap-2">
           <PopoverClose asChild>
@@ -59,9 +124,9 @@ const Refund: React.FC<RefundProps> = ({ className, onClick }) => {
           <Button
             className="w-1/2 bg-rose-100 text-red hover:bg-rose-200"
             onClick={handleRefund}
-            disabled={!password}
+            disabled={!password || isPending}
           >
-            Refund
+            {isPending ? "Processing..." : "Refund"}
           </Button>
         </div>
       </PopoverContent>

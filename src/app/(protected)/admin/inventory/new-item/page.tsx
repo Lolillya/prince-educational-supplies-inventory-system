@@ -184,9 +184,15 @@ const NewItem = () => {
   const units = useMemo(() => data?.units ?? [], [data]);
   const items = useMemo(() => data?.items ?? [], [data]);
   const variantsMemo = useMemo(() => data?.variants ?? [], [data]);
-  const formatPriceInput = (value: string): string => {
+  const formatPriceInput = (value: string | number): string => {
+    // Ensure we're working with a string
+    if (value === null || value === undefined) return '';
+    
+    // Convert to string first
+    const valueStr = value.toString();
+    
     // Remove any non-digit or non-dot characters
-    let formatted = value.replace(/[^\d.]/g, '');
+    let formatted = valueStr.replace(/[^\d.]/g, '');
 
     // Ensure only one decimal point
     const parts = formatted.split('.');
@@ -384,17 +390,38 @@ const NewItem = () => {
 
       // Map DB presets to component format
       const formattedPresets: PresetData[] = Array.from(uniquePresetsMap.values()).map(
-        (preset) => ({
-          id: preset.preset_id,
-          mainUnit: preset.main_unit.name,
-          mainPrice: formatPriceInput(preset.main_price),
-          isExisting: true,
-          conversions: preset.conversions.map((conv: any) => ({
-            qty: conv.conversion_rate.toString(),
-            unit: conv.to_unit.name,
-            price: conv.related_price ? formatPriceInput(conv.related_price) : "",
-          })),
-        }),
+        (preset) => {
+          // Debug the preset structure to understand what's coming from the DB
+          console.log("Processing preset:", preset);
+          
+          // Add additional safeguards to handle potential missing properties
+          const mainPrice = preset.main_price !== undefined && preset.main_price !== null
+            ? formatPriceInput(preset.main_price)
+            : "0.00";
+            
+          return {
+            id: preset.preset_id,
+            mainUnit: preset.main_unit?.name || "",
+            mainPrice: mainPrice,
+            isExisting: true,
+            conversions: (preset.conversions || []).map((conv: any) => {
+              // Debug individual conversion
+              console.log("Processing conversion:", conv);
+              
+              // Check if related_price exists and is valid
+              let price = "";
+              if (conv.related_price !== undefined && conv.related_price !== null) {
+                price = formatPriceInput(conv.related_price);
+              }
+              
+              return {
+                qty: conv.conversion_rate ? conv.conversion_rate.toString() : "0",
+                unit: conv.to_unit?.name || "",
+                price: price,
+              };
+            }),
+          };
+        }
       );
 
       console.log("Formatted presets for UI:", formattedPresets);
@@ -795,6 +822,12 @@ const NewItem = () => {
     return true;
   };
 
+  const { mutateAsync: deleteVariantMutation } =
+    api.inventory.deleteVariant.useMutation();
+    
+  const { mutateAsync: deletePresetMutation } =
+    api.inventory.deletePreset.useMutation();
+
   const handleSave = async () => {
     // Check main inputs first
     if (!itemSearch && !selectedItem) {
@@ -1101,6 +1134,38 @@ const NewItem = () => {
           });
           
           console.log("Updated existing item:", item);
+          
+          // Handle deleted variants - if we have an existing item, delete any variants that were removed
+          if (selectedItem.item_id) {
+            // Get the existing variants for the item
+            const existingVariants = items.find(i => i.item_id === selectedItem.item_id)?.variants || [];
+            
+            // Find variants that exist in the database but are not in the current variants list
+            const variantsToDelete = existingVariants.filter(existingVariant => 
+              !variants.some(v => v.id === existingVariant.variant_id)
+            );
+            
+            // Delete the removed variants
+            for (const variantToDelete of variantsToDelete) {
+              console.log("Deleting variant:", variantToDelete);
+              await deleteVariantMutation({ variantId: variantToDelete.variant_id });
+            }
+          }
+          
+          // Handle deleted presets - if we have an existing item, delete any presets that were removed
+          if (fetchedPresets && fetchedPresets.length > 0) {
+            // Find presets that exist in fetchedPresets but not in the current presets list
+            const presetsToDelete = fetchedPresets.filter(existingPreset => 
+              existingPreset.preset_id && 
+              !presets.some(p => p.id === existingPreset.preset_id)
+            );
+            
+            // Delete the removed presets
+            for (const presetToDelete of presetsToDelete) {
+              console.log("Deleting preset:", presetToDelete);
+              await deletePresetMutation({ presetId: presetToDelete.preset_id });
+            }
+          }
         } else {
           // Create new item if no item_id exists
           item = await createItemMutation({

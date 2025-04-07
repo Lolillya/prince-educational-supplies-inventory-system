@@ -332,7 +332,11 @@ export const customerRouter = createTRPCRouter({
           status: "PENDING",
         },
         include: {
-          Payment: true,
+          Payment: {
+            include: {
+              PaymentLog: true,
+            },
+          },
           line_items: {
             include: {
               variant: {
@@ -355,15 +359,27 @@ export const customerRouter = createTRPCRouter({
         },
       });
 
-      return invoices.map((invoice) => ({
-        ...invoice,
-        paid_amount: invoice.Payment.reduce(
+      return invoices.map((invoice) => {
+        // Filter out refunded payments
+        const activePayments = invoice.Payment.filter((payment) => {
+          // Check if the payment has any logs with status "REFUNDED"
+          const isRefunded = payment.PaymentLog?.some(
+            (log) => log.status === "REFUNDED",
+          );
+          return !isRefunded;
+        });
+
+        // Calculate paid amount only from active (non-refunded) payments
+        const paidAmount = activePayments.reduce(
           (sum, p) => sum + (p.amount || 0),
           0,
-        ),
-        remaining:
-          (invoice.total_amount || 0) -
-          invoice.Payment.reduce((sum, p) => sum + (p.amount || 0), 0),
-      }));
+        );
+
+        return {
+          ...invoice,
+          paid_amount: paidAmount,
+          remaining: (invoice.total_amount || 0) - paidAmount,
+        };
+      });
     }),
 });

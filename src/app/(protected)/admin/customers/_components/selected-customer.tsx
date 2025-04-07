@@ -43,6 +43,7 @@ type SelectedCustomerProps = {
   unpaidInvoices: any[]; // Replace with proper type
   unpaidSum: number;
   onPaymentSuccess: () => void;
+  onRefundSuccess?: () => void;
 };
 
 const SelectedCustomer = ({
@@ -64,6 +65,7 @@ const SelectedCustomer = ({
   unpaidInvoices,
   unpaidSum,
   onPaymentSuccess,
+  onRefundSuccess,
 }: SelectedCustomerProps) => {
   // const [sum, setSum] = useState<number>();
   const router = useRouter();
@@ -108,6 +110,7 @@ const SelectedCustomer = ({
           emoji={emoji}
           company={company}
           onPaymentSuccess={onPaymentSuccess}
+          onRefundSuccess={onRefundSuccess}
         />
 
         <RecordInfo

@@ -143,14 +143,24 @@ const CustomersPage = () => {
     return true;
   };
 
-  const handleDelete = async (id: string) => {
-    if (!checkAdminRole()) return;
-    try {
-      await deleteCustomerMutation.mutateAsync({ id });
-      void router.refresh();
-    } catch (error) {
-      console.error("Failed to delete customer:", error);
-    }
+  const handleDelete = (id: string): Promise<void> => {
+    if (!checkAdminRole()) return Promise.resolve();
+
+    return deleteCustomerMutation
+      .mutateAsync({ id })
+      .then(() => {
+        void router.refresh();
+      })
+      .catch((error) => {
+        console.error("Failed to delete customer:", error);
+        throw error;
+      });
+  };
+
+  // Add a function to handle refund success
+  const handleRefundSuccess = () => {
+    // Refetch unpaid invoices to update the total
+    void refetch();
   };
 
   const filteredCustomers = customerData?.filter((customer) => {
@@ -278,6 +288,7 @@ const CustomersPage = () => {
                     unpaidInvoices={unpaidInvoices ?? []}
                     unpaidSum={unpaidSum}
                     onPaymentSuccess={() => refetch()}
+                    onRefundSuccess={handleRefundSuccess}
                   />
                 </div>
               </ScrollArea>

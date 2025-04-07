@@ -30,10 +30,10 @@ interface PaymentRecordProps {
       timestamp: Date;
     }[];
   };
-  onRefund?: () => void;
+  onRefundSuccess?: () => void;
 }
 
-const PaymentRecord = ({ payment, onRefund }: PaymentRecordProps) => {
+const PaymentRecord = ({ payment, onRefundSuccess }: PaymentRecordProps) => {
   const formattedDate = new Date(payment.payment_date).toLocaleDateString(
     "en-US",
     {
@@ -50,11 +50,36 @@ const PaymentRecord = ({ payment, onRefund }: PaymentRecordProps) => {
   // Format the amount with 2 decimal places
   const formattedAmount = payment.amount.toFixed(2);
 
+  // Check if payment has been refunded
+  const isRefunded = payment.PaymentLog?.some(
+    (log) => log.status === "REFUNDED",
+  );
+
+  // Get refund date if payment is refunded
+  const refundDate = isRefunded
+    ? payment.PaymentLog?.find((log) => log.status === "REFUNDED")?.timestamp
+    : null;
+
+  const formattedRefundDate = refundDate
+    ? new Date(refundDate).toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "long",
+        day: "numeric",
+      })
+    : null;
+
   return (
     <div className="w-full rounded-lg bg-slate-100 p-6">
       <div className="flex items-center justify-between">
         <div className={`flex flex-col gap-1 ${poppins.className} w-full`}>
-          <p className="text-lg text-slate-600">#{formattedInvoiceNumber}</p>
+          <div className="flex items-center gap-2">
+            <p className="text-lg text-slate-600">#{formattedInvoiceNumber}</p>
+            {isRefunded && (
+              <span className="rounded-full bg-rose-100 px-2 py-[2px] text-xs font-medium text-rose-500">
+                Refunded
+              </span>
+            )}
+          </div>
           <div className="flex items-center gap-4 text-slate-400">
             <div className="flex items-center gap-2 text-slate-400">
               <TooltipProvider delayDuration={0} skipDelayDuration={0}>
@@ -64,6 +89,9 @@ const PaymentRecord = ({ payment, onRefund }: PaymentRecordProps) => {
                   </TooltipTrigger>
                   <TooltipContent className="rounded-lg border border-slate-200 bg-white text-sm text-slate-700 shadow-none">
                     Payment recorded on {formattedDate}
+                    {isRefunded && formattedRefundDate && (
+                      <div>Refunded on {formattedRefundDate}</div>
+                    )}
                   </TooltipContent>
                 </Tooltip>
               </TooltipProvider>
@@ -92,11 +120,19 @@ const PaymentRecord = ({ payment, onRefund }: PaymentRecordProps) => {
           orientation="vertical"
           className="h-12 w-[2px] bg-slate-200"
         />
-        <div className="${poppins.className} ml-6 flex w-full items-center justify-between">
-          <div className={`flex flex-col gap-1`}>
-            <p className="text-lg text-slate-600">₱{formattedAmount}</p>
+        <div
+          className={`${poppins.className} ml-6 flex w-full items-center justify-between`}
+        >
+          <div className="flex flex-col gap-1">
+            <p
+              className={`text-lg ${isRefunded ? "text-rose-500" : "text-slate-600"}`}
+            >
+              ₱{formattedAmount}
+            </p>
             <div className="flex items-center gap-4 text-slate-400">
-              <p className="text-sm">Amount paid</p>
+              <p className="text-sm">
+                {isRefunded ? "Amount refunded" : "Amount paid"}
+              </p>
               <Separator
                 orientation="vertical"
                 className="h-5 w-[2px] bg-slate-200"
@@ -109,8 +145,18 @@ const PaymentRecord = ({ payment, onRefund }: PaymentRecordProps) => {
                 </p>
               </div>
             </div>
+            {isRefunded && (
+              <p className="mt-1 text-xs text-rose-500">
+                This amount has been added back to the unpaid balance
+              </p>
+            )}
           </div>
-          <Refund onClick={onRefund} />
+          {!isRefunded && (
+            <Refund
+              paymentId={payment.payment_id}
+              onRefundSuccess={onRefundSuccess}
+            />
+          )}
         </div>
       </div>
     </div>

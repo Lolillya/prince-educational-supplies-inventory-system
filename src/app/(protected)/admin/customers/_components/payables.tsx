@@ -10,6 +10,7 @@ import {
   DialogHeader,
   DialogTitle,
   DialogTrigger,
+  DialogDescription,
 } from "~/components/ui/dialog";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { Separator } from "~/components/ui/separator";
@@ -37,6 +38,7 @@ interface PayablesProps {
   emoji: string; // Add emoji prop
   company: string; // Add companyName prop
   onPaymentSuccess: () => void;
+  onRefundSuccess?: () => void;
 }
 
 interface PaymentRecordType {
@@ -61,6 +63,7 @@ const Payables = ({
   emoji,
   company,
   onPaymentSuccess,
+  onRefundSuccess,
 }: PayablesProps) => {
   const [selectedTab, setSelectedTab] = useState<"payables" | "payments">(
     "payables",
@@ -74,10 +77,40 @@ const Payables = ({
     unpaidInvoices.length > 0 ? unpaidInvoices[0].invoice_id : 0;
 
   // Fetch payment records for the customer
-  const { data: paymentRecords = [] } = api.payment.getByInvoiceId.useQuery(
-    { invoiceId: firstInvoiceId },
-    { enabled: firstInvoiceId > 0 && selectedTab === "payments" },
-  );
+  const { data: paymentRecords, refetch: refetchPaymentRecords } =
+    api.payment.getByInvoiceId.useQuery(
+      { invoiceId: firstInvoiceId },
+      { enabled: firstInvoiceId > 0 && selectedTab === "payments" },
+    );
+
+  const handleRefundSuccess = () => {
+    // Refresh payment records
+    void refetchPaymentRecords();
+    // Also refresh unpaid invoices to update the total
+    onPaymentSuccess();
+    // Call the onRefundSuccess callback if provided
+    if (onRefundSuccess) {
+      onRefundSuccess();
+    }
+  };
+
+  const renderPaymentRecords = () => {
+    if (!paymentRecords || paymentRecords.length === 0) {
+      return (
+        <div className="flex items-center justify-center p-4 text-slate-500">
+          No payment records found
+        </div>
+      );
+    }
+
+    return paymentRecords.map((record) => (
+      <PaymentRecord
+        key={record.payment_id}
+        payment={record}
+        onRefundSuccess={handleRefundSuccess}
+      />
+    ));
+  };
 
   return (
     <Dialog>
@@ -113,27 +146,15 @@ const Payables = ({
 
         <ScrollArea className="h-80">
           <div className="flex flex-col gap-2">
-            {selectedTab === "payables" ? (
-              unpaidInvoices.map((invoice) => (
-                <UnpaidInvoice
-                  key={invoice.invoice_id}
-                  invoice={invoice}
-                  onPaymentSuccess={onPaymentSuccess}
-                />
-              ))
-            ) : paymentRecords!.length > 0 ? (
-              paymentRecords!.map((record: PaymentRecordType) => (
-                <PaymentRecord
-                  key={record.payment_id}
-                  payment={record}
-                  onRefund={onPaymentSuccess}
-                />
-              ))
-            ) : (
-              <div className="flex items-center justify-center p-4 text-slate-500">
-                No payment records found
-              </div>
-            )}
+            {selectedTab === "payables"
+              ? unpaidInvoices.map((invoice) => (
+                  <UnpaidInvoice
+                    key={invoice.invoice_id}
+                    invoice={invoice}
+                    onPaymentSuccess={onPaymentSuccess}
+                  />
+                ))
+              : renderPaymentRecords()}
           </div>
         </ScrollArea>
 

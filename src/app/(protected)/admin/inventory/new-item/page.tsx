@@ -505,6 +505,12 @@ const NewItem = () => {
   const handleSearchItem = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setItemSearch(value);
+    
+    // If field is cleared, also clear the item state
+    if (value === "") {
+      setItem("");
+      setSelectedItem(null);
+    }
 
     // Check if the current value exactly matches an option
     const exactMatch = itemOptions.find(
@@ -513,15 +519,17 @@ const NewItem = () => {
     if (exactMatch) {
       handleSelect("item", exactMatch);
     }
-
-    if (value === "" && !itemOptions.includes(value)) {
-      setItem(value);
-    }
   };
 
   const handleSearchBrand = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setBrandSearch(value);
+    
+    // If field is cleared, also clear the brand state
+    if (value === "") {
+      setBrand("");
+      setSelectedBrand(null);
+    }
 
     // Check if the current value exactly matches an option
     const exactMatch = brandOptions.find(
@@ -530,15 +538,17 @@ const NewItem = () => {
     if (exactMatch) {
       handleSelect("brand", exactMatch);
     }
-
-    if (value === "" && !brandOptions.includes(value)) {
-      setBrand(value);
-    }
   };
 
   const handleSearchCategory = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value;
     setCategorySearch(value);
+    
+    // If field is cleared, also clear the category state
+    if (value === "") {
+      setCategory("");
+      setSelectedCategory(null);
+    }
 
     // Check if the current value exactly matches an option
     const exactMatch = categoryOptions.find(
@@ -546,10 +556,6 @@ const NewItem = () => {
     );
     if (exactMatch) {
       handleSelect("category", exactMatch);
-    }
-
-    if (value === "" && !categoryOptions.includes(value)) {
-      setCategory(value);
     }
   };
 
@@ -728,6 +734,45 @@ const NewItem = () => {
   const { mutateAsync: updateVariantMutation } =
     api.inventory.updateVariant.useMutation();
 
+  // Helper function to check if two preset cards are duplicates
+  const arePresetsIdentical = (preset1: PresetData, preset2: PresetData): boolean => {
+    // Check if main unit and price are the same
+    if (preset1.mainUnit !== preset2.mainUnit) return false;
+    
+    // Compare main prices - handle both string and number formats
+    const price1 = typeof preset1.mainPrice === 'string' ? parseFloat(preset1.mainPrice) : preset1.mainPrice;
+    const price2 = typeof preset2.mainPrice === 'string' ? parseFloat(preset2.mainPrice) : preset2.mainPrice;
+    
+    // If prices are not equal (accounting for floating point errors)
+    if (Math.abs(price1 - price2) > 0.001) return false;
+    
+    // Check if they have the same number of conversions
+    if (preset1.conversions.length !== preset2.conversions.length) return false;
+    
+    // Check if all conversions match
+    for (let i = 0; i < preset1.conversions.length; i++) {
+      const conv1 = preset1.conversions[i];
+      
+      // Find matching conversion in preset2
+      const matchingConversion = preset2.conversions.find(conv2 => 
+        conv2.unit === conv1.unit && 
+        conv2.qty === conv1.qty &&
+        // Compare prices, handling string/number format
+        (
+          (conv1.price === conv2.price) || 
+          (conv1.price && conv2.price && 
+           Math.abs(parseFloat(conv1.price.toString()) - parseFloat(conv2.price.toString())) <= 0.001)
+        )
+      );
+      
+      // If no match found for this conversion
+      if (!matchingConversion) return false;
+    }
+    
+    // If we get here, all checks passed - presets are identical
+    return true;
+  };
+
   const handleSave = async () => {
     // Check main inputs first
     if (!itemSearch && !selectedItem) {
@@ -822,8 +867,34 @@ const NewItem = () => {
       return;
     }
 
+    // Check for duplicate preset cards (completely identical presets)
+    const hasDuplicatePresets = presets.some((preset, index) => {
+      // Look for any identical preset with a different index
+      return presets.some((otherPreset, otherIndex) => 
+        index !== otherIndex && arePresetsIdentical(preset, otherPreset)
+      );
+    });
+    
+    if (hasDuplicatePresets) {
+      toast("❌ Duplicate preset cards", {
+        description: "You have multiple identical preset cards. Please keep only one of each.",
+        duration: 4000,
+      });
+      return;
+    }
+
     // Now check preset validations
-    // Check for invalid presets (main price zero/negative)
+    // 1. First check - Main Unit
+    const hasEmptyMainUnit = presets.some(preset => !preset.mainUnit);
+    if (hasEmptyMainUnit) {
+      toast("❌ Missing main unit", {
+        description: "Please fill in the Main Unit field for all presets",
+        duration: 4000,
+      });
+      return;
+    }
+
+    // 2. Second check - Main Price
     const invalidMainPrices = presets.filter(preset =>
         !preset.mainPrice || 
         preset.mainPrice === "" ||
@@ -840,7 +911,7 @@ const NewItem = () => {
       return;
     }
 
-    // Check for invalid conversions (qty or price zero/negative)
+    // 3. Third check - Conversion Row Quantity and Price
     const invalidConversions = presets.some(preset =>
         preset.conversions.some(conv => {
             const qty = parseFloat(conv.qty);
@@ -869,27 +940,25 @@ const NewItem = () => {
       return;
     }
 
-    // Check for invalid unit selections
+    // 4. Fourth check - Conversion Row Unit
     const invalidUnits = presets.some(preset => {
-      // Check main unit
-      const mainUnitInvalid = !units.some(unit => unit.name === preset.mainUnit);
-
-      // Check conversion units
+      // Only check conversion units here since main unit was checked first
       const conversionUnitsInvalid = preset.conversions.some(conv =>
           !units.some(unit => unit.name === conv.unit)
       );
 
-      return mainUnitInvalid || conversionUnitsInvalid;
+      return conversionUnitsInvalid;
     });
 
     if (invalidUnits) {
       toast("❌ Invalid unit selection", {
-        description: "Please select units from the dropdown list",
+        description: "Please select conversion units from the dropdown list",
         duration: 4000,
       });
       return;
     }
 
+    // Additional validation checks
     // Check for empty conversion rows
     const hasEmptyConversions = presets.some(preset =>
         preset.conversions.some(conv =>
@@ -932,11 +1001,26 @@ const NewItem = () => {
       });
       return;
     }
-    
-    const hasEmptyMainUnit = presets.some(preset => !preset.mainUnit);
-    if (hasEmptyMainUnit) {
-      toast("❌ Missing main unit", {
-        description: "Please fill in the Main Unit field for all presets",
+
+    // Check for "pieces" unit positioning
+    const hasInvalidPiecesPosition = presets.some(preset => {
+      // Check if "pieces" is used as main unit
+      if (preset.mainUnit && preset.mainUnit.toLowerCase() === "pieces") {
+        return true;
+      }
+      
+      // Check if "pieces" is used in any conversion row except the last one
+      const conversionsWithUnits = preset.conversions.filter(conv => conv.unit && conv.unit.trim() !== "");
+      const lastIndex = conversionsWithUnits.length - 1;
+      
+      return conversionsWithUnits.some((conv, index) => {
+        return conv.unit && conv.unit.toLowerCase() === "pieces" && index !== lastIndex;
+      });
+    });
+
+    if (hasInvalidPiecesPosition) {
+      toast("❌ Invalid 'pieces' unit position", {
+        description: "'Pieces' can only be used in the last conversion row, not as main unit or in the middle",
         duration: 4000,
       });
       return;
@@ -1160,6 +1244,12 @@ const NewItem = () => {
     // Check for duplicates by comparing array length with Set size
     return new Set(allUnits).size !== allUnits.length;
   };
+
+  // This effect will scroll to the top when the page loads, preventing auto-scroll to the bottom
+  useEffect(() => {
+    // Scroll to top of the page on load
+    window.scrollTo(0, 0);
+  }, []);
 
   let content = null;
   if (isLoading) {
@@ -1418,7 +1508,9 @@ const NewItem = () => {
             </div>
 
             <div className="mt-8">
-              <Label className="text-slate-500">Preset Conversions</Label>
+              <Label className="text-slate-500">
+                Preset Conversions <span className="text-rose-500">*</span>
+              </Label>
 
               <div className="mt-2 grid grid-cols-3 gap-4">
                 {presets.map((preset) => (

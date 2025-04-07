@@ -23,6 +23,12 @@ interface DeleteProps {
   onDelete: (id: string) => Promise<void>;
   onVerifyPassword: (password: string) => Promise<boolean>;
   userRole?: string;
+  unpaidAmount?: number;
+  hasUnpaidInvoices?: boolean;
+  getLatestUnpaidBalance?: () => Promise<{
+    amount: number;
+    hasUnpaid: boolean;
+  }>;
 }
 
 const Delete: React.FC<DeleteProps> = ({
@@ -33,30 +39,72 @@ const Delete: React.FC<DeleteProps> = ({
   onDelete,
   onVerifyPassword,
   userRole,
+  unpaidAmount = 0,
+  hasUnpaidInvoices = false,
+  getLatestUnpaidBalance,
 }) => {
   const [password, setPassword] = useState<string>("");
   const [error, setError] = useState<string | null>(null);
   const [isSuccess, setIsSuccess] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isDialogOpen, setIsDialogOpen] = useState<boolean>(false);
 
   const handleDelete = async () => {
-    // Immediately check if user is ADMIN
-    if (userRole !== "ADMIN") {
-      setError("Only ADMIN users can delete records");
-      return;
-    }
-
-    // Check password exists
-    if (!password) {
-      setError("Please enter your password to confirm");
-      return;
-    }
+    // Clear any previous error
+    setError(null);
+    setIsLoading(true);
 
     try {
+      // Immediately check if user is ADMIN
+      if (userRole !== "ADMIN") {
+        setError("Only ADMIN users can delete records");
+        setIsLoading(false);
+        return;
+      }
+
+      // Check password exists
+      if (!password) {
+        setError("Please enter your password to confirm");
+        setIsLoading(false);
+        return;
+      }
+
       // Verify password first
       const isPasswordCorrect = await onVerifyPassword(password);
       if (!isPasswordCorrect) {
         setError("Incorrect password");
+        setIsLoading(false);
         return;
+      }
+
+      // Password is correct, now check if customer has unpaid invoices
+      // Only check for unpaid invoices if this is a customer record
+      if (recordType === "Customers") {
+        // For customers with unpaid invoices, only check real-time data if necessary
+        if (hasUnpaidInvoices || getLatestUnpaidBalance) {
+          let currentUnpaidAmount = unpaidAmount;
+          let currentHasUnpaid = hasUnpaidInvoices;
+
+          // Only fetch latest data if we have the function
+          if (getLatestUnpaidBalance) {
+            try {
+              const result = await getLatestUnpaidBalance();
+              currentUnpaidAmount = result.amount;
+              currentHasUnpaid = result.hasUnpaid;
+            } catch (err) {
+              console.error("Failed to check latest unpaid balance:", err);
+              // Fall back to props if fetching fails
+            }
+          }
+
+          if (currentHasUnpaid) {
+            setError(
+              `Cannot delete customer with unpaid balance of PHP ${currentUnpaidAmount.toFixed(2)}`,
+            );
+            setIsLoading(false);
+            return;
+          }
+        }
       }
 
       // Proceed with deletion
@@ -74,11 +122,13 @@ const Delete: React.FC<DeleteProps> = ({
 
       // Clear success state if there was an error
       setIsSuccess(false);
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
-    <Dialog>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
       <DialogTrigger asChild>
         <Button
           variant="ghost"
@@ -150,10 +200,12 @@ const Delete: React.FC<DeleteProps> = ({
                   onChange={(e) => setPassword(e.target.value)}
                 />
               </div>
-              <div className="mt-1 flex items-center gap-2">
-                <AlertCircle className="h-5 w-5 text-rose-500" />
-                <p className="text-rose-500">{error}</p>
-              </div>
+              {error && (
+                <div className="mt-1 flex items-center gap-2">
+                  <AlertCircle className="h-5 w-5 text-rose-500" />
+                  <p className="text-rose-500">{error}</p>
+                </div>
+              )}
             </div>
             <Separator orientation="horizontal" className="h-[2px]" />
             <div className="flex justify-end gap-3">
@@ -168,8 +220,9 @@ const Delete: React.FC<DeleteProps> = ({
               <Button
                 className="bg-red hover:bg-red/80"
                 onClick={() => void handleDelete()}
+                disabled={isLoading}
               >
-                Delete Record
+                {isLoading ? "Checking..." : "Delete Record"}
               </Button>
             </div>
           </>

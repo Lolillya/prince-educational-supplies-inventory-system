@@ -14,6 +14,12 @@ type RecordItemProps = {
   onDelete: (id: string) => Promise<void>;
   onVerifyPassword: (password: string) => Promise<boolean>;
   userRole?: string;
+  unpaidAmount?: number;
+  hasUnpaidInvoices?: boolean;
+  getLatestUnpaidBalance?: () => Promise<{
+    amount: number;
+    hasUnpaid: boolean;
+  }>;
 };
 
 const RecordItem: React.FC<RecordItemProps> = ({
@@ -26,6 +32,9 @@ const RecordItem: React.FC<RecordItemProps> = ({
   onDelete,
   onVerifyPassword,
   userRole,
+  unpaidAmount = 0,
+  hasUnpaidInvoices = false,
+  getLatestUnpaidBalance,
 }) => {
   return (
     <>
@@ -54,6 +63,9 @@ const RecordItem: React.FC<RecordItemProps> = ({
               onDelete={onDelete}
               onVerifyPassword={onVerifyPassword}
               userRole={userRole}
+              unpaidAmount={unpaidAmount}
+              hasUnpaidInvoices={hasUnpaidInvoices}
+              getLatestUnpaidBalance={getLatestUnpaidBalance}
             />
           </div>
         </div>

@@ -42,12 +42,18 @@ type VariantData = {
   isExisting: boolean;
 };
 
+// Update the PresetData type to ensure conversions are consistent
 type PresetData = {
   id: number;
   mainUnit: string;
-  mainPrice: string;
+  mainPrice: string | number;
   isExisting?: boolean;
-  conversions: Array<{ qty: string; unit: string; price?: string }>;
+  conversions: Array<{ 
+    qty: string; 
+    unit: string; 
+    price?: string | number;
+    quantity?: number; // For backward compatibility
+  }>;
 };
 
 const NewItem = () => {
@@ -190,7 +196,9 @@ const NewItem = () => {
 
     // Limit to 2 decimal places
     if (parts.length === 2) {
-      formatted = parts[0] + '.' + parts[1].slice(0, 2);
+      // Safely access parts[1] with a fallback to empty string
+      const decimal = parts[1] || '';
+      formatted = parts[0] + '.' + decimal.slice(0, 2);
     }
 
     return formatted;
@@ -379,12 +387,12 @@ const NewItem = () => {
         (preset) => ({
           id: preset.preset_id,
           mainUnit: preset.main_unit.name,
-          mainPrice: formatPriceWithTwoDecimals(preset.main_price),
+          mainPrice: formatPriceInput(preset.main_price),
           isExisting: true,
           conversions: preset.conversions.map((conv: any) => ({
             qty: conv.conversion_rate.toString(),
             unit: conv.to_unit.name,
-            price: conv.related_price ? formatPriceWithTwoDecimals(conv.related_price) : "",
+            price: conv.related_price ? formatPriceInput(conv.related_price) : "",
           })),
         }),
       );
@@ -749,27 +757,41 @@ const NewItem = () => {
     // Check if they have the same number of conversions
     if (preset1.conversions.length !== preset2.conversions.length) return false;
     
-    // Check if all conversions match
-    for (let i = 0; i < preset1.conversions.length; i++) {
-      const conv1 = preset1.conversions[i];
-      
-      // Find matching conversion in preset2
-      const matchingConversion = preset2.conversions.find(conv2 => 
-        conv2.unit === conv1.unit && 
-        conv2.qty === conv1.qty &&
-        // Compare prices, handling string/number format
-        (
-          (conv1.price === conv2.price) || 
-          (conv1.price && conv2.price && 
-           Math.abs(parseFloat(conv1.price.toString()) - parseFloat(conv2.price.toString())) <= 0.001)
-        )
-      );
+    // Create a copy of preset2 conversions for tracking matches
+    const remainingConv2 = [...preset2.conversions];
+    
+    // For each conversion in preset1, find a match in preset2
+    for (const conv1 of preset1.conversions) {
+      // Find the index of a matching conversion in the remaining preset2 conversions
+      const matchIdx = remainingConv2.findIndex(conv2 => {
+        // Match unit and quantity
+        if (conv1.unit !== conv2.unit || conv1.qty !== conv2.qty) {
+          return false;
+        }
+        
+        // Match price (handle undefined/string/number cases)
+        const price1Str = conv1.price?.toString() || '';
+        const price2Str = conv2.price?.toString() || '';
+        
+        if (!price1Str && !price2Str) return true; // Both empty
+        if (!price1Str || !price2Str) return false; // One empty, one not
+        
+        // Compare numeric values with small tolerance for floating point
+        const price1Num = parseFloat(price1Str);
+        const price2Num = parseFloat(price2Str);
+        
+        return !isNaN(price1Num) && !isNaN(price2Num) && 
+               Math.abs(price1Num - price2Num) <= 0.001;
+      });
       
       // If no match found for this conversion
-      if (!matchingConversion) return false;
+      if (matchIdx === -1) return false;
+      
+      // Remove the matched conversion so it can't be matched again
+      remainingConv2.splice(matchIdx, 1);
     }
     
-    // If we get here, all checks passed - presets are identical
+    // If we get here, all conversions matched exactly once
     return true;
   };
 
@@ -895,13 +917,18 @@ const NewItem = () => {
     }
 
     // 2. Second check - Main Price
-    const invalidMainPrices = presets.filter(preset =>
-        !preset.mainPrice || 
-        preset.mainPrice === "" ||
-        preset.mainPrice === "0.00" ||
-        preset.mainPrice === "0" ||
-        parseFloat(preset.mainPrice) <= 0
-    );
+    const invalidMainPrices = presets.filter(preset => {
+        // Handle the string | number conversion before using parseFloat
+        const price = typeof preset.mainPrice === 'string' 
+            ? parseFloat(preset.mainPrice) 
+            : preset.mainPrice;
+        
+        return !preset.mainPrice || 
+            preset.mainPrice === "" ||
+            preset.mainPrice === "0.00" ||
+            preset.mainPrice === "0" ||
+            price <= 0;
+    });
 
     if (invalidMainPrices.length > 0) {
       toast("❌ Invalid price", {
@@ -922,7 +949,11 @@ const NewItem = () => {
             
             // If price exists, check if it's invalid
             if (conv.price !== undefined && conv.price !== '') {
-                const price = parseFloat(conv.price);
+                // Handle the string | number conversion
+                const price = typeof conv.price === 'string' 
+                    ? parseFloat(conv.price) 
+                    : conv.price;
+                
                 if (isNaN(price) || price <= 0) {
                     return true;
                 }
@@ -1154,11 +1185,17 @@ const NewItem = () => {
               createPresetMutation({
                 itemId: item.item_id!,
                 mainUnit: preset.mainUnit,
-                mainPrice: parseFloat(preset.mainPrice),
+                mainPrice: typeof preset.mainPrice === 'string' 
+                    ? parseFloat(preset.mainPrice) 
+                    : preset.mainPrice,
                 conversions: preset.conversions.map((conv) => ({
                   qty: parseFloat(conv.qty),
                   unit: conv.unit,
-                  price: conv.price ? parseFloat(conv.price) : 0,
+                  price: conv.price 
+                    ? (typeof conv.price === 'string' 
+                        ? parseFloat(conv.price) 
+                        : conv.price) 
+                    : 0,
                 })),
               }),
             ),
@@ -1179,11 +1216,17 @@ const NewItem = () => {
               updatePresetMutation({
                 presetId: preset.id!,
                 mainUnit: preset.mainUnit,
-                mainPrice: parseFloat(preset.mainPrice),
+                mainPrice: typeof preset.mainPrice === 'string' 
+                    ? parseFloat(preset.mainPrice) 
+                    : preset.mainPrice,
                 conversions: preset.conversions.map((conv) => ({
                   qty: parseFloat(conv.qty),
                   unit: conv.unit,
-                  price: conv.price ? parseFloat(conv.price) : 0,
+                  price: conv.price 
+                    ? (typeof conv.price === 'string' 
+                        ? parseFloat(conv.price) 
+                        : conv.price) 
+                    : 0,
                 })),
               }),
             ),
@@ -1492,7 +1535,8 @@ const NewItem = () => {
                   onChange={(value) => {
                     const newVariants = [...variants];
                     newVariants[index] = {
-                      ...newVariants[index],
+                      id: variant.id,
+                      isExisting: variant.isExisting,
                       ...value,
                     };
                     setVariants(newVariants);
@@ -1517,13 +1561,13 @@ const NewItem = () => {
                   <ConversionCard
                     key={preset.id}
                     preset={preset}
-                    onUpdate={(updatedPreset) =>
+                    onUpdate={(updatedPreset) => {
+                      // Force cast to ensure TypeScript understands both types are compatible
                       setPresets(
-                        presets.map((p) =>
-                          p.id === preset.id ? updatedPreset : p,
-                        ),
-                      )
-                    }
+                        presets.map((p) => p.id === preset.id ? 
+                          (updatedPreset as unknown as PresetData) : p)
+                      );
+                    }}
                     onRemove={presets.length > 1 ? () =>
                       setPresets(presets.filter((p) => p.id !== preset.id)) : undefined}
                   />

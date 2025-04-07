@@ -29,8 +29,8 @@ interface PresetData {
   mainPrice: number | string; // Allow both number and string
   isExisting?: boolean;
   conversions: Array<{
-    qty?: string;
-    unit?: string;
+    qty: string;
+    unit: string;
     price?: string | number;
     quantity?: number; // For backward compatibility
   }>;
@@ -276,10 +276,17 @@ const ConversionCard = ({
     }
 
     const newConversions = [...preset.conversions];
-    newConversions[index] = {
-      ...newConversions[index],
-      ...newData,
-    };
+    // Make sure the index is valid
+    if (index >= 0 && index < newConversions.length) {
+      const currentConversion = newConversions[index] || { qty: "", unit: "", price: "" };
+      
+      newConversions[index] = {
+        // Ensure non-optional fields have default values if undefined
+        qty: newData.qty ?? currentConversion.qty ?? "",
+        unit: newData.unit ?? currentConversion.unit ?? "",
+        price: newData.price ?? currentConversion.price
+      };
+    }
     onUpdate({ ...preset, conversions: newConversions });
   };
 
@@ -289,10 +296,17 @@ const ConversionCard = ({
     const formattedPrice = formatPrice(price);
 
     const newConversions = [...preset.conversions];
-    newConversions[index] = {
-      ...newConversions[index],
-      price: formattedPrice
-    };
+    // Make sure the index is valid
+    if (index >= 0 && index < newConversions.length) {
+      const currentConversion = newConversions[index] || { qty: "", unit: "", price: "" };
+      
+      newConversions[index] = {
+        // Ensure qty and unit remain defined
+        qty: currentConversion.qty ?? "",
+        unit: currentConversion.unit ?? "",
+        price: formattedPrice
+      };
+    }
     onUpdate({ ...preset, conversions: newConversions });
   };
 

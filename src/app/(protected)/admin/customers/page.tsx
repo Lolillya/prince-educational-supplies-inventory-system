@@ -49,6 +49,8 @@ interface Customer {
       };
     };
   }[];
+  unpaidAmount?: number;
+  hasUnpaidInvoices?: boolean;
 }
 
 interface Location {
@@ -65,6 +67,9 @@ const CustomersPage = () => {
   const searchParams = useSearchParams();
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [selectedRecord, setSelectedRecord] = useState<Customer | null>(null);
+  const [customersWithUnpaidStatus, setCustomersWithUnpaidStatus] = useState<
+    Map<string, { amount: number; hasUnpaid: boolean }>
+  >(new Map());
 
   const { data: customerData } = api.customers.list.useQuery();
   const customerIdParam = searchParams.get("customerId");
@@ -110,6 +115,103 @@ const CustomersPage = () => {
     { enabled: !!selectedRecord },
   );
 
+  // Check unpaid invoices for all customers - optimize by using a prefetch strategy
+  const checkUnpaidQuery = api.useUtils().customers.unpaidInvoices;
+
+  // Function to get latest unpaid balance for a customer - with debouncing/caching
+  const unpaidBalanceCache = new Map<
+    string,
+    { amount: number; hasUnpaid: boolean; timestamp: number }
+  >();
+  const CACHE_EXPIRY_MS = 30000; // 30 seconds cache validity
+
+  const getLatestUnpaidBalance = async (customerId: string) => {
+    const now = Date.now();
+    const cachedValue = unpaidBalanceCache.get(customerId);
+
+    // Use cached value if available and not expired
+    if (cachedValue && now - cachedValue.timestamp < CACHE_EXPIRY_MS) {
+      return {
+        amount: cachedValue.amount,
+        hasUnpaid: cachedValue.hasUnpaid,
+      };
+    }
+
+    try {
+      const unpaidData = await checkUnpaidQuery.fetch({
+        customerId,
+      });
+
+      const totalUnpaid = unpaidData.reduce(
+        (sum, invoice) => sum + invoice.remaining,
+        0,
+      );
+
+      const result = {
+        amount: totalUnpaid,
+        hasUnpaid: totalUnpaid > 0,
+      };
+
+      // Cache the result with timestamp
+      unpaidBalanceCache.set(customerId, {
+        ...result,
+        timestamp: now,
+      });
+
+      return result;
+    } catch (error) {
+      console.error(
+        `Error fetching unpaid invoices for customer ${customerId}:`,
+        error,
+      );
+      return { amount: 0, hasUnpaid: false };
+    }
+  };
+
+  // Use effect to check unpaid invoices for all customers - optimize to reduce number of requests
+  useEffect(() => {
+    if (customerData) {
+      const fetchUnpaidForAllCustomers = async () => {
+        const unpaidMap = new Map<
+          string,
+          { amount: number; hasUnpaid: boolean }
+        >();
+
+        // Process customers in batches to avoid too many simultaneous requests
+        const batchSize = 3; // Reduced batch size to prevent overloading
+        for (let i = 0; i < customerData.length; i += batchSize) {
+          const batch = customerData.slice(i, i + batchSize);
+
+          // Process each batch with Promise.all for better performance
+          const promises = batch.map(async (customer) => {
+            const customerId = customer.Personal_Details_Id;
+            return {
+              id: customerId,
+              data: await getLatestUnpaidBalance(customerId),
+            };
+          });
+
+          // Wait for all promises in this batch to resolve
+          const results = await Promise.all(promises);
+
+          // Update the map with the results
+          results.forEach((result) => {
+            unpaidMap.set(result.id, result.data);
+          });
+
+          // Add a small delay between batches to prevent UI freezing
+          if (i + batchSize < customerData.length) {
+            await new Promise((resolve) => setTimeout(resolve, 100));
+          }
+        }
+
+        setCustomersWithUnpaidStatus(unpaidMap);
+      };
+
+      void fetchUnpaidForAllCustomers();
+    }
+  }, [customerData]);
+
   const verifyPasswordMutation = api.customers.verifyPassword.useMutation();
   const handleVerifyPassword = async (password: string) => {
     if (!personalDetailsId) return false;
@@ -145,6 +247,9 @@ const CustomersPage = () => {
 
   const handleDelete = (id: string): Promise<void> => {
     if (!checkAdminRole()) return Promise.resolve();
+
+    // We no longer need to check for unpaid invoices here
+    // as the Delete component will handle it with the props we pass
 
     return deleteCustomerMutation
       .mutateAsync({ id })
@@ -213,25 +318,33 @@ const CustomersPage = () => {
             {(filteredCustomers?.length ?? 0) > 0 ? (
               <ScrollArea className="h-full w-full">
                 <div className="flex h-40 w-full flex-col items-center">
-                  {filteredCustomers?.map((customer) => (
-                    <RecordItem
-                      key={customer.Personal_Details_Id}
-                      name={customer.Personal_Details.company}
-                      id={customer.Personal_Details_Id}
-                      emoji={customer.emoji}
-                      onClick={() => setSelectedRecord(customer as Customer)}
-                      isSelected={
-                        selectedRecord?.Personal_Details_Id ===
-                        customer.Personal_Details_Id
-                      }
-                      recordType={"Customers"}
-                      onVerifyPassword={handleVerifyPassword}
-                      onDelete={(id) => {
-                        handleDelete(id);
-                      }}
-                      userRole={userRole}
-                    />
-                  ))}
+                  {filteredCustomers?.map((customer) => {
+                    const unpaidStatus = customersWithUnpaidStatus.get(
+                      customer.Personal_Details_Id,
+                    );
+                    return (
+                      <RecordItem
+                        key={customer.Personal_Details_Id}
+                        name={customer.Personal_Details.company}
+                        id={customer.Personal_Details_Id}
+                        emoji={customer.emoji}
+                        onClick={() => setSelectedRecord(customer as Customer)}
+                        isSelected={
+                          selectedRecord?.Personal_Details_Id ===
+                          customer.Personal_Details_Id
+                        }
+                        recordType={"Customers"}
+                        onVerifyPassword={handleVerifyPassword}
+                        onDelete={handleDelete}
+                        userRole={userRole}
+                        unpaidAmount={unpaidStatus?.amount ?? 0}
+                        hasUnpaidInvoices={unpaidStatus?.hasUnpaid ?? false}
+                        getLatestUnpaidBalance={() =>
+                          getLatestUnpaidBalance(customer.Personal_Details_Id)
+                        }
+                      />
+                    );
+                  })}
                 </div>
               </ScrollArea>
             ) : (

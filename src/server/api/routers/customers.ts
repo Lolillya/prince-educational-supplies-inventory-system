@@ -252,19 +252,73 @@ export const customerRouter = createTRPCRouter({
     .mutation(async ({ input }) => {
       const { id } = input;
 
-      // Cascade will handle related records automatically
-      await db.personal_Details.delete({
-        where: { personal_details_id: id },
-        include: {
-          User_Role: {
-            include: {
-              customerInvoices: true,
-            },
-          },
-        },
-      });
+      try {
+        // 1. First delete any authentication logs
+        await db.authentication_Log.deleteMany({
+          where: { personal_details_id: id },
+        });
 
-      return { success: true };
+        // 2. Delete any authentication records
+        await db.authentication.deleteMany({
+          where: { personal_details_id: id },
+        });
+
+        // 3. Delete any user roles associated with this personal detail
+        await db.user_Role.deleteMany({
+          where: { Personal_Details_Id: id },
+        });
+
+        // 4. Find and delete any invoices associated with this customer
+        const userRoles = await db.user_Role.findMany({
+          where: { Personal_Details_Id: id },
+        });
+
+        for (const role of userRoles) {
+          // Delete payments for invoices related to this customer
+          const invoices = await db.invoice.findMany({
+            where: { customer_id: role.id },
+            select: { invoice_id: true },
+          });
+
+          for (const invoice of invoices) {
+            // Delete payments and payment logs
+            const payments = await db.payment.findMany({
+              where: { invoice_id: invoice.invoice_id },
+              select: { payment_id: true },
+            });
+
+            for (const payment of payments) {
+              await db.payment_Log.deleteMany({
+                where: { payment_id: payment.payment_id },
+              });
+            }
+
+            await db.payment.deleteMany({
+              where: { invoice_id: invoice.invoice_id },
+            });
+
+            // Delete line items
+            await db.line_Item.deleteMany({
+              where: { invoice_id: invoice.invoice_id },
+            });
+          }
+
+          // Delete invoices
+          await db.invoice.deleteMany({
+            where: { customer_id: role.id },
+          });
+        }
+
+        // 5. Finally delete the personal details
+        await db.personal_Details.delete({
+          where: { personal_details_id: id },
+        });
+
+        return { success: true };
+      } catch (error) {
+        console.error("Error in delete mutation:", error);
+        throw error;
+      }
     }),
 
   verifyPassword: publicProcedure

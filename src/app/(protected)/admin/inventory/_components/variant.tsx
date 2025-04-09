@@ -23,8 +23,9 @@ const Variant = ({
   value = { variant: "", lowStock: 0, veryLowStock: 0 },
   onChange,
 }: VariantProps) => {
-  const hasStockError = value?.lowStock !== undefined && 
-    value?.veryLowStock !== undefined && 
+  const hasStockError =
+    value?.lowStock !== undefined &&
+    value?.veryLowStock !== undefined &&
     value?.lowStock <= value?.veryLowStock &&
     value?.lowStock > 0 &&
     value?.veryLowStock > 0;
@@ -36,7 +37,7 @@ const Variant = ({
         className="bg-white text-slate-700 placeholder-slate-300 shadow-none"
         value={value.variant}
         onChange={(e) => {
-          onChange?.({ 
+          onChange?.({
             ...value,
             variant: e.target.value,
           });
@@ -48,21 +49,43 @@ const Variant = ({
             <div className="flex w-full items-center">
               <div className="h-full w-2 rounded-l-lg bg-amber-500" />
               <Input
-                type="number"
-                min="0"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Low Stock Level"
                 className="w-full rounded-l-none bg-white text-slate-700 placeholder-slate-300 shadow-none"
-                value={
-                  value.lowStock === 0
-                    ? ""
-                    : value.lowStock
-                }
-                onChange={(e) =>
-                  onChange?.({ 
-                    ...value, 
-                    lowStock: Number(e.target.value) || 0 
-                  })
-                }
+                value={value.lowStock === 0 ? "" : value.lowStock}
+                onKeyDown={(e) => {
+                  // Allow keyboard shortcuts and navigation keys
+                  if (e.metaKey || e.ctrlKey || e.altKey) {
+                    return;
+                  }
+
+                  // Allow only numeric keys, backspace, delete, tab, arrows
+                  if (
+                    !/^\d$/.test(e.key) &&
+                    ![
+                      "Backspace",
+                      "Delete",
+                      "Tab",
+                      "ArrowLeft",
+                      "ArrowRight",
+                      "ArrowUp",
+                      "ArrowDown",
+                      "Home",
+                      "End",
+                    ].includes(e.key)
+                  ) {
+                    e.preventDefault();
+                  }
+                }}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
+                  onChange?.({
+                    ...value,
+                    lowStock: val === "" ? 0 : Number(val),
+                  });
+                }}
               />
             </div>
           </div>
@@ -70,21 +93,43 @@ const Variant = ({
             <div className="flex w-full items-center">
               <div className="h-full w-2 rounded-l-lg bg-rose-500" />
               <Input
-                type="number"
-                min="0"
+                type="text"
+                inputMode="numeric"
+                pattern="[0-9]*"
                 placeholder="Very Low Stock Level"
                 className="w-full rounded-l-none bg-white text-slate-700 placeholder-slate-300 shadow-none"
-                value={
-                  value.veryLowStock === 0
-                    ? ""
-                    : value.veryLowStock
-                }
-                onChange={(e) =>
+                value={value.veryLowStock === 0 ? "" : value.veryLowStock}
+                onKeyDown={(e) => {
+                  // Allow keyboard shortcuts and navigation keys
+                  if (e.metaKey || e.ctrlKey || e.altKey) {
+                    return;
+                  }
+
+                  // Allow only numeric keys, backspace, delete, tab, arrows
+                  if (
+                    !/^\d$/.test(e.key) &&
+                    ![
+                      "Backspace",
+                      "Delete",
+                      "Tab",
+                      "ArrowLeft",
+                      "ArrowRight",
+                      "ArrowUp",
+                      "ArrowDown",
+                      "Home",
+                      "End",
+                    ].includes(e.key)
+                  ) {
+                    e.preventDefault();
+                  }
+                }}
+                onChange={(e) => {
+                  const val = e.target.value.replace(/[^0-9]/g, "");
                   onChange?.({
                     ...value,
-                    veryLowStock: Number(e.target.value) || 0,
-                  })
-                }
+                    veryLowStock: val === "" ? 0 : Number(val),
+                  });
+                }}
               />
             </div>
           </div>

@@ -1,4 +1,4 @@
-import { Box, Calendar, Printer } from 'lucide-react'
+import { Box, Calendar, X } from 'lucide-react'
 import { Poppins } from 'next/font/google'
 import React, { useState } from 'react'
 import { Button } from '~/components/ui/button'
@@ -6,9 +6,10 @@ import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, Di
 import { Input } from '~/components/ui/input'
 import { Label } from '~/components/ui/label'
 import { Separator } from '~/components/ui/separator'
-import { Textarea } from '~/components/ui/textarea'
-import RecordEditor from '../../_components/record-editor'
-import RecordExpand from '../../_components/record-expand'
+import { ScrollArea } from '~/components/ui/scroll-area'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '~/components/ui/table'
+import { HoverCard, HoverCardContent, HoverCardTrigger } from '~/components/ui/hover-card'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '~/components/ui/tooltip'
 import EmployeeActivityCard from './employee-activity-card'
 
 const poppins = Poppins({
@@ -23,6 +24,35 @@ interface RestockDialogProps {
 	context: 'employee' | 'supplier';
 }
 
+// Define types for unit conversion
+interface UnitConversion {
+	from: string;
+	count: number;
+	to: string;
+	price?: number;
+}
+
+// Define types for restock items
+interface RestockItem {
+	variant: string;
+	item: string;
+	brand: string;
+	quantity: number;
+	price: number;
+	mainUnit: string;
+	unitConversion: UnitConversion[];
+}
+
+// Simple UnitLine component for conversions
+const UnitLine = ({ from, count, to, price }: UnitConversion) => {
+	return (
+		<div className='flex justify-between items-center w-full'>
+			<p className='text-sm text-slate-500 flex items-center gap-2'>{from} = {count} {to}</p>
+			<p className='text-sm text-slate-500'>₱{price?.toFixed(2) || '0.00'}</p>
+		</div>
+	);
+};
+
 const RestockDialog = ({ restock, clerkId, activity, context = 'employee' }: RestockDialogProps) => {
 	const totalAdded = activity.batchVariants?.reduce(
 		(sum: number, bv: any) => sum + bv.quantity, 0
@@ -30,37 +60,42 @@ const RestockDialog = ({ restock, clerkId, activity, context = 'employee' }: Res
 
 	const [isEditing, setIsEditing] = useState(false);
 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-	const [showWarning, setShowWarning] = useState(false);
+
+	// Format batch variants for the table
+	const restockItems: RestockItem[] = activity.batchVariants?.map((bv: any) => {
+		// Process unit conversions with price information
+		const unitConversions = bv.SupplierUnit?.flatMap((supplierUnit: any) =>
+			supplierUnit.ConversionRate?.map((rate: any) => ({
+				from: rate.fromUnit?.name || 'unit',
+				count: rate.conversion_rate || 1,
+				to: rate.toUnit?.name || 'pcs',
+				price: supplierUnit.price || 0
+			}))
+		) || [];
+
+		return {
+			variant: bv.variant?.name || 'Unknown Variant',
+			item: bv.variant?.item?.name || 'Unknown Item',
+			brand: bv.variant?.item?.brand?.name || 'Unknown Brand',
+			quantity: bv.quantity || 0,
+			price: bv.SupplierUnit?.[0]?.price || 0,
+			mainUnit: bv.SupplierUnit?.[0]?.unit?.name || 'pcs',
+			unitConversion: unitConversions
+		};
+	}) || [];
 
 	// Get supplier name from the first batch variant's SupplierUnit
 	const supplierName = activity.batchVariants?.[0]?.SupplierUnit?.[0]?.supplier?.Personal_Details?.company || 'Unknown Supplier';
-
-	const handleEdit = () => {
-		setIsEditing((prev) => !prev);
-		setShowWarning(false);
-	};
-
-	const handleKeyDown = (event: React.KeyboardEvent) => {
-		if (event.key === "Escape" && isEditing) {
-			setShowWarning(true);
-			event.preventDefault();
-		}
-	};
+	// Get clerk name from Personal_Details
+	const clerkName = activity.Personal_Details ? 
+		`${activity.Personal_Details.first_name} ${activity.Personal_Details.last_name}` : 
+		'Unknown Clerk';
 
 	return (
 		<Dialog
 			open={isDialogOpen}
 			onOpenChange={(open) => {
-				if (!open) {
-					if (isEditing) {
-						setShowWarning(true);
-						return;
-					}
-				}
 				setIsDialogOpen(open);
-				if (!open) {
-					setShowWarning(false);
-				}
 			}}
 		>
 			<DialogTrigger>
@@ -94,77 +129,115 @@ const RestockDialog = ({ restock, clerkId, activity, context = 'employee' }: Res
 			</DialogTrigger>
 
 			<DialogContent
-				className="!w-full !max-w-3xl [&>button]:hidden"
-				onKeyDown={handleKeyDown}
+				className="flex max-h-[80%] !w-full !max-w-3xl flex-col [&>button]:hidden"
 			>
-				<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
+				<DialogHeader className={`h-full text-xl ${poppins.className} font-normal`}>
 					<div className="flex items-center justify-between">
-						<div className="flex flex-col gap-2">
+						<div className="flex h-full flex-col justify-between gap-2">
 							<DialogTitle className="text-xl font-normal text-slate-700">
 								Restock #{activity.batch_number}
 							</DialogTitle>
 							<div className="flex items-center gap-3 text-slate-400">
 								<Calendar className="h-4 w-4" />
 								<DialogDescription className="text-sm tracking-wide">
-									{new Date(activity.created_at).toLocaleDateString()}
+									{new Date(activity.created_at).toLocaleDateString("en-US", {
+										month: "long",
+										day: "numeric",
+										year: "numeric",
+									})}
 								</DialogDescription>
 							</div>
 						</div>
-						<div className="flex items-center gap-3">
-							{/*<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />*/}
-							{/*<RecordExpand />*/}
-						</div>
+						<DialogClose asChild>
+							<Button
+								variant={"secondary"}
+								className="h-12 w-12 text-slate-700"
+							>
+								<X className="!h-6 !w-6 text-slate-400" strokeWidth={2.5} />
+							</Button>
+						</DialogClose>
 					</div>
 				</DialogHeader>
 
 				<Separator orientation="horizontal" className="h-[2px]" />
 
 				<div className="flex gap-3">
-					{context === 'employee' && (
-						<div className="flex w-1/2 flex-col gap-2">
-							<Label className="text-slate-400">Supplier</Label>
-							<Input
-								className="bg-slate-100 text-slate-700 shadow-none"
-								disabled={!isEditing}
-								value={supplierName}
-							/>
-						</div>
-					)}
-					<div className={`flex ${context === 'employee' ? 'w-1/2' : 'w-full'} flex-col gap-2`}>
-						<Label className="text-slate-400">Recorded by</Label>
+					<div className="flex w-full flex-col gap-2">
+						<Label className="text-slate-400">
+							{context === 'supplier' ? 'Recorded by' : 'Supplier'}
+						</Label>
 						<Input
 							className="bg-slate-100 text-slate-700 shadow-none"
-							disabled={!isEditing}
-							value={activity.Personal_Details ?
-								`${activity.Personal_Details.first_name} ${activity.Personal_Details.last_name}` :
-								'Unknown Clerk'
-							}
+							disabled={true}
+							value={context === 'supplier' ? clerkName : supplierName}
 						/>
 					</div>
 				</div>
 
-				{/* Restock table placeholder */}
-				<div className="mt-4">
-					<p className="text-slate-500 text-sm">
-						Restock Items ({(activity.batchVariants || []).length} variants)
-					</p>
-					<div className="mt-2 space-y-2">
-						{activity.batchVariants?.map((bv: any) => (
-							<div key={bv.batch_variant_id} className="flex justify-between items-center p-2 bg-slate-50 rounded">
-								<span>{bv.variant?.item?.brand?.name} {bv.variant?.item?.name}</span>
-								<span>{bv.quantity} items</span>
-							</div>
-						))}
-					</div>
+				{/* Restock Table */}
+				<div>
+					<Table className="w-full table-fixed">
+						<TableHeader className="sticky top-0 rounded-lg bg-slate-100">
+							<TableRow className="border-none">
+								<TableHead className="w-48 rounded-l-xl">Item</TableHead>
+								<TableHead>Quantity</TableHead>
+								<TableHead>Unit</TableHead>
+								<TableHead>Conversions</TableHead>
+								<TableHead className="rounded-r-xl">Price</TableHead>
+							</TableRow>
+						</TableHeader>
+					</Table>
+					<ScrollArea className="h-40" type="always">
+						<Table className="w-full table-fixed">
+							<TableBody>
+								{restockItems.length > 0 ?
+									(restockItems.map((item: RestockItem, index: number) => (
+										<TableRow key={index} className="border-none text-slate-700">
+											<TableCell className="rounded-l-xl w-48">
+												<TooltipProvider>
+													<Tooltip>
+														<TooltipTrigger className="hover:cursor-text line-clamp-1 text-left">
+															{item.item} - {item.brand} - {item.variant}
+														</TooltipTrigger>
+														<TooltipContent className="shadow-none text-slate-700">
+															{item.item} - {item.brand} - {item.variant}
+														</TooltipContent>
+													</Tooltip>
+												</TooltipProvider>
+											</TableCell>
+											<TableCell>{item.quantity}</TableCell>
+											<TableCell>{item.mainUnit}</TableCell>
+											<TableCell className="truncate">
+												<HoverCard>
+													<HoverCardTrigger className="hover:underline hover:cursor-default">
+														{item.unitConversion.length} Conversions
+													</HoverCardTrigger>
+													<HoverCardContent className="shadow-none flex flex-col gap-3">
+														{item.unitConversion.map((unit: UnitConversion, index: number) => (
+															<UnitLine 
+																key={index} 
+																from={unit.from} 
+																count={unit.count} 
+																to={unit.to}
+																price={unit.price} 
+															/>
+														))}
+													</HoverCardContent>
+												</HoverCard>
+											</TableCell>
+											<TableCell>₱{(item.price ?? 0).toFixed(2)}</TableCell>
+										</TableRow>
+									))) : (
+										<TableRow>
+											<TableCell colSpan={5} className='rounded-xl text-slate-700'>No items available...</TableCell>
+										</TableRow>
+									)}
+							</TableBody>
+						</Table>
+					</ScrollArea>
 				</div>
 
 				<Separator orientation="horizontal" className="h-[2px]" />
-
-				<Textarea
-					className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"
-					placeholder="Your record notes..."
-					disabled={!isEditing}
-				/>
 
 				<div className="flex items-center justify-between">
 					<div className="flex flex-col">
@@ -172,184 +245,16 @@ const RestockDialog = ({ restock, clerkId, activity, context = 'employee' }: Res
 						<p className="text-sm text-slate-400">Total Added Stock</p>
 					</div>
 					<div className="flex items-center gap-2">
-						<DialogClose asChild disabled={isEditing}>
-							<Button variant="secondary" className="text-slate-700 hover:bg-slate-200" disabled={isEditing}>
+						<DialogClose asChild>
+							<Button variant="secondary" className="text-slate-700 hover:bg-slate-200">
 								Close
 							</Button>
 						</DialogClose>
-						<Button className="bg-green hover:bg-green/80" disabled={isEditing}>
-							<Printer />
-							Print Restock
-						</Button>
 					</div>
 				</div>
-				{showWarning && (
-					<p className="text-right text-sm text-orange-400">
-						Whoops! Don't forget to save your changes.
-					</p>
-				)}
 			</DialogContent>
 		</Dialog>
 	)
 }
 
 export default RestockDialog
-
-// import { Calendar, Printer } from 'lucide-react'
-// import { Poppins } from 'next/font/google'
-// import React, { useState } from 'react'
-// import { Button } from '~/components/ui/button'
-// import { Dialog, DialogClose, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '~/components/ui/dialog'
-// import { Input } from '~/components/ui/input'
-// import { Label } from '~/components/ui/label'
-// import { Separator } from '~/components/ui/separator'
-// import { Textarea } from '~/components/ui/textarea'
-// import RecordEditor from '../../_components/record-editor'
-// import RecordExpand from '../../_components/record-expand'
-// import EmployeeActivityCard from './employee-activity-card'
-//
-// const poppins = Poppins({
-// 	subsets: ["latin"],
-// 	weight: ["400", "700"],
-// });
-//
-// interface RestockDialogProps {
-// 	activity: any;
-// }
-//
-// const RestockDialog = ({ activity }: RestockDialogProps) => {
-// 	const totalAdded = activity.batchVariants?.reduce(
-// 		(sum: number, bv: any) => sum + bv.quantity, 0
-// 	) || 0;
-//
-//
-// 	const [isEditing, setIsEditing] = useState(false);
-// 	const [isDialogOpen, setIsDialogOpen] = useState(false);
-// 	const [showWarning, setShowWarning] = useState(false);
-//
-// 	const handleEdit = () => {
-// 		setIsEditing((prev) => !prev);
-// 		setShowWarning(false);
-// 	};
-//
-// 	const handleKeyDown = (event: React.KeyboardEvent) => {
-// 		if (event.key === "Escape" && isEditing) {
-// 			setShowWarning(true);
-// 			event.preventDefault();
-// 		}
-// 	};
-//
-// 	return (
-//
-// 		< Dialog
-// 			open={isDialogOpen}
-// 			onOpenChange={(open) => {
-// 				if (!open) {
-// 					if (isEditing) {
-// 						setShowWarning(true);
-// 						return;
-// 					}
-// 				}
-// 				setIsDialogOpen(open);
-// 				if (!open) {
-// 					setShowWarning(false);
-// 				}
-// 			}}
-// 		>
-// 			<DialogTrigger>
-// 				<EmployeeActivityCard
-// 					type="restock"
-// 					activity={{
-// 						id: activity.batch_number,
-// 						created_at: activity.created_at,
-// 						quantity: activity.batchVariants?.reduce(
-// 							(sum: number, bv: any) => sum + bv.quantity, 0
-// 						) || 0
-// 					}}
-// 				/>
-// 			</DialogTrigger>
-// 			<DialogContent
-// 				className="!w-full !max-w-3xl [&>button]:hidden"
-// 				onKeyDown={handleKeyDown}
-// 			>
-// 				<DialogHeader className={`text-xl ${poppins.className} font-normal`}>
-// 					<div className="flex items-center justify-between">
-// 						<div className="flex flex-col gap-2">
-// 							<DialogTitle className="text-xl font-normal text-slate-700">
-// 								Restock #{activity.batch_number}
-// 							</DialogTitle>
-// 							<div className="flex items-center gap-3 text-slate-400">
-// 								<Calendar className="h-4 w-4" />
-// 								<DialogDescription className="text-sm tracking-wide">
-// 									{new Date(activity.created_at).toLocaleDateString()}
-// 								</DialogDescription>
-// 							</div>
-// 						</div>
-// 						<div className="flex items-center gap-3">
-// 							<RecordEditor isEditing={isEditing} handleEdit={handleEdit} />
-// 							<RecordExpand />
-// 						</div>
-// 					</div>
-// 				</DialogHeader>
-//
-// 				<Separator orientation="horizontal" className="h-[2px]" />
-//
-// 				<div className="flex gap-3">
-// 					<div className="flex w-1/2 flex-col gap-2">
-// 						<Label className="text-slate-400">Supplier</Label>
-// 						<Input
-// 							className="bg-slate-100 text-slate-700 shadow-none"
-// 							disabled={!isEditing}
-// 							value={'supplier'}
-// 						/> {/** Please pass real data here */}
-// 					</div>
-// 					<div className="flex w-1/2 flex-col gap-2">
-// 						<Label className="text-slate-400">Recorded by</Label>
-// 						<Input
-// 							className="bg-slate-100 text-slate-700 shadow-none"
-// 							disabled={!isEditing}
-// 						/>
-// 					</div>
-// 				</div>
-//
-// 				{/* <RestockTable restockItem={} isEditing={isEditing} /> * Please pass real data here */}
-// 				<p>
-// 					Note: Gi tanggal ko ang RestockTable component and other functionality for now kay di ko sure kung tama ang pag reference sa db......... but this is how it should look like oke?
-// 				</p>
-//
-// 				<Separator orientation="horizontal" className="h-[2px]" />
-//
-// 				<Textarea
-// 					className="!min-h-16 border-none text-slate-700 bg-slate-100 resize-none focus:outline focus:outline-2 focus:outline-slate-200"
-// 					placeholder="Your record notes..."
-// 					disabled={!isEditing}
-// 				/>
-//
-// 				<div className="flex items-center justify-between">
-// 					<div className="flex flex-col">
-// 						<p className="text-base font-normal text-slate-700">{500}</p> {/** Please pass real data here */}
-// 						<p className="text-sm text-slate-400">Added Stock</p>
-// 					</div>
-// 					<div className="flex items-center gap-2">
-// 						<DialogClose asChild disabled={isEditing}>
-// 							<Button variant="secondary" className="text-slate-700 hover:bg-slate-200" disabled={isEditing}>
-// 								Close
-// 							</Button>
-// 						</DialogClose>
-// 						<Button className="bg-green hover:bg-green/80" disabled={isEditing}>
-// 							<Printer />
-// 							Print Restock
-// 						</Button>
-// 					</div>
-// 				</div>
-// 				{showWarning && (
-// 					<p className="text-right text-sm text-orange-400">
-// 						Whoops! Don't forget to save your changes.
-// 					</p>
-// 				)}
-// 			</DialogContent>
-// 		</Dialog >
-// 	)
-// }
-//
-// export default RestockDialog

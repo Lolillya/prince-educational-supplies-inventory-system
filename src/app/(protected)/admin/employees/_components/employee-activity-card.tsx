@@ -52,11 +52,11 @@ const EmployeeActivityCard = ({ type, activity }: EmployeeActivityCardProps) => 
 										<PhilippinePeso className="h-4 w-4" />
 									</TooltipTrigger>
 									<TooltipContent className='text-slate-700 p-2 bg-white rounded-lg my-4 text-sm shadow-none border border-slate-200'>
-										₱{activity.total?.toLocaleString()} grand total
+										{activity.total?.toLocaleString()} grand total
 									</TooltipContent>
 								</Tooltip>
 							</TooltipProvider>
-							<p className="text-sm">₱{activity.total?.toLocaleString()}</p>
+							<p className="text-sm">{activity.total?.toLocaleString()}</p>
 						</>
 					) : type == 'restock' ? (
 						<>

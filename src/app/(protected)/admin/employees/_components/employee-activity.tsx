@@ -64,13 +64,25 @@ const EmployeeActivity = ({
                 context="employee"
               />
             ) : (
-              <InvoiceDialog
-                key={activity.invoice_id}
-                activity={activity}
-                invoice={activity.invoice}
-                id={activity.invoice_id}
-                context="employee"
-              />
+              <div key={activity.invoice_id} onClick={() => console.log("Invoice clicked:", activity)}>
+                <InvoiceDialog
+                  activity={activity}
+                  invoice={{
+                    invoice_number: activity.invoice_number,
+                    created_at: activity.created_at,
+                    total_amount: activity.total_amount,
+                    invoiceClerk: activity.invoiceClerk || {
+                      Personal_Details: {
+                        first_name: "",
+                        last_name: "",
+                        company: "",
+                      }
+                    }
+                  }}
+                  id={activity.invoice_id.toString()}
+                  context="employee"
+                />
+              </div>
             ),
           )}
           {totalCount === 0 && (

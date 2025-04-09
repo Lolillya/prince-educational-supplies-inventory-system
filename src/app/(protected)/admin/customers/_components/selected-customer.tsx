@@ -66,6 +66,7 @@ const SelectedCustomer = ({
   unpaidSum,
   onPaymentSuccess,
   onRefundSuccess,
+  invoiceHistoryData,
 }: SelectedCustomerProps) => {
   // const [sum, setSum] = useState<number>();
   const router = useRouter();
@@ -134,6 +135,7 @@ const SelectedCustomer = ({
           first_name={first_name}
           last_name={last_name}
           company={company}
+          detailedInvoiceData={invoiceHistoryData.invoices}
         />
       </div>
     </div>

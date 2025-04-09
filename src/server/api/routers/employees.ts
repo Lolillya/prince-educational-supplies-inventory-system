@@ -349,10 +349,34 @@ export const employeeRouter = createTRPCRouter({
                 include: {
                     batchVariants: {
                         include: {
-                            variant: true,
-                            SupplierUnit: true
-                        }
-                    }
+                            variant: {
+                                include: {
+                                    item: {
+                                        include: {
+                                            brand: true,
+                                        },
+                                    },
+                                },
+                            },
+                            SupplierUnit: {
+                                include: {
+                                    unit: true,
+                                    supplier: {
+                                        include: {
+                                            Personal_Details: true,
+                                        },
+                                    },
+                                    ConversionRate: {
+                                        include: {
+                                            fromUnit: true,
+                                            toUnit: true,
+                                        },
+                                    },
+                                },
+                            },
+                        },
+                    },
+                    Personal_Details: true,
                 },
                 orderBy: { created_at: 'desc' }
             });
@@ -364,12 +388,56 @@ export const employeeRouter = createTRPCRouter({
             return await db.invoice.findMany({
                 where: { invoice_clerk: input.clerkId },
                 include: {
+                    customer: {
+                        include: {
+                            Personal_Details: {
+                                select: {
+                                    first_name: true,
+                                    last_name: true,
+                                    company: true,
+                                    personal_details_id: true
+                                },
+                            },
+                        },
+                    },
+                    invoiceClerk: {
+                        select: {
+                            Personal_Details: {
+                                select: {
+                                    first_name: true,
+                                    last_name: true,
+                                    personal_details_id: true
+                                },
+                            },
+                            Personal_Details_Id: true
+                        },
+                    },
                     line_items: {
                         include: {
-                            variant: true,
-                            unit: true
-                        }
-                    }
+                            variant: {
+                                select: {
+                                    name: true,
+                                    variant_id: true,
+                                    item: {
+                                        select: {
+                                            name: true,
+                                            brand: {
+                                                select: {
+                                                    name: true,
+                                                },
+                                            },
+                                        },
+                                    },
+                                },
+                            },
+                            unit: {
+                                select: {
+                                    name: true,
+                                    unit_id: true
+                                },
+                            },
+                        },
+                    },
                 },
                 orderBy: { created_at: 'desc' }
             });

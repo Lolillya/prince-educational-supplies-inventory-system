@@ -14,6 +14,7 @@ import InvoiceRecord from "./_components/invoice-record";
 import { type LineItemsProp } from "~/lib/utils/exportInvoice";
 import { ScrollArea } from "~/components/ui/scroll-area";
 import { toast } from "~/hooks/use-toast";
+
 export type InvoiceProps = {
   term: string;
   voidPending: boolean;
@@ -72,12 +73,11 @@ const InvoicePage = () => {
   const filteredInvoices = invoiceData?.filter((invoice) => {
     const invoice_number = invoice.invoice_number.toString();
     const company = invoice.customer.Personal_Details.company?.toLowerCase();
-    const first_name =
-      invoice.customer.Personal_Details.first_name?.toLowerCase();
-    const last_name =
-      invoice.customer.Personal_Details.last_name?.toLowerCase();
-    const invoiceClerk =
-      (invoice.invoiceClerk.Personal_Details.first_name?.toLowerCase() ?? "") +
+    const first_name = invoice.customer.Personal_Details.first_name?.toLowerCase();
+    const last_name = invoice.customer.Personal_Details.last_name?.toLowerCase();
+    const invoiceClerk = 
+      (invoice.invoiceClerk.Personal_Details.first_name?.toLowerCase() ?? "") + 
+      " " + 
       (invoice.invoiceClerk.Personal_Details.last_name?.toLowerCase() ?? "");
     const dateMonth = invoice.created_at
       .toLocaleDateString("en-US", {
@@ -87,14 +87,30 @@ const InvoicePage = () => {
       })
       .toLowerCase();
 
-    return (
-      invoice_number.includes(searchTerm.toLowerCase()) ||
-      company?.includes(searchTerm.toLowerCase()) ||
-      first_name?.includes(searchTerm.toLowerCase()) ||
-      last_name?.includes(searchTerm.toLowerCase()) ||
-      invoiceClerk.includes(searchTerm.toLowerCase()) ||
-      dateMonth.includes(searchTerm.toLowerCase())
-    );
+    // If we have a search term, filter by it
+    if (searchTerm) {
+      return (
+        invoice_number.includes(searchTerm.toLowerCase()) ||
+        company?.includes(searchTerm.toLowerCase()) ||
+        first_name?.includes(searchTerm.toLowerCase()) ||
+        last_name?.includes(searchTerm.toLowerCase()) ||
+        invoiceClerk.includes(searchTerm.toLowerCase()) ||
+        dateMonth.includes(searchTerm.toLowerCase())
+      );
+    }
+    
+    // If we have a clerkId, show all their invoices
+    if (clerkId) {
+      return invoice.invoiceClerk.Personal_Details_Id === clerkId;
+    }
+    
+    // If we have a customerId, show all their invoices
+    if (customerId) {
+      return invoice.customer.Personal_Details_Id === customerId;
+    }
+
+    // Otherwise show all invoices
+    return true;
   });
 
   if (isLoading)

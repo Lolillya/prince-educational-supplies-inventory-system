@@ -43,21 +43,20 @@ model Role {
 }
 
 model User_Role {
-  id                                      String           @id @default(uuid())
-  Personal_Details_Id                     String           @unique
-  role_Id                                 Int
-  emoji                                   String           @default("🄿")
-  Favorite_Favorite_contact_idToUser_Role Favorite[]       @relation("Favorite_contact_idToUser_Role")
-  Favorite_Favorite_user_idToUser_Role    Favorite[]       @relation("Favorite_user_idToUser_Role")
-  History_Log                             History_Log[]
-  Inventory_Log                           Inventory_Log[]
-  customerInvoices                        Invoice[]        @relation("CustomerRelation")
-  clerkInvoices                           Invoice[]        @relation("InvoiceClerkRelation")
-  Invoice                                 Invoice[]
-  Pin                                     Pin[]
-  SupplierUnit                            SupplierUnit[]
-  Personal_Details                        Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id], onDelete: Cascade)
-  Role                                    Role             @relation(fields: [role_Id], references: [role_Id])
+  id                                   String           @id @default(uuid())
+  Personal_Details_Id                  String           @unique
+  role_Id                              Int
+  emoji                                String           @default("🄿")
+  Favorite_Favorite_user_idToUser_Role Favorite[]       @relation("Favorite_user_idToUser_Role")
+  History_Log                          History_Log[]
+  Inventory_Log                        Inventory_Log[]
+  customerInvoices                     Invoice[]        @relation("CustomerRelation")
+  clerkInvoices                        Invoice[]        @relation("InvoiceClerkRelation")
+  Invoice                              Invoice[]
+  Pin                                  Pin[]
+  SupplierUnit                         SupplierUnit[]
+  Personal_Details                     Personal_Details @relation(fields: [Personal_Details_Id], references: [personal_details_id], onDelete: Cascade)
+  Role                                 Role             @relation(fields: [role_Id], references: [role_Id])
 }
 
 model Authentication {
@@ -132,7 +131,6 @@ model Variant {
   created_at   DateTime       @default(now())
   updated_at   DateTime       @updatedAt
   BatchVariant BatchVariant[]
-  Favorite     Favorite[]
   inventory    Inventory[]
   LineItem     Line_Item[]
   StockLevel   StockLevel?
@@ -150,7 +148,6 @@ model Batch {
   batch_number     Int              @unique @default(autoincrement())
   Personal_Details Personal_Details @relation(fields: [restock_clerk], references: [personal_details_id])
   batchVariants    BatchVariant[]
-  Pin              Pin[]
 }
 
 model BatchVariant {
@@ -292,7 +289,6 @@ model Invoice {
   line_items                   Line_Item[]
   Payment                      Payment[]
   payment_logs                 Payment_Log[]
-  Pin                          Pin[]
 }
 
 model Line_Item {
@@ -360,33 +356,31 @@ model History_Log {
 }
 
 model Favorite {
-  favorite_id                              Int        @id @default(autoincrement())
-  user_id                                  String
-  created_at                               DateTime   @default(now())
-  updated_at                               DateTime
-  variant_id                               Int?
-  contact_id                               String?
-  User_Role_Favorite_contact_idToUser_Role User_Role? @relation("Favorite_contact_idToUser_Role", fields: [contact_id], references: [id])
-  User_Role_Favorite_user_idToUser_Role    User_Role  @relation("Favorite_user_idToUser_Role", fields: [user_id], references: [id])
-  Variant                                  Variant?   @relation(fields: [variant_id], references: [variant_id])
+  favorite_id                           Int       @id @default(autoincrement())
+  user_id                               String
+  updated_at                            DateTime
+  entity_id                             String
+  favorited_at                          DateTime  @default(now())
+  page_type                             PageType
+  User_Role_Favorite_user_idToUser_Role User_Role @relation("Favorite_user_idToUser_Role", fields: [user_id], references: [id])
 
-  @@unique([user_id, contact_id])
-  @@unique([user_id, variant_id])
+  @@unique([user_id, page_type, entity_id])
+  @@index([favorited_at])
+  @@index([user_id, page_type])
 }
 
 model Pin {
   pin_id     Int       @id @default(autoincrement())
   user_id    String
-  created_at DateTime  @default(now())
   updated_at DateTime
-  invoice_id Int?
-  batch_id   Int?
-  Batch      Batch?    @relation(fields: [batch_id], references: [batch_id])
-  Invoice    Invoice?  @relation(fields: [invoice_id], references: [invoice_id])
+  entity_id  String
+  page_type  PageType
+  pinned_at  DateTime  @default(now())
   User_Role  User_Role @relation(fields: [user_id], references: [id])
 
-  @@unique([user_id, batch_id])
-  @@unique([user_id, invoice_id])
+  @@unique([user_id, page_type, entity_id])
+  @@index([pinned_at])
+  @@index([user_id, page_type])
 }
 
 enum Roles {
@@ -401,4 +395,12 @@ enum PaymentMethod {
   CARD
   ONLINE
   CHEQUE
+}
+
+enum PageType {
+  RESTOCK
+  INVOICE
+  SUPPLIER
+  CUSTOMER
+  INVENTORY
 }

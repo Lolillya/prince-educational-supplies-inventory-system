@@ -667,6 +667,9 @@ export const inventoryRouter = createTRPCRouter({
             include: {
               to_unit: true,
               from_unit: true
+            },
+            orderBy: {
+              preset_conversion_id: 'asc'
             }
           }
         },
@@ -862,75 +865,96 @@ export const inventoryRouter = createTRPCRouter({
     }),
 
   deleteVariant: publicProcedure
-    .input(z.object({ variantId: z.number() }))
-    .mutation(async ({ input }) => {
+    .input(
+      z.object({
+        variantId: z.number(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
       const { variantId } = input;
+      console.log(`Deleting variant with ID: ${variantId}`);
 
-      return await db.$transaction(async (prisma) => {
-        // 1. Get variant and its associated item
-        const variant = await prisma.variant.findUnique({
-          where: { variant_id: variantId },
-          include: { item: true },
-        });
-
-        if (!variant) {
-          throw new Error("Variant not found");
-        }
-
-        const itemId = variant.item.item_id;
-
-        // 2. Delete the variant
-        await prisma.variant.delete({
+      try {
+        // First, delete related inventory records
+        await ctx.db.inventory.deleteMany({
           where: { variant_id: variantId },
         });
 
-        // 3. Check if item has any remaining variants
-        const remainingVariants = await prisma.variant.count({
-          where: { item_id: itemId },
+        // Delete related stock levels
+        await ctx.db.stockLevel.deleteMany({
+          where: { variant_id: variantId },
         });
 
-        if (remainingVariants === 0) {
-          // 4. Delete presets first (due to foreign key constraints)
-          await prisma.presetConversion.deleteMany({
-            where: { preset: { item_id: itemId } },
-          });
+        // Delete the variant itself
+        const deletedVariant = await ctx.db.variant.delete({
+          where: { variant_id: variantId },
+        });
 
-          await prisma.preset.deleteMany({
-            where: { item_id: itemId },
-          });
+        return { success: true, deletedVariant };
+      } catch (error) {
+        console.error("Failed to delete variant:", error);
+        throw new Error("Failed to delete variant");
+      }
+    }),
 
-          // 5. Delete the item
-          const deletedItem = await prisma.item.delete({
-            where: { item_id: itemId },
-          });
+  deletePreset: publicProcedure
+    .input(
+      z.object({
+        presetId: z.number(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { presetId } = input;
+      console.log(`Deleting preset with ID: ${presetId}`);
 
-          // 6. Check brand usage
-          const brandUsed = await prisma.item.count({
-            where: { brand_id: deletedItem.brand_id },
-          });
+      try {
+        // First get the preset to get item_id and main_unit_id
+        const preset = await ctx.db.preset.findUnique({
+          where: { preset_id: presetId },
+          include: { conversions: true },
+        });
 
-          if (brandUsed === 0) {
-            await prisma.brand.delete({
-              where: { brand_id: deletedItem.brand_id },
-            });
-          }
-
-          // 7. Check category usage
-          const categoryUsed = await prisma.item.count({
-            where: { category_id: deletedItem.category_id },
-          });
-
-          if (categoryUsed === 0) {
-            await prisma.category.delete({
-              where: { category_id: deletedItem.category_id },
-            });
-          }
+        if (!preset) {
+          throw new Error(`Preset with ID ${presetId} not found`);
         }
 
-        return {
-          message: "Variant and related records deleted successfully.",
-        };
-      });
+        // First, delete related preset conversions
+        await ctx.db.presetConversion.deleteMany({
+          where: { preset_id: presetId },
+        });
+
+        // Get all custom price units that might have been created for this preset
+        const customPriceUnits = await ctx.db.unit.findMany({
+          where: {
+            name: {
+              contains: `_${presetId}`,
+            }
+          },
+        });
+
+        // Delete any custom presets that might have been used for prices
+        if (customPriceUnits.length > 0) {
+          const unitIds = customPriceUnits.map(unit => unit.unit_id);
+          await ctx.db.preset.deleteMany({
+            where: {
+              item_id: preset.item_id,
+              main_unit_id: {
+                in: unitIds
+              }
+            }
+          });
+        }
+
+        // Finally, delete the preset itself
+        const deletedPreset = await ctx.db.preset.delete({
+          where: { preset_id: presetId },
+        });
+
+        return { success: true, deletedPreset };
+      } catch (error) {
+        console.error("Failed to delete preset:", error);
+        throw new Error("Failed to delete preset");
+      }
     }),
 
   getPresetsByItemId: publicProcedure

@@ -13,10 +13,20 @@ type ProcessedPresetConversion = {
   to_unit_id: number;
   created_at: Date;
   updated_at: Date;
-  from_unit: { name: string; created_at: Date; updated_at: Date; unit_id: number; };
-  to_unit: { name: string; created_at: Date; updated_at: Date; unit_id: number; };
+  from_unit: {
+    name: string;
+    created_at: Date;
+    updated_at: Date;
+    unit_id: number;
+  };
+  to_unit: {
+    name: string;
+    created_at: Date;
+    updated_at: Date;
+    unit_id: number;
+  };
   related_price?: number | null;
-}
+};
 
 type ProcessedPreset = {
   preset_id: number;
@@ -25,9 +35,14 @@ type ProcessedPreset = {
   main_price: number;
   created_at: Date;
   updated_at: Date;
-  main_unit: { name: string; created_at: Date; updated_at: Date; unit_id: number; };
+  main_unit: {
+    name: string;
+    created_at: Date;
+    updated_at: Date;
+    unit_id: number;
+  };
   conversions: ProcessedPresetConversion[];
-}
+};
 
 const normalizeInput = (value: any) =>
   typeof value === "string" && value.trim() === "" ? null : value;
@@ -534,9 +549,19 @@ export const inventoryRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { presetId, mainUnit, mainPrice, conversions } = input;
 
-      console.log("Updating preset with data:", JSON.stringify({
-        presetId, mainUnit, mainPrice, conversions
-      }, null, 2));
+      console.log(
+        "Updating preset with data:",
+        JSON.stringify(
+          {
+            presetId,
+            mainUnit,
+            mainPrice,
+            conversions,
+          },
+          null,
+          2,
+        ),
+      );
 
       // Get the existing preset
       const existingPreset = await ctx.db.preset.findUnique({
@@ -545,9 +570,9 @@ export const inventoryRouter = createTRPCRouter({
           conversions: {
             include: {
               to_unit: true,
-              from_unit: true
-            }
-          }
+              from_unit: true,
+            },
+          },
         },
       });
 
@@ -582,9 +607,10 @@ export const inventoryRouter = createTRPCRouter({
             // Find destination presets from these conversions
             for (const conv of conversions) {
               // Find a preset where the main unit is the to_unit of this conversion
-              const connectedPreset = allPresets.find(p =>
-                p.main_unit_id === conv.to_unit_id &&
-                !relatedPresetIds.has(p.preset_id)
+              const connectedPreset = allPresets.find(
+                (p) =>
+                  p.main_unit_id === conv.to_unit_id &&
+                  !relatedPresetIds.has(p.preset_id),
               );
 
               if (connectedPreset) {
@@ -597,14 +623,14 @@ export const inventoryRouter = createTRPCRouter({
       }
 
       // Delete all related presets and conversions except the main one
-      const presetsToDelete = [...relatedPresetIds].filter(id => id !== presetId);
+      const presetsToDelete = [...relatedPresetIds].filter(
+        (id) => id !== presetId,
+      );
 
       // Delete all conversions for related presets
       await ctx.db.presetConversion.deleteMany({
         where: {
-          OR: [
-            { preset_id: { in: [...relatedPresetIds] } },
-          ]
+          OR: [{ preset_id: { in: [...relatedPresetIds] } }],
         },
       });
 
@@ -620,20 +646,20 @@ export const inventoryRouter = createTRPCRouter({
         where: {
           name: {
             contains: `_${presetId}`,
-          }
+          },
         },
       });
 
       // Delete any custom presets that might have been used for prices
       if (customPriceUnits.length > 0) {
-        const unitIds = customPriceUnits.map(unit => unit.unit_id);
+        const unitIds = customPriceUnits.map((unit) => unit.unit_id);
         await ctx.db.preset.deleteMany({
           where: {
             item_id: itemId,
             main_unit_id: {
-              in: unitIds
-            }
-          }
+              in: unitIds,
+            },
+          },
         });
       }
 
@@ -696,12 +722,12 @@ export const inventoryRouter = createTRPCRouter({
           conversions: {
             include: {
               to_unit: true,
-              from_unit: true
+              from_unit: true,
             },
             orderBy: {
-              preset_conversion_id: 'asc'
-            }
-          }
+              preset_conversion_id: "asc",
+            },
+          },
         },
       });
 
@@ -944,9 +970,9 @@ export const inventoryRouter = createTRPCRouter({
           include: {
             conversions: {
               include: {
-                to_unit: true
-              }
-            }
+                to_unit: true,
+              },
+            },
           },
         });
 
@@ -973,15 +999,18 @@ export const inventoryRouter = createTRPCRouter({
           // Check each preset we already know should be deleted
           for (const currentPresetId of presetsToDelete) {
             // Find the preset object
-            const currentPreset = allPresets.find(p => p.preset_id === currentPresetId);
+            const currentPreset = allPresets.find(
+              (p) => p.preset_id === currentPresetId,
+            );
             if (!currentPreset) continue;
 
             // For each of its conversions, find target presets
             for (const conv of currentPreset.conversions) {
               // Find any preset that has this conversion's to_unit as its main unit
-              const targetPreset = allPresets.find(p =>
-                p.main_unit_id === conv.to_unit_id &&
-                !presetsToDelete.has(p.preset_id)
+              const targetPreset = allPresets.find(
+                (p) =>
+                  p.main_unit_id === conv.to_unit_id &&
+                  !presetsToDelete.has(p.preset_id),
               );
 
               if (targetPreset) {
@@ -996,23 +1025,23 @@ export const inventoryRouter = createTRPCRouter({
         await ctx.db.presetConversion.deleteMany({
           where: {
             preset_id: {
-              in: [...presetsToDelete]
-            }
-          }
+              in: [...presetsToDelete],
+            },
+          },
         });
 
         // Delete all presets in the chain
         await ctx.db.preset.deleteMany({
           where: {
             preset_id: {
-              in: [...presetsToDelete]
-            }
-          }
+              in: [...presetsToDelete],
+            },
+          },
         });
 
         return {
           success: true,
-          message: `Deleted preset chain with ${presetsToDelete.size} presets`
+          message: `Deleted preset chain with ${presetsToDelete.size} presets`,
         };
       } catch (error) {
         console.error("Failed to delete preset:", error);
@@ -1037,60 +1066,90 @@ export const inventoryRouter = createTRPCRouter({
                 to_unit: true,
               },
               orderBy: {
-                preset_conversion_id: 'asc'
-              }
+                preset_conversion_id: "asc",
+              },
             },
           },
         });
 
+        console.log(`Found ${allPresets.length} presets for item ID ${itemId}`);
+
         // Find top-level presets (ones that have conversions but aren't the target of any conversion)
         // These are the "root" presets in our chains (like "Boxes")
         const targetUnitIds = new Set(
-          allPresets.flatMap(preset =>
-            preset.conversions.map(conv => conv.to_unit_id)
-          )
+          allPresets.flatMap((preset) =>
+            preset.conversions.map((conv) => conv.to_unit_id),
+          ),
         );
 
         // Get presets that aren't targets of any other conversion (root presets)
-        const rootPresets = allPresets.filter(preset =>
-          !targetUnitIds.has(preset.main_unit_id) && preset.conversions.length > 0
+        const rootPresets = allPresets.filter(
+          (preset) =>
+            !targetUnitIds.has(preset.main_unit_id) &&
+            preset.conversions.length > 0,
         );
+
+        console.log(`Found ${rootPresets.length} root presets`);
 
         if (rootPresets.length === 0) {
           // If no root presets found, return all presets with conversions as a fallback
-          return allPresets.filter(p => p.conversions.length > 0);
+          return allPresets.filter((p) => p.conversions.length > 0);
         }
 
-        // For each root preset, build the full conversion chain
-        const processedPresets: ProcessedPreset[] = [];
+        // For each root preset, gather all conversions in the chain
+        const resultPresets: ProcessedPreset[] = [];
 
         for (const rootPreset of rootPresets) {
-          // Start with the root preset
-          const processedRoot: ProcessedPreset = {
+          console.log(
+            `Processing root preset: ${rootPreset.preset_id} (${rootPreset.main_unit.name})`,
+          );
+
+          // Start with the main preset data
+          const processedPreset: ProcessedPreset = {
             ...rootPreset,
-            conversions: [] // We'll fill this with prices next
+            conversions: [],
           };
 
-          // For each conversion in the root preset
-          for (const conversion of rootPreset.conversions) {
-            // Find the next preset in the chain where main_unit_id matches this conversion's to_unit_id
-            const nextPreset = allPresets.find(p =>
-              p.main_unit_id === conversion.to_unit_id
+          // Build the complete conversion chain by traversing all linked presets
+          const allChainConversions: ProcessedPresetConversion[] = [];
+          const processedUnitIds = new Set<number>();
+
+          // First add the direct conversions from the root preset (level 1)
+          for (const directConv of rootPreset.conversions) {
+            // Find the next preset in the chain where this conversion points to
+            const nextPreset = allPresets.find(
+              (p) => p.main_unit_id === directConv.to_unit_id,
             );
 
-            // Add the conversion with the price from the next preset
-            const conversionWithPrice: ProcessedPresetConversion = {
-              ...conversion,
-              related_price: nextPreset?.main_price || null
-            };
+            // Add the conversion with price from the next preset
+            allChainConversions.push({
+              ...directConv,
+              related_price: nextPreset?.main_price || null,
+            });
 
-            processedRoot.conversions.push(conversionWithPrice);
+            // Track that we've processed this unit
+            processedUnitIds.add(directConv.to_unit_id);
+
+            // Now find subsequent conversions in the chain
+            if (nextPreset) {
+              const chainedConversions = gatherChainedConversions(
+                nextPreset,
+                allPresets,
+                processedUnitIds,
+              );
+
+              // Add all chained conversions to our list
+              allChainConversions.push(...chainedConversions);
+            }
           }
 
-          processedPresets.push(processedRoot);
+          // Set all conversions for this preset
+          processedPreset.conversions = allChainConversions;
+          resultPresets.push(processedPreset);
         }
 
-        return processedPresets;
+        console.log(`Returning ${resultPresets.length} processed presets`);
+        return resultPresets;
       } catch (error) {
         console.error(`Error fetching presets for item ID ${itemId}:`, error);
         throw new Error("Failed to fetch presets");
@@ -1306,3 +1365,47 @@ export const inventoryRouter = createTRPCRouter({
 });
 
 export default inventoryRouter;
+
+// Helper function to gather conversions from presets further down the chain
+function gatherChainedConversions(
+  preset: any,
+  allPresets: any[],
+  processedUnitIds: Set<number>,
+): ProcessedPresetConversion[] {
+  const conversions: ProcessedPresetConversion[] = [];
+
+  // Process each conversion in this preset
+  for (const conv of preset.conversions) {
+    // Skip if we've already processed this unit (prevents circular references)
+    if (processedUnitIds.has(conv.to_unit_id)) {
+      continue;
+    }
+
+    // Find the next preset in the chain
+    const nextPreset = allPresets.find(
+      (p) => p.main_unit_id === conv.to_unit_id,
+    );
+
+    // Add this conversion with its price
+    conversions.push({
+      ...conv,
+      related_price: nextPreset?.main_price || null,
+    });
+
+    // Mark this unit as processed
+    processedUnitIds.add(conv.to_unit_id);
+
+    // Recurse into the next preset if it exists
+    if (nextPreset) {
+      const nextConversions = gatherChainedConversions(
+        nextPreset,
+        allPresets,
+        processedUnitIds,
+      );
+
+      conversions.push(...nextConversions);
+    }
+  }
+
+  return conversions;
+}

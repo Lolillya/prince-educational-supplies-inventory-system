@@ -29,15 +29,17 @@ interface CustomerInvoiceProps {
   last_name: string;
   customerId: string;
   company?: string;
+  detailedInvoiceData?: any[]; // Add this for the complete invoice data with line items
 }
 
 export default function CustomerInvoice({
-  invoiceData,
-  customerId,
-  first_name,
-  last_name,
-  company,
-}: CustomerInvoiceProps) {
+                                          invoiceData,
+                                          customerId,
+                                          first_name,
+                                          last_name,
+                                          company,
+                                          detailedInvoiceData,
+                                        }: CustomerInvoiceProps) {
   const router = useRouter();
 
   const [showAll, setShowAll] = useState(false);
@@ -48,78 +50,73 @@ export default function CustomerInvoice({
   // Create the search term - prefer company name if available, otherwise use full name
   const searchTerm = company || `${first_name} ${last_name}`.trim();
 
-  // const [isEditing, setIsEditing] = useState(false);
-  // const [isDialogOpen, setIsDialogOpen] = useState(false);
-  // const [showWarning, setShowWarning] = useState(false);
+  // Match detailed data with basic data
+  const getDetailedInvoice = (invoiceNumber: number) => {
+    return detailedInvoiceData?.find(invoice => invoice.invoice_number === invoiceNumber);
+  };
 
   const handleInvoiceDoubleClick = () => {
     const url = `/admin/invoice?customerId=${customerId}${searchTerm ? `&searchQuery=${encodeURIComponent(searchTerm)}` : ""}`;
     router.push(url);
   };
-  // const handleEdit = () => {
-  //     setIsEditing((prev) => !prev);
-  //     setShowWarning(false);
-  // };
-
-  // const handleKeyDown = (event: React.KeyboardEvent) => {
-  //     if (event.key === "Escape" && isEditing) {
-  //         setShowWarning(true);
-  //         event.preventDefault();
-  //     }
-  // };
 
   return (
-    <div className="rounded-lg bg-white/60 p-5 text-slate-400">
-      <div className="flex items-center justify-between">
-        <Link
-          href={`/admin/invoice?customerId=${customerId}${searchTerm ? `&searchQuery=${encodeURIComponent(searchTerm)}` : ""}`}
-        >
-          <div className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
-            Invoices
-            <ArrowUpRight className="h-4 w-4" />
-          </div>
-        </Link>
-        {totalCount > 0 && (
-          <p className="pr-5 text-sm text-slate-400">
-            {shownCount} of {totalCount}
-          </p>
-        )}
-      </div>
-      <div className="mt-2">
-        <div className="flex flex-col gap-1">
-          {/* //TODO: map restock data based on selected supplier */}
-
-          {displayedData.map((invoice) => (
-            <div
-              key={invoice.invoice_number}
-              onDoubleClick={handleInvoiceDoubleClick}
-              className="cursor-pointer transition-colors hover:bg-slate-100/50"
-            >
-              <InvoiceDialog
-                id={customerId}
-                activity={invoice}
-                context="customer"
-                invoice={invoice}
-              />
+      <div className="rounded-lg bg-white/60 p-5 text-slate-400">
+        <div className="flex items-center justify-between">
+          <Link
+              href={`/admin/invoice?customerId=${customerId}${searchTerm ? `&searchQuery=${encodeURIComponent(searchTerm)}` : ""}`}
+          >
+            <div className="flex w-fit items-center gap-2 rounded-lg px-5 py-1 tracking-wide text-slate-400 transition-colors duration-300 hover:bg-slate-200/50 hover:text-slate-500">
+              Invoices
+              <ArrowUpRight className="h-4 w-4" />
             </div>
-          ))}
-          {totalCount === 0 && (
-            <p className="py-4 text-center text-slate-400">No invoices found</p>
+          </Link>
+          {totalCount > 0 && (
+              <p className="pr-5 text-sm text-slate-400">
+                {shownCount} of {totalCount}
+              </p>
           )}
         </div>
-      </div>
+        <div className="mt-2">
+          <div className="flex flex-col gap-1">
+            {/* //TODO: map restock data based on selected supplier */}
 
-      {totalCount > 3 && (
-        <div className="mt-4">
-          <p
-            className="cursor-pointer text-center hover:underline"
-            onClick={() => setShowAll(!showAll)}
-          >
-            {showAll ? "Show less" : "Show more"}
-          </p>
+            {displayedData.map((invoice) => {
+              // Try to get detailed data for this invoice
+              const detailedInvoice = getDetailedInvoice(invoice.invoice_number);
+
+              return (
+                  <div
+                      key={invoice.invoice_number}
+                      onDoubleClick={handleInvoiceDoubleClick}
+                      className="cursor-pointer transition-colors hover:bg-slate-100/50"
+                  >
+                    <InvoiceDialog
+                        id={customerId}
+                        activity={detailedInvoice || invoice}
+                        context="customer"
+                        invoice={invoice}
+                    />
+                  </div>
+              );
+            })}
+            {totalCount === 0 && (
+                <p className="py-4 text-center text-slate-400">No invoices found</p>
+            )}
+          </div>
         </div>
-      )}
-    </div>
+
+        {totalCount > 3 && (
+            <div className="mt-4">
+              <p
+                  className="cursor-pointer text-center hover:underline"
+                  onClick={() => setShowAll(!showAll)}
+              >
+                {showAll ? "Show less" : "Show more"}
+              </p>
+            </div>
+        )}
+      </div>
   );
 }
 {

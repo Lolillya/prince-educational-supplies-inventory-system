@@ -47,26 +47,27 @@ type SelectedCustomerProps = {
 };
 
 const SelectedCustomer = ({
-  first_name,
-  last_name,
-  id,
-  role_Id,
-  emoji,
-  company,
-  representative,
-  contact,
-  email,
-  location,
-  notes,
-  invoiceData,
-  // auth,
-  // invoiceHistoryData,
-  // clerkId,
-  unpaidInvoices,
-  unpaidSum,
-  onPaymentSuccess,
-  onRefundSuccess,
-}: SelectedCustomerProps) => {
+                            first_name,
+                            last_name,
+                            id,
+                            role_Id,
+                            emoji,
+                            company,
+                            representative,
+                            contact,
+                            email,
+                            location,
+                            notes,
+                            invoiceData,
+                            // auth,
+                            // invoiceHistoryData,
+                            // clerkId,
+                            unpaidInvoices,
+                            unpaidSum,
+                            onPaymentSuccess,
+                            onRefundSuccess,
+                            invoiceHistoryData,
+                          }: SelectedCustomerProps) => {
   // const [sum, setSum] = useState<number>();
   const router = useRouter();
 
@@ -76,67 +77,68 @@ const SelectedCustomer = ({
   };
 
   return (
-    <div className="flex w-full flex-col p-5">
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-5">
-          <Avatar className="h-16 w-16 !rounded-lg">
-            <AvatarFallback className="!rounded-lg bg-black text-3xl text-slate-700">
-              {emoji}
-            </AvatarFallback>
-          </Avatar>
-          <div className="flex flex-col gap-2">
-            <div className="flex items-center gap-2">
-              <p className="text-lg text-slate-700">{company}</p>
-              {role_Id === 3 && (
-                <p className="rounded-full bg-cyan-200 px-2 py-[3px] text-sm tracking-wide text-cyan-700">
-                  Customer
-                </p>
-              )}
+      <div className="flex w-full flex-col p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-5">
+            <Avatar className="h-16 w-16 !rounded-lg">
+              <AvatarFallback className="!rounded-lg bg-black text-3xl text-slate-700">
+                {emoji}
+              </AvatarFallback>
+            </Avatar>
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center gap-2">
+                <p className="text-lg text-slate-700">{company}</p>
+                {role_Id === 3 && (
+                    <p className="rounded-full bg-cyan-200 px-2 py-[3px] text-sm tracking-wide text-cyan-700">
+                      Customer
+                    </p>
+                )}
+              </div>
+              <p className="text-sm text-slate-400">{id}</p>
             </div>
-            <p className="text-sm text-slate-400">{id}</p>
+          </div>
+          <div onClick={handleEditCustomer} className="cursor-pointer">
+            <Edit />
           </div>
         </div>
-        <div onClick={handleEditCustomer} className="cursor-pointer">
-          <Edit />
+
+        <Separator className="mt-5 h-[1px] bg-slate-300" />
+
+        <div className="mt-5 flex flex-col gap-3">
+          <Payables
+              sum={unpaidSum}
+              unpaidInvoices={unpaidInvoices}
+              emoji={emoji}
+              company={company}
+              onPaymentSuccess={onPaymentSuccess}
+              onRefundSuccess={onRefundSuccess}
+          />
+
+          <RecordInfo
+              icon={User2}
+              recordType={"Representative"}
+              info={representative}
+          />
+          <RecordInfo icon={Phone} recordType={"Contact"} info={contact} />
+          <RecordInfo icon={Mail} recordType={"Email"} info={email} />
+          <RecordInfo icon={MapPin} recordType={"Location"} info={location} />
+          <RecordNotes notes={notes} />
+        </div>
+
+        <Separator className="mt-5 h-[1px] bg-slate-300" />
+
+        <div className="mt-5">
+          {/* //TODO: reflect invoice data based on selected customer */}
+          <CustomerInvoice
+              invoiceData={invoiceData}
+              customerId={id}
+              first_name={first_name}
+              last_name={last_name}
+              company={company}
+              detailedInvoiceData={invoiceHistoryData.invoices}
+          />
         </div>
       </div>
-
-      <Separator className="mt-5 h-[1px] bg-slate-300" />
-
-      <div className="mt-5 flex flex-col gap-3">
-        <Payables
-          sum={unpaidSum}
-          unpaidInvoices={unpaidInvoices}
-          emoji={emoji}
-          company={company}
-          onPaymentSuccess={onPaymentSuccess}
-          onRefundSuccess={onRefundSuccess}
-        />
-
-        <RecordInfo
-          icon={User2}
-          recordType={"Representative"}
-          info={representative}
-        />
-        <RecordInfo icon={Phone} recordType={"Contact"} info={contact} />
-        <RecordInfo icon={Mail} recordType={"Email"} info={email} />
-        <RecordInfo icon={MapPin} recordType={"Location"} info={location} />
-        <RecordNotes notes={notes} />
-      </div>
-
-      <Separator className="mt-5 h-[1px] bg-slate-300" />
-
-      <div className="mt-5">
-        {/* //TODO: reflect invoice data based on selected customer */}
-        <CustomerInvoice
-          invoiceData={invoiceData}
-          customerId={id}
-          first_name={first_name}
-          last_name={last_name}
-          company={company}
-        />
-      </div>
-    </div>
   );
 };
 

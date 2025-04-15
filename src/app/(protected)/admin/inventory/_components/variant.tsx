@@ -5,6 +5,7 @@ import { Input } from "~/components/ui/input";
 interface VariantProps {
   onRemove: () => void;
   isOnlyVariant: boolean;
+  hasBatchVariant?: boolean;
   value?: {
     variant: string;
     lowStock: number;
@@ -20,6 +21,7 @@ interface VariantProps {
 const Variant = ({
   onRemove,
   isOnlyVariant,
+  hasBatchVariant = false,
   value = { variant: "", lowStock: 0, veryLowStock: 0 },
   onChange,
 }: VariantProps) => {
@@ -146,7 +148,7 @@ const Variant = ({
         <Button
           className="mt-2 rounded-lg border-[3px] border-dashed border-slate-300 bg-slate-100 p-2 text-slate-400 hover:border-rose-300 hover:bg-rose-100 hover:text-rose-400"
           onClick={onRemove}
-          disabled={isOnlyVariant}
+          disabled={isOnlyVariant || hasBatchVariant}
         >
           Remove Variant
         </Button>

@@ -40,6 +40,7 @@ type VariantData = {
   lowStock: number;
   veryLowStock: number;
   isExisting: boolean;
+  hasBatchVariant: boolean;
 };
 
 // Update the PresetData type to ensure conversions are consistent
@@ -128,6 +129,8 @@ const NewItem = () => {
 
   const { data, isLoading, isError } = api.inventory.listAllData.useQuery();
 
+  const { data: inventoryData } = api.inventory.listInventory.useQuery();
+
   // Fetch presets for the selected item if there's an item ID
   const { data: fetchedPresets, isLoading: isLoadingPresets } =
     api.inventory.getPresetsByItemId.useQuery(
@@ -157,8 +160,34 @@ const NewItem = () => {
   const { mutateAsync: updateItemMutation } =
     api.inventory.updateItem.useMutation();
 
-  const { mutateAsync: updatePresetMutation } =
-    api.inventory.updatePreset.useMutation();
+  const { mutateAsync: deletePresetMutation } =
+    api.inventory.deletePreset.useMutation({
+      onSuccess: () => {
+        // Invalidate the inventory list query to refresh the data
+        utils.inventory.listInventory.invalidate();
+        utils.inventory.listAllData.invalidate();
+      },
+    });
+
+  const { mutateAsync: addConversionToPresetMutation } =
+    api.inventory.addConversionToPreset.useMutation({
+      onSuccess: () => {
+        // Invalidate the queries to refresh the data
+        utils.inventory.listInventory.invalidate();
+        utils.inventory.listAllData.invalidate();
+        utils.inventory.getPresetsByItemId.invalidate();
+      },
+    });
+
+  const { mutateAsync: removeConversionFromPresetMutation } =
+    api.inventory.removeConversionFromPreset.useMutation({
+      onSuccess: () => {
+        // Invalidate the queries to refresh the data
+        utils.inventory.listInventory.invalidate();
+        utils.inventory.listAllData.invalidate();
+        utils.inventory.getPresetsByItemId.invalidate();
+      },
+    });
 
   // Update variants state definition with proper type
   const [variants, setVariants] = useState<VariantData[]>([
@@ -168,6 +197,7 @@ const NewItem = () => {
       lowStock: 0,
       veryLowStock: 0,
       isExisting: false,
+      hasBatchVariant: false,
     },
   ]);
 
@@ -300,16 +330,27 @@ const NewItem = () => {
       );
 
       if (matchingItem) {
-        const variants = matchingItem.variants.map((v) => ({
-          id: v.variant_id,
-          variant: v.name,
-          lowStock: v.StockLevel?.low_stock || 0,
-          veryLowStock: v.StockLevel?.very_low_stock || 0,
-          isExisting: true,
-        }));
+        // Check for batch variants for each variant
+        const variantsWithBatchCheck = matchingItem.variants.map((v) => {
+          const hasBatchVariant = inventoryData?.some(
+            (inv) =>
+              inv.variant?.variant_id === v.variant_id &&
+              inv.variant?.BatchVariant?.length > 0,
+          );
+
+          return {
+            id: v.variant_id,
+            variant: v.name,
+            lowStock: v.StockLevel?.low_stock || 0,
+            veryLowStock: v.StockLevel?.very_low_stock || 0,
+            isExisting: true,
+            hasBatchVariant: !!hasBatchVariant,
+          };
+        });
+
         setVariants(
-          variants.length > 0
-            ? variants
+          variantsWithBatchCheck.length > 0
+            ? variantsWithBatchCheck
             : [
                 {
                   id: Date.now(),
@@ -317,6 +358,7 @@ const NewItem = () => {
                   lowStock: 0,
                   veryLowStock: 0,
                   isExisting: false,
+                  hasBatchVariant: false,
                 },
               ],
         );
@@ -333,11 +375,21 @@ const NewItem = () => {
             lowStock: 0,
             veryLowStock: 0,
             isExisting: false,
+            hasBatchVariant: false,
           },
         ]);
         setSelectedItemId(null);
+        setPresets([
+          {
+            id: Date.now(),
+            mainUnit: "",
+            mainPrice: "",
+            conversions: [],
+          },
+        ]);
       }
     } else {
+      // Clear everything when any field is empty
       setVariants([
         {
           id: Date.now(),
@@ -345,9 +397,19 @@ const NewItem = () => {
           lowStock: 0,
           veryLowStock: 0,
           isExisting: false,
+          hasBatchVariant: false,
         },
       ]);
       setSelectedItemId(null);
+      setPresets([
+        {
+          id: Date.now(),
+          mainUnit: "",
+          mainPrice: "",
+          isExisting: false,
+          conversions: [],
+        },
+      ]);
     }
   }, [
     item,
@@ -356,6 +418,7 @@ const NewItem = () => {
     categorySearch,
     selectedCategory,
     items,
+    inventoryData,
   ]);
 
   // Process fetched presets when they arrive
@@ -363,15 +426,8 @@ const NewItem = () => {
     if (fetchedPresets && fetchedPresets.length > 0) {
       console.log("Raw presets from API:", fetchedPresets);
 
-      // Only include presets that have conversions (these are the main ones created by the user)
-      const mainPresets = fetchedPresets.filter(
-        (preset) => preset.conversions && preset.conversions.length > 0,
-      );
-
-      console.log("Filtered presets with conversions:", mainPresets);
-
-      // Map DB presets to component format - keep all presets, don't filter by main unit
-      const formattedPresets: PresetData[] = mainPresets.map((preset) => {
+      // Map DB presets to component format
+      const formattedPresets: PresetData[] = fetchedPresets.map((preset) => {
         // Debug the preset structure to understand what's coming from the DB
         console.log("Processing preset:", preset);
 
@@ -383,26 +439,19 @@ const NewItem = () => {
 
         return {
           id: preset.preset_id,
-          mainUnit: preset.main_unit?.name || "",
+          mainUnit: preset.main_unit || "",
           mainPrice: mainPrice,
           isExisting: true,
-          conversions: (preset.conversions || []).map((conv: any) => {
+          conversions: (preset.conversions || []).map((conv) => {
             // Debug individual conversion
             console.log("Processing conversion:", conv);
 
-            // Check if related_price exists and is valid
-            let price = "";
-            if (
-              conv.related_price !== undefined &&
-              conv.related_price !== null
-            ) {
-              price = formatPriceInput(conv.related_price);
-            }
-
             return {
               qty: conv.conversion_rate ? conv.conversion_rate.toString() : "0",
-              unit: conv.to_unit?.name || "",
-              price: price,
+              unit: conv.to_unit || "",
+              price: conv.related_price
+                ? formatPriceInput(conv.related_price)
+                : "",
             };
           }),
         };
@@ -424,7 +473,7 @@ const NewItem = () => {
           },
         ]);
       }
-    } else if (fetchedPresets && fetchedPresets.length === 0) {
+    } else {
       // If no presets found, reset to default
       setPresets([
         {
@@ -695,6 +744,7 @@ const NewItem = () => {
         lowStock: 0,
         veryLowStock: 0,
         isExisting: false,
+        hasBatchVariant: false,
       },
     ]);
   };
@@ -741,6 +791,7 @@ const NewItem = () => {
         lowStock: 0,
         veryLowStock: 0,
         isExisting: false,
+        hasBatchVariant: false,
       },
     ]);
     setIsDialogCancelOpen(false);
@@ -819,10 +870,22 @@ const NewItem = () => {
   };
 
   const { mutateAsync: deleteVariantMutation } =
-    api.inventory.deleteVariant.useMutation();
+    api.inventory.deleteVariant.useMutation({
+      onSuccess: () => {
+        // Invalidate the inventory list query to refresh the data
+        utils.inventory.listInventory.invalidate();
+        utils.inventory.listAllData.invalidate();
+      },
+    });
 
-  const { mutateAsync: deletePresetMutation } =
-    api.inventory.deletePreset.useMutation();
+  const { mutateAsync: updatePresetMutation } =
+    api.inventory.updatePresetChain.useMutation({
+      onSuccess: () => {
+        utils.inventory.listInventory.invalidate();
+        utils.inventory.listAllData.invalidate();
+        utils.inventory.getPresetsByItemId.invalidate();
+      },
+    });
 
   const handleSave = async () => {
     // Check main inputs first
@@ -1164,28 +1227,27 @@ const NewItem = () => {
 
             // Delete the removed variants
             for (const variantToDelete of variantsToDelete) {
-              console.log("Deleting variant:", variantToDelete);
-              await deleteVariantMutation({
-                variantId: variantToDelete.variant_id,
-              });
-            }
-          }
-
-          // Handle deleted presets - if we have an existing item, delete any presets that were removed
-          if (fetchedPresets && fetchedPresets.length > 0) {
-            // Find presets that exist in fetchedPresets but not in the current presets list
-            const presetsToDelete = fetchedPresets.filter(
-              (existingPreset) =>
-                existingPreset.preset_id &&
-                !presets.some((p) => p.id === existingPreset.preset_id),
-            );
-
-            // Delete the removed presets
-            for (const presetToDelete of presetsToDelete) {
-              console.log("Deleting preset:", presetToDelete);
-              await deletePresetMutation({
-                presetId: presetToDelete.preset_id,
-              });
+              try {
+                console.log("Attempting to delete variant:", variantToDelete);
+                await deleteVariantMutation({
+                  variantId: variantToDelete.variant_id,
+                });
+                console.log(
+                  "Successfully deleted variant:",
+                  variantToDelete.variant_id,
+                );
+              } catch (error) {
+                console.error("Error deleting variant:", error);
+                if (error instanceof Error) {
+                  toast("❌ Cannot delete variant", {
+                    description: error.message,
+                    duration: 4000,
+                  });
+                  // Stop the save process if we can't delete a variant
+                  setIsSaving(false);
+                  return;
+                }
+              }
             }
           }
         } else {
@@ -1228,12 +1290,14 @@ const NewItem = () => {
             name: variant.variant,
           });
 
+          // Create stock level for the new variant
           await createStockLevelMutation({
             variant_id: createdVariant.variant_id,
             low_stock: variant.lowStock,
             very_low_stock: variant.veryLowStock,
           });
 
+          // Create inventory record for the new variant
           await createInventoryMutation({
             variant_id: createdVariant.variant_id,
             quantity: 0,
@@ -1243,8 +1307,184 @@ const NewItem = () => {
         }
       }
 
-      // Handle preset conversions - both new and updates to existing ones
-      // Handle new presets (ones without isExisting flag)
+      // Handle presets - both existing ones with new conversions and completely new ones
+      // First handle deleted presets
+      if (selectedItem?.item_id) {
+        // Get the existing presets for the item
+        const existingPresets = fetchedPresets || [];
+
+        // Find presets that exist in the database but are not in the current presets list
+        const presetsToDelete = existingPresets.filter(
+          (existingPreset) =>
+            !presets.some((p) => p.id === existingPreset.preset_id),
+        );
+
+        // Delete the removed presets
+        for (const presetToDelete of presetsToDelete) {
+          try {
+            console.log("Attempting to delete preset:", presetToDelete);
+            await deletePresetMutation({
+              presetId: presetToDelete.preset_id,
+              shouldMarkOnly: false,
+            });
+            console.log(
+              "Successfully deleted preset:",
+              presetToDelete.preset_id,
+            );
+          } catch (error) {
+            console.error("Error deleting preset:", error);
+            if (error instanceof Error) {
+              toast("❌ Cannot delete preset", {
+                description: error.message,
+                duration: 4000,
+              });
+              // Stop the save process if we can't delete a preset
+              setIsSaving(false);
+              return;
+            }
+          }
+        }
+
+        // Handle modified presets (where conversions have been removed)
+        for (const currentPreset of presets) {
+          // Only process existing presets
+          if (!currentPreset.isExisting) continue;
+
+          // Find matching preset from fetched data
+          const originalPreset = existingPresets.find(
+            (p) => p.preset_id === currentPreset.id,
+          );
+          if (!originalPreset) continue;
+
+          // Check for removed conversions
+          const originalConversions = originalPreset.conversions || [];
+          const currentConversions = currentPreset.conversions || [];
+
+          // If the preset has fewer conversions now, some were removed
+          if (originalConversions.length > currentConversions.length) {
+            console.log(`Preset ${currentPreset.id} has removed conversions:`, {
+              original: originalConversions.length,
+              current: currentConversions.length,
+            });
+
+            // Build a map of current conversions by unit name for easier comparison
+            const currentUnitMap = new Map();
+            currentConversions.forEach((conv) => {
+              if (conv.unit) currentUnitMap.set(conv.unit, true);
+            });
+
+            // Find removed conversions by checking which original units are missing
+            for (const originalConv of originalConversions) {
+              if (!originalConv.to_unit) continue;
+
+              // If this unit is no longer in the current conversions, it was removed
+              if (!currentUnitMap.has(originalConv.to_unit)) {
+                console.log(
+                  `Found removed conversion to unit: ${originalConv.to_unit}`,
+                );
+
+                try {
+                  // Find the unit ID for the removed conversion
+                  const unitToRemove = units.find(
+                    (u) => u.name === originalConv.to_unit,
+                  );
+                  if (!unitToRemove) {
+                    console.warn(
+                      `Could not find unit ID for ${originalConv.to_unit}`,
+                    );
+                    continue;
+                  }
+
+                  // Call the removeConversionFromPreset mutation
+                  await removeConversionFromPresetMutation({
+                    presetId: currentPreset.id,
+                    toUnitId: unitToRemove.unit_id,
+                    itemId: selectedItem.item_id,
+                  });
+
+                  console.log(
+                    `Successfully removed conversion to ${originalConv.to_unit}`,
+                  );
+                } catch (error) {
+                  console.error(
+                    `Error removing conversion to ${originalConv.to_unit}:`,
+                    error,
+                  );
+                  if (error instanceof Error) {
+                    toast("❌ Error removing conversion", {
+                      description: error.message,
+                      duration: 4000,
+                    });
+                    setIsSaving(false);
+                    return;
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        // Process existing presets with updates
+        for (const preset of presets) {
+          if (preset.isExisting) {
+            // Find the original preset data
+            const originalPreset = fetchedPresets?.find(
+              (p) => p.preset_id === preset.id,
+            );
+            if (!originalPreset) continue;
+
+            // Check if any changes were made
+            const isMainUnitChanged =
+              preset.mainUnit !== originalPreset.main_unit;
+            const isMainPriceChanged =
+              (typeof preset.mainPrice === "string"
+                ? parseFloat(preset.mainPrice)
+                : preset.mainPrice) !== originalPreset.main_price;
+            const conversionsChanged = preset.conversions.some(
+              (conv, index) => {
+                const originalConv = originalPreset.conversions[index];
+                if (!originalConv) return true;
+                return (
+                  parseFloat(conv.qty) !== originalConv.conversion_rate ||
+                  conv.unit !== originalConv.to_unit ||
+                  (typeof conv.price === "string"
+                    ? parseFloat(conv.price)
+                    : conv.price) !== originalConv.related_price
+                );
+              },
+            );
+
+            if (isMainUnitChanged || isMainPriceChanged || conversionsChanged) {
+              // Prepare conversions data
+              const conversions = preset.conversions.map((conv, index) => {
+                const originalConv = originalPreset.conversions[index];
+                return {
+                  conversionId: originalConv?.preset_conversion_id,
+                  rate: parseFloat(conv.qty),
+                  unit: conv.unit,
+                  price:
+                    typeof conv.price === "string"
+                      ? parseFloat(conv.price)
+                      : conv.price,
+                };
+              });
+
+              // Call the updatePreset mutation
+              await updatePresetMutation({
+                presetId: preset.id,
+                mainUnit: preset.mainUnit,
+                mainPrice:
+                  typeof preset.mainPrice === "string"
+                    ? parseFloat(preset.mainPrice)
+                    : preset.mainPrice,
+                conversions,
+              });
+            }
+          }
+        }
+      }
+
+      // Handle new presets only - no updates
       const newPresets = presets.filter(
         (preset) =>
           !preset.isExisting &&
@@ -1253,24 +1493,14 @@ const NewItem = () => {
           preset.conversions.length > 0,
       );
 
-      // Handle existing presets that need to be updated
-      const existingPresets = presets.filter(
-        (preset) =>
-          preset.isExisting &&
-          preset.id &&
-          preset.mainUnit &&
-          preset.mainPrice &&
-          preset.conversions.length > 0,
-      );
-
       if (newPresets.length > 0) {
-        console.log("Saving new presets:", newPresets);
+        console.log("Creating new presets:", newPresets);
 
         try {
           const results = await Promise.all(
             newPresets.map((preset) =>
               createPresetMutation({
-                itemId: item.item_id!,
+                itemId: item.item_id,
                 mainUnit: preset.mainUnit,
                 mainPrice:
                   typeof preset.mainPrice === "string"
@@ -1295,38 +1525,6 @@ const NewItem = () => {
         }
       }
 
-      if (existingPresets.length > 0) {
-        console.log("Updating existing presets:", existingPresets);
-
-        try {
-          const updateResults = await Promise.all(
-            existingPresets.map((preset) =>
-              updatePresetMutation({
-                presetId: preset.id!,
-                mainUnit: preset.mainUnit,
-                mainPrice:
-                  typeof preset.mainPrice === "string"
-                    ? parseFloat(preset.mainPrice)
-                    : preset.mainPrice,
-                conversions: preset.conversions.map((conv) => ({
-                  qty: parseFloat(conv.qty),
-                  unit: conv.unit,
-                  price: conv.price
-                    ? typeof conv.price === "string"
-                      ? parseFloat(conv.price)
-                      : conv.price
-                    : 0,
-                })),
-              }),
-            ),
-          );
-
-          console.log("Updated presets:", updateResults);
-        } catch (error) {
-          console.error("Preset update error:", error);
-        }
-      }
-
       utils.inventory.listInventory.invalidate();
 
       toast("✅ Success", {
@@ -1342,7 +1540,8 @@ const NewItem = () => {
     } catch (error) {
       console.error("Error saving item:", error);
       toast("❌ Error", {
-        description: "Failed to save item",
+        description:
+          error instanceof Error ? error.message : "Failed to save item",
         duration: 4000,
       });
     } finally {
@@ -1633,10 +1832,12 @@ const NewItem = () => {
                     newVariants[index] = {
                       id: variant.id,
                       isExisting: variant.isExisting,
+                      hasBatchVariant: variant.hasBatchVariant,
                       ...value,
                     };
                     setVariants(newVariants);
                   }}
+                  hasBatchVariant={variant.hasBatchVariant}
                 />
               ))}
               <Button
@@ -1687,6 +1888,7 @@ const NewItem = () => {
                           id: Date.now(),
                           mainUnit: "",
                           mainPrice: "",
+                          isExisting: false,
                           conversions: [],
                         },
                       ])

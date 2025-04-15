@@ -65,16 +65,16 @@ const ConversionCard = ({
   const [showMainUnitError, setShowMainUnitError] = useState(false);
   const [showMainPriceError, setShowMainPriceError] = useState(false);
   const [rawPriceInput, setRawPriceInput] = useState("");
-  
+
   // Add ref to track if unit was selected from dropdown
   const wasMainUnitSelectedFromDropdown = useRef(false);
-  
+
   // Add ref for scroll area to enable auto-scrolling
   const scrollAreaContainerRef = useRef<HTMLDivElement>(null);
 
   const { data: units } = api.restock.getUnits.useQuery();
   const unitOptions = units?.map((unit) => unit.name) ?? [];
-  
+
   // Collect all units used in conversion fields (excluding empty values)
   const usedUnitsInConversions = preset.conversions
     .map(conv => conv.unit || '')
@@ -108,24 +108,24 @@ const ConversionCard = ({
   const handleSelectUnit = (unitName: string) => {
     // Mark as selected from dropdown
     wasMainUnitSelectedFromDropdown.current = true;
-    
+
     // Update the state
     setInputValue(unitName);
     setHighlightedIndex(-1);
     setIsDropdownVisible(false);
-    
+
     // Clear main unit error immediately since we now have a valid unit
     setShowMainUnitError(false);
-    
+
     // Update preset with new main unit
     onUpdate({ ...preset, mainUnit: unitName });
-    
+
     // Check if main price is empty
     const hasEmptyPrice = !preset.mainPrice || preset.mainPrice === "";
-    
+
     // Show error if unit is selected but price is empty
     setShowMainPriceError(hasEmptyPrice);
-    
+
     if (inputRef.current) {
       inputRef.current.blur();
     }
@@ -149,10 +149,10 @@ const ConversionCard = ({
         !dropdownRef.current.contains(event.target as Node)
       ) {
         setIsDropdownVisible(false);
-        
+
         // Only clear if it wasn't selected from dropdown and isn't valid
         const isValidUnit = unitOptions.includes(inputValue);
-        
+
         if (!isValidUnit && inputValue && !wasMainUnitSelectedFromDropdown.current) {
           setInputValue("");
           onUpdate({ ...preset, mainUnit: "" });
@@ -160,7 +160,7 @@ const ConversionCard = ({
           // If it's a valid unit, consider it as selected even if not from dropdown
           wasMainUnitSelectedFromDropdown.current = true;
         }
-        
+
         // Show error if main unit is empty
         setShowMainUnitError(!preset.mainUnit);
       }
@@ -216,10 +216,10 @@ const ConversionCard = ({
 
     // Update the raw input for display during typing
     setRawPriceInput(numericValue);
-    
+
     // Also update the actual value
     onUpdate({ ...preset, mainPrice: numericValue });
-    
+
     // Check if price is empty and unit has value - show error
     const isEmpty = numericValue === '';
     const hasUnit = preset.mainUnit !== '';
@@ -232,7 +232,7 @@ const ConversionCard = ({
     if (!value || value.trim() === '') {
       setRawPriceInput("");
       onUpdate({ ...preset, mainPrice: '' });
-      
+
       // Show error if main unit exists but price is empty
       setShowMainPriceError(!!preset.mainUnit);
       return;
@@ -242,7 +242,7 @@ const ConversionCard = ({
     const formattedValue = formatPrice(value);
     setRawPriceInput(""); // Clear raw input since we're not editing anymore
     onUpdate({ ...preset, mainPrice: formattedValue });
-    
+
     // Clear error if price is valid
     setShowMainPriceError(false);
   };
@@ -279,7 +279,7 @@ const ConversionCard = ({
     // Make sure the index is valid
     if (index >= 0 && index < newConversions.length) {
       const currentConversion = newConversions[index] || { qty: "", unit: "", price: "" };
-      
+
       newConversions[index] = {
         // Ensure non-optional fields have default values if undefined
         qty: newData.qty ?? currentConversion.qty ?? "",
@@ -299,7 +299,7 @@ const ConversionCard = ({
     // Make sure the index is valid
     if (index >= 0 && index < newConversions.length) {
       const currentConversion = newConversions[index] || { qty: "", unit: "", price: "" };
-      
+
       newConversions[index] = {
         // Ensure qty and unit remain defined
         qty: currentConversion.qty ?? "",
@@ -313,11 +313,11 @@ const ConversionCard = ({
   const handleAddConversion = () => {
     if (preset.conversions.length < 5) {
       // Check if any existing conversion row is incomplete
-      const hasIncompleteConversions = preset.conversions.some(conv => 
-        (!conv.qty || !conv.unit || !conv.price) && 
+      const hasIncompleteConversions = preset.conversions.some(conv =>
+        (!conv.qty || !conv.unit || !conv.price) &&
         (conv.qty || conv.unit || conv.price) // At least one field has a value (not completely empty)
       );
-      
+
       if (hasIncompleteConversions) {
         toast("❌ Incomplete conversion", {
           description: "Please complete all conversion fields before adding a new row",
@@ -325,15 +325,15 @@ const ConversionCard = ({
         });
         return;
       }
-      
+
       onUpdate({
         ...preset,
         conversions: [...preset.conversions, { qty: "", unit: "", price: "" }],
       });
-      
+
       // Reset dropdown state to show updated available units
       setIsDropdownVisible(false);
-      
+
       // Scroll to the bottom of the conversion area
       setTimeout(() => {
         if (scrollAreaContainerRef.current) {
@@ -349,14 +349,14 @@ const ConversionCard = ({
   // Utility function to format prices consistently
   const formatPrice = (price: string | number | undefined): string => {
     if (!price && price !== 0) return "";
-    
+
     const priceStr = typeof price === 'number' ? price.toString() : (price || "");
-    
+
     if (priceStr.includes('.')) {
       const [whole, decimal = ''] = priceStr.split('.');
       return `${whole}.${decimal.padEnd(2, '0').slice(0, 2)}`;
     }
-    
+
     return priceStr ? `${priceStr}.00` : "";
   };
 
@@ -396,7 +396,7 @@ const ConversionCard = ({
                   setIsDropdownVisible(true);
                   // Reset selection flag when manually typing
                   wasMainUnitSelectedFromDropdown.current = false;
-                  
+
                   // Clear error if they've entered a valid unit
                   if (unitOptions.includes(value)) {
                     setShowMainUnitError(false);
@@ -411,10 +411,10 @@ const ConversionCard = ({
                 setTimeout(() => {
                   if (!dropdownRef.current?.contains(document.activeElement)) {
                     setIsDropdownVisible(false);
-                    
+
                     // Only clear if not a valid unit and not selected from dropdown
                     const isValidUnit = unitOptions.includes(preset.mainUnit);
-                    
+
                     if (!isValidUnit && preset.mainUnit && !wasMainUnitSelectedFromDropdown.current) {
                       setInputValue("");
                       onUpdate({ ...preset, mainUnit: "" });
@@ -422,7 +422,7 @@ const ConversionCard = ({
                       // If it's a valid unit, consider it as selected even if not from dropdown
                       wasMainUnitSelectedFromDropdown.current = true;
                     }
-                    
+
                     // Show error if main unit is empty
                     setShowMainUnitError(!preset.mainUnit);
                   }
@@ -430,7 +430,7 @@ const ConversionCard = ({
               }}
               onKeyDown={handleKeyDown}
             />
-            
+
             {showMainUnitError && (
               <p className="mt-1 text-sm text-rose-400">
                 Please select a unit.
@@ -455,8 +455,8 @@ const ConversionCard = ({
                     ))
                   ) : (
                     <div className="px-4 py-2 text-slate-400 italic">
-                      {inputValue 
-                        ? "No matching units found" 
+                      {inputValue
+                        ? "No matching units found"
                         : "All units are already in use"}
                     </div>
                   )}
@@ -490,7 +490,7 @@ const ConversionCard = ({
                     }
                   }}
               />
-              
+
               {showMainPriceError && (
                 <p className="mt-1 text-sm text-rose-400">
                   Price required.
@@ -531,12 +531,12 @@ const ConversionCard = ({
                       .filter((_, i) => i !== index)
                       .map(c => c.unit || '')
                       .filter(Boolean);
-                  
+
                   // Include the main unit in used units if it exists
                   if (preset.mainUnit) {
                       usedUnits.push(preset.mainUnit);
                   }
-                  
+
                   return (
                       <Conversion
                           key={index}
@@ -570,7 +570,7 @@ const ConversionCard = ({
               ? "Maximum 5 conversions reached"
               : "+ Add a conversion"}
         </Button>
-        
+
         <TooltipProvider>
           <Tooltip delayDuration={300}>
             <TooltipTrigger asChild>

@@ -336,24 +336,36 @@ export const inventoryRouter = createTRPCRouter({
     )
     .mutation(async ({ input }) => {
       const { variantId, name, lowStock, veryLowStock } = input;
+
       // Update variant name
       const updatedVariant = await db.variant.update({
         where: { variant_id: variantId },
         data: { name },
       });
-      // Update or create stock level
-      await db.stockLevel.upsert({
+
+      // Update stock level if it exists, create if it doesn't
+      const existingStockLevel = await db.stockLevel.findUnique({
         where: { variant_id: variantId },
-        update: {
-          low_stock: lowStock,
-          very_low_stock: veryLowStock,
-        },
-        create: {
-          variant_id: variantId,
-          low_stock: lowStock,
-          very_low_stock: veryLowStock,
-        },
       });
+
+      if (existingStockLevel) {
+        await db.stockLevel.update({
+          where: { variant_id: variantId },
+          data: {
+            low_stock: lowStock,
+            very_low_stock: veryLowStock,
+          },
+        });
+      } else {
+        await db.stockLevel.create({
+          data: {
+            variant_id: variantId,
+            low_stock: lowStock,
+            very_low_stock: veryLowStock,
+          },
+        });
+      }
+
       return updatedVariant;
     }),
 
@@ -389,6 +401,16 @@ export const inventoryRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ input }) => {
+      // First check if a stock level already exists for this variant
+      const existingStockLevel = await db.stockLevel.findUnique({
+        where: { variant_id: input.variant_id },
+      });
+
+      if (existingStockLevel) {
+        throw new Error("Stock level already exists for this variant");
+      }
+
+      // Create new stock level with auto-incrementing ID
       const stockLevel = await db.stockLevel.create({
         data: {
           variant_id: input.variant_id,
@@ -396,6 +418,7 @@ export const inventoryRouter = createTRPCRouter({
           very_low_stock: input.very_low_stock,
         },
       });
+
       return stockLevel;
     }),
 
@@ -420,614 +443,29 @@ export const inventoryRouter = createTRPCRouter({
       return inventory;
     }),
 
-  createPreset: publicProcedure
-    .input(
-      z.object({
-        itemId: z.number(),
-        mainUnit: z.string(),
-        mainPrice: z.number(),
-        conversions: z.array(
-          z.object({
-            qty: z.number(),
-            unit: z.string(),
-            price: z.number(),
-          }),
-        ),
-      }),
-    )
-    .mutation(async ({ input, ctx }) => {
-      const { itemId, mainUnit, mainPrice, conversions } = input;
-
-      console.log("Creating preset with data:", JSON.stringify(input, null, 2));
-
-      // Find or create main unit without creating special price units
-      const mainUnitRecord = await ctx.db.unit.upsert({
-        where: { name: mainUnit },
-        create: { name: mainUnit },
-        update: {},
-      });
-
-      // Check if a preset with this main unit already exists for this item
-      const existingMainPreset = await ctx.db.preset.findFirst({
-        where: {
-          item_id: itemId,
-          main_unit_id: mainUnitRecord.unit_id,
-        },
-      });
-
-      // If preset already exists, use a different strategy - don't update existing presets
-      if (existingMainPreset) {
-        console.log(
-          `A preset with main unit ${mainUnit} already exists for this item.`,
-        );
-        console.log(
-          `Creating a new preset chain instead of modifying the existing one.`,
-        );
-      }
-
-      // Always create a new main preset - don't update existing ones
-      const mainPreset = await ctx.db.preset.create({
-        data: {
-          item_id: itemId,
-          main_unit_id: mainUnitRecord.unit_id,
-          main_price: mainPrice,
-        },
-      });
-
-      console.log(`Created new main preset with ID: ${mainPreset.preset_id}`);
-
-      // Process each conversion in sequential order to properly chain them
-      let lastUnitId = mainUnitRecord.unit_id; // Start with the main unit (Boxes)
-      let lastPresetId = mainPreset.preset_id;
-
-      for (const conversion of conversions) {
-        // Find or create the to_unit (Pack, Pieces)
-        const toUnitRecord = await ctx.db.unit.upsert({
-          where: { name: conversion.unit },
-          create: { name: conversion.unit },
-          update: {},
-        });
-
-        // Create the conversion from the previous unit to this unit
-        const conversionRecord = await ctx.db.presetConversion.create({
-          data: {
-            preset_id: lastPresetId,
-            from_unit_id: lastUnitId,
-            to_unit_id: toUnitRecord.unit_id,
-            conversion_rate: conversion.qty,
-          },
-        });
-
-        console.log(
-          `Created preset conversion with ID: ${conversionRecord.preset_conversion_id}`,
-        );
-
-        // Create preset for this unit with its price
-        const unitPreset = await ctx.db.preset.create({
-          data: {
-            item_id: itemId,
-            main_unit_id: toUnitRecord.unit_id,
-            main_price: conversion.price,
-          },
-        });
-
-        console.log(`Created unit preset with ID: ${unitPreset.preset_id}`);
-
-        // Update for next iteration to chain properly
-        lastUnitId = toUnitRecord.unit_id;
-        lastPresetId = unitPreset.preset_id;
-      }
-
-      // Return the complete preset chain, starting from the main preset
-      return ctx.db.preset.findUnique({
-        where: { preset_id: mainPreset.preset_id },
-        include: {
-          conversions: {
-            include: {
-              from_unit: true,
-              to_unit: true,
-            },
-          },
-        },
-      });
-    }),
-
-  updatePreset: publicProcedure
-    .input(
-      z.object({
-        presetId: z.number(),
-        mainUnit: z.string(),
-        mainPrice: z.number(),
-        conversions: z.array(
-          z.object({
-            id: z.number().optional(), // Preset conversion ID if it exists
-            qty: z.number(),
-            unit: z.string(),
-            price: z.number(),
-            isNew: z.boolean().optional(), // Flag to indicate if this is a new conversion
-          }),
-        ),
-      }),
-    )
-    .mutation(async ({ input, ctx }) => {
-      const { presetId, mainUnit, mainPrice, conversions } = input;
-
-      console.log(
-        "Updating preset with data:",
-        JSON.stringify(
-          {
-            presetId,
-            mainUnit,
-            mainPrice,
-            conversions,
-          },
-          null,
-          2,
-        ),
-      );
-
-      // Get the existing preset
-      const existingPreset = await ctx.db.preset.findUnique({
-        where: { preset_id: presetId },
-        include: {
-          conversions: {
-            include: {
-              to_unit: true,
-              from_unit: true,
-            },
-          },
-          main_unit: true,
-        },
-      });
-
-      if (!existingPreset) {
-        throw new Error(`Preset with ID ${presetId} not found`);
-      }
-
-      // Get the item_id from the preset
-      const itemId = existingPreset.item_id;
-
-      // Find all presets in this chain
-      const allPresets = await ctx.db.preset.findMany({
-        where: { item_id: itemId },
-        include: {
-          conversions: true,
-          main_unit: true,
-        },
-      });
-
-      // Build a map of preset IDs to preset objects for quicker lookups
-      const presetMap = new Map(
-        allPresets.map((preset) => [preset.preset_id, preset]),
-      );
-
-      // Update only the main preset's price - this is the only value we'll change
-      // without explicit user input
-      if (existingPreset.main_price !== mainPrice) {
-        await ctx.db.preset.update({
-          where: { preset_id: presetId },
-          data: { main_price: mainPrice },
-        });
-        console.log(`Updated main preset ID ${presetId} price to ${mainPrice}`);
-      }
-
-      // Track which conversion IDs we've processed
-      const processedConversionIds = new Set<number>();
-
-      // Process only existing conversions - update their rates if needed
-      for (const conversion of conversions) {
-        // Skip any conversion without an ID (these would be new ones we don't want to auto-create)
-        if (!conversion.id && !conversion.isNew) {
-          console.log(
-            `Skipping conversion without ID that isn't marked as new: ${conversion.unit}`,
-          );
-          continue;
-        }
-
-        // If it's an existing conversion, update it
-        if (conversion.id) {
-          const existingConversion = await ctx.db.presetConversion.findUnique({
-            where: { preset_conversion_id: conversion.id },
-            include: { to_unit: true },
-          });
-
-          if (!existingConversion) {
-            console.log(
-              `Warning: Conversion with ID ${conversion.id} not found`,
-            );
-            continue;
-          }
-
-          // Mark this conversion as processed
-          processedConversionIds.add(conversion.id);
-
-          // Update the conversion rate if it changed
-          if (existingConversion.conversion_rate !== conversion.qty) {
-            await ctx.db.presetConversion.update({
-              where: { preset_conversion_id: conversion.id },
-              data: { conversion_rate: conversion.qty },
-            });
-            console.log(
-              `Updated conversion ${conversion.id} rate to ${conversion.qty}`,
-            );
-          }
-
-          // Find the linked preset (the one where main_unit_id = this conversion's to_unit_id)
-          const linkedPreset = allPresets.find(
-            (p) => p.main_unit_id === existingConversion.to_unit_id,
-          );
-
-          // Update the linked preset's price if it exists and price changed
-          if (linkedPreset && linkedPreset.main_price !== conversion.price) {
-            await ctx.db.preset.update({
-              where: { preset_id: linkedPreset.preset_id },
-              data: { main_price: conversion.price },
-            });
-            console.log(
-              `Updated linked preset ${linkedPreset.preset_id} price to ${conversion.price}`,
-            );
-          }
-        }
-        // Only create a new conversion if explicitly marked as new
-        else if (conversion.isNew) {
-          console.log(
-            `Creating new conversion for unit ${conversion.unit} with rate ${conversion.qty}`,
-          );
-
-          // Find or create the unit
-          const toUnitRecord = await ctx.db.unit.upsert({
-            where: { name: conversion.unit },
-            create: { name: conversion.unit },
-            update: {},
-          });
-
-          // Create the new conversion
-          const newConversion = await ctx.db.presetConversion.create({
-            data: {
-              preset_id: presetId,
-              from_unit_id: existingPreset.main_unit_id,
-              to_unit_id: toUnitRecord.unit_id,
-              conversion_rate: conversion.qty,
-            },
-          });
-
-          // Create a linked preset for this new unit
-          const newPreset = await ctx.db.preset.create({
-            data: {
-              item_id: itemId,
-              main_unit_id: toUnitRecord.unit_id,
-              main_price: conversion.price,
-            },
-          });
-
-          console.log(
-            `Created new conversion ${newConversion.preset_conversion_id} and linked preset ${newPreset.preset_id}`,
-          );
-        }
-      }
-
-      // Return the updated preset with its conversions
-      const result = await ctx.db.preset.findUnique({
-        where: { preset_id: presetId },
-        include: {
-          conversions: {
-            include: {
-              to_unit: true,
-              from_unit: true,
-            },
-            orderBy: {
-              preset_conversion_id: "asc",
-            },
-          },
-        },
-      });
-
-      return result;
-    }),
-
-  editItem: publicProcedure
-    .input(
-      z.object({
-        inventoryId: z.number(), // This is actually inventory_number now
-        name: z.string(),
-        brand: z.string(),
-        category: z.string(),
-        description: z.string().optional(),
-        variants: z.array(
-          z.object({
-            id: z.number().optional(), // Variant ID
-            name: z.string(),
-            lowStock: z.number().min(1, "Low Stock must be greater than 0."),
-            veryLowStock: z
-              .number()
-              .min(1, "Very Low Stock must be greater than 0."),
-          }),
-        ),
-        inventoryClerk: z.string(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const {
-        inventoryId,
-        name,
-        brand,
-        category,
-        description,
-        variants,
-        inventoryClerk,
-      } = input;
-
-      // Fetch inventory using inventory_number
-      const inventoryRecord = await db.inventory.findUnique({
-        where: { inventory_number: inventoryId },
-        include: {
-          variant: {
-            include: {
-              item: {
-                include: {
-                  brand: true,
-                  category: true,
-                  variants: true,
-                },
-              },
-            },
-          },
-        },
-      });
-
-      if (!inventoryRecord?.variant?.item) {
-        throw new Error("Item not found");
-      }
-
-      // Extract variant and item
-      const variant = inventoryRecord.variant;
-      const item = variant.item;
-
-      // Update brand name
-      const updatedBrand = await db.brand.update({
-        where: { brand_id: item.brand.brand_id },
-        data: { name: brand },
-      });
-
-      // Update category name
-      const updatedCategory = await db.category.update({
-        where: { category_id: item.category.category_id },
-        data: { name: category },
-      });
-
-      // Update item details
-      const updatedItem = await db.item.update({
-        where: { item_id: item.item_id },
-        data: {
-          name,
-          description,
-          brand_id: updatedBrand.brand_id,
-          category_id: updatedCategory.category_id,
-        },
-      });
-
-      const updatedVariants = await Promise.all(
-        variants.map(async (variantData) => {
-          if (variantData.id) {
-            // Check if the variant exists before updating
-            const existingVariant = await db.variant.findUnique({
-              where: { variant_id: variantData.id },
-              include: { StockLevel: true },
-            });
-
-            if (!existingVariant) {
-              throw new Error(`Variant with ID ${variantData.id} not found`);
-            }
-
-            // Update the existing variant
-            await db.variant.update({
-              where: { variant_id: variantData.id },
-              data: { name: variantData.name },
-            });
-
-            // Ensure stock level is updated properly
-            await db.stockLevel.upsert({
-              where: { variant_id: variantData.id }, // Use existing variant ID
-              update: {
-                low_stock: variantData.lowStock,
-                very_low_stock: variantData.veryLowStock,
-              },
-              create: {
-                variant_id: variantData.id,
-                low_stock: variantData.lowStock,
-                very_low_stock: variantData.veryLowStock,
-              },
-            });
-
-            return variantData.id;
-          }
-
-          // Create new variant
-          const newVariant = await db.variant.create({
-            data: {
-              name: variantData.name,
-              item_id: updatedItem.item_id,
-            },
-          });
-
-          // Create stock level entry
-          await db.stockLevel.create({
-            data: {
-              variant_id: newVariant.variant_id,
-              low_stock: variantData.lowStock,
-              very_low_stock: variantData.veryLowStock,
-            },
-          });
-
-          // Create new inventory record
-          await db.inventory.create({
-            data: {
-              variant_id: newVariant.variant_id,
-              quantity: 0,
-              inventory_clerk: inventoryClerk,
-              inventory_number: Math.floor(1000000 + Math.random() * 9000000),
-            },
-          });
-
-          return newVariant.variant_id;
-        }),
-      );
-
-      return { updatedItem, updatedVariants };
-    }),
-
-  deleteItem: publicProcedure
-    .input(
-      z.object({
-        inventoryId: z.number(),
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const { inventoryId } = input;
-
-      // Fetch the variant associated with the inventoryId
-      const variant = await db.variant.findUnique({
-        where: { variant_id: inventoryId },
-        include: {
-          item: true, // Include the related item to access its ID
-        },
-      });
-
-      if (!variant) {
-        throw new Error("Variant not found");
-      }
-
-      const itemId = variant.item?.item_id;
-
-      if (!itemId) {
-        throw new Error("Associated item not found");
-      }
-
-      // Delete the Item and rely on cascading deletes for related records
-      await db.item.delete({
-        where: { item_id: itemId },
-      });
-
-      return { message: "Item and all related records deleted successfully." };
-    }),
-
   deleteVariant: publicProcedure
-    .input(
-      z.object({
-        variantId: z.number(),
-      }),
-    )
+    .input(z.object({ variantId: z.number() }))
     .mutation(async ({ input, ctx }) => {
       const { variantId } = input;
-      console.log(`Deleting variant with ID: ${variantId}`);
 
-      try {
-        // First, delete related inventory records
-        await ctx.db.inventory.deleteMany({
-          where: { variant_id: variantId },
-        });
+      // Only check for batch variants
+      const batchVariant = await ctx.db.batchVariant.findFirst({
+        where: { variant_id: variantId },
+      });
 
-        // Delete related stock levels
-        await ctx.db.stockLevel.deleteMany({
-          where: { variant_id: variantId },
-        });
-
-        // Delete the variant itself
-        const deletedVariant = await ctx.db.variant.delete({
-          where: { variant_id: variantId },
-        });
-
-        return { success: true, deletedVariant };
-      } catch (error) {
-        console.error("Failed to delete variant:", error);
-        throw new Error("Failed to delete variant");
-      }
-    }),
-
-  deletePreset: publicProcedure
-    .input(
-      z.object({
-        presetId: z.number(),
-        shouldMarkOnly: z.boolean().optional(),
-      }),
-    )
-    .mutation(async ({ input, ctx }) => {
-      const { presetId, shouldMarkOnly = true } = input;
-      console.log(
-        `Marking preset with ID ${presetId} for deletion (actual delete: ${!shouldMarkOnly})`,
-      );
-
-      try {
-        // First get the preset to get item_id
-        const preset = await ctx.db.preset.findUnique({
-          where: { preset_id: presetId },
-          include: {
-            conversions: {
-              include: {
-                to_unit: true,
-              },
-            },
-          },
-        });
-
-        if (!preset) {
-          throw new Error(`Preset with ID ${presetId} not found`);
-        }
-
-        const itemId = preset.item_id;
-
-        // Find all presets for this item
-        const allPresets = await ctx.db.preset.findMany({
-          where: { item_id: itemId },
-          include: { conversions: true },
-        });
-
-        // Find all presets in the chain
-        const presetsToDelete = findPresetChain(presetId, allPresets).map(
-          (p) => p.preset_id,
+      // If batch variant exists, throw an error
+      if (batchVariant) {
+        throw new Error(
+          "Cannot delete variant as it has associated batch records.",
         );
-
-        console.log(
-          `Found ${presetsToDelete.length} presets to mark for deletion`,
-        );
-
-        if (shouldMarkOnly) {
-          // Just return the IDs without deleting anything
-          return {
-            success: true,
-            message: `Marked ${presetsToDelete.length} presets for deletion`,
-            presetsToDelete,
-          };
-        } else {
-          // Actually delete the presets and their conversions
-          // Delete all preset conversions for all presets in the chain
-          await ctx.db.presetConversion.deleteMany({
-            where: {
-              preset_id: {
-                in: presetsToDelete,
-              },
-            },
-          });
-
-          // Delete all presets in the chain
-          await ctx.db.preset.deleteMany({
-            where: {
-              preset_id: {
-                in: presetsToDelete,
-              },
-            },
-          });
-
-          return {
-            success: true,
-            message: `Deleted ${presetsToDelete.length} presets`,
-            presetsToDelete,
-          };
-        }
-      } catch (error) {
-        console.error("Failed to delete preset:", error);
-        throw new Error("Failed to delete preset");
       }
+
+      // If no batch variants, proceed with deletion
+      const deletedVariant = await ctx.db.variant.delete({
+        where: { variant_id: variantId },
+      });
+
+      return deletedVariant;
     }),
 
   getPresetsByItemId: publicProcedure
@@ -1036,8 +474,8 @@ export const inventoryRouter = createTRPCRouter({
       const { itemId } = input;
 
       try {
-        // Fetch all presets for the given item ID with their conversions and units
-        const allPresets = await db.preset.findMany({
+        // First, get all presets for the given item ID
+        const presets = await db.preset.findMany({
           where: { item_id: itemId },
           include: {
             main_unit: true,
@@ -1051,405 +489,855 @@ export const inventoryRouter = createTRPCRouter({
               },
             },
           },
+          orderBy: {
+            preset_id: "asc",
+          },
         });
 
-        console.log(`Found ${allPresets.length} presets for item ID ${itemId}`);
+        // Group presets by their chain (starting with presets that have conversions)
+        const presetChains: ProcessedPreset[] = [];
+        const processedPresetIds = new Set<number>();
 
-        // Find top-level presets (ones that have conversions but aren't the target of any conversion)
-        // These are the "root" presets in our chains (like "Boxes")
-
-        // First, build a map of all presets that are targets of conversions
-        const targetUnitIds = new Set(
-          allPresets.flatMap((preset) =>
-            preset.conversions.map((conv) => conv.to_unit_id),
-          ),
-        );
-
-        // Build a map of preset IDs to quickly identify which presets are part of chains
-        const presetInChain = new Map<number, boolean>();
-
-        // For each preset...
-        allPresets.forEach((preset) => {
-          // If this preset has conversions pointing to other presets
-          if (preset.conversions.length > 0) {
-            // For each of its conversions
-            preset.conversions.forEach((conv) => {
-              // Find presets where their main unit is the target of this conversion
-              const targetPresets = allPresets.filter(
-                (p) => p.main_unit_id === conv.to_unit_id,
-              );
-              // Mark these presets as part of a chain (not root presets)
-              targetPresets.forEach((tp) => {
-                presetInChain.set(tp.preset_id, true);
-              });
-            });
-          }
-        });
-
-        // Get all root presets - ones that aren't targets in any conversion chain
-        const rootPresets = allPresets.filter(
-          (preset) =>
-            !presetInChain.has(preset.preset_id) &&
-            preset.conversions.length > 0,
-        );
-
-        console.log(`Found ${rootPresets.length} root presets`);
-
-        if (rootPresets.length === 0) {
-          // If no root presets found, return all presets with conversions as a fallback
-          return allPresets.filter((p) => p.conversions.length > 0);
-        }
-
-        // For each root preset, gather all conversions in the chain
-        const resultPresets: ProcessedPreset[] = [];
-
-        for (const rootPreset of rootPresets) {
-          console.log(
-            `Processing root preset: ${rootPreset.preset_id} (${rootPreset.main_unit.name})`,
+        // First, find all starting presets (those that are not the target of any conversion)
+        const startingPresets = presets.filter((preset) => {
+          // A preset is a starting preset if it's not the target of any conversion
+          return !presets.some((p) =>
+            p.conversions.some(
+              (conv) => conv.to_unit_id === preset.main_unit_id,
+            ),
           );
+        });
 
-          // Start with the main preset data
-          const processedPreset: ProcessedPreset = {
-            ...rootPreset,
-            conversions: [],
-          };
+        for (const preset of startingPresets) {
+          // Skip if this preset has already been processed
+          if (processedPresetIds.has(preset.preset_id)) continue;
 
-          // Build the complete conversion chain by traversing all linked presets
-          const allChainConversions: ProcessedPresetConversion[] = [];
-          const processedUnitIds = new Set<number>();
+          // Only process presets that have conversions (these are the starting points of chains)
+          if (preset.conversions.length > 0 && preset.main_unit) {
+            const chain: ProcessedPreset = {
+              preset_id: preset.preset_id,
+              item_id: preset.item_id,
+              main_unit_id: preset.main_unit_id,
+              main_price: preset.main_price,
+              created_at: preset.created_at,
+              updated_at: preset.updated_at,
+              main_unit: preset.main_unit,
+              conversions: [],
+            };
 
-          // First add the direct conversions from the root preset (level 1)
-          for (const directConv of rootPreset.conversions) {
-            // Find the next preset in the chain where this conversion points to
-            const nextPreset = allPresets.find(
-              (p) => p.main_unit_id === directConv.to_unit_id,
-            );
+            // Add the first preset to processed set
+            processedPresetIds.add(preset.preset_id);
 
-            // Add the conversion with price from the next preset
-            allChainConversions.push({
-              ...directConv,
-              related_price: nextPreset?.main_price || null,
-            });
+            // Find all presets in this chain
+            let currentPreset = preset;
 
-            // Track that we've processed this unit
-            processedUnitIds.add(directConv.to_unit_id);
+            while (currentPreset.conversions.length > 0) {
+              const currentConversion = currentPreset.conversions[0];
+              if (!currentConversion?.from_unit || !currentConversion?.to_unit)
+                break;
 
-            // Now find subsequent conversions in the chain
-            if (nextPreset) {
-              const chainedConversions = gatherChainedConversions(
-                nextPreset,
-                allPresets,
-                processedUnitIds,
+              // Find the next preset in the chain
+              const nextPreset = presets.find(
+                (p) => p.main_unit_id === currentConversion.to_unit_id,
               );
 
-              // Add all chained conversions to our list
-              allChainConversions.push(...chainedConversions);
-            }
-          }
+              if (!nextPreset) break;
 
-          // Set all conversions for this preset
-          processedPreset.conversions = allChainConversions;
-          resultPresets.push(processedPreset);
+              // Add the conversion to the chain with the next preset's main price
+              chain.conversions.push({
+                preset_conversion_id: currentConversion.preset_conversion_id,
+                preset_id: currentPreset.preset_id,
+                conversion_rate: currentConversion.conversion_rate,
+                from_unit_id: currentConversion.from_unit_id,
+                to_unit_id: currentConversion.to_unit_id,
+                created_at: currentConversion.created_at,
+                updated_at: currentConversion.updated_at,
+                from_unit: currentConversion.from_unit,
+                to_unit: currentConversion.to_unit,
+                related_price: nextPreset.main_price,
+              });
+
+              // Add the next preset to processed set
+              processedPresetIds.add(nextPreset.preset_id);
+              currentPreset = nextPreset;
+            }
+
+            presetChains.push(chain);
+          }
         }
 
-        console.log(`Returning ${resultPresets.length} processed presets`);
-        return resultPresets;
+        // Format the presets for the frontend
+        const formattedPresets = presetChains.map((chain) => ({
+          preset_id: chain.preset_id,
+          main_unit: chain.main_unit.name,
+          main_price: chain.main_price,
+          conversions: chain.conversions.map((conv) => ({
+            preset_conversion_id: conv.preset_conversion_id,
+            from_unit: conv.from_unit.name,
+            to_unit: conv.to_unit.name,
+            conversion_rate: conv.conversion_rate,
+            related_price: conv.related_price,
+          })),
+        }));
+
+        return formattedPresets;
       } catch (error) {
-        console.error(`Error fetching presets for item ID ${itemId}:`, error);
+        console.error("Error fetching presets:", error);
         throw new Error("Failed to fetch presets");
       }
     }),
 
-  verifyPassword: publicProcedure
+  createPreset: publicProcedure
     .input(
       z.object({
-        personalDetailsId: z.string(), // ID from the session
-        password: z.string(), // Password input by the user
-      }),
-    )
-    .mutation(async ({ input }) => {
-      const { personalDetailsId, password } = input;
-
-      // Fetch the authentication record for the user
-      const authRecord = await db.authentication.findUnique({
-        where: { personal_details_id: personalDetailsId },
-      });
-
-      if (!authRecord) {
-        throw new Error("User not found.");
-      }
-
-      // Compare the input password with the stored password
-      if (authRecord.password !== password) {
-        throw new Error("Incorrect password.");
-      }
-
-      return { success: true, message: "Password verified." };
-    }),
-
-  // ~/server/api/inventory.ts
-  updateSupplierUnits: publicProcedure
-    .input(
-      z.object({
-        batchVariantId: z.number(),
-        units: z.array(
+        itemId: z.number(),
+        mainUnit: z.string(),
+        mainPrice: z.union([z.string(), z.number()]),
+        conversions: z.array(
           z.object({
-            operation: z.enum(["create", "update", "delete"]),
-            supplierUnitId: z.number().optional(),
-            data: z.object({
-              stock: z.string().transform(Number),
-              price: z.string().transform(Number),
-              unit: z.string(),
-              conversionQty: z
-                .string()
-                .transform((v) => (v ? Number(v) : null)),
-              conversionUnit: z.string(),
-              supplierId: z.string(),
-            }),
+            qty: z.union([z.string(), z.number()]),
+            unit: z.string(),
+            price: z.union([z.string(), z.number()]),
           }),
         ),
       }),
     )
     .mutation(async ({ input }) => {
-      const { batchVariantId, units } = input;
+      const { itemId, mainUnit, mainPrice, conversions } = input;
 
-      return await db.$transaction(
-        async (prisma) => {
-          const results: any[] = [];
-          const BATCH_SIZE = 10;
+      try {
+        // Find the main unit
+        const mainUnitRecord = await db.unit.findUnique({
+          where: { name: mainUnit },
+        });
 
-          for (let i = 0; i < units.length; i += BATCH_SIZE) {
-            const batch = units.slice(i, i + BATCH_SIZE);
+        if (!mainUnitRecord) {
+          throw new Error(`Main unit ${mainUnit} not found.`);
+        }
 
-            await Promise.all(
-              batch.map(async (unit) => {
-                try {
-                  switch (unit.operation) {
-                    case "create":
-                      const newUnit = await prisma.supplierUnit.create({
-                        data: {
-                          batchVariant: {
-                            connect: {
-                              batch_variant_id: batchVariantId,
-                            },
-                          },
-                          supplier: {
-                            connect: {
-                              id: unit.data.supplierId,
-                            },
-                          },
-                          quantity_per_unit: Number(unit.data.stock),
-                          total_quantity: Number(unit.data.stock),
-                          price: Number(unit.data.price),
-                          unit: {
-                            connect: {
-                              name: unit.data.unit,
-                            },
-                          },
-                          ConversionRate:
-                            unit.data.conversionQty && unit.data.conversionUnit
-                              ? {
-                                  create: {
-                                    conversion_rate: Number(
-                                      unit.data.conversionQty,
-                                    ),
-                                    fromUnit: {
-                                      connect: {
-                                        name: unit.data.unit,
-                                      },
-                                    },
-                                    toUnit: {
-                                      connect: {
-                                        name: unit.data.conversionUnit,
-                                      },
-                                    },
-                                  },
-                                }
-                              : undefined,
-                        },
-                        include: {
-                          ConversionRate: true,
-                        },
-                      });
-                      results.push(newUnit);
-                      break;
+        // Create the first preset record (main unit)
+        const firstPreset = await db.preset.create({
+          data: {
+            item_id: itemId,
+            main_unit_id: mainUnitRecord.unit_id,
+            main_price:
+              typeof mainPrice === "string" ? parseFloat(mainPrice) : mainPrice,
+          },
+        });
 
-                    case "update":
-                      // Get existing conversion rate
-                      const existingConversion =
-                        await prisma.conversionRate.findFirst({
-                          where: {
-                            supplier_unit_id: unit.supplierUnitId,
-                          },
-                        });
+        let currentPreset = firstPreset;
+        let currentUnitId = mainUnitRecord.unit_id;
 
-                      const updateData = {
-                        quantity_per_unit: Number(unit.data.stock),
-                        price: Number(unit.data.price),
-                        unit: {
-                          connect: {
-                            name: unit.data.unit,
-                          },
-                        },
-                        ConversionRate:
-                          unit.data.conversionQty && unit.data.conversionUnit
-                            ? {
-                                upsert: {
-                                  where: {
-                                    conversion_id:
-                                      existingConversion?.conversion_id ?? -1,
-                                  },
-                                  create: {
-                                    conversion_rate: Number(
-                                      unit.data.conversionQty,
-                                    ),
-                                    fromUnit: {
-                                      connect: { name: unit.data.unit },
-                                    },
-                                    toUnit: {
-                                      connect: {
-                                        name: unit.data.conversionUnit,
-                                      },
-                                    },
-                                  },
-                                  update: {
-                                    conversion_rate: Number(
-                                      unit.data.conversionQty,
-                                    ),
-                                    toUnit: {
-                                      connect: {
-                                        name: unit.data.conversionUnit,
-                                      },
-                                    },
-                                  },
-                                },
-                              }
-                            : {
-                                deleteMany: {
-                                  supplier_unit_id: unit.supplierUnitId,
-                                },
-                              },
-                      };
+        // Process each conversion in the chain
+        for (const conversion of conversions) {
+          // Find the to unit
+          const toUnit = await db.unit.findUnique({
+            where: { name: conversion.unit },
+          });
 
-                      const updatedUnit = await prisma.supplierUnit.update({
-                        where: { supplier_unit_id: unit.supplierUnitId },
-                        data: updateData,
-                        include: { ConversionRate: true },
-                      });
-                      results.push(updatedUnit);
-                      break;
+          if (!toUnit) {
+            throw new Error(`Unit ${conversion.unit} not found.`);
+          }
 
-                    case "delete":
-                      if (unit.supplierUnitId) {
-                        await prisma.conversionRate.deleteMany({
-                          where: { supplier_unit_id: unit.supplierUnitId },
-                        });
-                        const deletedUnit = await prisma.supplierUnit.delete({
-                          where: { supplier_unit_id: unit.supplierUnitId },
-                        });
-                        results.push(deletedUnit);
-                      }
-                      break;
-                  }
-                } catch (error) {
-                  console.error(`Error processing unit:`, unit);
-                  throw error;
-                }
-              }),
+          // Create preset conversion for the current chain
+          await db.presetConversion.create({
+            data: {
+              preset_id: currentPreset.preset_id,
+              from_unit_id: currentUnitId, // Use the current unit's ID
+              to_unit_id: toUnit.unit_id,
+              conversion_rate:
+                typeof conversion.qty === "string"
+                  ? parseFloat(conversion.qty)
+                  : conversion.qty,
+            },
+          });
+
+          // Create a new preset for the next unit in the chain
+          currentPreset = await db.preset.create({
+            data: {
+              item_id: itemId,
+              main_unit_id: toUnit.unit_id,
+              main_price:
+                typeof conversion.price === "string"
+                  ? parseFloat(conversion.price)
+                  : conversion.price,
+            },
+          });
+
+          // Update the current unit ID for the next conversion
+          currentUnitId = toUnit.unit_id;
+        }
+
+        return {
+          message: "Preset chain created successfully!",
+          firstPresetId: firstPreset.preset_id,
+        };
+      } catch (error) {
+        console.error("Error creating preset chain:", error);
+        throw new Error(
+          `Failed to create preset chain: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }),
+
+  deletePreset: publicProcedure
+    .input(
+      z.object({
+        presetId: z.number(),
+        shouldMarkOnly: z.boolean().optional(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { presetId, shouldMarkOnly = false } = input;
+
+      try {
+        // If shouldMarkOnly is true, we might implement a soft delete in the future
+        // For now, we'll always perform a hard delete
+
+        // Find the preset to get related info
+        const presetToDelete = await db.preset.findUnique({
+          where: { preset_id: presetId },
+          include: {
+            conversions: true,
+            item: true,
+          },
+        });
+
+        if (!presetToDelete) {
+          throw new Error(`Preset with ID ${presetId} not found.`);
+        }
+
+        // Get all presets for this item to identify which ones to delete
+        const allItemPresets = await db.preset.findMany({
+          where: { item_id: presetToDelete.item_id },
+          include: {
+            main_unit: true,
+            conversions: {
+              include: {
+                from_unit: true,
+                to_unit: true,
+              },
+            },
+          },
+        });
+
+        // Find the specific preset unit name for reference in error messages
+        const presetUnitToDelete = allItemPresets.find(
+          (p) => p.preset_id === presetId,
+        )?.main_unit?.name;
+
+        // Function to follow a specific chain starting from a specific preset ID
+        // This ensures we only delete presets in the chain that starts with our target preset
+        const followSpecificChain = (startPresetId: number): Set<number> => {
+          const chainPresetIds = new Set<number>([startPresetId]);
+          let currentPresetId = startPresetId;
+
+          // Follow the chain from the start preset to the end
+          while (true) {
+            // Find the current preset
+            const currentPreset = allItemPresets.find(
+              (p) => p.preset_id === currentPresetId,
+            );
+            if (!currentPreset || currentPreset.conversions.length === 0) {
+              // Reached the end of the chain
+              break;
+            }
+
+            // Get the first conversion (assuming presets have at most one outgoing conversion)
+            const conversion = currentPreset.conversions[0];
+            if (!conversion) {
+              // No conversion found
+              break;
+            }
+
+            // Find the next preset in the chain
+            const nextPreset = allItemPresets.find(
+              (p) => p.main_unit_id === conversion.to_unit_id,
+            );
+            if (!nextPreset || chainPresetIds.has(nextPreset.preset_id)) {
+              // No next preset or we've hit a cycle
+              break;
+            }
+
+            // Add this preset to our chain
+            chainPresetIds.add(nextPreset.preset_id);
+            currentPresetId = nextPreset.preset_id;
+          }
+
+          return chainPresetIds;
+        };
+
+        // Get all presets in the specific chain starting from our target preset
+        const presetsToDelete = followSpecificChain(presetId);
+        console.log(
+          `Deleting preset chain for unit "${presetUnitToDelete}" - ${presetsToDelete.size} presets to delete`,
+        );
+
+        // Delete all presets in the chain
+        // Note: Due to cascading deletes in the database schema, the conversions will be automatically deleted
+        for (const idToDelete of presetsToDelete) {
+          await db.preset.delete({
+            where: { preset_id: idToDelete },
+          });
+        }
+
+        return {
+          message: `Preset chain for "${presetUnitToDelete}" deleted successfully`,
+          presetId,
+          deletedCount: presetsToDelete.size,
+        };
+      } catch (error) {
+        console.error("Error deleting preset:", error);
+        throw new Error(
+          `Failed to delete preset: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }),
+
+  removeConversionFromPreset: publicProcedure
+    .input(
+      z.object({
+        presetId: z.number(),
+        toUnitId: z.number(),
+        itemId: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { presetId, toUnitId, itemId } = input;
+
+      try {
+        // Get all presets for this item to identify the chain
+        const allItemPresets = await db.preset.findMany({
+          where: { item_id: itemId },
+          include: {
+            main_unit: true,
+            conversions: {
+              include: {
+                from_unit: true,
+                to_unit: true,
+              },
+            },
+          },
+        });
+
+        // Find the preset with the given ID
+        const sourcePreset = allItemPresets.find(
+          (p) => p.preset_id === presetId,
+        );
+        if (!sourcePreset) {
+          throw new Error(`Preset with ID ${presetId} not found.`);
+        }
+
+        // Find the preset that uses the unit as its main unit (the one we're removing)
+        const presetToRemove = allItemPresets.find(
+          (p) => p.main_unit_id === toUnitId,
+        );
+        if (!presetToRemove) {
+          throw new Error(`No preset found with main unit ID ${toUnitId}.`);
+        }
+
+        // Find the conversion that leads to the unit we want to remove
+        // First, look for a direct conversion from the source preset
+        let conversionToRemove = sourcePreset.conversions.find(
+          (c) => c.to_unit_id === toUnitId,
+        );
+
+        // If no direct conversion found, we need to find the chain that leads to it
+        if (!conversionToRemove) {
+          // Build a map of the chain: preset_id -> conversion that leads to the next preset
+          const chainMap = new Map();
+
+          // Find the first preset in the chain
+          const firstPreset = allItemPresets.find(
+            (p) => p.preset_id === presetId,
+          );
+          if (!firstPreset) {
+            throw new Error(
+              `Could not find start of chain (preset ${presetId})`,
             );
           }
-          return results;
+
+          // Add all conversions to the map
+          for (const preset of allItemPresets) {
+            if (preset.conversions.length > 0) {
+              chainMap.set(preset.preset_id, preset.conversions[0]);
+            }
+          }
+
+          // Follow the chain from the source preset until we find a conversion
+          // that connects to a preset that leads to our target unit
+          let currentPresetId = firstPreset.preset_id;
+          let previousPresetId = null;
+          let previousConversion = null;
+
+          while (
+            currentPresetId &&
+            currentPresetId !== presetToRemove.preset_id
+          ) {
+            const conversion = chainMap.get(currentPresetId);
+            if (!conversion) {
+              // We've reached the end of the chain without finding our target
+              break;
+            }
+
+            // Find the preset that this conversion points to
+            const nextPreset = allItemPresets.find(
+              (p) => p.main_unit_id === conversion.to_unit_id,
+            );
+            if (!nextPreset) {
+              break;
+            }
+
+            // If the next preset leads to our target, we've found the conversion we need to remove
+            if (nextPreset.preset_id === presetToRemove.preset_id) {
+              conversionToRemove = conversion;
+              break;
+            }
+
+            // If the next preset has a conversion that leads to our target, we've found what we need
+            const nextConversion = chainMap.get(nextPreset.preset_id);
+            if (nextConversion && nextConversion.to_unit_id === toUnitId) {
+              conversionToRemove = nextConversion;
+              previousPresetId = nextPreset.preset_id;
+              break;
+            }
+
+            // Otherwise, continue following the chain
+            previousPresetId = currentPresetId;
+            previousConversion = conversion;
+            currentPresetId = nextPreset.preset_id;
+          }
+
+          // If we still haven't found the conversion, look for a preset that directly points to our target
+          if (!conversionToRemove) {
+            for (const preset of allItemPresets) {
+              const conv = preset.conversions.find(
+                (c) => c.to_unit_id === toUnitId,
+              );
+              if (conv) {
+                conversionToRemove = conv;
+                previousPresetId = preset.preset_id;
+                break;
+              }
+            }
+          }
+        }
+
+        if (!conversionToRemove) {
+          throw new Error(
+            `No conversion found that leads to unit ID ${toUnitId} in the chain.`,
+          );
+        }
+
+        // Find the next conversion in the chain (if any)
+        const nextConversion = presetToRemove.conversions[0]; // Assuming each preset has at most one outgoing conversion
+
+        // Case 1: This is the last unit in the chain - just delete the conversion and the preset
+        if (!nextConversion) {
+          console.log(
+            `Removing last unit in chain (${presetToRemove.main_unit.name})`,
+          );
+
+          // Delete the conversion that points to the preset to remove
+          await db.presetConversion.delete({
+            where: {
+              preset_conversion_id: conversionToRemove.preset_conversion_id,
+            },
+          });
+
+          // Delete the preset to remove
+          await db.preset.delete({
+            where: { preset_id: presetToRemove.preset_id },
+          });
+        }
+        // Case 2: This is a middle unit in the chain - need to reconnect the chain
+        else {
+          console.log(
+            `Removing middle unit in chain (${presetToRemove.main_unit.name})`,
+          );
+
+          // Find the target preset that follows in the chain
+          const targetPreset = allItemPresets.find(
+            (p) => p.main_unit_id === nextConversion.to_unit_id,
+          );
+          if (!targetPreset) {
+            throw new Error(
+              `Could not find preset with main unit ID ${nextConversion.to_unit_id}.`,
+            );
+          }
+
+          // Use the next conversion's rate directly instead of multiplying
+          const newConversionRate = nextConversion.conversion_rate;
+
+          // Update the existing conversion to point to the target preset
+          await db.presetConversion.update({
+            where: {
+              preset_conversion_id: conversionToRemove.preset_conversion_id,
+            },
+            data: {
+              to_unit_id: nextConversion.to_unit_id,
+              conversion_rate: newConversionRate,
+            },
+          });
+
+          // Delete the conversion from the preset to remove
+          await db.presetConversion.delete({
+            where: {
+              preset_conversion_id: nextConversion.preset_conversion_id,
+            },
+          });
+
+          // Delete the preset to remove
+          await db.preset.delete({
+            where: { preset_id: presetToRemove.preset_id },
+          });
+        }
+
+        return {
+          message: `Conversion removed successfully`,
+          removedPresetId: presetToRemove.preset_id,
+          sourcePresetId: sourcePreset.preset_id,
+        };
+      } catch (error) {
+        console.error("Error removing conversion from preset:", error);
+        throw new Error(
+          `Failed to remove conversion: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }),
+
+  addConversionToPreset: publicProcedure
+    .input(
+      z.object({
+        presetId: z.number(),
+        fromUnitId: z.number().optional(),
+        conversionRate: z.union([z.string(), z.number()]),
+        toUnit: z.string(),
+        price: z.union([z.string(), z.number()]),
+        itemId: z.number(),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { presetId, fromUnitId, conversionRate, toUnit, price, itemId } =
+        input;
+
+      try {
+        // 1. First, find the preset to get info about the chain
+        const sourcePreset = await db.preset.findUnique({
+          where: { preset_id: presetId },
+          include: {
+            main_unit: true,
+          },
+        });
+
+        if (!sourcePreset) {
+          throw new Error(`Preset with ID ${presetId} not found`);
+        }
+
+        // 2. Find the preset with the fromUnitId as its main_unit_id or determine the last preset in the chain
+        let lastPresetInChain = sourcePreset;
+        let lastUnitId = fromUnitId;
+
+        // Get all presets with the same item ID
+        const itemPresets = await db.preset.findMany({
+          where: { item_id: itemId },
+          include: {
+            main_unit: true,
+            conversions: {
+              include: { to_unit: true, from_unit: true },
+            },
+          },
+        });
+
+        // If fromUnitId is provided, find the preset with that unit as its main unit
+        if (fromUnitId) {
+          const presetWithFromUnit = itemPresets.find(
+            (preset) => preset.main_unit_id === fromUnitId,
+          );
+
+          if (presetWithFromUnit) {
+            lastPresetInChain = presetWithFromUnit;
+            lastUnitId = fromUnitId;
+          } else {
+            console.warn(
+              `No preset found with main_unit_id ${fromUnitId}, using source preset's unit.`,
+            );
+          }
+        } else {
+          // Otherwise find the last preset in the chain by following conversions
+          let currentPreset = sourcePreset;
+          const processedPresetIds = new Set<number>([currentPreset.preset_id]);
+
+          while (true) {
+            // Find a preset conversion where current preset is the source
+            const conversion = await db.presetConversion.findFirst({
+              where: { preset_id: currentPreset.preset_id },
+              include: { to_unit: true, from_unit: true },
+            });
+
+            if (!conversion) {
+              // This is the end of the chain
+              lastPresetInChain = currentPreset;
+              lastUnitId = currentPreset.main_unit_id;
+              break;
+            }
+
+            // Find the next preset in the chain
+            const nextPreset = itemPresets.find(
+              (p) => p.main_unit_id === conversion.to_unit_id,
+            );
+
+            if (!nextPreset || processedPresetIds.has(nextPreset.preset_id)) {
+              // This is the end of the chain or we've encountered a cycle
+              lastPresetInChain = currentPreset;
+              lastUnitId = conversion.to_unit_id;
+              break;
+            }
+
+            // Move to the next preset in the chain
+            currentPreset = nextPreset;
+            processedPresetIds.add(currentPreset.preset_id);
+          }
+        }
+
+        if (!lastUnitId) {
+          throw new Error(
+            "Could not determine the last unit in the preset chain",
+          );
+        }
+
+        console.log(
+          `Using preset ${lastPresetInChain.preset_id} with unit ${lastUnitId} as source for new conversion`,
+        );
+
+        // 3. Find or confirm the to_unit
+        const toUnitRecord = await db.unit.findUnique({
+          where: { name: toUnit },
+        });
+
+        if (!toUnitRecord) {
+          throw new Error(`Unit ${toUnit} not found`);
+        }
+
+        // 4. Create a preset conversion linking the last unit to the new unit
+        const presetConversion = await db.presetConversion.create({
+          data: {
+            preset_id: lastPresetInChain.preset_id,
+            from_unit_id: lastUnitId,
+            to_unit_id: toUnitRecord.unit_id,
+            conversion_rate:
+              typeof conversionRate === "string"
+                ? parseFloat(conversionRate)
+                : conversionRate,
+          },
+        });
+
+        // 5. Create a new preset for the new unit
+        const newPreset = await db.preset.create({
+          data: {
+            item_id: itemId,
+            main_unit_id: toUnitRecord.unit_id,
+            main_price: typeof price === "string" ? parseFloat(price) : price,
+          },
+        });
+
+        return {
+          message: "Conversion added successfully to preset chain",
+          presetId: newPreset.preset_id,
+          conversionId: presetConversion.preset_conversion_id,
+        };
+      } catch (error) {
+        console.error("Error adding conversion to preset:", error);
+        throw new Error(
+          `Failed to add conversion to preset: ${error instanceof Error ? error.message : "Unknown error"}`,
+        );
+      }
+    }),
+
+  updatePresetChain: publicProcedure
+    .input(
+      z.object({
+        presetId: z.number(),
+        mainUnit: z.string(),
+        mainPrice: z.number(),
+        conversions: z.array(
+          z.object({
+            conversionId: z.number().optional(),
+            rate: z.number(),
+            unit: z.string(),
+            price: z.number(),
+          }),
+        ),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { presetId, mainUnit, mainPrice, conversions } = input;
+
+      // Get existing preset with conversions
+      const existingPreset = await ctx.db.preset.findUnique({
+        where: { preset_id: presetId },
+        include: {
+          main_unit: true,
+          conversions: {
+            orderBy: { preset_conversion_id: "asc" },
+          },
         },
-        {
-          maxWait: 30000,
-          timeout: 30000,
+      });
+
+      if (!existingPreset) {
+        throw new Error("Preset not found");
+      }
+
+      // Get new main unit
+      const newMainUnit = await ctx.db.unit.findUnique({
+        where: { name: mainUnit },
+      });
+      if (!newMainUnit) {
+        throw new Error(`Unit ${mainUnit} not found`);
+      }
+
+      // Update main preset
+      const updatedPreset = await ctx.db.preset.update({
+        where: { preset_id: presetId },
+        data: {
+          main_unit_id: newMainUnit.unit_id,
+          main_price: mainPrice,
         },
-      );
+      });
+
+      // Handle main unit change
+      if (existingPreset.main_unit_id !== newMainUnit.unit_id) {
+        // Update previous conversion pointing to this preset
+        await ctx.db.presetConversion.updateMany({
+          where: {
+            to_unit_id: existingPreset.main_unit_id,
+            preset: { item_id: existingPreset.item_id },
+          },
+          data: { to_unit_id: newMainUnit.unit_id },
+        });
+      }
+
+      // Process conversions
+      let currentPresetId = presetId;
+      let currentUnitId = newMainUnit.unit_id;
+
+      for (const conversion of conversions) {
+        // Handle both updates and new conversions
+        if (conversion.conversionId) {
+          // UPDATE EXISTING CONVERSION
+          const existingConversion = await ctx.db.presetConversion.findUnique({
+            where: { preset_conversion_id: conversion.conversionId },
+            include: { to_unit: true },
+          });
+
+          if (!existingConversion) {
+            throw new Error(
+              `Conversion with ID ${conversion.conversionId} not found`,
+            );
+          }
+
+          const toUnit = await ctx.db.unit.findUnique({
+            where: { name: conversion.unit },
+          });
+          if (!toUnit) throw new Error(`Unit ${conversion.unit} not found`);
+
+          // Update the conversion
+          await ctx.db.presetConversion.update({
+            where: { preset_conversion_id: conversion.conversionId },
+            data: {
+              conversion_rate: conversion.rate,
+              from_unit_id: currentUnitId,
+              to_unit_id: toUnit.unit_id,
+            },
+          });
+
+          // Find and update linked preset for EXISTING conversion
+          const nextPreset = await ctx.db.preset.findFirst({
+            where: {
+              item_id: existingPreset.item_id,
+              main_unit_id: existingConversion.to_unit_id,
+            },
+          });
+
+          if (nextPreset) {
+            // Update next preset's main unit and price
+            await ctx.db.preset.update({
+              where: { preset_id: nextPreset.preset_id },
+              data: {
+                main_unit_id: toUnit.unit_id,
+                main_price: conversion.price,
+              },
+            });
+
+            currentUnitId = toUnit.unit_id;
+            currentPresetId = nextPreset.preset_id;
+          }
+        } else {
+          // CREATE NEW CONVERSION
+          const toUnit = await ctx.db.unit.findUnique({
+            where: { name: conversion.unit },
+          });
+          if (!toUnit) throw new Error(`Unit ${conversion.unit} not found`);
+
+          // Create new conversion
+          await ctx.db.presetConversion.create({
+            data: {
+              preset_id: currentPresetId,
+              conversion_rate: conversion.rate,
+              from_unit_id: currentUnitId,
+              to_unit_id: toUnit.unit_id,
+            },
+          });
+
+          // Handle NEW conversion's next preset
+          const nextPreset = await ctx.db.preset.findFirst({
+            where: {
+              item_id: existingPreset.item_id,
+              main_unit_id: toUnit.unit_id, // Use the new toUnit directly
+            },
+          });
+
+          if (nextPreset) {
+            // Update existing linked preset if found
+            await ctx.db.preset.update({
+              where: { preset_id: nextPreset.preset_id },
+              data: {
+                main_price: conversion.price,
+              },
+            });
+          } else {
+            // Create new preset for the conversion
+            const newPreset = await ctx.db.preset.create({
+              data: {
+                item_id: existingPreset.item_id,
+                main_unit_id: toUnit.unit_id,
+                main_price: conversion.price,
+              },
+            });
+            currentPresetId = newPreset.preset_id;
+          }
+
+          currentUnitId = toUnit.unit_id;
+        }
+      }
+
+      // Update final preset in the chain
+      const finalPreset = await ctx.db.preset.findFirst({
+        where: { preset_id: currentPresetId },
+        include: { conversions: true },
+      });
+
+      if (finalPreset && finalPreset.conversions.length === 0) {
+        await ctx.db.preset.update({
+          where: { preset_id: currentPresetId },
+          data: {
+            main_price: conversions[conversions.length - 1]?.price,
+          },
+        });
+      }
+
+      return updatedPreset;
     }),
 });
 
 export default inventoryRouter;
-
-// Helper function to find all presets in a chain starting from a root preset ID
-function findPresetChain(rootPresetId: number, allPresets: any[]): any[] {
-  // Start with the root preset
-  const rootPreset = allPresets.find((p) => p.preset_id === rootPresetId);
-  if (!rootPreset) return [];
-
-  // Initialize with the root preset
-  const chainPresets = [rootPreset];
-  const processedPresetIds = new Set<number>([rootPresetId]);
-  let foundNew = true;
-
-  // Keep finding connected presets until no more found
-  while (foundNew) {
-    foundNew = false;
-
-    // For each preset we've already found
-    for (const currentPreset of [...chainPresets]) {
-      // Create copy to avoid iteration issues
-      // Look at its conversions
-      for (const conv of currentPreset.conversions) {
-        // Find any preset that has its main unit matching this conversion's to_unit
-        const nextPreset = allPresets.find(
-          (p) =>
-            p.main_unit_id === conv.to_unit_id &&
-            !processedPresetIds.has(p.preset_id),
-        );
-
-        if (nextPreset) {
-          // Found a new preset in the chain
-          chainPresets.push(nextPreset);
-          processedPresetIds.add(nextPreset.preset_id);
-          foundNew = true;
-        }
-      }
-    }
-  }
-
-  return chainPresets;
-}
-
-// Helper function to gather conversions from presets further down the chain
-function gatherChainedConversions(
-  preset: any,
-  allPresets: any[],
-  processedUnitIds: Set<number>,
-): ProcessedPresetConversion[] {
-  const conversions: ProcessedPresetConversion[] = [];
-
-  // Process each conversion in this preset
-  for (const conv of preset.conversions) {
-    // Skip if we've already processed this unit (prevents circular references)
-    if (processedUnitIds.has(conv.to_unit_id)) {
-      continue;
-    }
-
-    // Find the next preset in the chain
-    const nextPreset = allPresets.find(
-      (p) => p.main_unit_id === conv.to_unit_id,
-    );
-
-    // Add this conversion with its price
-    conversions.push({
-      ...conv,
-      related_price: nextPreset?.main_price || null,
-    });
-
-    // Mark this unit as processed
-    processedUnitIds.add(conv.to_unit_id);
-
-    // Recurse into the next preset if it exists
-    if (nextPreset) {
-      const nextConversions = gatherChainedConversions(
-        nextPreset,
-        allPresets,
-        processedUnitIds,
-      );
-
-      conversions.push(...nextConversions);
-    }
-  }
-
-  return conversions;
-}

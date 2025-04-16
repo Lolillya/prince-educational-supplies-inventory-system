@@ -27,20 +27,34 @@ export const paymentRouter = createTRPCRouter({
             },
           });
 
-          // 2. Get invoice with all payments
+          // 2. Get invoice with all payments and their logs
           const invoice = await tx.invoice.findUniqueOrThrow({
             where: { invoice_id: input.invoiceId },
-            include: { Payment: true },
+            include: {
+              Payment: {
+                include: {
+                  PaymentLog: true,
+                },
+              },
+            },
           });
 
-          // 3. Calculate total paid amount
-          const totalPaid = invoice.Payment.reduce(
+          // 3. Filter out refunded payments and calculate total paid amount
+          const activePayments = invoice.Payment.filter((payment) => {
+            // Check if the payment has any logs with status "REFUNDED"
+            const isRefunded = payment.PaymentLog?.some(
+              (log) => log.status === "REFUNDED",
+            );
+            return !isRefunded;
+          });
+
+          const totalPaid = activePayments.reduce(
             (sum, p) => sum + p.amount,
             0,
           );
 
-          // 4. Check if full amount is paid
-          if (totalPaid + input.amount >= invoice.total_amount) {
+          // 4. Check if full amount is paid (comparing the actual total paid with invoice amount)
+          if (totalPaid >= invoice.total_amount) {
             await tx.invoice.update({
               where: { invoice_id: input.invoiceId },
               data: { status: "PAID" },
@@ -90,6 +104,67 @@ export const paymentRouter = createTRPCRouter({
       } catch (error) {
         console.error("Error fetching payments:", error);
         throw new Error("Failed to fetch payments");
+      }
+    }),
+
+  getByCustomerId: publicProcedure
+    .input(
+      z.object({
+        customerId: z.string(),
+      }),
+    )
+    .query(async ({ ctx, input }) => {
+      try {
+        // 1. First get all invoices for this customer
+        const invoices = await ctx.db.invoice.findMany({
+          where: {
+            customer_id: input.customerId,
+          },
+          select: {
+            invoice_id: true,
+            invoice_number: true,
+          },
+        });
+
+        const invoiceIds = invoices.map((inv) => inv.invoice_id);
+
+        if (invoiceIds.length === 0) {
+          return [];
+        }
+
+        // 2. Get all payments for these invoices
+        const payments = await ctx.db.payment.findMany({
+          where: {
+            invoice_id: {
+              in: invoiceIds,
+            },
+          },
+          include: {
+            invoice: {
+              select: {
+                invoice_number: true,
+                status: true,
+              },
+            },
+            PaymentLog: {
+              select: {
+                status: true,
+                timestamp: true,
+              },
+              orderBy: {
+                timestamp: "desc",
+              },
+            },
+          },
+          orderBy: {
+            payment_date: "desc",
+          },
+        });
+
+        return payments;
+      } catch (error) {
+        console.error("Error fetching customer payments:", error);
+        throw new Error("Failed to fetch customer payment history");
       }
     }),
 

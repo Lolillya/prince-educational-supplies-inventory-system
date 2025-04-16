@@ -34,11 +34,14 @@ interface PayablesProps {
     remaining: number;
     invoice_id: number;
     paid_amount: number;
+    isPaid?: boolean;
+    status?: string;
   }[];
   emoji: string; // Add emoji prop
   company: string; // Add companyName prop
   onPaymentSuccess: () => void;
   onRefundSuccess?: () => void;
+  customerId: string; // Add customerId prop
 }
 
 interface PaymentRecordType {
@@ -50,6 +53,7 @@ interface PaymentRecordType {
   reference?: string | null;
   invoice?: {
     invoice_number: number;
+    status?: string;
   };
   PaymentLog?: {
     status: string;
@@ -64,23 +68,24 @@ const Payables = ({
   company,
   onPaymentSuccess,
   onRefundSuccess,
+  customerId,
 }: PayablesProps) => {
   const [selectedTab, setSelectedTab] = useState<"payables" | "payments">(
     "payables",
   );
+
   // Calculate total remaining from invoices if sum is incorrect
   const calculatedSum =
     sum ?? unpaidInvoices.reduce((acc, invoice) => acc + invoice.remaining, 0);
 
-  // Get the first invoice ID to fetch payment records
-  const firstInvoiceId =
-    unpaidInvoices.length > 0 ? unpaidInvoices[0].invoice_id : 0;
-
-  // Fetch payment records for the customer
-  const { data: paymentRecords, refetch: refetchPaymentRecords } =
-    api.payment.getByInvoiceId.useQuery(
-      { invoiceId: firstInvoiceId },
-      { enabled: firstInvoiceId > 0 && selectedTab === "payments" },
+  // Fetch all payment records for the customer
+  const { data: customerPaymentRecords, refetch: refetchPaymentRecords } =
+    api.payment.getByCustomerId.useQuery(
+      { customerId },
+      {
+        enabled: !!customerId && selectedTab === "payments",
+        staleTime: 5000, // Refresh data every 5 seconds if tab is active
+      },
     );
 
   const handleRefundSuccess = () => {
@@ -95,7 +100,7 @@ const Payables = ({
   };
 
   const renderPaymentRecords = () => {
-    if (!paymentRecords || paymentRecords.length === 0) {
+    if (!customerPaymentRecords || customerPaymentRecords.length === 0) {
       return (
         <div className="flex items-center justify-center p-4 text-slate-500">
           No payment records found
@@ -103,7 +108,7 @@ const Payables = ({
       );
     }
 
-    return paymentRecords.map((record) => (
+    return customerPaymentRecords.map((record) => (
       <PaymentRecord
         key={record.payment_id}
         payment={record}
@@ -111,6 +116,10 @@ const Payables = ({
       />
     ));
   };
+
+  // Count unpaid and total invoices
+  const unpaidCount = unpaidInvoices.filter((inv) => !inv.isPaid).length;
+  const totalCount = unpaidInvoices.length;
 
   return (
     <Dialog>
@@ -131,7 +140,9 @@ const Payables = ({
                   {company || "Customer Company"}
                 </DialogTitle>
                 <p className="text-sm text-slate-400">
-                  {unpaidInvoices.length} unpaid invoices
+                  {unpaidCount} unpaid{" "}
+                  {unpaidCount === 1 ? "invoice" : "invoices"} of {totalCount}{" "}
+                  total
                 </p>
               </div>
             </div>
@@ -165,7 +176,9 @@ const Payables = ({
             <p className="text-base font-normal text-slate-700">
               ₱{calculatedSum.toFixed(2)}
             </p>
-            <p className="text-sm tracking-wide text-slate-400">Unpaid Total</p>
+            <p className="text-sm tracking-wide text-slate-400">
+              Total Payables
+            </p>
           </div>
           <div className="flex items-center gap-2">
             <DialogClose asChild>

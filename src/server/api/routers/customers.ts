@@ -383,7 +383,7 @@ export const customerRouter = createTRPCRouter({
       const invoices = await db.invoice.findMany({
         where: {
           customer_id: input.customerId,
-          status: "PENDING",
+          status: { in: ["PENDING", "PAID"] }, // Get both pending and paid invoices
         },
         include: {
           Payment: {
@@ -411,6 +411,9 @@ export const customerRouter = createTRPCRouter({
             },
           },
         },
+        orderBy: {
+          created_at: "desc", // Most recent invoices first
+        },
       });
 
       return invoices.map((invoice) => {
@@ -429,10 +432,17 @@ export const customerRouter = createTRPCRouter({
           0,
         );
 
+        // For paid invoices, set remaining to 0 to prevent negative values
+        let remaining = (invoice.total_amount || 0) - paidAmount;
+        if (invoice.status === "PAID") {
+          remaining = 0;
+        }
+
         return {
           ...invoice,
           paid_amount: paidAmount,
-          remaining: (invoice.total_amount || 0) - paidAmount,
+          remaining: remaining,
+          isPaid: invoice.status === "PAID",
         };
       });
     }),

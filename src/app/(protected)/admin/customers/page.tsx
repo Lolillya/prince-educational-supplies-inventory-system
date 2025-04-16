@@ -266,6 +266,16 @@ const CustomersPage = () => {
   const handleRefundSuccess = () => {
     // Refetch unpaid invoices to update the total
     void refetch();
+    // Also invalidate payment queries
+    utils.payment.getByCustomerId.invalidate();
+  };
+
+  // Add a function to handle payment success
+  const handlePaymentSuccess = () => {
+    // Refetch unpaid invoices
+    void refetch();
+    // Also invalidate payment queries
+    utils.payment.getByCustomerId.invalidate();
   };
 
   const filteredCustomers = customerData?.filter((customer) => {
@@ -400,7 +410,7 @@ const CustomersPage = () => {
                     clerkId={selectedRecord.id ?? ""}
                     unpaidInvoices={unpaidInvoices ?? []}
                     unpaidSum={unpaidSum}
-                    onPaymentSuccess={() => refetch()}
+                    onPaymentSuccess={handlePaymentSuccess}
                     onRefundSuccess={handleRefundSuccess}
                   />
                 </div>

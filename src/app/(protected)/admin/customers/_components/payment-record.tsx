@@ -1,4 +1,4 @@
-import { Calendar, User2 } from "lucide-react";
+import { Calendar, Check, User2 } from "lucide-react";
 import { Poppins } from "next/font/google";
 import { Separator } from "~/components/ui/separator";
 import {
@@ -24,6 +24,7 @@ interface PaymentRecordProps {
     reference?: string | null;
     invoice?: {
       invoice_number: number;
+      status?: string;
     };
     PaymentLog?: {
       status: string;
@@ -46,6 +47,10 @@ const PaymentRecord = ({ payment, onRefundSuccess }: PaymentRecordProps) => {
   // Format the invoice number with leading zeros
   const formattedInvoiceNumber =
     payment.invoice?.invoice_number.toString().padStart(8, "0") || "00000000";
+
+  // Get invoice status if available
+  const invoiceStatus = payment.invoice?.status || null;
+  const isPaid = invoiceStatus === "PAID";
 
   // Format the amount with 2 decimal places
   const formattedAmount = payment.amount.toFixed(2);
@@ -77,6 +82,11 @@ const PaymentRecord = ({ payment, onRefundSuccess }: PaymentRecordProps) => {
             {isRefunded && (
               <span className="rounded-full bg-rose-100 px-2 py-[2px] text-xs font-medium text-rose-500">
                 Refunded
+              </span>
+            )}
+            {!isRefunded && isPaid && (
+              <span className="flex items-center gap-1 rounded-full bg-emerald-100 px-2 py-[2px] text-xs text-emerald-600">
+                <Check className="h-3 w-3" /> Paid Invoice
               </span>
             )}
           </div>
@@ -125,7 +135,7 @@ const PaymentRecord = ({ payment, onRefundSuccess }: PaymentRecordProps) => {
         >
           <div className="flex flex-col gap-1">
             <p
-              className={`text-lg ${isRefunded ? "text-rose-500" : "text-slate-600"}`}
+              className={`text-lg ${isRefunded ? "text-rose-500" : isPaid ? "text-emerald-600" : "text-slate-600"}`}
             >
               ₱{formattedAmount}
             </p>

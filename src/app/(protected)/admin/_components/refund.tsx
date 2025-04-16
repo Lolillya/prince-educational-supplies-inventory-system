@@ -81,7 +81,7 @@ const Refund: React.FC<RefundProps> = ({
 
   return (
     <Popover>
-      <PopoverTrigger>
+      <PopoverTrigger asChild>
         <Button
           variant="ghost"
           className={`group flex h-12 w-12 items-center justify-center rounded-xl bg-transparent transition-all duration-300 hover:bg-rose-200/60 ${className}`}

@@ -141,7 +141,6 @@ const Payment: React.FC<PaymentProps> = ({
                 <Input
                   value={calculatedBalance.toFixed(2)}
                   className="w-full bg-slate-100 text-slate-700 shadow-none focus:outline focus:outline-2 focus:outline-slate-200"
-                  defaultValue={"00"}
                   disabled
                 />
               </div>
@@ -158,7 +157,6 @@ const Payment: React.FC<PaymentProps> = ({
                       ? "border-emerald-200 bg-emerald-50 text-emerald-600"
                       : "bg-slate-100 text-slate-700"
                   }`}
-                  defaultValue={"00"}
                   disabled
                 />
               </div>

@@ -7,6 +7,35 @@ const restockNotesSchema = z.object({
   invoice_id: z.number(),
   notes: z.string(),
 });
+
+// Define the types first
+type PresetUnit = {
+  unit_id: number;
+  name: string;
+  created_at?: Date;
+  updated_at?: Date;
+};
+
+type PresetConversion = {
+  preset_conversion_id: number;
+  preset_id: number;
+  conversion_rate: number;
+  from_unit_id: number;
+  to_unit_id: number;
+  from_unit: PresetUnit;
+  to_unit: PresetUnit;
+  price?: number;
+};
+
+type PresetChain = {
+  preset_id: number;
+  item_id: number;
+  main_unit_id: number;
+  main_price: number;
+  main_unit: PresetUnit;
+  conversions: PresetConversion[];
+};
+
 export const restockRouter = createTRPCRouter({
   getUnits: publicProcedure.query(async () => {
     try {
@@ -376,233 +405,124 @@ export const restockRouter = createTRPCRouter({
         const { itemId } = input;
         console.log(`Getting presets for item ID: ${itemId}`);
 
-        // First, get all the presets for this item
-        const mainPresets = await db.preset.findMany({
-          where: {
-            item_id: itemId,
-          },
-          select: {
-            preset_id: true,
-            main_unit_id: true,
-            main_price: true,
-            main_unit: {
-              select: {
-                unit_id: true,
-                name: true,
-              },
-            },
+        // Get all presets for the given item ID
+        const presets = await db.preset.findMany({
+          where: { item_id: itemId },
+          include: {
+            main_unit: true,
             conversions: {
-              select: {
-                preset_conversion_id: true,
-                conversion_rate: true,
-                from_unit_id: true,
-                to_unit_id: true,
-                from_unit: {
-                  select: {
-                    unit_id: true,
-                    name: true,
-                  },
-                },
-                to_unit: {
-                  select: {
-                    unit_id: true,
-                    name: true,
-                  },
-                },
+              include: {
+                from_unit: true,
+                to_unit: true,
               },
               orderBy: {
-                created_at: "asc",
+                preset_conversion_id: "asc",
               },
             },
           },
-        });
-
-        console.log(`Found ${mainPresets.length} main presets`);
-
-        // Then get a separate list of all unit presets with their prices
-        const unitPrices = await db.preset.findMany({
-          where: {
-            item_id: itemId,
-          },
-          select: {
-            main_unit_id: true,
-            main_price: true,
-            main_unit: {
-              select: {
-                name: true,
-              },
-            },
+          orderBy: {
+            preset_id: "asc",
           },
         });
 
-        console.log(`Found ${unitPrices.length} unit prices`);
-        unitPrices.forEach((up) => {
-          console.log(
-            `Unit ID: ${up.main_unit_id}, Price: ${up.main_price}, Name: ${up.main_unit?.name}`,
+        // Group presets by their chain (starting with presets that have conversions)
+        const presetChains: PresetChain[] = [];
+        const processedPresetIds = new Set<number>();
+
+        // First, find all starting presets (those that are not the target of any conversion)
+        const startingPresets = presets.filter((preset) => {
+          // A preset is a starting preset if it's not the target of any conversion
+          return !presets.some((p) =>
+            p.conversions.some(
+              (conv) => conv.to_unit_id === preset.main_unit_id,
+            ),
           );
         });
 
-        // Create a map of unit ID to price
-        const unitPriceMap = new Map<number, number>();
-        unitPrices.forEach((up) => {
-          unitPriceMap.set(up.main_unit_id, up.main_price);
-        });
+        console.log(`Found ${startingPresets.length} starting presets`);
 
-        // Format presets for easier consumption by frontend
-        const formattedPresets = mainPresets
-          .map((preset) => {
-            // Skip presets with no conversions
-            if (preset.conversions.length === 0) {
-              return null;
-            }
+        for (const preset of startingPresets) {
+          // Skip if this preset has already been processed
+          if (processedPresetIds.has(preset.preset_id)) continue;
 
-            console.log(`\n\n---- Processing preset ${preset.preset_id} ----`);
-            console.log(
-              `Main unit: ${preset.main_unit.name} (ID: ${preset.main_unit_id})`,
-            );
-            console.log(`Raw conversions (${preset.conversions.length}):`);
-            preset.conversions.forEach((conv, i) => {
-              console.log(
-                `  [${i}] ID: ${conv.preset_conversion_id}, From: ${conv.from_unit.name} (${conv.from_unit_id}) → To: ${conv.to_unit.name} (${conv.to_unit_id}), Rate: ${conv.conversion_rate}`,
-              );
-            });
-
-            // Sort conversions to ensure they form a proper chain
-            // We'll create a proper chain by ordering them correctly
-            const sortedConversions = [];
-            const fromUnitToConversion = new Map();
-
-            // First, create a map of from_unit_id to conversion
-            preset.conversions.forEach((conv) => {
-              if (!fromUnitToConversion.has(conv.from_unit_id)) {
-                fromUnitToConversion.set(conv.from_unit_id, []);
-              }
-              fromUnitToConversion.get(conv.from_unit_id).push(conv);
-            });
-
-            console.log("Created map of from_unit_id to conversions:");
-            fromUnitToConversion.forEach((convs, unitId) => {
-              console.log(
-                `  Unit ID ${unitId} has ${convs.length} outgoing conversions`,
-              );
-              convs.forEach((c: any, i: number) => {
-                console.log(
-                  `    [${i}] To: ${c.to_unit.name} (${c.to_unit_id}), Rate: ${c.conversion_rate}`,
-                );
-              });
-            });
-
-            // Start with conversions from the main unit
-            let currentUnitId = preset.main_unit_id;
-            console.log(
-              `Starting with main unit ID: ${currentUnitId} (${preset.main_unit.name})`,
-            );
-
-            // Keep track of processed unit IDs to avoid infinite loops
-            const processedUnitIds = new Set();
-
-            // Build the chain
-            let iterationCount = 0;
-            while (
-              fromUnitToConversion.has(currentUnitId) &&
-              !processedUnitIds.has(currentUnitId) &&
-              iterationCount < 10 // Safety limit
-            ) {
-              iterationCount++;
-              console.log(
-                `Iteration ${iterationCount}: Processing unit ID ${currentUnitId}`,
-              );
-              processedUnitIds.add(currentUnitId);
-
-              const nextConversions = fromUnitToConversion.get(currentUnitId);
-              if (nextConversions && nextConversions.length > 0) {
-                // Sort by creation date in case there are multiple options
-                const nextConversion = nextConversions[0];
-                console.log(
-                  `  Adding conversion: ${nextConversion.from_unit.name} → ${nextConversion.to_unit.name}, Rate: ${nextConversion.conversion_rate}`,
-                );
-                sortedConversions.push(nextConversion);
-                currentUnitId = nextConversion.to_unit_id;
-                console.log(`  Next unit ID: ${currentUnitId}`);
-              } else {
-                console.log(
-                  `  No more conversions from unit ID ${currentUnitId}`,
-                );
-                break;
-              }
-            }
-
-            // Check for missing conversions and add them if they exist
-            if (sortedConversions.length < preset.conversions.length) {
-              console.log(
-                `WARNING: ${preset.conversions.length - sortedConversions.length} conversions were not included in chain`,
-              );
-
-              // Use a Set to keep track of included conversion IDs
-              const includedIds = new Set(
-                sortedConversions.map((c) => c.preset_conversion_id),
-              );
-
-              // Find all missing conversions
-              const missingConversions = preset.conversions.filter(
-                (c) => !includedIds.has(c.preset_conversion_id),
-              );
-
-              console.log(
-                `Adding ${missingConversions.length} missing conversions to the chain`,
-              );
-              missingConversions.forEach((c, i) => {
-                console.log(
-                  `  Adding missing conversion [${i}]: From: ${c.from_unit.name} (${c.from_unit_id}) → To: ${c.to_unit.name} (${c.to_unit_id}), Rate: ${c.conversion_rate}`,
-                );
-                sortedConversions.push(c);
-              });
-            }
-
-            if (iterationCount >= 10) {
-              console.log(
-                "WARNING: Reached maximum iteration count, possible circular dependency",
-              );
-            }
-
-            console.log(`Sorted conversions (${sortedConversions.length}):`);
-            sortedConversions.forEach((conv, i) => {
-              console.log(
-                `  [${i}] From: ${conv.from_unit.name} → To: ${conv.to_unit.name}, Rate: ${conv.conversion_rate}`,
-              );
-            });
-
-            const result = {
-              presetId: preset.preset_id,
-              mainUnit: preset.main_unit.name,
-              mainPrice: preset.main_price,
-              conversions: sortedConversions.map((conversion) => {
-                // Get the price from the map using the to_unit_id
-                const conversionPrice =
-                  unitPriceMap.get(conversion.to_unit_id) || 0;
-
-                return {
-                  fromUnit: conversion.from_unit.name,
-                  toUnit: conversion.to_unit.name,
-                  conversionRate: conversion.conversion_rate,
-                  price: conversionPrice,
-                };
-              }),
-              conversionCount: sortedConversions.length,
+          // Only process presets that have conversions (these are the starting points of chains)
+          if (preset.conversions.length > 0 && preset.main_unit) {
+            const chain: PresetChain = {
+              preset_id: preset.preset_id,
+              item_id: preset.item_id,
+              main_unit_id: preset.main_unit_id,
+              main_price: preset.main_price,
+              main_unit: preset.main_unit,
+              conversions: [],
             };
 
-            console.log(
-              `Final result: Preset with ${result.conversions.length} conversions`,
-            );
-            result.conversions.forEach((c, i) => {
-              console.log(
-                `  Conversion ${i + 1}: ${c.fromUnit} → ${c.toUnit} (${c.conversionRate}), Price: ${c.price}`,
-              );
-            });
+            // Add the first preset to processed set
+            processedPresetIds.add(preset.preset_id);
 
-            return result;
-          })
-          .filter(Boolean); // Filter out null entries
+            // Find all presets in this chain
+            let currentPreset = preset;
+
+            while (currentPreset.conversions.length > 0) {
+              const currentConversion = currentPreset.conversions[0];
+              if (!currentConversion?.from_unit || !currentConversion?.to_unit)
+                break;
+
+              // Find the next preset in the chain
+              const nextPreset = presets.find(
+                (p) => p.main_unit_id === currentConversion.to_unit_id,
+              );
+
+              if (!nextPreset) break;
+
+              // Add the conversion to the chain with the next preset's main price
+              chain.conversions.push({
+                preset_conversion_id: currentConversion.preset_conversion_id,
+                preset_id: currentPreset.preset_id,
+                conversion_rate: currentConversion.conversion_rate,
+                from_unit_id: currentConversion.from_unit_id,
+                to_unit_id: currentConversion.to_unit_id,
+                from_unit: currentConversion.from_unit,
+                to_unit: currentConversion.to_unit,
+                price: nextPreset.main_price,
+              } as PresetConversion);
+
+              // Add the next preset to processed set
+              processedPresetIds.add(nextPreset.preset_id);
+              currentPreset = nextPreset;
+            }
+
+            presetChains.push(chain);
+          }
+        }
+
+        console.log(`Built ${presetChains.length} preset chains`);
+
+        // Format the presets for the frontend
+        const formattedPresets = presetChains.map((chain) => {
+          console.log(`Processing chain with id ${chain.preset_id}`);
+          console.log(
+            `Main unit: ${chain.main_unit.name}, Price: ${chain.main_price}`,
+          );
+          console.log(`Chain has ${chain.conversions.length} conversions`);
+
+          return {
+            presetId: chain.preset_id,
+            mainUnit: chain.main_unit.name,
+            mainPrice: chain.main_price,
+            conversions: chain.conversions.map((conv) => {
+              console.log(
+                `Conversion: ${conv.from_unit.name} → ${conv.to_unit.name} (${conv.conversion_rate}), Price: ${conv.price}`,
+              );
+              return {
+                fromUnit: conv.from_unit.name,
+                toUnit: conv.to_unit.name,
+                conversionRate: conv.conversion_rate,
+                price: conv.price || 0,
+              };
+            }),
+            conversionCount: chain.conversions.length,
+          };
+        });
 
         return formattedPresets;
       } catch (error) {

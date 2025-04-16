@@ -312,7 +312,7 @@ const StockCardV2 = ({
     }
 
     // Limit to 2 decimal places
-    if (parts.length === 2) {
+    if (parts.length === 2 && parts[1]) {
       numericValue = parts[0] + "." + parts[1].slice(0, 2);
     }
 
@@ -332,7 +332,7 @@ const StockCardV2 = ({
     // Format to exactly 2 decimal places
     let formattedValue = value;
     if (value.includes(".")) {
-      const [whole, decimal] = value.split(".");
+      const [whole, decimal = ""] = value.split(".");
       const paddedDecimal = decimal.padEnd(2, "0").slice(0, 2);
       formattedValue = `${whole}.${paddedDecimal}`;
     } else if (value) {

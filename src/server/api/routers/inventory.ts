@@ -369,6 +369,44 @@ export const inventoryRouter = createTRPCRouter({
       return updatedVariant;
     }),
 
+  updateBrand: publicProcedure
+    .input(
+      z.object({
+        brand_id: z.number(),
+        name: z.string().min(1, "Brand name is required"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { brand_id, name } = input;
+
+      // Update the brand with the given ID
+      const updatedBrand = await db.brand.update({
+        where: { brand_id },
+        data: { name },
+      });
+
+      return updatedBrand;
+    }),
+
+  updateCategory: publicProcedure
+    .input(
+      z.object({
+        category_id: z.number(),
+        name: z.string().min(1, "Category name is required"),
+      }),
+    )
+    .mutation(async ({ input }) => {
+      const { category_id, name } = input;
+
+      // Update the category with the given ID
+      const updatedCategory = await db.category.update({
+        where: { category_id },
+        data: { name },
+      });
+
+      return updatedCategory;
+    }),
+
   createVariant: publicProcedure
     .input(
       z.object({
@@ -1337,6 +1375,49 @@ export const inventoryRouter = createTRPCRouter({
       }
 
       return updatedPreset;
+    }),
+
+  verifyPassword: publicProcedure
+    .input(
+      z.object({
+        personalDetailsId: z.string(),
+        password: z.string(),
+      }),
+    )
+    .mutation(async ({ input, ctx }) => {
+      const { personalDetailsId, password } = input;
+
+      try {
+        // Get user from the database
+        const user = await ctx.db.personal_Details.findUnique({
+          where: { personal_details_id: personalDetailsId },
+          select: {
+            // Include fields needed for authentication
+            personal_details_id: true,
+            // Use whatever fields the schema has for authentication
+            // For demo purposes, we'll check if user exists
+          },
+        });
+
+        if (!user) {
+          throw new Error("User not found");
+        }
+
+        // For demo purposes - simplified authentication
+        // In a real app, you would have a proper password check
+        // This is just a placeholder implementation
+        if (password !== "admin") {
+          // Replace with real authentication
+          throw new Error("Incorrect password.");
+        }
+
+        return { success: true };
+      } catch (error) {
+        if (error instanceof Error) {
+          throw new Error(error.message);
+        }
+        throw new Error("Password verification failed");
+      }
     }),
 });
 

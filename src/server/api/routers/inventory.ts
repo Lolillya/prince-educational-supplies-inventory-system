@@ -535,6 +535,7 @@ export const inventoryRouter = createTRPCRouter({
         // Group presets by their chain (starting with presets that have conversions)
         const presetChains: ProcessedPreset[] = [];
         const processedPresetIds = new Set<number>();
+        const processedConversionIds = new Set<number>();
 
         // First, find all starting presets (those that are not the target of any conversion)
         const startingPresets = presets.filter((preset) => {
@@ -570,13 +571,26 @@ export const inventoryRouter = createTRPCRouter({
             let currentPreset = preset;
 
             while (currentPreset.conversions.length > 0) {
-              const currentConversion = currentPreset.conversions[0];
+              // Only consider conversions we haven't processed yet
+              const currentConversion = currentPreset.conversions.find(
+                (conv) =>
+                  !processedConversionIds.has(conv.preset_conversion_id),
+              );
+
+              if (!currentConversion) break;
               if (!currentConversion?.from_unit || !currentConversion?.to_unit)
                 break;
 
+              // Mark this conversion as processed
+              processedConversionIds.add(
+                currentConversion.preset_conversion_id,
+              );
+
               // Find the next preset in the chain
               const nextPreset = presets.find(
-                (p) => p.main_unit_id === currentConversion.to_unit_id,
+                (p) =>
+                  p.main_unit_id === currentConversion.to_unit_id &&
+                  !processedPresetIds.has(p.preset_id),
               );
 
               if (!nextPreset) break;
@@ -729,8 +743,8 @@ export const inventoryRouter = createTRPCRouter({
       const { presetId, shouldMarkOnly = false } = input;
 
       try {
-        // If shouldMarkOnly is true, we might implement a soft delete in the future
-        // For now, we'll always perform a hard delete
+        console.log(`=== DELETING PRESET CHAIN ===`);
+        console.log(`Starting with preset_id=${presetId}`);
 
         // Find the preset to get related info
         const presetToDelete = await db.preset.findUnique({
@@ -738,6 +752,7 @@ export const inventoryRouter = createTRPCRouter({
           include: {
             conversions: true,
             item: true,
+            main_unit: true,
           },
         });
 
@@ -745,84 +760,160 @@ export const inventoryRouter = createTRPCRouter({
           throw new Error(`Preset with ID ${presetId} not found.`);
         }
 
-        // Get all presets for this item to identify which ones to delete
-        const allItemPresets = await db.preset.findMany({
+        console.log(`Found preset: ${presetToDelete.preset_id}, unit: ${presetToDelete.main_unit?.name}, item: ${presetToDelete.item_id}`);
+
+        // Step 1: Get all conversions directly related to this preset_id
+        const directConversions = await db.presetConversion.findMany({
+          where: {
+            OR: [
+              { preset_id: presetId }, // Conversions FROM this preset
+              { to_unit_id: presetToDelete.main_unit_id } // Conversions TO this preset
+            ]
+          },
+          include: {
+            preset: true,
+            to_unit: true,
+            from_unit: true
+          }
+        });
+
+        console.log(`Direct conversions for preset ${presetId}:`, directConversions.map(c =>
+          `ID: ${c.preset_conversion_id}, From preset: ${c.preset_id}, From: ${c.from_unit.name}, To: ${c.to_unit.name}`
+        ));
+
+        // Step 2: Get explicit chain (both upstream and downstream)
+        // We need to find the entire chain this preset belongs to
+
+        // First, find all presets for this item
+        const allPresets = await db.preset.findMany({
           where: { item_id: presetToDelete.item_id },
           include: {
             main_unit: true,
             conversions: {
               include: {
                 from_unit: true,
-                to_unit: true,
-              },
-            },
-          },
+                to_unit: true
+              }
+            }
+          }
         });
 
-        // Find the specific preset unit name for reference in error messages
-        const presetUnitToDelete = allItemPresets.find(
-          (p) => p.preset_id === presetId,
-        )?.main_unit?.name;
-
-        // Function to follow a specific chain starting from a specific preset ID
-        // This ensures we only delete presets in the chain that starts with our target preset
-        const followSpecificChain = (startPresetId: number): Set<number> => {
-          const chainPresetIds = new Set<number>([startPresetId]);
-          let currentPresetId = startPresetId;
-
-          // Follow the chain from the start preset to the end
-          while (true) {
-            // Find the current preset
-            const currentPreset = allItemPresets.find(
-              (p) => p.preset_id === currentPresetId,
-            );
-            if (!currentPreset || currentPreset.conversions.length === 0) {
-              // Reached the end of the chain
-              break;
+        // Get all conversions for this item
+        const allConversions = await db.presetConversion.findMany({
+          where: {
+            preset: {
+              item_id: presetToDelete.item_id
             }
-
-            // Get the first conversion (assuming presets have at most one outgoing conversion)
-            const conversion = currentPreset.conversions[0];
-            if (!conversion) {
-              // No conversion found
-              break;
-            }
-
-            // Find the next preset in the chain
-            const nextPreset = allItemPresets.find(
-              (p) => p.main_unit_id === conversion.to_unit_id,
-            );
-            if (!nextPreset || chainPresetIds.has(nextPreset.preset_id)) {
-              // No next preset or we've hit a cycle
-              break;
-            }
-
-            // Add this preset to our chain
-            chainPresetIds.add(nextPreset.preset_id);
-            currentPresetId = nextPreset.preset_id;
+          },
+          include: {
+            preset: true,
+            from_unit: true,
+            to_unit: true
           }
+        });
 
-          return chainPresetIds;
-        };
+        // Build a direct preset-to-preset conversion map based on exact preset IDs
+        // key: preset_id, value: {nextPresetId, conversionId}
+        const presetConnections = new Map<number, {nextPresetId: number, conversionId: number}>();
 
-        // Get all presets in the specific chain starting from our target preset
-        const presetsToDelete = followSpecificChain(presetId);
-        console.log(
-          `Deleting preset chain for unit "${presetUnitToDelete}" - ${presetsToDelete.size} presets to delete`,
-        );
+        // Build a reverse map to find what preset points to each preset
+        // key: preset_id, value: {previousPresetId, conversionId}
+        const reverseConnections = new Map<number, {prevPresetId: number, conversionId: number}>();
 
-        // Delete all presets in the chain
-        // Note: Due to cascading deletes in the database schema, the conversions will be automatically deleted
-        for (const idToDelete of presetsToDelete) {
-          await db.preset.delete({
-            where: { preset_id: idToDelete },
-          });
+        // Map which exact preset has each unit as its main unit
+        const unitToPresetMap = new Map<number, number>();
+        for (const p of allPresets) {
+          unitToPresetMap.set(p.main_unit_id, p.preset_id);
+        }
+
+        // Build the connection maps
+        for (const conv of allConversions) {
+          const targetPresetId = unitToPresetMap.get(conv.to_unit_id);
+          if (targetPresetId) {
+            // Forward connection
+            presetConnections.set(conv.preset_id, {
+              nextPresetId: targetPresetId,
+              conversionId: conv.preset_conversion_id
+            });
+
+            // Reverse connection
+            reverseConnections.set(targetPresetId, {
+              prevPresetId: conv.preset_id,
+              conversionId: conv.preset_conversion_id
+            });
+          }
+        }
+
+        console.log(`Forward connections:`, JSON.stringify(Array.from(presetConnections.entries())));
+        console.log(`Reverse connections:`, JSON.stringify(Array.from(reverseConnections.entries())));
+
+        // Find the first preset in this chain (the root)
+        let rootPresetId = presetId;
+        while (reverseConnections.has(rootPresetId)) {
+          const prevInfo = reverseConnections.get(rootPresetId);
+          if (!prevInfo) break;
+          rootPresetId = prevInfo.prevPresetId;
+        }
+
+        console.log(`Root preset for chain containing ${presetId} is: ${rootPresetId}`);
+
+        // Now follow the chain from the root to collect all presets in this exact chain
+        const chainPresets = new Set<number>([rootPresetId]);
+        let currentId = rootPresetId;
+
+        while (presetConnections.has(currentId)) {
+          const nextInfo = presetConnections.get(currentId);
+          if (!nextInfo) break;
+
+          chainPresets.add(nextInfo.nextPresetId);
+          currentId = nextInfo.nextPresetId;
+        }
+
+        console.log(`Presets in this specific chain: ${Array.from(chainPresets).join(', ')}`);
+
+        // Now delete all conversions in this chain to avoid foreign key constraints
+        const conversionIdsToDelete = new Set<number>();
+
+        // Collect conversion IDs
+        for (const presetId of chainPresets) {
+          const preset = allPresets.find(p => p.preset_id === presetId);
+          if (preset && preset.conversions.length > 0) {
+            for (const conv of preset.conversions) {
+              conversionIdsToDelete.add(conv.preset_conversion_id);
+            }
+          }
+        }
+
+        console.log(`Conversion IDs to delete: ${Array.from(conversionIdsToDelete).join(', ')}`);
+
+        // Delete conversions
+        for (const convId of conversionIdsToDelete) {
+          try {
+            await db.presetConversion.delete({
+              where: { preset_conversion_id: convId }
+            });
+            console.log(`Deleted conversion: ${convId}`);
+          } catch (e) {
+            console.log(`Could not delete conversion ${convId}, may already be deleted`);
+          }
+        }
+
+        // Delete presets
+        for (const id of chainPresets) {
+          try {
+            await db.preset.delete({
+              where: { preset_id: id }
+            });
+            console.log(`Deleted preset: ${id}`);
+          } catch (e) {
+            console.log(`Could not delete preset ${id}, may already be deleted`);
+          }
         }
 
         return {
-          message: `Preset chain for "${presetUnitToDelete}" deleted successfully`,
+          message: `Preset chain deleted successfully`,
           presetId,
-          deletedCount: presetsToDelete.size,
+          deletedCount: chainPresets.size,
         };
       } catch (error) {
         console.error("Error deleting preset:", error);
@@ -844,8 +935,12 @@ export const inventoryRouter = createTRPCRouter({
       const { presetId, toUnitId, itemId } = input;
 
       try {
-        // Get all presets for this item to identify the chain
-        const allItemPresets = await db.preset.findMany({
+        console.log(`=== REMOVING CONVERSION FROM PRESET ===`);
+        console.log(`Starting with preset_id=${presetId}, removing unit_id=${toUnitId}`);
+
+        // Step 1: Get all data needed to understand the chain structure
+        // Get all presets for this item
+        const allPresets = await db.preset.findMany({
           where: { item_id: itemId },
           include: {
             main_unit: true,
@@ -856,176 +951,179 @@ export const inventoryRouter = createTRPCRouter({
               },
             },
           },
+          orderBy: {
+            preset_id: "asc",
+          },
         });
 
-        // Find the preset with the given ID
-        const sourcePreset = allItemPresets.find(
-          (p) => p.preset_id === presetId,
-        );
+        // Get the source preset to verify it exists
+        const sourcePreset = allPresets.find(p => p.preset_id === presetId);
         if (!sourcePreset) {
-          throw new Error(`Preset with ID ${presetId} not found.`);
+          throw new Error(`Preset with ID ${presetId} not found`);
         }
 
-        // Find the preset that uses the unit as its main unit (the one we're removing)
-        const presetToRemove = allItemPresets.find(
-          (p) => p.main_unit_id === toUnitId,
+        // Get all conversions for this item
+        const allConversions = await db.presetConversion.findMany({
+          where: {
+            preset: {
+              item_id: itemId,
+            },
+          },
+          include: {
+            preset: true,
+            from_unit: true,
+            to_unit: true,
+          },
+        });
+
+        console.log("All presets:", allPresets.map(p =>
+          `ID: ${p.preset_id}, Unit: ${p.main_unit?.name}, Price: ${p.main_price}`
+        ));
+        console.log("All conversions:", allConversions.map(c =>
+          `ID: ${c.preset_conversion_id}, From preset: ${c.preset_id}, From: ${c.from_unit.name}, To: ${c.to_unit.name}`
+        ));
+
+        // Step 2: Build precise preset-to-preset mapping
+        // Forward map: which preset points to which preset
+        const presetConnections = new Map<number, {nextPresetId: number, conversionId: number}>();
+        // Reverse map: which preset is pointed to by which preset
+        const reverseConnections = new Map<number, {prevPresetId: number, conversionId: number}>();
+        // Map unit IDs to the presets that have them as main_unit
+        const unitToPresetMap = new Map<number, number>();
+
+        // Build the unit-to-preset map
+        for (const preset of allPresets) {
+          unitToPresetMap.set(preset.main_unit_id, preset.preset_id);
+        }
+
+        // Build the connection maps
+        for (const conv of allConversions) {
+          const targetPresetId = unitToPresetMap.get(conv.to_unit_id);
+          if (targetPresetId) {
+            // Forward connection
+            presetConnections.set(conv.preset_id, {
+              nextPresetId: targetPresetId,
+              conversionId: conv.preset_conversion_id,
+            });
+
+            // Reverse connection
+            reverseConnections.set(targetPresetId, {
+              prevPresetId: conv.preset_id,
+              conversionId: conv.preset_conversion_id,
+            });
+          }
+        }
+
+        console.log("Forward connections:", JSON.stringify(Array.from(presetConnections.entries())));
+        console.log("Reverse connections:", JSON.stringify(Array.from(reverseConnections.entries())));
+
+        // Step 3: Find the root of this specific chain
+        let rootPresetId = presetId;
+        while (reverseConnections.has(rootPresetId)) {
+          const prevInfo = reverseConnections.get(rootPresetId);
+          if (!prevInfo) break;
+          rootPresetId = prevInfo.prevPresetId;
+        }
+
+        console.log(`Root preset for chain containing ${presetId} is: ${rootPresetId}`);
+
+        // Step 4: Map out the exact chain from root to end
+        const chainPresets = new Set<number>([rootPresetId]);
+        let currentId = rootPresetId;
+
+        while (presetConnections.has(currentId)) {
+          const nextInfo = presetConnections.get(currentId);
+          if (!nextInfo) break;
+
+          chainPresets.add(nextInfo.nextPresetId);
+          currentId = nextInfo.nextPresetId;
+        }
+
+        console.log(`All presets in this specific chain: ${Array.from(chainPresets).join(', ')}`);
+
+        // Step 5: Find the exact preset with the target unit ID that's in our chain
+        const presetToRemove = allPresets.find(
+          p => p.main_unit_id === toUnitId && chainPresets.has(p.preset_id)
         );
+
         if (!presetToRemove) {
-          throw new Error(`No preset found with main unit ID ${toUnitId}.`);
+          throw new Error(`No preset found with unit ID ${toUnitId} in this chain`);
         }
 
-        // Find the conversion that leads to the unit we want to remove
-        // First, look for a direct conversion from the source preset
-        let conversionToRemove = sourcePreset.conversions.find(
-          (c) => c.to_unit_id === toUnitId,
-        );
+        console.log(`Removing preset: ${presetToRemove.preset_id} with unit: ${presetToRemove.main_unit.name}`);
 
-        // If no direct conversion found, we need to find the chain that leads to it
-        if (!conversionToRemove) {
-          // Build a map of the chain: preset_id -> conversion that leads to the next preset
-          const chainMap = new Map();
+        // Step 6: Find the conversion that points to this preset
+        let sourcePresetId: number | null = null;
+        let conversionToRemove: any = null;
 
-          // Find the first preset in the chain
-          const firstPreset = allItemPresets.find(
-            (p) => p.preset_id === presetId,
+        // Look for the exact connection leading to our target preset
+        const previousPresetInfo = reverseConnections.get(presetToRemove.preset_id);
+        if (previousPresetInfo) {
+          sourcePresetId = previousPresetInfo.prevPresetId;
+          conversionToRemove = allConversions.find(
+            c => c.preset_conversion_id === previousPresetInfo.conversionId
           );
-          if (!firstPreset) {
-            throw new Error(
-              `Could not find start of chain (preset ${presetId})`,
-            );
-          }
-
-          // Add all conversions to the map
-          for (const preset of allItemPresets) {
-            if (preset.conversions.length > 0) {
-              chainMap.set(preset.preset_id, preset.conversions[0]);
-            }
-          }
-
-          // Follow the chain from the source preset until we find a conversion
-          // that connects to a preset that leads to our target unit
-          let currentPresetId = firstPreset.preset_id;
-          let previousPresetId = null;
-          let previousConversion = null;
-
-          while (
-            currentPresetId &&
-            currentPresetId !== presetToRemove.preset_id
-          ) {
-            const conversion = chainMap.get(currentPresetId);
-            if (!conversion) {
-              // We've reached the end of the chain without finding our target
-              break;
-            }
-
-            // Find the preset that this conversion points to
-            const nextPreset = allItemPresets.find(
-              (p) => p.main_unit_id === conversion.to_unit_id,
-            );
-            if (!nextPreset) {
-              break;
-            }
-
-            // If the next preset leads to our target, we've found the conversion we need to remove
-            if (nextPreset.preset_id === presetToRemove.preset_id) {
-              conversionToRemove = conversion;
-              break;
-            }
-
-            // If the next preset has a conversion that leads to our target, we've found what we need
-            const nextConversion = chainMap.get(nextPreset.preset_id);
-            if (nextConversion && nextConversion.to_unit_id === toUnitId) {
-              conversionToRemove = nextConversion;
-              previousPresetId = nextPreset.preset_id;
-              break;
-            }
-
-            // Otherwise, continue following the chain
-            previousPresetId = currentPresetId;
-            previousConversion = conversion;
-            currentPresetId = nextPreset.preset_id;
-          }
-
-          // If we still haven't found the conversion, look for a preset that directly points to our target
-          if (!conversionToRemove) {
-            for (const preset of allItemPresets) {
-              const conv = preset.conversions.find(
-                (c) => c.to_unit_id === toUnitId,
-              );
-              if (conv) {
-                conversionToRemove = conv;
-                previousPresetId = preset.preset_id;
-                break;
-              }
-            }
-          }
         }
 
         if (!conversionToRemove) {
-          throw new Error(
-            `No conversion found that leads to unit ID ${toUnitId} in the chain.`,
-          );
+          throw new Error(`Could not find conversion leading to preset ${presetToRemove.preset_id}`);
         }
 
-        // Find the next conversion in the chain (if any)
-        const nextConversion = presetToRemove.conversions[0]; // Assuming each preset has at most one outgoing conversion
+        console.log(`Found conversion ${conversionToRemove.preset_conversion_id} connecting presets ${sourcePresetId} -> ${presetToRemove.preset_id}`);
 
-        // Case 1: This is the last unit in the chain - just delete the conversion and the preset
-        if (!nextConversion) {
-          console.log(
-            `Removing last unit in chain (${presetToRemove.main_unit.name})`,
+        // Step 7: Find if this preset has any outgoing connections
+        const nextConnectionInfo = presetConnections.get(presetToRemove.preset_id);
+        const hasOutgoingConnection = !!nextConnectionInfo;
+
+        if (hasOutgoingConnection) {
+          // Case: This is a middle preset in the chain - need to reconnect
+          console.log(`Preset ${presetToRemove.preset_id} has an outgoing connection to preset ${nextConnectionInfo?.nextPresetId}`);
+
+          const nextPresetId = nextConnectionInfo?.nextPresetId;
+          const nextPreset = allPresets.find(p => p.preset_id === nextPresetId);
+
+          if (!nextPreset) {
+            throw new Error(`Could not find next preset with ID ${nextPresetId}`);
+          }
+
+          const outgoingConversion = allConversions.find(
+            c => c.preset_conversion_id === nextConnectionInfo?.conversionId
           );
 
-          // Delete the conversion that points to the preset to remove
-          await db.presetConversion.delete({
-            where: {
-              preset_conversion_id: conversionToRemove.preset_conversion_id,
+          if (!outgoingConversion) {
+            throw new Error(`Could not find outgoing conversion from preset ${presetToRemove.preset_id}`);
+          }
+
+          console.log(`Reconnecting chain: ${sourcePresetId} -> ${nextPresetId} (skipping ${presetToRemove.preset_id})`);
+
+          // Update the existing conversion to skip over the removed preset
+          await db.presetConversion.update({
+            where: { preset_conversion_id: conversionToRemove.preset_conversion_id },
+            data: {
+              to_unit_id: nextPreset.main_unit_id,
+              conversion_rate: outgoingConversion.conversion_rate,
             },
           });
 
-          // Delete the preset to remove
+          // Delete the outgoing conversion
+          await db.presetConversion.delete({
+            where: { preset_conversion_id: outgoingConversion.preset_conversion_id },
+          });
+
+          // Delete the preset being removed
           await db.preset.delete({
             where: { preset_id: presetToRemove.preset_id },
           });
-        }
-        // Case 2: This is a middle unit in the chain - need to reconnect the chain
-        else {
-          console.log(
-            `Removing middle unit in chain (${presetToRemove.main_unit.name})`,
-          );
+        } else {
+          // Case: This is the last preset in the chain - just delete the conversion and preset
+          console.log(`Preset ${presetToRemove.preset_id} is the last in the chain`);
 
-          // Find the target preset that follows in the chain
-          const targetPreset = allItemPresets.find(
-            (p) => p.main_unit_id === nextConversion.to_unit_id,
-          );
-          if (!targetPreset) {
-            throw new Error(
-              `Could not find preset with main unit ID ${nextConversion.to_unit_id}.`,
-            );
-          }
-
-          // Use the next conversion's rate directly instead of multiplying
-          const newConversionRate = nextConversion.conversion_rate;
-
-          // Update the existing conversion to point to the target preset
-          await db.presetConversion.update({
-            where: {
-              preset_conversion_id: conversionToRemove.preset_conversion_id,
-            },
-            data: {
-              to_unit_id: nextConversion.to_unit_id,
-              conversion_rate: newConversionRate,
-            },
-          });
-
-          // Delete the conversion from the preset to remove
+          // Delete the conversion pointing to this preset
           await db.presetConversion.delete({
-            where: {
-              preset_conversion_id: nextConversion.preset_conversion_id,
-            },
+            where: { preset_conversion_id: conversionToRemove.preset_conversion_id },
           });
 
-          // Delete the preset to remove
+          // Delete the preset
           await db.preset.delete({
             where: { preset_id: presetToRemove.preset_id },
           });
@@ -1034,7 +1132,7 @@ export const inventoryRouter = createTRPCRouter({
         return {
           message: `Conversion removed successfully`,
           removedPresetId: presetToRemove.preset_id,
-          sourcePresetId: sourcePreset.preset_id,
+          sourcePresetId: sourcePresetId || presetId,
         };
       } catch (error) {
         console.error("Error removing conversion from preset:", error);
@@ -1060,6 +1158,9 @@ export const inventoryRouter = createTRPCRouter({
         input;
 
       try {
+        console.log(`=== ADDING CONVERSION TO PRESET CHAIN ===`);
+        console.log(`Starting with preset_id=${presetId}`);
+
         // 1. First, find the preset to get info about the chain
         const sourcePreset = await db.preset.findUnique({
           where: { preset_id: presetId },
@@ -1072,11 +1173,7 @@ export const inventoryRouter = createTRPCRouter({
           throw new Error(`Preset with ID ${presetId} not found`);
         }
 
-        // 2. Find the preset with the fromUnitId as its main_unit_id or determine the last preset in the chain
-        let lastPresetInChain = sourcePreset;
-        let lastUnitId = fromUnitId;
-
-        // Get all presets with the same item ID
+        // Fetch all presets and conversions for this item to understand the chain structure
         const itemPresets = await db.preset.findMany({
           where: { item_id: itemId },
           include: {
@@ -1087,68 +1184,113 @@ export const inventoryRouter = createTRPCRouter({
           },
         });
 
-        // If fromUnitId is provided, find the preset with that unit as its main unit
+        const allConversions = await db.presetConversion.findMany({
+          where: {
+            preset: {
+              item_id: itemId,
+            },
+          },
+          include: {
+            preset: true,
+            from_unit: true,
+            to_unit: true,
+          },
+        });
+
+        console.log(
+          "All presets:",
+          itemPresets.map(
+            (p) =>
+              `ID: ${p.preset_id}, Unit: ${p.main_unit?.name}, Price: ${p.main_price}`,
+          ),
+        );
+        console.log(
+          "All conversions:",
+          allConversions.map(
+            (c) =>
+              `ID: ${c.preset_conversion_id}, From preset: ${c.preset_id}, From unit: ${c.from_unit.name}, To unit: ${c.to_unit.name}`,
+          ),
+        );
+
+        // Build a preset chain map to track exact chains
+        const presetChainMap = new Map<
+          number,
+          { nextPresetId: number; conversionId: number }
+        >();
+
+        for (const conv of allConversions) {
+          const targetPreset = itemPresets.find(
+            (p) => p.main_unit_id === conv.to_unit_id,
+          );
+          if (targetPreset) {
+            presetChainMap.set(conv.preset_id, {
+              nextPresetId: targetPreset.preset_id,
+              conversionId: conv.preset_conversion_id,
+            });
+          }
+        }
+
+        console.log(
+          "Chain map:",
+          JSON.stringify(Array.from(presetChainMap.entries())),
+        );
+
+        // 2. Find the end of the chain starting from the source preset
+        let endOfChainPreset = sourcePreset;
+        const presetsInChain = new Set<number>([sourcePreset.preset_id]);
+        let currentPresetId = sourcePreset.preset_id;
+
+        // Follow the chain starting from the source preset
+        while (true) {
+          const nextLink = presetChainMap.get(currentPresetId);
+          if (!nextLink) {
+            // This is the end of the chain
+            break;
+          }
+
+          presetsInChain.add(nextLink.nextPresetId);
+          currentPresetId = nextLink.nextPresetId;
+
+          // Update the end of chain preset
+          const nextPreset = itemPresets.find(
+            (p) => p.preset_id === nextLink.nextPresetId,
+          );
+          if (nextPreset) {
+            endOfChainPreset = nextPreset;
+          }
+        }
+
+        console.log(
+          `Presets in chain: ${Array.from(presetsInChain).join(", ")}`,
+        );
+        console.log(
+          `End of chain preset: ${endOfChainPreset.preset_id}, Unit: ${endOfChainPreset.main_unit.name}`,
+        );
+
+        // 3. If fromUnitId was specified, verify it's part of our chain
+        let lastPresetInChain = endOfChainPreset;
+        let lastUnitId = endOfChainPreset.main_unit_id;
+
         if (fromUnitId) {
           const presetWithFromUnit = itemPresets.find(
-            (preset) => preset.main_unit_id === fromUnitId,
+            (p) =>
+              p.main_unit_id === fromUnitId && presetsInChain.has(p.preset_id),
           );
 
           if (presetWithFromUnit) {
             lastPresetInChain = presetWithFromUnit;
             lastUnitId = fromUnitId;
+            console.log(
+              `Using specified fromUnitId=${fromUnitId} from preset ${presetWithFromUnit.preset_id}`,
+            );
           } else {
             console.warn(
-              `No preset found with main_unit_id ${fromUnitId}, using source preset's unit.`,
+              `No preset found with main_unit_id ${fromUnitId} in this chain, using end of chain preset.`,
             );
-          }
-        } else {
-          // Otherwise find the last preset in the chain by following conversions
-          let currentPreset = sourcePreset;
-          const processedPresetIds = new Set<number>([currentPreset.preset_id]);
-
-          while (true) {
-            // Find a preset conversion where current preset is the source
-            const conversion = await db.presetConversion.findFirst({
-              where: { preset_id: currentPreset.preset_id },
-              include: { to_unit: true, from_unit: true },
-            });
-
-            if (!conversion) {
-              // This is the end of the chain
-              lastPresetInChain = currentPreset;
-              lastUnitId = currentPreset.main_unit_id;
-              break;
-            }
-
-            // Find the next preset in the chain
-            const nextPreset = itemPresets.find(
-              (p) => p.main_unit_id === conversion.to_unit_id,
-            );
-
-            if (!nextPreset || processedPresetIds.has(nextPreset.preset_id)) {
-              // This is the end of the chain or we've encountered a cycle
-              lastPresetInChain = currentPreset;
-              lastUnitId = conversion.to_unit_id;
-              break;
-            }
-
-            // Move to the next preset in the chain
-            currentPreset = nextPreset;
-            processedPresetIds.add(currentPreset.preset_id);
           }
         }
 
-        if (!lastUnitId) {
-          throw new Error(
-            "Could not determine the last unit in the preset chain",
-          );
-        }
-
-        console.log(
-          `Using preset ${lastPresetInChain.preset_id} with unit ${lastUnitId} as source for new conversion`,
-        );
-
-        // 3. Find or confirm the to_unit
+        // 4. Find or confirm the to_unit
         const toUnitRecord = await db.unit.findUnique({
           where: { name: toUnit },
         });
@@ -1157,7 +1299,7 @@ export const inventoryRouter = createTRPCRouter({
           throw new Error(`Unit ${toUnit} not found`);
         }
 
-        // 4. Create a preset conversion linking the last unit to the new unit
+        // 5. Create a preset conversion linking the last unit to the new unit
         const presetConversion = await db.presetConversion.create({
           data: {
             preset_id: lastPresetInChain.preset_id,
@@ -1170,7 +1312,11 @@ export const inventoryRouter = createTRPCRouter({
           },
         });
 
-        // 5. Create a new preset for the new unit
+        console.log(
+          `Created conversion ${presetConversion.preset_conversion_id} from preset ${lastPresetInChain.preset_id}`,
+        );
+
+        // 6. Create a new preset for the new unit
         const newPreset = await db.preset.create({
           data: {
             item_id: itemId,
@@ -1178,6 +1324,10 @@ export const inventoryRouter = createTRPCRouter({
             main_price: typeof price === "string" ? parseFloat(price) : price,
           },
         });
+
+        console.log(
+          `Created new preset ${newPreset.preset_id} with unit ${toUnitRecord.name} and price ${price}`,
+        );
 
         return {
           message: "Conversion added successfully to preset chain",
@@ -1211,31 +1361,78 @@ export const inventoryRouter = createTRPCRouter({
     .mutation(async ({ input, ctx }) => {
       const { presetId, mainUnit, mainPrice, conversions } = input;
 
-      // Get existing preset with conversions
-      const existingPreset = await ctx.db.preset.findUnique({
-        where: { preset_id: presetId },
+      console.log(`=== UPDATING PRESET CHAIN ===`);
+      console.log(
+        `Starting with preset_id=${presetId}, unit=${mainUnit}, price=${mainPrice}`,
+      );
+      console.log(`Conversions:`, JSON.stringify(conversions));
+
+      // Get all presets for this item to allow chain tracing
+      const itemId = await ctx.db.preset
+        .findUnique({
+          where: { preset_id: presetId },
+          select: { item_id: true },
+        })
+        .then((data) => data?.item_id);
+
+      if (!itemId) {
+        throw new Error(`Preset with ID ${presetId} not found`);
+      }
+
+      // Load all item presets and conversions for accurate chain tracking
+      const allPresets = await ctx.db.preset.findMany({
+        where: { item_id: itemId },
         include: {
           main_unit: true,
           conversions: {
-            orderBy: { preset_conversion_id: "asc" },
+            include: {
+              from_unit: true,
+              to_unit: true,
+            },
           },
         },
       });
 
-      if (!existingPreset) {
-        throw new Error("Preset not found");
+      // Build a directed graph of preset chain connections for easier traversal
+      const chainGraph: Record<
+        number,
+        { nextPresetId?: number; conversion?: any }
+      > = {};
+
+      // First pass: record all connections between presets
+      for (const preset of allPresets) {
+        if (preset.conversions && preset.conversions.length > 0) {
+          const conversion = preset.conversions[0]; // Only take first conversion from each preset
+          if (conversion && conversion.to_unit_id) {
+            // Find the preset that this conversion points to
+            const targetPreset = allPresets.find(
+              (p) => p.main_unit_id === conversion.to_unit_id,
+            );
+
+            if (targetPreset) {
+              chainGraph[preset.preset_id] = {
+                nextPresetId: targetPreset.preset_id,
+                conversion: conversion,
+              };
+            }
+          }
+        }
       }
 
-      // Get new main unit
+      // For debugging: print the graph of chains
+      console.log("Chain graph:", JSON.stringify(chainGraph, null, 2));
+
+      // Get the new main unit by name
       const newMainUnit = await ctx.db.unit.findUnique({
         where: { name: mainUnit },
       });
+
       if (!newMainUnit) {
         throw new Error(`Unit ${mainUnit} not found`);
       }
 
-      // Update main preset
-      const updatedPreset = await ctx.db.preset.update({
+      // Update the root preset with the new main price and unit
+      await ctx.db.preset.update({
         where: { preset_id: presetId },
         data: {
           main_unit_id: newMainUnit.unit_id,
@@ -1243,29 +1440,34 @@ export const inventoryRouter = createTRPCRouter({
         },
       });
 
-      // Handle main unit change
-      if (existingPreset.main_unit_id !== newMainUnit.unit_id) {
-        // Update previous conversion pointing to this preset
-        await ctx.db.presetConversion.updateMany({
-          where: {
-            to_unit_id: existingPreset.main_unit_id,
-            preset: { item_id: existingPreset.item_id },
-          },
-          data: { to_unit_id: newMainUnit.unit_id },
-        });
-      }
-
-      // Process conversions
+      // Update each conversion in the chain
       let currentPresetId = presetId;
       let currentUnitId = newMainUnit.unit_id;
 
+      // Track which presets we've processed to avoid duplicates or cycles
+      const processedPresets = new Set<number>([presetId]);
+
+      // Process each conversion in the array
       for (const conversion of conversions) {
-        // Handle both updates and new conversions
+        console.log(`Processing conversion: ${JSON.stringify(conversion)}`);
+        console.log(
+          `Current preset: ${currentPresetId}, current unit: ${currentUnitId}`,
+        );
+
+        // Get the unit we're converting to
+        const toUnit = await ctx.db.unit.findUnique({
+          where: { name: conversion.unit },
+        });
+
+        if (!toUnit) {
+          throw new Error(`Unit ${conversion.unit} not found`);
+        }
+
         if (conversion.conversionId) {
-          // UPDATE EXISTING CONVERSION
+          // UPDATING EXISTING CONVERSION
+          // First find the exact conversion
           const existingConversion = await ctx.db.presetConversion.findUnique({
             where: { preset_conversion_id: conversion.conversionId },
-            include: { to_unit: true },
           });
 
           if (!existingConversion) {
@@ -1273,11 +1475,6 @@ export const inventoryRouter = createTRPCRouter({
               `Conversion with ID ${conversion.conversionId} not found`,
             );
           }
-
-          const toUnit = await ctx.db.unit.findUnique({
-            where: { name: conversion.unit },
-          });
-          if (!toUnit) throw new Error(`Unit ${conversion.unit} not found`);
 
           // Update the conversion
           await ctx.db.presetConversion.update({
@@ -1289,92 +1486,76 @@ export const inventoryRouter = createTRPCRouter({
             },
           });
 
-          // Find and update linked preset for EXISTING conversion
-          const nextPreset = await ctx.db.preset.findFirst({
-            where: {
-              item_id: existingPreset.item_id,
-              main_unit_id: existingConversion.to_unit_id,
-            },
-          });
+          // CRITICAL: Find the EXACT preset this conversion links to in the chain
+          const nextPresetId = chainGraph[currentPresetId]?.nextPresetId;
 
-          if (nextPreset) {
-            // Update next preset's main unit and price
+          if (nextPresetId) {
+            console.log(
+              `Updating linked preset: ${nextPresetId} with price: ${conversion.price}`,
+            );
+
+            // Update the preset this conversion points to
             await ctx.db.preset.update({
-              where: { preset_id: nextPreset.preset_id },
+              where: { preset_id: nextPresetId },
               data: {
                 main_unit_id: toUnit.unit_id,
                 main_price: conversion.price,
               },
             });
 
+            // Move to the next preset in the chain
+            currentPresetId = nextPresetId;
             currentUnitId = toUnit.unit_id;
-            currentPresetId = nextPreset.preset_id;
+            processedPresets.add(nextPresetId);
+          } else {
+            console.log(
+              `Warning: Could not find next preset in chain after ${currentPresetId}`,
+            );
           }
         } else {
-          // CREATE NEW CONVERSION
-          const toUnit = await ctx.db.unit.findUnique({
-            where: { name: conversion.unit },
-          });
-          if (!toUnit) throw new Error(`Unit ${conversion.unit} not found`);
+          // CREATING NEW CONVERSION
+          console.log(`Creating new conversion from preset ${currentPresetId}`);
 
-          // Create new conversion
-          await ctx.db.presetConversion.create({
+          // Create a new conversion
+          const newConversion = await ctx.db.presetConversion.create({
             data: {
               preset_id: currentPresetId,
-              conversion_rate: conversion.rate,
               from_unit_id: currentUnitId,
               to_unit_id: toUnit.unit_id,
+              conversion_rate: conversion.rate,
             },
           });
 
-          // Handle NEW conversion's next preset
-          const nextPreset = await ctx.db.preset.findFirst({
-            where: {
-              item_id: existingPreset.item_id,
-              main_unit_id: toUnit.unit_id, // Use the new toUnit directly
+          // Create a new preset for this conversion
+          const newPreset = await ctx.db.preset.create({
+            data: {
+              item_id: itemId,
+              main_unit_id: toUnit.unit_id,
+              main_price: conversion.price,
             },
           });
 
-          if (nextPreset) {
-            // Update existing linked preset if found
-            await ctx.db.preset.update({
-              where: { preset_id: nextPreset.preset_id },
-              data: {
-                main_price: conversion.price,
-              },
-            });
-          } else {
-            // Create new preset for the conversion
-            const newPreset = await ctx.db.preset.create({
-              data: {
-                item_id: existingPreset.item_id,
-                main_unit_id: toUnit.unit_id,
-                main_price: conversion.price,
-              },
-            });
-            currentPresetId = newPreset.preset_id;
-          }
+          console.log(
+            `Created new preset: ${newPreset.preset_id} for unit: ${toUnit.name}`,
+          );
 
+          // Update the chain graph
+          chainGraph[currentPresetId] = {
+            nextPresetId: newPreset.preset_id,
+            conversion: newConversion,
+          };
+
+          // Move to the next preset in the chain
+          currentPresetId = newPreset.preset_id;
           currentUnitId = toUnit.unit_id;
+          processedPresets.add(newPreset.preset_id);
         }
       }
 
-      // Update final preset in the chain
-      const finalPreset = await ctx.db.preset.findFirst({
-        where: { preset_id: currentPresetId },
-        include: { conversions: true },
-      });
-
-      if (finalPreset && finalPreset.conversions.length === 0) {
-        await ctx.db.preset.update({
-          where: { preset_id: currentPresetId },
-          data: {
-            main_price: conversions[conversions.length - 1]?.price,
-          },
-        });
-      }
-
-      return updatedPreset;
+      console.log(
+        `Chain update complete. Processed presets: ${Array.from(processedPresets).join(", ")}`,
+      );
+      return { success: true, presetId };
     }),
 
   verifyPassword: publicProcedure
